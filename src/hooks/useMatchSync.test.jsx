@@ -92,6 +92,7 @@ it('retries on foreground and retains the local score after a failure', async ()
 
 it('queues during account bootstrap and sends when that same account is ready', async () => {
   const initialProps = { ...options, user: null, clerkUser: { id: 'clerk-owner' } };
+  setMatchStorageScope(initialProps.clerkUser.id);
   save.mockResolvedValue('server-id');
   const { result, rerender } = renderHook((props) => useMatchSync(props), { initialProps });
   await act(async () => { await result.current.syncMatch(match); });

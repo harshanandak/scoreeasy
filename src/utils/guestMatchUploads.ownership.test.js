@@ -76,7 +76,6 @@ it.each([false, true])('interleaved X and Y claims queue exactly one account (We
   const original = Storage.prototype.setItem;
   let second;
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (storageKey, value) {
-    
     if (storageKey === `se_guest_match_claim:${encodeURIComponent(payload.clientMatchId)}` && JSON.parse(value).ownerId === 'X' && !second) {
       second = Promise.resolve(claimGuestMatchSaves('Y'));
     }
