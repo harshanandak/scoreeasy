@@ -164,3 +164,13 @@ it('does not treat a named rules preset or an unchanged Custom chip as edited', 
     expect(isCustomSetup(applySetsPreset('volleyball', 'custom', format), { label: preset, format }, sport)).toBe(false);
   }
 });
+
+
+it('ignores display-only powerplay metadata when comparing cricket rules', async () => {
+  const { isCustomSetup } = await import('./setupFormats');
+  const { buildCricketFormat } = await import('../../../utils/cricketCalculations');
+  const { getSportById } = await import('../../../models/sportRegistry');
+  const format = buildCricketFormat('T20');
+  expect(isCustomSetup({ ...format, powerplay: [] }, { label: 'T20', format }, getSportById('cricket'))).toBe(false);
+  expect(isCustomSetup({ ...format, freeHit: false }, { label: 'T20', format }, getSportById('cricket'))).toBe(true);
+});

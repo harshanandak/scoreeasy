@@ -263,7 +263,7 @@ export function setupRuleValues(sportConfig, format = {}) {
     return sets;
   }
   if (sportConfig?.engine === 'custom-cricket') {
-    const { id: _id, name: _name, desc: _desc, preset: _preset, customizable: _editable, gullyRules: _gully, formatMode: _mode, ...cricket } = rules;
+    const { id: _id, name: _name, desc: _desc, preset: _preset, customizable: _editable, gullyRules: _gully, formatMode: _mode, powerplay: _display, ...cricket } = rules;
     return { ...cricket, maxBalls: cricket.maxBalls ?? null, lastManStands: Boolean(cricket.lastManStands), trialBall: Boolean(cricket.trialBall), oneTipOneHand: Boolean(cricket.oneTipOneHand) };
   }
   const { rulesPreset: _preset, formatMode: _mode, ...values } = rules;
