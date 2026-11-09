@@ -4,6 +4,7 @@ import { useLiveBroadcast } from './useLiveBroadcast';
 import { usePendingLiveFinalizations } from './usePendingLiveFinalizations';
 import { loadSession, saveSession } from '../lib/live/liveSession';
 import { enqueue, load } from '../lib/live/outbox';
+import { flushLiveSession } from '../lib/live/recovery';
 
 const h = vi.hoisted(() => ({
   query: vi.fn(), create: vi.fn(), scorePoint: vi.fn(), undo: vi.fn(),
@@ -132,4 +133,67 @@ it.each([true, false])('does not write finish intent for a never-shared match wh
   await act(async () => { pending.resolve(null); await restoring; });
   expect(h.finalize).not.toHaveBeenCalled();
   scorer.unmount();
+});
+
+it('recovers when an unresolved scorer drain and root recovery overlap the finish', async () => {
+  saveSession(clientMatchId, { seq: 7, isShared: true });
+  const pending = deferred();
+  h.query.mockReturnValue(pending.promise);
+  const order = [];
+  h.scorePoint.mockImplementation(async ({ snapshot }) => { order.push(snapshot ? 'terminal' : 'point'); });
+  h.finalize.mockImplementation(async () => { order.push('finalize'); });
+  const root = renderHook(() => usePendingLiveFinalizations());
+  const scorer = renderHook(() => useLiveBroadcast());
+  let restoring;
+  await act(async () => { restoring = scorer.result.current.restore({ clientMatchId }); });
+  let pointPromise;
+  await act(async () => {
+    pointPromise = scorer.result.current.point({ team: 'A', at: 1 });
+    await scorer.result.current.finalize(finish);
+  });
+  expect(loadSession(clientMatchId)).toHaveProperty('finalizeIntent');
+  expect(h.finalize).not.toHaveBeenCalled();
+  await act(async () => {
+    pending.resolve(restoredSession);
+    await Promise.all([restoring, pointPromise]);
+  });
+  await expectRecovered(order);
+  scorer.unmount();
+  root.unmount();
+});
+
+it.each(['match_not_found', 'not_authorized'])('retains broadcastError and cancels a permanently rejected unresolved session: %s', async code => {
+  enqueue({ kind: 'point', team: 'A', value: 0, type: 'correction', snapshot: terminal, at: 1, clientMatchId, clientEventId: `${clientMatchId}:8` });
+  saveSession(clientMatchId, { seq: 8, isShared: true, finalizeIntent: { resultType: 'abandoned' } });
+  h.query.mockRejectedValue(Object.assign(new Error('Server Error'), { data: { code } }));
+  const root = renderHook(() => usePendingLiveFinalizations());
+  await waitFor(() => expect(root.result.current).toHaveLength(1));
+  expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
+  expect(loadSession(clientMatchId).broadcastError.code).toBe(code);
+  expect(load()).toEqual([]);
+  const calls = h.query.mock.calls.length;
+  await act(async () => { globalThis.dispatchEvent(new Event('online')); });
+  expect(h.query).toHaveBeenCalledTimes(calls);
+  expect(h.scorePoint).not.toHaveBeenCalled();
+  expect(h.finalize).not.toHaveBeenCalled();
+  root.unmount();
+});
+
+it('retains an unresolved finish after a transport failure and retries from root on reconnect', async () => {
+  enqueue({ kind: 'point', team: 'A', value: 0, type: 'correction', snapshot: terminal, at: 1, clientMatchId, clientEventId: `${clientMatchId}:8` });
+  saveSession(clientMatchId, { seq: 8, isShared: true, finalizeIntent: { resultType: 'abandoned' } });
+  h.query.mockRejectedValueOnce(new Error('offline'));
+  const root = renderHook(() => usePendingLiveFinalizations());
+  await act(async () => { await flushLiveSession(clientMatchId, h); });
+  expect(loadSession(clientMatchId)).toHaveProperty('finalizeIntent');
+  expect(loadSession(clientMatchId)).not.toHaveProperty('broadcastError');
+  expect(load()).toHaveLength(1);
+  await act(async () => { globalThis.dispatchEvent(new Event('online')); });
+  await waitFor(() => {
+    expect(h.finalize).toHaveBeenCalledTimes(1);
+    expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
+  });
+  expect(h.scorePoint).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ snapshot: terminal }));
+  expect(h.scorePoint.mock.invocationCallOrder[0]).toBeLessThan(h.finalize.mock.invocationCallOrder[0]);
+  root.unmount();
 });
