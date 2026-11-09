@@ -6,16 +6,20 @@ import { addAppStateChangeListener } from '../mobile/lifecycle';
 import { LIVE_SESSIONS_CHANGED, liveSessions } from '../lib/live/liveSession';
 import { flushLiveSession } from '../lib/live/recovery';
 import { size } from '../lib/live/outbox';
+import { matchSaveOwner } from './usePendingMatchSaves';
 
 export function usePendingLiveFinalizations() {
-  const { isAuthenticated, user } = useAuth();
+  const auth = useAuth();
+  const { isAuthenticated, user } = auth;
+  const ownerId = matchSaveOwner(auth);
   const ready = Boolean(isAuthenticated && user);
   const convex = useConvex();
   const scorePoint = useMutation(api.live.scorePoint);
   const undo = useMutation(api.live.undo);
   const finalize = useMutation(api.live.finalize);
+  const setVisibility = useMutation(api.live.setVisibility);
   const mutations = useRef(null);
-  mutations.current = { scorePoint, undo, finalize, getOwnedSession: clientMatchId => convex.query(api.live.getOwnedSession, { clientMatchId }) };
+  mutations.current = { ownerId, scorePoint, undo, finalize, setVisibility, getOwnedSession: (clientMatchId, expectedOwnerId) => convex.query(api.live.getOwnedSession, { clientMatchId, ...(expectedOwnerId ? { expectedOwnerId } : {}) }), getOwnerId: () => mutations.current.ownerId };
   const [, refresh] = useState(0);
   useEffect(() => {
     let disposed = false;
@@ -24,7 +28,8 @@ export function usePendingLiveFinalizations() {
       refresh(value => value + 1);
       if (!ready || navigator.onLine === false) return;
       for (const session of liveSessions()) {
-        if (!session.broadcastError && (session.pendingFinish || session.finalizeIntent || size(session.clientMatchId) > 0)) {
+        if (session.ownerId && session.ownerId !== ownerId) continue;
+        if (!session.broadcastError && (session.visibilityIntent || session.pendingFinish || session.finalizeIntent || size(session.clientMatchId) > 0)) {
           void flushLiveSession(session.clientMatchId, mutations.current).then(() => {
             if (!disposed) refresh(value => value + 1);
           });
@@ -47,6 +52,6 @@ export function usePendingLiveFinalizations() {
       events.forEach(event => globalThis.removeEventListener(event, run));
       document.removeEventListener('visibilitychange', foreground);
     };
-  }, [ready]);
-  return ready ? liveSessions().filter(session => session.broadcastError) : [];
+  }, [ready, ownerId]);
+  return ready ? liveSessions().filter(session => (!session.ownerId || session.ownerId === ownerId) && session.broadcastError) : [];
 }

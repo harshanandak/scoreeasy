@@ -192,6 +192,12 @@ export function isSaveInFlight(record) {
   return inFlight.has(keyFor(record.ownerId, record.payload.clientMatchId));
 }
 
+export function resumeOwnerMatchSaves(ownerId) {
+  for (const record of pendingMatchSaves(ownerId)) {
+    if (record.ownerMismatch) write({ ...record, ownerMismatch: false, nextAttemptAt: 0 });
+  }
+}
+
 export function attemptMatchSave(record, save, canSend = () => true, manual = false) {
   const key = keyFor(record.ownerId, record.payload.clientMatchId);
   if (isMatchSaveConfirmed(record.ownerId, record.payload.clientMatchId, record.completionId) || localSaveConfirmed(record)) return Promise.resolve({ status: 'synced', clientMatchId: record.payload.clientMatchId });
@@ -204,7 +210,7 @@ export function attemptMatchSave(record, save, canSend = () => true, manual = fa
     return Promise.resolve({ status: 'failed', clientMatchId: record.payload.clientMatchId });
   }
   if (!canSend() || navigator.onLine === false) return Promise.resolve({ status: 'pending', clientMatchId: record.payload.clientMatchId });
-  if (!manual && (record.terminal || record.nextAttemptAt > Date.now())) return Promise.resolve({ status: record.state, clientMatchId: record.payload.clientMatchId });
+  if (!manual && (record.terminal || record.ownerMismatch || record.nextAttemptAt > Date.now())) return Promise.resolve({ status: record.state, clientMatchId: record.payload.clientMatchId });
   let persistedBeforeSend = false;
   try { persistedBeforeSend = localStorage.getItem(key) !== null; } catch { /* Volatile records still send. */ }
   // Install the guard before notifying subscribers, which can also drain the queue.
@@ -218,7 +224,7 @@ export function attemptMatchSave(record, save, canSend = () => true, manual = fa
     if (isMatchSaveConfirmed(record.ownerId, record.payload.clientMatchId, record.completionId) || localSaveConfirmed(record)) return { status: 'synced', clientMatchId: record.payload.clientMatchId };
     if (!canSend() || !sameCompletion(currentRecord(record), record) || !fixtureStillMatches(record)) return { status: 'pending', clientMatchId: record.payload.clientMatchId };
     try {
-      await save(record.payload);
+      await save({ ...record.payload, expectedOwnerId: record.ownerId });
       if (record.storageBackend === 'indexedDB') await hydratePendingMatchSaves(record.ownerId);
       const latest = currentRecord(record);
       if (!latest && localSaveConfirmed(record)) {
@@ -250,6 +256,12 @@ export function attemptMatchSave(record, save, canSend = () => true, manual = fa
         if (record.storageBackend !== 'indexedDB') volatileRecords.delete(key);
         try { localStorage.removeItem(key); } catch { /* The confirmation suppresses this stale record. */ }
         return { status: 'synced', clientMatchId: record.payload.clientMatchId };
+      }
+      if (error?.data?.code === 'owner_mismatch') {
+        write({ ...record, state: 'pending', terminal: false, ownerMismatch: true, nextAttemptAt: 0 });
+        updateLocalMatch(record, 'pending');
+        if (pendingWrites.has(key)) await pendingWrites.get(key);
+        return { status: 'pending', clientMatchId: record.payload.clientMatchId };
       }
       const attempts = record.attempts + 1;
       write({ ...record, state: 'failed', terminal: !isTransportFailure(error), attempts, nextAttemptAt: Date.now() + Math.min(300000, 5000 * 2 ** Math.min(attempts - 1, 6)) });
