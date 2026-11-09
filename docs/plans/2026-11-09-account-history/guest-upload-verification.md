@@ -1,0 +1,30 @@
+# Guest upload evidence
+
+Decisions needed: none. Upload is automatic, using the approved default.
+
+PR B implements the write side of forge-1013 independently of History PR A.
+
+The test-only commit was pushed first. [Red CI](https://github.com/harshanandak/scoreeasy/actions/runs/42598413311) reported `Failed to resolve import "./guestMatchUploads"`. No fix was pushed until that failure was fetched. Consult the draft PR for checks on the final head; this artifact does not claim they passed.
+
+Acceptance walkthrough:
+
+- Guest quick matches and completed tournament fixtures with stable unique ids are claimed for the first account before the existing pending-save queue receives them. The claim survives refresh and stale local match snapshots. Client match ids retain server-side deduplication.
+- Claiming now waits for queue ownership to be reconciled across localStorage, in-memory records and IndexedDB, including ownerMismatch and compact acknowledgement records. An unmarked result with any other owner's record is skipped. Web Locks serialize claiming and enqueueing across tabs; atomic immutable IndexedDB owner acquisition provides the fallback. If neither mechanism is available, claims fail closed and local results remain intact. Draining a guest-claimed record revalidates its claim before sending.
+- Tournament results without a stable unique fixture identity are skipped, with their tournament name and result position listed as not uploaded in the app notice. No ids are assigned and no fixture fields or scores are rewritten. Duplicate fixture ids and missing tournament ids are also skipped.
+- Unit tests cover claim-once behavior, X then Y, a previously owned result, a stale board overwriting sync metadata, and a claim that cannot be persisted. Failed claim persistence leaves the match local for a later retry.
+- Active guest matches are left intact. A test completes one later and verifies it can then be claimed. Existing scoring and completion paths continue to handle in-progress matches after sign-in.
+- Offline tests retain the owner-bound queue through a hook remount, then reconnect and acknowledge one save. The existing queue supplies IndexedDB fallback, retry backoff, browser/native foreground recovery and expectedOwnerId enforcement.
+- The shared enqueue boundary refuses quick results and durable guest claims bound to another account. Ordinary tournament queues retain their existing owner-scoped confirmation behavior. A quick-board caller receives idle instead of reporting a rejected enqueue as pending.
+- The notice counts only acknowledged results, persists a consumed receipt, and disappears when the active account changes. Hook tests hold the server promise open to verify no premature saved notice.
+- `guest-sign-in-notice.png` shows two real queue records acknowledged by the showcase's fake server and the resulting `2 matches saved to your account` notice.
+- `guest-account-switch.png` shows the subsequent account switch without X's saved notice. Automated tests assert no X records are sent for Y.
+
+Screenshots were captured only in T3's integrated browser at a 390×844 CSS viewport (device pixel ratio 2). The showcase uses the real claiming, pending-save and notice code with fake account controls and a local fake server acknowledgement. It does not authenticate with Clerk or write to Convex. Production sign-in, real backgrounding and cross-device delivery remain unverified.
+
+Evidence levels: the red CI run is externally verified; newly added green-path tests await final-head CI. Browser behavior is rung 5 for the mocked showcase only. No local tests ran. Commit hooks run lint and type-check. Evidence was compressed and checked with the repository scripts. No sport calculations changed.
+
+CI follow-up: [Android run 42601059088](https://github.com/harshanandak/scoreeasy/actions/runs/42601059088) reported three failures on 57a6a97. The active-match fixture incorrectly retained completedAt, which storage deliberately treats as a legacy completion signal; its setup now omits that timestamp and asserts it is active before claiming, with every original assertion retained. The local-owner enqueue guard now applies to quick matches; durable guest claims still protect tournament uploads, while the unchanged existing tournament-confirmation test keeps its owner-scoped queue contract. The notice uses colour tokens without raw fallback literals; the palette baseline is unchanged. These fixes await CI; only lint and type-check run locally.
+
+Sol review follow-up: a separate test-only commit (dad56a2) was pushed before the additional ownership fixes. It covers the exact quota/crash sequence where X's queue survives in IndexedDB but its local marker does not, both with and without ownerMismatch; a localStorage ownerMismatch record; two distinct idless results; interleaved X/Y claiming with Web Locks and with the IndexedDB fallback; and claim revalidation during drain. The first three CI fixes are retained in the same final fix push. Only PR #259 changed. Implementation changes for the additional review findings stay below 200 lines, excluding tests and this walkthrough. Current-head green CI remains unverified.
+
+Red-first results: [CI run 42602832120](https://github.com/harshanandak/scoreeasy/actions/runs/42602832120) reported the unmarked-owner, idless-fixture and drain-revalidation failures before implementation. The original concurrency setup did not force cross-tab interleaving in one test runtime, so a second test-only commit (4f4c449) reenters as Y immediately before X writes its claim while local marker writes fail. [iOS run 42603997985](https://github.com/harshanandak/scoreeasy/actions/runs/42603997985) then reported both concurrency cases red: two instances of quick:football:unmarked were returned instead of one. Both red runs were fetched before the combined fix push. Local verification remained lint and type-check only. The owner will update this independent branch before merging; master was not merged or rebased into it, and the PR #258 worktree was not used.

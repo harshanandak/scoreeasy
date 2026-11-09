@@ -2,6 +2,7 @@ import { loadQuickMatch, saveQuickMatch, loadSportTournaments, saveSportTourname
 import { ConvexError } from 'convex/values';
 import { tournamentCompletionId } from './tournamentSync';
 import { fallbackCompletionMatches, loadPendingSaveFallback, matchSaveFingerprint, storePendingSaveFallback } from './pendingMatchSaveStore';
+import { guestClaimKey, readGuestClaim } from './guestMatchOwnership';
 
 export { tournamentCompletionId } from './tournamentSync';
 
@@ -121,6 +122,24 @@ export function pendingMatchSaves(ownerId, includeSynced = false) {
   return [...records.values()];
 }
 
+export async function pendingMatchSaveOwnership() {
+  await Promise.allSettled([...pendingWrites.values()]);
+  const records = [...volatileRecords.values()];
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (key?.startsWith(PREFIX)) records.push(JSON.parse(localStorage.getItem(key)));
+  }
+  if (globalThis.indexedDB) records.push(...await loadPendingSaveFallback());
+  const owners = new Map();
+  for (const record of records) {
+    const id = record?.clientMatchId || record?.payload?.clientMatchId;
+    if (!id || !record.ownerId) continue;
+    if (!owners.has(id)) owners.set(id, new Set());
+    owners.get(id).add(record.ownerId);
+  }
+  return owners;
+}
+
 export function pruneSyncedMatchSaves(ownerId) {
   for (const record of pendingMatchSaves(ownerId, true)) {
     if (record.storageBackend === 'indexedDB' && record.state === 'synced') {
@@ -164,6 +183,10 @@ function write(record) {
 export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch, quickCompletion) {
   const key = keyFor(ownerId, payload.clientMatchId);
   const local = loadMatchSaveLocal({ quickMatchId, tournamentMatch });
+  if (!tournamentMatch && local?.syncOwnerId && local.syncOwnerId !== ownerId) return undefined;
+  let claimed;
+  try { claimed = localStorage.getItem(guestClaimKey(payload.clientMatchId)) !== null; } catch { /* Ordinary signed-in saves retain the existing IndexedDB fallback. Guest claiming requires a durable claim first. */ }
+  if (claimed && readGuestClaim(payload.clientMatchId)?.ownerId !== ownerId) return undefined;
   const completionId = tournamentMatch ? tournamentCompletionId(local) : undefined;
   const existing = pendingMatchSaves(ownerId).find((entry) => entry.payload.clientMatchId === payload.clientMatchId);
   if (existing && (!tournamentMatch || (existing.completionId === completionId && JSON.stringify(existing.payload) === JSON.stringify(payload)))) return existing;
@@ -175,6 +198,7 @@ export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch
   confirmed.delete(key);
   // A replacement waits behind any in-flight send; its old outcome cannot overwrite this record.
   const record = write({ ownerId, payload, quickMatchId, tournamentMatch, completionId,
+    ...(claimed ? { guestClaimed: true } : {}),
     ...(quickCompletion ? { quickCompletionFingerprint: matchSaveFingerprint(JSON.parse(tournamentCompletionId(quickCompletion))) } : {}),
     state: priorCompletionSaved ? 'failed' : 'pending', terminal: priorCompletionSaved,
     priorCompletionSaved, attempts: 0, nextAttemptAt: 0 });
@@ -209,6 +233,9 @@ export function resumeOwnerMatchSaves(ownerId) {
 }
 
 export function attemptMatchSave(record, save, canSend = () => true, manual = false, isOwnerActive = canSend) {
+  const ownerActive = canSend;
+  const guestClaimed = record.guestClaimed || Boolean(readGuestClaim(record.payload.clientMatchId));
+  canSend = () => ownerActive() && (!guestClaimed || readGuestClaim(record.payload.clientMatchId)?.ownerId === record.ownerId);
   const key = keyFor(record.ownerId, record.payload.clientMatchId);
   if (isMatchSaveConfirmed(record.ownerId, record.payload.clientMatchId, record.completionId) || localSaveConfirmed(record)) return Promise.resolve({ status: 'synced', clientMatchId: record.payload.clientMatchId });
   if (inFlight.has(key)) return inFlight.get(key);
