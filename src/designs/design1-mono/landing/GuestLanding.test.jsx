@@ -109,6 +109,54 @@ describe('GuestLanding', () => {
     expect(within(card).getByText('Set 3 of 5')).toBeInTheDocument();
   });
 
+  it('explains the product below the app: four numbered sections in the original voice', () => {
+    renderLanding();
+
+    const sections = [
+      ['01 / App experience', 'Start first. Save later.'],
+      ['02 / Features', 'Everything you need.'],
+      ['03 / Sports', '9 sports. Your rules.'],
+      ['04 / How it works', 'Three steps.'],
+    ];
+    for (const [eyebrow, heading] of sections) {
+      expect(screen.getByText(eyebrow)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: heading })).toBeInTheDocument();
+    }
+    expect(screen.getByText('Universal score tracker')).toBeInTheDocument();
+  });
+
+  it('shows the stat cards and says what the app does, only with claims the app keeps', () => {
+    renderLanding();
+
+    const stats = within(screen.getByRole('heading', { level: 2, name: 'Start first. Save later.' }).closest('section'));
+    expect(stats.getByText('Sports ready').previousElementSibling).toHaveTextContent('9');
+    expect(stats.getByText('Guest mode')).toBeInTheDocument();
+    expect(stats.getByText('Local first')).toBeInTheDocument();
+    expect(stats.getByText(/no account required before the first score tap/i)).toBeInTheDocument();
+
+    const features = within(screen.getByRole('heading', { level: 2, name: 'Everything you need.' }).closest('section'));
+    for (const title of ['Guest first', 'Sync when you sign in', 'Live share link', 'Undo that follows', 'Rules engine', 'Tournaments']) {
+      expect(features.getByRole('heading', { level: 3, name: title })).toBeInTheDocument();
+    }
+    expect(features.getByText(/weak signal never costs one/i)).toBeInTheDocument();
+    expect(features.getByText(/stays private until you share it/i)).toBeInTheDocument();
+  });
+
+  it('lists the three steps and closes with a Start and a sign up action', () => {
+    renderLanding({ cloudAuthAvailable: true });
+
+    const how = within(screen.getByRole('heading', { level: 2, name: 'Three steps.' }).closest('section'));
+    expect(how.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      expect.stringContaining('Pick sport'),
+      expect.stringContaining('Add teams'),
+      expect.stringContaining('Score live'),
+    ]);
+
+    const closing = within(screen.getByRole('heading', { level: 2, name: 'Ready?' }).closest('section'));
+    expect(closing.getByRole('link', { name: 'Start Cricket' })).toHaveAttribute('href', '/play?sport=cricket');
+    expect(closing.getByRole('link', { name: 'Create a free account' })).toHaveAttribute('href', '/signup');
+  });
+
   it('turns each sport tile into a start link for that sport', () => {
     renderLanding();
 
