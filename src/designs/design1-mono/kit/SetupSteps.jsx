@@ -3,8 +3,8 @@ import './setupSteps.css';
 
 /**
  * The step indicator: one 48px button per step, the current one filled. Any step can be opened at
- * any time, so the scorer is never forced through all of them. These tabs are the only way
- * between steps; Start is the one button at the bottom of every step.
+ * any time, so the scorer is never forced through all of them. Tabs open any step and the header
+ * Back returns to the previous one; Start is the one button at the bottom of every step.
  */
 export function SetupStepper({ steps, current, onSelect }) {
   return (

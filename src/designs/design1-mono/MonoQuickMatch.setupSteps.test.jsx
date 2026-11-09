@@ -37,10 +37,10 @@ beforeEach(() => {
 });
 
 describe('quick setup steps', () => {
-  it('tennis: Game and Teams steps, Start on both, no Rules step, the tabs and Back move between them', async () => {
+  it('tennis: Game and Teams steps, Start on both, a Rules step, the tabs and Back move between them', async () => {
     renderQuick('/tennis/quick');
     expect(await screen.findByRole('button', { name: 'Game', current: 'step' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Rules' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Rules' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'What are you playing?' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start tennis' })).toBeInTheDocument();
 
