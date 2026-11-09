@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import PropTypes from 'prop-types';
 
 const iconPropTypes = {
@@ -6,166 +7,173 @@ const iconPropTypes = {
   strokeWidth: PropTypes.number,
 };
 
-function VolleyballIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+// Owner-approved set (forge-1049). Solid glyphs on a 24x24 grid painted with the `color` prop;
+// only hockey and kabaddi are stroke-drawn. Cut-outs use evenodd paths where they can, and a
+// luminance <mask> (white/black keywords, no raw colour literals) where seams must reach the edge.
+// Frisbee keeps its original 32x32 outline drawing.
+
+// Mask ids must be unique per rendered instance: many icons share one page.
+function useMaskId(prefix) {
+  return `${prefix}-${useId().replaceAll(':', '')}`;
+}
+
+// Hockey and kabaddi are stroke-drawn at the widths below. A caller that passes strokeWidth
+// scales them against the Kit's standard stroke of 2; with no strokeWidth the designed widths apply.
+const DESIGN_STROKE = 2;
+const strokeScale = (strokeWidth) => (strokeWidth === undefined ? 1 : strokeWidth / DESIGN_STROKE);
+
+const SOLID = { viewBox: '0 0 24 24' };
+
+// Volleyball adapts Lucide `volleyball` (ISC); the licence notice is in THIRD_PARTY_NOTICES.md.
+function VolleyballIcon({ size = 32, color = 'currentColor' }) {
+  const maskId = useMaskId('se-volleyball');
+  const seam = { fill: 'none', stroke: 'black', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' };
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="16" cy="16" r="13.5" />
-      <path d="M16 2.5c0 0-1.2 6.8 3.5 12.5s11.2 5.8 11.2 5.8" />
-      <path d="M4.2 8.5c0 0 6.2 2.2 12.8 0s9-7.2 9-7.2" />
-      <path d="M4 22c0 0 5.5-4.5 4.8-12S3.5 3 3.5 3" />
-      <path d="M16 29.5c0 0 1-7-3.8-12.5S1.5 11.5 1.5 11.5" />
-      <path d="M28 22.5c0 0-6 2-12.5-.5s-8.8-7.5-8.8-7.5" />
-      <path d="M28.5 9c0 0-5.8 4.2-5 12s5 8.5 5 8.5" />
+    <svg width={size} height={size} {...SOLID}>
+      <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+        <rect width="24" height="24" fill="white" />
+        <path d="M11.1 7.1a16.55 16.55 0 0 1 10.9 4" {...seam} />
+        <path d="M12 12a12.6 12.6 0 0 1-8.7 5" {...seam} />
+        <path d="M16.8 13.6a16.55 16.55 0 0 1-9 7.5" {...seam} />
+        <path d="M20.7 17a12.8 12.8 0 0 0-8.7-5 13.3 13.3 0 0 1 0-10" {...seam} />
+        <path d="M6.3 3.8a16.55 16.55 0 0 0 1.9 11.5" {...seam} />
+      </mask>
+      <g mask={`url(#${maskId})`}>
+        <circle cx="12" cy="12" r="10" fill={color} />
+      </g>
     </svg>
   );
 }
 
-function CricketIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function CricketIcon({ size = 32, color = 'currentColor' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 28l3.5-5" />
-      <path d="M9.5 23l4-6.5c0.8-1.3 2.5-1.5 3.5-0.5l1.5 1.5c0.8 0.8 0.5 2.2-0.5 3l-6.5 4z" />
-      <line x1="22" y1="8" x2="22" y2="22" />
-      <line x1="25" y1="8" x2="25" y2="22" />
-      <line x1="28" y1="8" x2="28" y2="22" />
-      <path d="M21.5 8.5c0.8-1 1.8-1 2.8 0" />
-      <path d="M24.5 8.5c0.8-1 1.8-1 2.8 0" />
+    <svg width={size} height={size} {...SOLID} fill={color}>
+      <path d="M9.3 7L11.5 7L11.5 21.4L9.3 21.4zM12.8 7L15 7L15 21.4L12.8 21.4zM16.3 7L18.5 7L18.5 21.4L16.3 21.4z" />
+      <path d="M9.6 4.2L13.5 4.2L13.5 5.8L9.6 5.8zM14.3 4.2L18.2 4.2L18.2 5.8L14.3 5.8z" />
+      <path fillRule="evenodd" d="M1.5 17.6a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0 -7 0zM2.71 19.21A3.33 3.33 0 0 1 7.29 15.99A9.33 9.33 0 0 0 2.71 19.21z" />
     </svg>
   );
 }
 
-function TennisIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function TennisIcon({ size = 32, color = 'currentColor' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <ellipse cx="18" cy="11" rx="7.5" ry="9" transform="rotate(-20 18 11)" />
-      <line x1="14" y1="6" x2="14.5" y2="17" />
-      <line x1="18" y1="4" x2="18.5" y2="18.5" />
-      <line x1="22" y1="5" x2="22" y2="16" />
-      <line x1="11.5" y1="9" x2="24" y2="7.5" />
-      <line x1="11" y1="13" x2="24.5" y2="11.5" />
-      <path d="M12 18.5l-4.5 7" />
-      <circle cx="6" cy="6.5" r="2.8" />
-      <path d="M4 4.5c1.2 1 2.5 2.8 2.5 4.2" />
+    <svg width={size} height={size} {...SOLID} fill={color}>
+      <path fillRule="evenodd" d="M6.3 6.54A5.5 7.1 22 1 1 16.5 10.66A5.5 7.1 22 1 1 6.3 6.54zM8.25 7.33A3.4 5 22 1 1 14.55 9.87A3.4 5 22 1 1 8.25 7.33z" />
+      <path d="M13.08 2.91L8.66 13.85L9.72 14.29L14.14 3.35zM7.95 5.67L15.92 8.89L16.35 7.82L8.38 4.6zM6.49 9.28L14.46 12.51L14.89 11.44L6.92 8.22zM7.81 14.16L4.81 21.58L7.13 22.51L10.12 15.09z" />
+      <path fillRule="evenodd" d="M15.2 18.2a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0 -6.4 0zM16.3 16.73A2.91 2.91 0 0 1 20.5 19.67A6.52 6.52 0 0 0 16.3 16.73z" />
     </svg>
   );
 }
 
-
-
-function FootballIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function FootballIcon({ size = 32, color = 'currentColor' }) {
+  const maskId = useMaskId('se-football');
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="16" cy="16" r="13.5" />
-      <path d="M16 8.5l4.5 3.2-1.8 5.3h-5.5l-1.8-5.3z" />
-      <path d="M16 8.5l0-6" /><path d="M20.5 11.7l5-2.5" /><path d="M18.7 17l3.5 4.5" /><path d="M13.2 17l-3.5 4.5" /><path d="M11.5 11.7l-5-2.5" />
+    <svg width={size} height={size} {...SOLID}>
+      <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+        <rect width="24" height="24" fill="white" />
+        <path d="M12 8L15.8 10.76L14.35 15.24L9.65 15.24L8.2 10.76z" fill="black" />
+        <path d="M12 5.5L8.67 3.08L9.94 -0.83L14.06 -0.83L15.33 3.08z" fill="black" />
+        <path d="M18.18 9.99L19.45 6.08L23.57 6.08L24.84 9.99L21.51 12.41z" fill="black" />
+        <path d="M15.82 17.26L19.94 17.26L21.21 21.17L17.88 23.59L14.55 21.17z" fill="black" />
+        <path d="M8.18 17.26L9.45 21.17L6.12 23.59L2.79 21.17L4.06 17.26z" fill="black" />
+        <path d="M5.82 9.99L2.49 12.41L-0.84 9.99L0.43 6.08L4.55 6.08z" fill="black" />
+        <circle cx="12" cy="12" r="9.25" fill="none" stroke="white" strokeWidth="1.5" />
+      </mask>
+      <g mask={`url(#${maskId})`}>
+        <circle cx="12" cy="12" r="10" fill={color} />
+      </g>
     </svg>
   );
 }
 
-
-function BasketballIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function BasketballIcon({ size = 32, color = 'currentColor' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="16" cy="16" r="13.5" /><path d="M2.5 16h27" /><path d="M16 2.5v27" />
-      <path d="M5 5.5c3.5 4 5.5 7 5.8 10.5" /><path d="M5.2 26c3.2-3.8 5.2-6.8 5.6-10" />
-      <path d="M27 5.5c-3.5 4-5.5 7-5.8 10.5" /><path d="M26.8 26c-3.2-3.8-5.2-6.8-5.6-10" />
+    <svg width={size} height={size} {...SOLID} fill={color}>
+      <path fillRule="evenodd" d="M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM11 2.5L13 2.5L13 11L21.5 11L21.5 13L13 13L13 21.5L11 21.5L11 13L2.5 13L2.5 11L11 11zM6.35 4.04A5.44 5.44 0 0 1 9.58 11.29A27.76 27.76 0 0 1 6.35 4.04zM9.58 12.71A5.44 5.44 0 0 1 6.35 19.96A27.76 27.76 0 0 1 9.58 12.71zM17.65 4.04A27.76 27.76 0 0 1 14.42 11.29A5.44 5.44 0 0 1 17.65 4.04zM14.42 12.71A27.76 27.76 0 0 1 17.65 19.96A5.44 5.44 0 0 1 14.42 12.71z" />
     </svg>
   );
 }
 
-function KabaddiIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function KabaddiIcon({ size = 32, color = 'currentColor', strokeWidth }) {
+  const k = strokeScale(strokeWidth);
+  const limb = { fill: 'none', stroke: color, strokeLinecap: 'round', strokeLinejoin: 'round' };
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="7" r="3" />
-      <path d="M12 10l-2.5 7 4.5 4" />
-      <path d="M10.5 14h7" />
-      <path d="M17.5 14l3-3" />
-      <path d="M14 21l-1.5 6" />
-      <path d="M14 21l5 4" />
-      <path d="M22 7h5" />
-      <path d="M24.5 4.5v5" />
-      <path d="M23 20c2 0 3.5-1 4-3" />
+    <svg width={size} height={size} {...SOLID}>
+      <rect x="17" y="2" width="1.9" height="4.2" rx="0.95" fill={color} />
+      <rect x="17" y="7.4" width="1.9" height="3" rx="0.95" fill={color} />
+      <rect x="17" y="17.6" width="1.9" height="4.4" rx="0.95" fill={color} />
+      <circle cx="12.4" cy="6.2" r="2.6" fill={color} />
+      <path d="M10.6 10.8L6.4 14.4" {...limb} strokeWidth={4.2 * k} />
+      <path d="M10.6 10.8L20.6 12.6" {...limb} strokeWidth={3.2 * k} />
+      <path d="M6.4 14.4L11.6 17L12 21.8" {...limb} strokeWidth={3.6 * k} />
+      <path d="M6.4 14.4L3.8 18.2L2.2 21.8" {...limb} strokeWidth={3.4 * k} />
     </svg>
   );
 }
 
 KabaddiIcon.propTypes = iconPropTypes;
 
-function BadmintonIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function BadmintonIcon({ size = 32, color = 'currentColor' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <ellipse cx="16" cy="24" rx="3.5" ry="2.5" />
-      <path d="M12.5 24c-2-4-3.5-10-2-16" />
-      <path d="M19.5 24c2-4 3.5-10 2-16" />
-      <path d="M10.5 8c1.5-1 3.2-1.5 5.5-1.5s4 0.5 5.5 1.5" />
-      <path d="M13 21c-0.5-3.5-0.5-8 1-13" />
-      <path d="M19 21c0.5-3.5 0.5-8-1-13" />
-      <path d="M16 22v-15" />
+    <svg width={size} height={size} {...SOLID} fill={color}>
+      <path fillRule="evenodd" d="M11.68 1.81Q18.81 3.88 22.09 10.55L11.06 16.7L7.54 13.74zM9.88 14.53A19.91 19.91 0 0 1 16.24 6.94A19.91 19.91 0 0 1 9.88 14.53zM8.81 13.63A20.56 20.56 0 0 1 13.79 4.89A20.56 20.56 0 0 1 8.81 13.63zM10.95 15.43A20.56 20.56 0 0 1 18.69 9A20.56 20.56 0 0 1 10.95 15.43z" />
+      <path fillRule="evenodd" d="M4.32 18.05a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0z" />
     </svg>
   );
 }
 
-function HockeyIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function HockeyIcon({ size = 32, color = 'currentColor', strokeWidth }) {
+  const k = strokeScale(strokeWidth);
+  const stick = { fill: 'none', stroke: color, strokeLinecap: 'round', strokeLinejoin: 'round' };
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8 3l10 18" />
-      <path d="M18 21c1 1.8 3 2.8 6 2.8" />
-      <path d="M9.5 3.5l10 18" />
-      <path d="M19.5 21.5c1 1.5 2.8 2.2 5.5 2.2" />
-      <path d="M24 23.8v1.2" />
-      <ellipse cx="14" cy="27.5" rx="4.5" ry="1.8" />
+    <svg width={size} height={size} {...SOLID}>
+      <path d="M21 3L14.6 15.6" {...stick} strokeWidth={3 * k} />
+      <path d="M14.6 15.6C13.4 18 11.8 19.8 9.2 19.8" {...stick} strokeWidth={4 * k} />
+      <circle cx="3.8" cy="19" r="2.6" fill={color} />
     </svg>
   );
 }
 
-function TableTennisIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function TableTennisIcon({ size = 32, color = 'currentColor' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="14" cy="12" r="8.5" />
-      <path d="M8 5.5c3.5 3 8.5 9 12 13" />
-      <path d="M20 19l4 6.5" />
-      <path d="M22 18l4 6.5" />
-      <line x1="24" y1="25.5" x2="26" y2="24.5" />
-      <circle cx="5.5" cy="25" r="2.5" />
+    <svg width={size} height={size} {...SOLID} fill={color}>
+      <circle cx="13.6" cy="9.6" r="6.9" />
+      <path d="M10.84 14.34L6.32 19.71L3.49 16.88L8.86 12.36z" />
+      <circle cx="4.9" cy="18.3" r="2" />
+      <circle cx="19.4" cy="19.4" r="2.8" />
     </svg>
   );
 }
 
-function GolfIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function GolfIcon({ size = 32, color = 'currentColor' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 4v22" /><path d="M16 4l9 3.5-9 3.5" />
-      <path d="M6 26c2.5-1.5 6-2 10-2s7.5 0.5 10 2" /><circle cx="22" cy="24.5" r="2" />
+    <svg width={size} height={size} {...SOLID} fill={color}>
+      <path d="M7.4 2.6L7.4 19.6L9.4 19.6L9.4 2.6zM9.4 3.2L19.4 6.9L9.4 10.6z" />
+      <path d="M2.4 21.2A17.34 17.34 0 0 1 21.6 21.2A153.75 153.75 0 0 0 2.4 21.2z" />
+      <path fillRule="evenodd" d="M14 16.1a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0 -4.8 0z" />
     </svg>
   );
 }
 
-function PoolIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function PoolIcon({ size = 32, color = 'currentColor' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 8l8 16h-16z" />
-      <circle cx="16" cy="12" r="2" />
-      <circle cx="14" cy="16.5" r="2" />
-      <circle cx="18" cy="16.5" r="2" />
-      <circle cx="12" cy="21" r="2" />
-      <circle cx="16" cy="21" r="2" />
-      <circle cx="20" cy="21" r="2" />
-      <line x1="3" y1="4" x2="13" y2="11" />
+    <svg width={size} height={size} {...SOLID} fill={color}>
+      <path fillRule="evenodd" d="M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM6.8 12a5.2 5.2 0 1 0 10.4 0a5.2 5.2 0 1 0 -10.4 0z" />
+      <path fillRule="evenodd" d="M10.45 10.3a1.55 1.55 0 1 0 3.1 0a1.55 1.55 0 1 0 -3.1 0zM11.38 10.3a0.62 0.62 0 1 0 1.24 0a0.62 0.62 0 1 0 -1.24 0zM10.15 13.5a1.85 1.85 0 1 0 3.7 0a1.85 1.85 0 1 0 -3.7 0zM11.18 13.5a0.82 0.82 0 1 0 1.64 0a0.82 0.82 0 1 0 -1.64 0z" />
     </svg>
   );
 }
 
-function ChessIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+function ChessIcon({ size = 32, color = 'currentColor' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 4v3" /><path d="M14.5 5.5h3" /><path d="M11 10c0-2.8 2.2-3 5-3s5 0.2 5 3" /><path d="M10 10h12" />
-      <path d="M11 10l-1 12" /><path d="M21 10l1 12" /><path d="M10 22h12" />
-      <path d="M9 22l-0.5 2.5" /><path d="M23 22l0.5 2.5" /><path d="M8.5 24.5h15" /><path d="M8 27h16" />
-      <path d="M8.5 24.5l-0.5 2.5" /><path d="M23.5 24.5l0.5 2.5" />
+    <svg width={size} height={size} {...SOLID} fill={color}>
+      <path fillRule="evenodd" d="M8.9 6.3a3.1 3.1 0 1 0 6.2 0a3.1 3.1 0 1 0 -6.2 0z" />
+      <path fillRule="evenodd" d="M7.9 10.4h8.2a1 1 0 0 1 1 1v.2a1 1 0 0 1-1 1H7.9a1 1 0 0 1-1-1v-.2a1 1 0 0 1 1-1z" />
+      <path fillRule="evenodd" d="M9.5 13.4h5c0 2.6 1.3 4.2 2.9 5.6H6.6c1.6-1.4 2.9-3 2.9-5.6z" />
+      <path fillRule="evenodd" d="M5.8 19.7h12.4a.9.9 0 0 1 .9.9v.5a.9.9 0 0 1-.9.9H5.8a.9.9 0 0 1-.9-.9v-.5a.9.9 0 0 1 .9-.9z" />
     </svg>
   );
 }
-
 
 function FrisbeeIcon({ size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
   return (
@@ -189,14 +197,16 @@ export const ICON_MAP = {
   Pool: PoolIcon, Chess: ChessIcon, Frisbee: FrisbeeIcon,
 };
 
-// The same hand-drawn doodles keyed by registry id (registry names differ in case, e.g. 'Table Tennis').
+// The same sport icons keyed by registry id (registry names differ in case, e.g. 'Table Tennis').
 export const ICON_BY_SPORT_ID = {
   volleyball: VolleyballIcon, cricket: CricketIcon, tennis: TennisIcon,
   football: FootballIcon, basketball: BasketballIcon, badminton: BadmintonIcon,
   hockey: HockeyIcon, kabaddi: KabaddiIcon, tabletennis: TableTennisIcon,
 };
 
-export default function SportIcon({ name, size = 32, color = 'currentColor', strokeWidth = 1.5 }) {
+// strokeWidth is forwarded only when the caller sets it: frisbee falls back to 1.5, hockey and
+// kabaddi to their designed widths, and the solid icons ignore it.
+export default function SportIcon({ name, size = 32, color = 'currentColor', strokeWidth }) {
   const Icon = ICON_MAP[name];
   return Icon ? <Icon size={size} color={color} strokeWidth={strokeWidth} /> : null;
 }

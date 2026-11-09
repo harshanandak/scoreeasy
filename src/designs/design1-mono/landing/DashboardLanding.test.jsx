@@ -190,9 +190,9 @@ describe('DashboardLanding (Kit Home)', () => {
       expect(rows[0]).toHaveTextContent('38–31');
       expect(rows[0].querySelector('strong')).toHaveTextContent('Bulls');
       expect(rows[1].querySelector('strong')).toBeNull();
-      // The doodle sits in the sport's identity badge: a hand-drawn stroke icon, never the tile mark.
+      // The doodle sits in the sport's identity badge: the 24x24 sport icon, never the tile mark.
       const badge = rows[0].querySelector('.kit-badge');
-      expect(badge.querySelector('svg')).toHaveAttribute('stroke-width', '2');
+      expect(badge.querySelector('svg')).toHaveAttribute('viewBox', '0 0 24 24');
       expect(badge.style.getPropertyValue('--sport-core')).not.toBe('');
       expect(container.querySelectorAll('.kit-tile .kit-badge, .kit-tile svg')).toHaveLength(0);
     });
