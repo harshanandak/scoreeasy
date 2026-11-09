@@ -9,8 +9,8 @@
   margin: 0 auto;
   padding: 14px 16px;
   border-radius: 16px;
-  background: var(--se-color-ink, #111);
-  color: var(--se-color-on-ink, #fff);
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
   font: 650 0.92rem var(--se-font-sans, sans-serif);
 }
 @media (max-width: 767px) {

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { claimGuestMatchSaves, consumeGuestUploadNotice } from './guestMatchUploads';
 import { enqueueQuickMatchSave } from '../hooks/useMatchSync';
 import { loadQuickMatch, saveQuickMatch, saveSportTournament, loadSportTournaments } from './storage';
-import { attemptMatchSave, pendingMatchSaves } from './pendingMatchSaves';
+import { attemptMatchSave, enqueueMatchSave, pendingMatchSaves } from './pendingMatchSaves';
 
 const guest = { id: 'guest', sport: 'football', team1: 'North', team2: 'South', score1: 2, score2: 1, winner: 'North', status: 'completed', completedAt: '2026-11-01T12:00:00Z' };
 beforeEach(() => { localStorage.clear(); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
@@ -18,7 +18,8 @@ describe('automatic guest upload claim', () => {
     expect(pendingMatchSaves('X')[0].payload.date).toBe(Date.parse(guest.completedAt));
   });
   it('leaves active matches intact and claims them only after completion', () => {
-    saveQuickMatch({ ...guest, status: 'in-progress', winner: undefined });
+    saveQuickMatch({ ...guest, status: 'in-progress', completedAt: undefined, winner: undefined });
+    expect(loadQuickMatch('guest').status).toBe('in-progress');
     expect(claimGuestMatchSaves('X')).toEqual([]);
     expect(loadQuickMatch('guest').status).toBe('in-progress');
     saveQuickMatch(guest);
@@ -53,6 +54,10 @@ describe('automatic guest upload claim', () => {
     expect(claimGuestMatchSaves('X')).toContain('tournament:football:cup:guest');
     expect(loadSportTournaments('se_football')[0].matches[0].syncOwnerId).toBe('X');
     expect(claimGuestMatchSaves('Y')).toEqual([]);
+    const record = pendingMatchSaves('X')[0];
+    expect(enqueueMatchSave('Y', record.payload, undefined, record.tournamentMatch)).toBeUndefined();
+    expect(pendingMatchSaves('Y')).toEqual([]);
+    expect(loadSportTournaments('se_football')[0].matches[0].syncOwnerId).toBe('X');
   });
   it('retains the claim offline and retries without duplicating the account save', async () => {
     saveQuickMatch(guest);

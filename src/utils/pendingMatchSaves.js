@@ -165,7 +165,7 @@ function write(record) {
 export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch, quickCompletion) {
   const key = keyFor(ownerId, payload.clientMatchId);
   const local = loadMatchSaveLocal({ quickMatchId, tournamentMatch });
-  if (local?.syncOwnerId && local.syncOwnerId !== ownerId) return undefined;
+  if (!tournamentMatch && local?.syncOwnerId && local.syncOwnerId !== ownerId) return undefined;
   let claimed;
   try { claimed = localStorage.getItem(guestClaimKey(payload.clientMatchId)) !== null; } catch { /* Ordinary signed-in saves retain the existing IndexedDB fallback. Guest claiming requires a durable claim first. */ }
   if (claimed && readGuestClaim(payload.clientMatchId)?.ownerId !== ownerId) return undefined;
