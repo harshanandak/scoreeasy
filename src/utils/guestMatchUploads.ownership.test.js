@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { IDBFactory } from 'fake-indexeddb';
 
 const match = { id: 'unmarked', sport: 'football', team1: 'North', team2: 'South', score1: 2, score2: 1, status: 'completed', completedAt: '2026-11-01' };
-const payload = { ...match, clientMatchId: 'quick:football:unmarked', date: 1 };
+const payload = { sport: match.sport, team1: match.team1, team2: match.team2, score1: match.score1, score2: match.score2, clientMatchId: 'quick:football:unmarked', date: 1 };
 const key = `se_pending_match:X:${encodeURIComponent(payload.clientMatchId)}`;
 beforeEach(() => {
   vi.resetModules(); localStorage.clear();
@@ -47,11 +47,12 @@ it('keeps distinct idless tournament results intact and never queues the shared 
   localStorage.setItem('se_quickmatches', '[]');
   const fixtures = [{ status: 'completed', score1: 2, score2: 1 }, { status: 'completed', score1: 0, score2: 3 }];
   localStorage.setItem('se_football', JSON.stringify([{ id: 'legacy', name: 'Legacy cup', matches: fixtures }]));
-  const { claimGuestMatchSaves } = await import('./guestMatchUploads');
+  const { claimGuestMatchSaves, unuploadedGuestTournamentResults } = await import('./guestMatchUploads');
   const { pendingMatchSaves } = await import('./pendingMatchSaves');
   expect(await claimGuestMatchSaves('X')).toEqual([]);
   expect(pendingMatchSaves('X')).toEqual([]);
   expect(JSON.parse(localStorage.getItem('se_football'))[0].matches).toEqual(fixtures);
+  expect(unuploadedGuestTournamentResults()).toEqual(['Legacy cup result 1', 'Legacy cup result 2']);
 });
 
 it.each([false, true])('interleaved X and Y claims queue exactly one account (Web Locks: %s)', async webLocks => {

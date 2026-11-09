@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useGuestMatchUploads } from '/src/hooks/useGuestMatchUploads';
-import { attemptMatchSave, pendingMatchSaves } from '/src/utils/pendingMatchSaves';
+import { attemptMatchSave, isSaveInFlight, pendingMatchSaves, PENDING_SAVES_CHANGED } from '/src/utils/pendingMatchSaves';
 import { saveQuickMatch } from '/src/utils/storage';
 import { KitTop } from '/src/designs/design1-mono/kit/KitParts';
 import GuestUploadNotice from '/src/components/GuestUploadNotice';
@@ -20,9 +20,12 @@ function Showcase() {
   const [ownerId, setOwner] = useState(null);
   const notice = useGuestMatchUploads({ ownerId, ready: Boolean(ownerId) });
   useEffect(() => {
-    if (ownerId) for (const record of pendingMatchSaves(ownerId)) {
-      void attemptMatchSave(record, async () => 'mock-server-ack');
-    }
+    const drain = () => { if (ownerId) for (const record of pendingMatchSaves(ownerId)) {
+      if (!isSaveInFlight(record)) void attemptMatchSave(record, async () => 'mock-server-ack');
+    } };
+    window.addEventListener(PENDING_SAVES_CHANGED, drain);
+    drain();
+    return () => window.removeEventListener(PENDING_SAVES_CHANGED, drain);
   }, [ownerId]);
   return <main className="mono-app kit-screen" style={{ maxWidth: 672, margin: 'auto' }}>
     <p style={{ fontSize: 12 }}>Evidence showcase · mock sign-in and server</p>

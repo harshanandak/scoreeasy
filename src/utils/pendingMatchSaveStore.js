@@ -33,7 +33,7 @@ function transaction(mode, action) {
 
 export function loadPendingSaveFallback(ownerId) {
   return transaction('readonly', (store, complete) => {
-    const read = store.index('ownerId').getAll(ownerId);
+    const read = ownerId ? store.index('ownerId').getAll(ownerId) : store.getAll();
     read.onsuccess = () => complete(read.result);
   });
 }
