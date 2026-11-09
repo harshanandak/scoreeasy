@@ -1,5 +1,5 @@
 // The example match on the guest landing. Nothing here is a typed number: every score, set tally
-// and status line is read from the same pure engines the scorers use (models/live/* for sets,
+// and half-time line is read from the same pure engines the scorers use (models/live/* for sets,
 // tennis and goals; utils/cricketEngine; utils/kabaddiEngine), fed with a short scripted match.
 // Sport rules live in those engines, so this file only scripts the play and formats the result.
 import { appendPoint } from '../../../models/live/scoringEvents';
@@ -7,12 +7,15 @@ import { volleyballState } from '../../../models/live/volleyball';
 import { tennisState, TENNIS_PRESETS } from '../../../models/live/tennis';
 import { goalsState } from '../../../models/live/goals';
 import { getSportById, getSportsList } from '../../../models/sportRegistry';
-import { applyDelivery, createInnings, deriveInnings, makeDelivery, makeFormat } from '../../../utils/cricketEngine';
+import { applyDelivery, createInnings, deriveChase, deriveInnings, makeDelivery, makeFormat } from '../../../utils/cricketEngine';
 import { applyRaid, createKabaddiState, startHalf, teamTotal } from '../../../utils/kabaddiEngine';
 import { PRESETS } from '../../../lib/teamColour';
 
-/** @typedef {{ name: string, score: string, meta?: string }} DemoTeam */
-/** @typedef {{ sportId: string, colours: [string, string], teams: [DemoTeam, DemoTeam], status: string }} Demo */
+/** One side of the card: the big number, plus a small suffix when the sport has one (cricket wickets, "/5").
+ *  `context` is the one line under the board: the chase in cricket, the set count in volleyball, the
+ *  half-time score in football. Every value is read from the sport's engine.
+ *  @typedef {{ name: string, score: string, suffix?: string }} DemoTeam
+ *  @typedef {{ sportId: string, colours: [string, string], teams: [DemoTeam, DemoTeam], context: string }} Demo */
 
 /** The sports the landing can show: the registered ones, in focus order. */
 export const DEMO_SPORT_IDS = getSportsList().map((sport) => sport.id);
@@ -56,13 +59,18 @@ function timedEvents(...sides) {
 
 const colourPair = (name) => PRESETS[name];
 
+/** Join the parts of a context line, skipping any the engine did not report. */
+const line = (...parts) => parts.filter(Boolean).join(' · ');
+
+const POINT_STATE_LABELS = { setPoint: 'set point', matchPoint: 'match point' };
+
 // ---- sets sports: volleyball, badminton, table tennis ------------------------------------
 
 function setsDemo(sportId, { names, bestOf, sets, current, colours }) {
   const sport = getSportById(sportId);
   const unit = sport.config.setLabel || 'Set';
-  const teams = [...sets.flatMap(([a, b]) => rallies(a, b)), ...rallies(...current)];
-  const state = volleyballState(pointEvents(teams), {
+  const letters = [...sets.flatMap(([a, b]) => rallies(a, b)), ...rallies(...current)];
+  const state = volleyballState(pointEvents(letters), {
     pointsPerSet: sport.config.pointsPerSet,
     deciderPoints: sport.config.deciderPoints,
     winBy: sport.config.winBy,
@@ -71,10 +79,14 @@ function setsDemo(sportId, { names, bestOf, sets, current, colours }) {
   return {
     sportId,
     colours,
-    status: `${unit} ${state.currentSet} of ${bestOf}`,
+    context: line(
+      `${unit} ${state.currentSet} of ${bestOf}`,
+      `${unit.toLowerCase()}s ${state.setsA}-${state.setsB}`,
+      POINT_STATE_LABELS[state.pointState],
+    ),
     teams: [
-      { name: names[0], score: String(state.pointsA), meta: `${unit}s won ${state.setsA}` },
-      { name: names[1], score: String(state.pointsB), meta: `${unit}s won ${state.setsB}` },
+      { name: names[0], score: String(state.pointsA) },
+      { name: names[1], score: String(state.pointsB) },
     ],
   };
 }
@@ -96,31 +108,40 @@ function tennisDemo() {
     'A', 'A', 'B', // the game in play: A 30, B 15
   ];
   const state = tennisState(pointEvents(points), TENNIS_PRESETS.standard);
-  const games = (side) => [...state.sets.map((set) => set[side]), state.currentSet[side === 'a' ? 'gamesA' : 'gamesB']].join(' · ');
+  let callout;
+  if (state.isMatchPoint) callout = 'match point';
+  else if (state.isSetPoint) callout = 'set point';
+  else if (state.isBreakPoint) callout = 'break point';
   return {
     sportId: 'tennis',
     colours: colourPair('Sky v Navy'),
-    status: `Set ${state.sets.length + 1} · best of 3`,
+    context: line(`Set ${state.sets.length + 1} · games ${state.currentSet.gamesA}-${state.currentSet.gamesB}`, callout),
     teams: [
-      { name: 'Player 1', score: state.currentGame.labelA, meta: games('a') },
-      { name: 'Player 2', score: state.currentGame.labelB, meta: games('b') },
+      { name: 'Player 1', score: state.currentGame.labelA },
+      { name: 'Player 2', score: state.currentGame.labelB },
     ],
   };
 }
 
 // ---- goals sports: football, basketball, hockey -------------------------------------------
 
-function goalsDemo(sportId, { names, totals, values, spacing, periods, status, colours }) {
+// `context` gets the last goal, the period in play and the half-time score ("HT 1-0", from the
+// engine's line score, once play is past the half) and returns the one line under the board.
+function goalsDemo(sportId, { names, totals, values, spacing, periods, context, colours }) {
   const events = timedEvents(
     sideScores('A', totals[0], values[0], spacing[0]),
     sideScores('B', totals[1], values[1], spacing[1]),
   );
   const state = goalsState(events, { periods });
   const last = state.timeline.at(-1);
+  const periodIndex = last?.periodIndex ?? 0;
+  const halfCount = periods.length / 2;
+  const firstHalf = (side) => state.lineScore.periods.slice(0, halfCount).reduce((sum, period) => sum + period[side], 0);
+  const halfTime = periodIndex >= halfCount ? `HT ${firstHalf('a')}-${firstHalf('b')}` : undefined;
   return {
     sportId,
     colours,
-    status: status({ last, period: periods[last?.periodIndex ?? 0] }),
+    context: context({ last, period: periods[periodIndex], halfTime }),
     teams: [
       { name: names[0], score: String(state.totalA) },
       { name: names[1], score: String(state.totalB) },
@@ -148,38 +169,48 @@ function kabaddiDemo() {
   return {
     sportId: 'kabaddi',
     colours,
-    status: `Half ${state.half} · raid ${state.raidNumber}`,
+    context: line(`Half ${state.half}`, `${state.teams[state.nextRaidTeam].name} raid next`),
     teams: [
-      { name: a.name, score: String(teamTotal(a)), meta: `${state.mat[0].length} on the mat` },
-      { name: b.name, score: String(teamTotal(b)), meta: `${state.mat[1].length} on the mat` },
+      { name: a.name, score: String(teamTotal(a)) },
+      { name: b.name, score: String(teamTotal(b)) },
     ],
   };
 }
 
 // ---- cricket ------------------------------------------------------------------------------
 
-// Runs off the bat per ball for India's innings so far; `W` is a wicket (bowled).
-const CRICKET_BALLS = [1, 0, 4, 2, 0, 1, 'W', 1, 1, 6, 0, 2, 4, 1, 0, 1, 'W', 2, 1, 0, 4, 1, 1, 0, 6, 2, 0, 1, 4, 1, 0, 2, 1];
+// Runs off the bat per ball; `W` is a wicket (bowled). India's first innings is a full 20 overs
+// (24 balls repeated five times); Australia's reply is 33 balls in, from the same script as before.
+const INDIA_BALLS = Array.from({ length: 5 }, () => [
+  1, 0, 4, 2, 1, 0, 1, 1, 6, 0, 2, 1, 0, 4, 1, 1, 0, 2, 1, 'W', 1, 2, 0, 4,
+]).flat();
+const AUSTRALIA_BALLS = [1, 0, 4, 2, 0, 1, 'W', 1, 1, 6, 0, 2, 4, 1, 0, 1, 'W', 2, 1, 0, 4, 1, 1, 0, 6, 2, 0, 1, 4, 1, 0, 2, 1];
 
-function cricketDemo() {
-  const format = makeFormat({ name: 'T20', oversPerInnings: 20 });
+function playInnings(balls, format, overrides) {
   let incoming = 3;
-  const innings = CRICKET_BALLS.reduce((current, ball) => {
+  return balls.reduce((current, ball) => {
     const wicket = ball === 'W';
     const delivery = makeDelivery(wicket
       ? { wicket: { type: 'bowled', out: current.striker, completedRuns: 0, incoming: `p${incoming}` } }
       : { batsmanRuns: ball });
     if (wicket) incoming += 1;
     return applyDelivery(current, delivery, format);
-  }, createInnings({ battingTeam: 'A', bowlingTeam: 'B' }));
-  const totals = deriveInnings(innings, format);
+  }, createInnings(overrides));
+}
+
+function cricketDemo() {
+  const format = makeFormat({ name: 'T20', oversPerInnings: 20 });
+  const first = deriveInnings(playInnings(INDIA_BALLS, format, { battingTeam: 'A', bowlingTeam: 'B' }), format);
+  const reply = playInnings(AUSTRALIA_BALLS, format, { battingTeam: 'B', bowlingTeam: 'A', target: first.runs + 1 });
+  const second = deriveInnings(reply, format);
+  const chase = deriveChase(reply, format);
   return {
     sportId: 'cricket',
     colours: colourPair('Red v Blue'),
-    status: `T20 · ${totals.overs} of ${format.oversPerInnings} overs`,
+    context: `Australia need ${chase.runsNeeded} off ${chase.ballsLeft} balls`,
     teams: [
-      { name: 'India', score: `${totals.runs}/${totals.wkts}`, meta: `${totals.overs} overs` },
-      { name: 'Australia', score: '–', meta: 'To bat' },
+      { name: 'India', score: String(first.runs), suffix: `/${first.wkts}` },
+      { name: 'Australia', score: String(second.runs), suffix: `/${second.wkts}` },
     ],
   };
 }
@@ -201,7 +232,7 @@ const BUILDERS = {
     values: [[1], [1]],
     spacing: [1900, 3000],
     periods: [{ label: '1st half', durationSec: 2700 }, { label: '2nd half', durationSec: 2700 }],
-    status: ({ last, period }) => `${last?.minute ?? 0}' · ${period?.label ?? ''}`,
+    context: ({ last, halfTime }) => line(`${last?.minute ?? 0}'`, halfTime),
     colours: colourPair('Sky v Navy'),
   }),
   basketball: () => goalsDemo('basketball', {
@@ -210,7 +241,7 @@ const BUILDERS = {
     values: [[2, 3, 2, 2, 1], [2, 2, 3, 2, 1]],
     spacing: [42, 44],
     periods: ['Q1', 'Q2', 'Q3', 'Q4'].map((label) => ({ label, durationSec: 600 })),
-    status: ({ period }) => `${period?.label ?? 'Q1'} of 4`,
+    context: ({ period, halfTime }) => line(`${period?.label ?? 'Q1'} of 4`, halfTime),
     colours: colourPair('Yellow v White'),
   }),
   tennis: tennisDemo,
@@ -224,7 +255,7 @@ const BUILDERS = {
     spacing: [900, 1100],
     // Field hockey (registry): four 15-minute quarters.
     periods: ['Q1', 'Q2', 'Q3', 'Q4'].map((label) => ({ label, durationSec: 900 })),
-    status: ({ last, period }) => `${period?.label ?? 'Q1'} of 4 · ${last?.minute ?? 0}'`,
+    context: ({ period, halfTime }) => line(`${period?.label ?? 'Q1'} of 4`, halfTime),
     colours: colourPair('Red v Maroon'),
   }),
 };
