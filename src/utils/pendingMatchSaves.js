@@ -1,7 +1,7 @@
 import { loadQuickMatch, saveQuickMatch, loadSportTournaments, saveSportTournament } from './storage';
 import { ConvexError } from 'convex/values';
 import { tournamentCompletionId } from './tournamentSync';
-import { loadPendingSaveFallback, storePendingSaveFallback } from './pendingMatchSaveStore';
+import { fallbackCompletionMatches, loadPendingSaveFallback, matchSaveFingerprint, storePendingSaveFallback } from './pendingMatchSaveStore';
 
 export { tournamentCompletionId } from './tournamentSync';
 
@@ -17,6 +17,7 @@ const revisions = new Map();
 const dirtyRecords = new Set();
 const keyFor = (ownerId, clientMatchId) => `${PREFIX}${encodeURIComponent(ownerId)}:${encodeURIComponent(clientMatchId)}`;
 const notify = () => globalThis.dispatchEvent(new Event(PENDING_SAVES_CHANGED));
+const cacheFallback = (record, previous) => record.payload ? record : { ...record, payload: previous?.payload || { clientMatchId: record.clientMatchId } };
 
 export async function hydratePendingMatchSaves(ownerId) {
   if (!ownerId || !globalThis.indexedDB) return;
@@ -25,12 +26,16 @@ export async function hydratePendingMatchSaves(ownerId) {
   const beforeRead = new Map(revisions);
   let changed = false;
   try {
-    for (const record of await loadPendingSaveFallback(ownerId)) {
+    for (const stored of await loadPendingSaveFallback(ownerId)) {
+      let record = cacheFallback(stored);
       if (record?.ownerId !== ownerId || !record.payload?.clientMatchId) continue;
       const key = keyFor(ownerId, record.payload.clientMatchId);
       if (beforeRead.get(key) !== revisions.get(key)) continue;
+      const previous = volatileRecords.get(key);
+      const matches = record.state === 'synced' && fallbackCompletionMatches(previous, stored);
       // Failed writes leave newer session state that a successful read cannot replace.
-      if (dirtyRecords.has(key) && !(record.state === 'synced' && sameCompletion(volatileRecords.get(key), record))) continue;
+      if (dirtyRecords.has(key) && !matches) continue;
+      if (matches) record = cacheFallback(stored, previous);
       dirtyRecords.delete(key);
       changed ||= JSON.stringify(volatileRecords.get(key)) !== JSON.stringify(record);
       volatileRecords.set(key, record);
@@ -46,7 +51,7 @@ function persistFallback(key, record) {
   const settled = pending.then((stored) => {
     if (volatileRecords.get(key) !== record) return;
     dirtyRecords.delete(key);
-    volatileRecords.set(key, stored);
+    volatileRecords.set(key, cacheFallback(stored, record));
     if (stored.state === 'synced') confirmed.set(key, stored.completionId);
     notify();
   }).catch(() => {
@@ -118,6 +123,10 @@ export function pendingMatchSaves(ownerId, includeSynced = false) {
 
 export function pruneSyncedMatchSaves(ownerId) {
   for (const record of pendingMatchSaves(ownerId, true)) {
+    if (record.storageBackend === 'indexedDB' && record.state === 'synced') {
+      if (!record.payloadFingerprint && !pendingWrites.has(keyFor(ownerId, record.payload.clientMatchId))) write(record);
+      continue;
+    }
     if (!localSaveConfirmed(record)) continue;
     const key = keyFor(ownerId, record.payload.clientMatchId);
     try { localStorage.removeItem(key); } catch { /* The synced marker still prevents sending; retry cleanup on the next drain. */ }
@@ -152,7 +161,7 @@ function write(record) {
   return record;
 }
 
-export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch) {
+export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch, quickCompletion) {
   const key = keyFor(ownerId, payload.clientMatchId);
   const local = loadMatchSaveLocal({ quickMatchId, tournamentMatch });
   const completionId = tournamentMatch ? tournamentCompletionId(local) : undefined;
@@ -166,6 +175,7 @@ export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch
   confirmed.delete(key);
   // A replacement waits behind any in-flight send; its old outcome cannot overwrite this record.
   const record = write({ ownerId, payload, quickMatchId, tournamentMatch, completionId,
+    ...(quickCompletion ? { quickCompletionFingerprint: matchSaveFingerprint(JSON.parse(tournamentCompletionId(quickCompletion))) } : {}),
     state: priorCompletionSaved ? 'failed' : 'pending', terminal: priorCompletionSaved,
     priorCompletionSaved, attempts: 0, nextAttemptAt: 0 });
   updateLocalMatch(record, record.state);
