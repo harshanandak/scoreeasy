@@ -6,7 +6,7 @@ import { sportIdentityVars } from '../../../lib/sportIdentity';
 import { ICON_BY_SPORT_ID } from '../landing/sportIcons';
 import './kit.css';
 
-/** The app mark: the hand-drawn volleyball from the app icon (PR #178), in ink, stroke 2.0. */
+/** The app mark: the volleyball sport icon, in ink. */
 export function BrandMark({ size = 28 }) {
   const Ball = ICON_BY_SPORT_ID.volleyball;
   return (
@@ -167,8 +167,8 @@ SportTile.propTypes = {
 };
 
 /**
- * A list-row / history badge: the sport's identity gradient with its hand-drawn doodle (the
- * originals from sportIcons.jsx, stroke 2 on 32) in the on-colour. Unknown sports get a neutral well.
+ * A list-row / history badge: the sport's identity gradient with its sport icon (from
+ * sportIcons.jsx; strokeWidth={2} keeps the stroke-drawn ones at their designed widths) in the on-colour. Unknown sports get a neutral well.
  */
 export function SportBadge({ sportId }) {
   const Doodle = Object.prototype.hasOwnProperty.call(ICON_BY_SPORT_ID, sportId) ? ICON_BY_SPORT_ID[sportId] : null;
