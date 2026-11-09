@@ -56,17 +56,63 @@ describe('landing demo', () => {
     expect(demo.status).toMatch(/^Q[1-4] of 4 · \d+'$/);
   });
 
-  it('reads cricket runs, wickets and overs from the innings engine', () => {
+  it("reads cricket as a chase: India's full 20 overs, Australia 5.3 overs in, from the innings engine", () => {
     const demo = buildDemo('cricket');
-    expect(demo.teams[0].score).toMatch(/^\d+\/2$/);
-    expect(demo.teams[0].meta).toBe('5.3 overs');
-    expect(demo.teams[1].meta).toBe('To bat');
+    expect(demo.teams[0].score).toMatch(/^\d+\/\d+$/);
+    expect(demo.teams[0].meta).toBe('20 overs');
+    expect(demo.teams[1].score).toMatch(/^\d+\/2$/);
+    expect(demo.teams[1].meta).toBe('5.3 overs');
+    expect(demo.live).toBe(1);
+    expect(demo.liveLabel).toBe('Batting');
+    // The chase line comes from deriveChase: the target is India's total + 1 and 120 - 33 balls are left.
+    const [indiaRuns] = demo.teams[0].score.split('/').map(Number);
+    const [australiaRuns] = demo.teams[1].score.split('/').map(Number);
+    expect(demo.foot).toContain(`need ${indiaRuns + 1 - australiaRuns} off 87 balls`);
+  });
+
+  it('gives every side the same cells as there are columns', () => {
+    for (const id of DEMO_SPORT_IDS) {
+      const demo = buildDemo(id);
+      if (demo.kind === 'cricket') continue;
+      for (const team of demo.teams) expect(team.cells).toHaveLength(demo.columns.length);
+    }
+  });
+
+  it('shows the finished sets with their winner, and the server the engine reports', () => {
+    const volleyball = buildDemo('volleyball');
+    expect(volleyball.columns).toEqual(['S1', 'S2']);
+    expect(volleyball.teams[0].cells).toEqual([{ value: '25', won: true }, { value: '23', won: false }]);
+    expect(volleyball.teams[1].cells).toEqual([{ value: '21', won: false }, { value: '25', won: true }]);
+    expect(volleyball.live).toBe(0);
+    expect(buildDemo('badminton').columns).toEqual(['G1']);
+    expect(buildDemo('badminton').live).toBe(0);
+    expect(buildDemo('tabletennis').live).toBeUndefined();
+
+    const tennis = buildDemo('tennis');
+    expect(tennis.columns).toEqual(['S1', 'S2']);
+    expect(tennis.teams[0].cells).toEqual([{ value: '6', won: true }, { value: '3', current: true }]);
+    expect(tennis.live).toBeDefined();
+  });
+
+  it('breaks goal sports into the line score up to the period in play', () => {
+    const basketball = buildDemo('basketball');
+    expect(basketball.columns).toEqual(['Q1', 'Q2', 'Q3']);
+    for (const team of basketball.teams) {
+      expect(team.cells.reduce((sum, cell) => sum + Number(cell.value), 0)).toBe(Number(team.score));
+    }
+    expect(buildDemo('football').columns).toEqual(['1H', '2H']);
   });
 
   it('totals kabaddi from the raid engine, with both sides on the mat', () => {
     const demo = buildDemo('kabaddi');
     expect(demo.teams.every((team) => Number.isInteger(Number(team.score)))).toBe(true);
     expect(demo.status).toMatch(/^Half 1 · raid 12$/);
+    // The category cells add up to the total, and each side shows one pip per player.
+    for (const team of demo.teams) {
+      expect(team.cells.reduce((sum, cell) => sum + Number(cell.value), 0)).toBe(Number(team.score));
+      expect(team.pips.total).toBe(7);
+    }
+    expect([0, 1]).toContain(demo.live);
   });
 
   it('rejects a sport with no demo', () => {

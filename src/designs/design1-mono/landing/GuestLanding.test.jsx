@@ -41,7 +41,7 @@ function setViewport(width, mobile = false) {
   });
 }
 
-const chipFor = (name) => within(screen.getByRole('group', { name: 'Pick a sport' })).getByRole('button', { name });
+const pickFor = (name) => within(screen.getByRole('group', { name: 'Pick a sport' })).getByRole('button', { name });
 const startLinks = (name) => screen.getAllByRole('link', { name });
 
 describe('GuestLanding', () => {
@@ -69,26 +69,27 @@ describe('GuestLanding', () => {
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
   });
 
-  it('shows a chip for every registered sport', () => {
+  it('shows a picker tile for every registered sport, three across with no scrolling row', () => {
     renderLanding();
 
     for (const sport of getSportsList()) {
-      expect(chipFor(sport.name)).toBeInTheDocument();
+      expect(pickFor(sport.name)).toBeInTheDocument();
     }
     expect(getSportsList()).toHaveLength(9);
+    expect(within(screen.getByRole('group', { name: 'Pick a sport' })).getAllByRole('button')).toHaveLength(9);
   });
 
   it('keeps the chip, the example card and every Start button on the same sport', () => {
     renderLanding();
 
-    expect(chipFor('Cricket')).toHaveAttribute('aria-pressed', 'true');
+    expect(pickFor('Cricket')).toHaveAttribute('aria-pressed', 'true');
     expect(within(screen.getByTestId('landing-example')).getByText('Cricket')).toBeInTheDocument();
     expect(startLinks('Start Cricket')).toHaveLength(2);
 
-    fireEvent.click(chipFor('Badminton'));
+    fireEvent.click(pickFor('Badminton'));
 
-    expect(chipFor('Badminton')).toHaveAttribute('aria-pressed', 'true');
-    expect(chipFor('Cricket')).toHaveAttribute('aria-pressed', 'false');
+    expect(pickFor('Badminton')).toHaveAttribute('aria-pressed', 'true');
+    expect(pickFor('Cricket')).toHaveAttribute('aria-pressed', 'false');
     expect(within(screen.getByTestId('landing-example')).getByText('Badminton')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Start Cricket' })).not.toBeInTheDocument();
     for (const link of startLinks('Start Badminton')) {
@@ -103,10 +104,51 @@ describe('GuestLanding', () => {
     expect(within(card).getByText('India')).toBeInTheDocument();
     expect(within(card).getByText(/^\d+\/\d+$/)).toBeInTheDocument();
 
-    fireEvent.click(chipFor('Volleyball'));
+    fireEvent.click(pickFor('Volleyball'));
     expect(within(card).getByText('Eagles')).toBeInTheDocument();
     expect(within(card).getByText('18')).toBeInTheDocument();
     expect(within(card).getByText('Set 3 of 5')).toBeInTheDocument();
+  });
+
+  it('lays out a scorecard for each sport from what that sport keeps', () => {
+    renderLanding();
+    const card = screen.getByTestId('landing-example');
+
+    // Cricket: both innings with runs, wickets and overs, who is batting, and the chase.
+    expect(card).toHaveAttribute('data-kind', 'cricket');
+    expect(within(card).getByText('20 overs')).toBeInTheDocument();
+    expect(within(card).getByText('5.3 overs')).toBeInTheDocument();
+    expect(within(card).getByText('Batting')).toBeInTheDocument();
+    expect(within(card).getByText(/^Australia need d+ off 87 balls · required rate d+.d{2}$/)).toBeInTheDocument();
+
+    // Set sports: the finished sets as a grid, the set in play as the big number, and the server.
+    fireEvent.click(pickFor('Volleyball'));
+    expect(card).toHaveAttribute('data-kind', 'sets');
+    expect(within(card).getByText('S1')).toBeInTheDocument();
+    expect(within(card).getByText('S2')).toBeInTheDocument();
+    expect(within(card).getByText('Serving')).toBeInTheDocument();
+
+    // Table tennis has no serve line: its serve alternates every two points and the engine is not fed it.
+    fireEvent.click(pickFor('Table Tennis'));
+    expect(within(card).queryByText('Serving')).not.toBeInTheDocument();
+
+    fireEvent.click(pickFor('Tennis'));
+    expect(card).toHaveAttribute('data-kind', 'tennis');
+    expect(within(card).getByText('Serving')).toBeInTheDocument();
+    expect(within(card).getByText('30')).toBeInTheDocument();
+
+    // Goal sports: the period line score up to the period in play.
+    fireEvent.click(pickFor('Basketball'));
+    expect(card).toHaveAttribute('data-kind', 'goals');
+    expect(['Q1', 'Q2', 'Q3'].map((period) => within(card).getByText(period))).toHaveLength(3);
+    expect(within(card).queryByText('Q4')).not.toBeInTheDocument();
+
+    // Kabaddi: points by category, one pip per player, who raids next.
+    fireEvent.click(pickFor('Kabaddi'));
+    expect(card).toHaveAttribute('data-kind', 'kabaddi');
+    expect(within(card).getAllByText('Touch')).toHaveLength(2);
+    expect(within(card).getByText('Raids next')).toBeInTheDocument();
+    expect(card.querySelectorAll('.kit-score-pips i')).toHaveLength(14);
   });
 
   it('explains the product below the app: four numbered sections in the original voice', () => {
