@@ -146,3 +146,15 @@ it.each(['acknowledge', 'reject'])('handles a same-account signout/signin with a
   expect(h.save).toHaveBeenCalledTimes(outcome === 'acknowledge' ? 1 : 2);
   for (const [args] of h.save.mock.calls) expect(args.expectedOwnerId).toBe('same-A');
 });
+
+it('waits for the cloud account identity before submitting a new live creation or restore', async () => {
+  h.create.mockResolvedValue({ matchId: 'unbound', token: 'UNBOUND' });
+  const hook = renderHook(() => useLiveBroadcast(), { wrapper: ({ children }) => (
+    <AuthContext.Provider value={{ ...auth('A'), authMode: 'cloud', clerkUser: null }}>{children}</AuthContext.Provider>
+  ) });
+  await act(async () => { await hook.result.current.goLive({ clientMatchId: 'loading-account', sport: 'football', scorecardKind: 'goals', teamA: { name: 'A' }, teamB: { name: 'B' }, snapshot }); });
+  await act(async () => { await hook.result.current.restore({ clientMatchId: 'loading-account' }); });
+  expect(h.create).not.toHaveBeenCalled();
+  expect(h.query).not.toHaveBeenCalled();
+  expect(loadSession('loading-account')).toBeNull();
+});

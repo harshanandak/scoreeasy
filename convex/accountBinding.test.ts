@@ -93,3 +93,20 @@ test("expected-owner binding does not replace authentication or live-match owner
   await expect(t.mutation(api.live.finalize, args)).rejects.toThrow(/authenticated/i);
   await expect(b.mutation(api.live.finalize, args)).rejects.toMatchObject({ data: { code: "not_authorized" } });
 });
+
+test("a switched account without a bootstrapped user still rejects the originating Clerk subject as owner_mismatch", async () => {
+  const { t, b, ids } = await setup();
+  await t.run(ctx => ctx.db.delete("users", ids.b));
+  const args = { ...saved, expectedOwnerId: "A" };
+  await expect(b.mutation(api.matches.save, args)).rejects.toMatchObject({ data: { code: "owner_mismatch" } });
+  expect((await data(t)).matches).toEqual([]);
+});
+
+test("recovery lookup cannot resolve the switched account's same-named live session", async () => {
+  const { a, b } = await setup();
+  const original = await a.mutation(api.live.create, live);
+  await b.mutation(api.live.create, live);
+  const args = { clientMatchId: live.clientMatchId, expectedOwnerId: "A" };
+  await expect(b.query(api.live.getOwnedSession, args)).rejects.toMatchObject({ data: { code: "owner_mismatch" } });
+  expect(await a.query(api.live.getOwnedSession, args)).toMatchObject({ matchId: original.matchId });
+});
