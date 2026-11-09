@@ -3,7 +3,7 @@ import { listDataKeys, loadData } from './storage';
 import { QUICK_MATCH_DRAFT_PREFIX, migrateQuickMatchDraft } from './quickMatchDrafts';
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 import { getTournamentMatches, isTournamentMatchCompleted } from './tournamentSync';
-import { inProgressTimestamp } from './inProgressMatch';
+import { inProgressProblem, inProgressTimestamp } from './inProgressMatch';
 import { isKabaddiMigrationBackup, migrateLegacyKabaddiBackups } from './kabaddiMigrationBackups';
 
 export const APP_ENTRY_RESOLVER_PATH = '/';
@@ -110,8 +110,12 @@ export function loadInProgressMatches(sports = getSportsList()) {
         !isTournamentMatchCompleted(match, sport.engine, match.format || tournament.format)
         && (match.draftState || match.status === 'in-progress'));
       const nameOf = (ref) => tournament.teams?.find(team => team.id === ref)?.name || tournament.teams?.[ref]?.name || String(ref || 'Team');
+      // A started fixture whose team cannot be found in its tournament has no board to open.
+      const hasTeam = (ref) => ref !== undefined && ref !== null
+        && Boolean(tournament.teams?.some(team => team.id === ref) || tournament.teams?.[ref]);
       if (started.length) return started.map(match => ({
         ...match, sport: sport.id, kind: 'tournament-match', tournamentId: tournament.id,
+        teamsMissing: !hasTeam(match.team1Id ?? match.team1) || !hasTeam(match.team2Id ?? match.team2),
         storageKey: sport.storageKey, tournamentName: tournament.name,
         team1Name: nameOf(match.team1Id ?? match.team1), team2Name: nameOf(match.team2Id ?? match.team2),
         entryPath: `/${sport.id}/tournament/${tournament.id}/match/${match.id}/score`,
@@ -120,7 +124,30 @@ export function loadInProgressMatches(sports = getSportsList()) {
     });
   });
   return [...new Map([...quickMatches, ...tournaments].map((match) => [match.entryPath, match])).values()]
+    .map((match) => ({ ...match, openProblem: inProgressProblem(match) || undefined }))
     .sort((a, b) => (inProgressTimestamp(b) || 0) - (inProgressTimestamp(a) || 0));
+}
+
+// The kept entry whose board lives at this URL, following the scorer's own restore rules (MonoQuickMatch):
+// a result URL and a setup opened with newMatch/teams state restore nothing; ?resume=<id> restores that
+// draft; the bare quick URL restores the newest quick draft of the sport. Anything else: null, so the
+// crash screen never offers to delete a match the board did not load.
+export function findKeptMatchForUrl(pathname, search = '', state = null) {
+  const params = new URLSearchParams(search);
+  const quick = /^\/([^/]+)\/quick\/?$/.exec(pathname);
+  if (quick && (params.has('result') || state?.newMatch === true || Array.isArray(state?.teams))) return null;
+  const resume = params.get('resume');
+  const matches = loadInProgressMatches();
+  const decode = (value) => { try { return decodeURI(value); } catch { return value; } };
+  const sameUrl = (entryPath) => {
+    const [entryPathname, entrySearch = ''] = entryPath.split('?');
+    return decode(entryPathname) === decode(pathname) && new URLSearchParams(entrySearch).get('resume') === resume;
+  };
+  const exact = matches.find(match => match.kind !== 'tournament' && sameUrl(match.entryPath));
+  if (exact || !quick || resume !== null) return exact || null;
+  // Already newest first.
+  return matches.find(match => match.kind === 'quick' && match.sport === quick[1]
+    && match.draftKey?.startsWith(QUICK_MATCH_DRAFT_PREFIX)) || null;
 }
 
 export function loadAppEntryState() {
@@ -139,7 +166,7 @@ export function loadAppEntryState() {
     const onlyMatch = inProgressMatches.length === 1 ? inProgressMatches[0] : null;
     // Preserve tournament-only entry at Home; only a lone quick match jumps
     // straight to scoring. Multiple entries always share Home's resume list.
-    const draftEntryPath = onlyMatch?.kind === 'quick' ? onlyMatch.entryPath : null;
+    const draftEntryPath = onlyMatch?.kind === 'quick' && !onlyMatch.openProblem ? onlyMatch.entryPath : null;
 
     return {
       draftEntryPath,

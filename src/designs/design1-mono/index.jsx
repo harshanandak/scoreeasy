@@ -15,6 +15,7 @@ import {
 } from '../../utils/appEntry';
 import { AuthUserButton } from '../../components/AuthButtons';
 import ErrorBoundary from '../../components/ErrorBoundary';
+import RouteErrorBoundary from './RouteErrorBoundary';
 import ChunkReloadReset from '../../components/ChunkReloadReset';
 import OfflineFallback from '../../components/OfflineFallback';
 import ConvexReconnectingFallback from '../../components/ConvexReconnectingFallback';
@@ -1738,7 +1739,7 @@ export default function Design1Mono() {
         <ScoringBoardContext.Provider value={registerBoard}>
         <ScoringCompletionContext.Provider value={completeProtectedScoring}>
         <Suspense fallback={<LazyFallback />}>
-          <ErrorBoundary>
+          <RouteErrorBoundary>
             <ChunkReloadReset />
             <OnboardingGuard>
               <Routes>
@@ -1799,7 +1800,7 @@ export default function Design1Mono() {
                 <Route path="*" element={<NotFoundRoute />} />
               </Routes>
             </OnboardingGuard>
-          </ErrorBoundary>
+          </RouteErrorBoundary>
         </Suspense>
         </ScoringCompletionContext.Provider>
         </ScoringBoardContext.Provider>

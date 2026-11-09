@@ -1,5 +1,7 @@
 import { clearData, deleteQuickMatch, loadData, saveData } from './storage';
 import { getSportById } from '../models/sportRegistry';
+import { getQuickMatchDraftKey } from './quickMatchDrafts';
+import { getTennisQuickDraftKey } from './tennisQuickMatch';
 
 export function inProgressTimestamp(match) {
   const times = [match.updatedAt, match.savedAt, match.draftState?.savedAt, match.createdAt, match.date, match.startedAt]
@@ -8,10 +10,15 @@ export function inProgressTimestamp(match) {
   return times.length ? Math.max(...times) : null;
 }
 
+// The match's name from its team names alone: never reads score data, so it works on a damaged entry.
+export function inProgressTitle(match) {
+  return match.kind === 'tournament' ? match.name || 'Tournament'
+    : `${match.team1Name || match.team1 || 'Team A'} v ${match.team2Name || match.team2 || 'Team B'}`;
+}
+
 export function inProgressSummary(match) {
   const state = match.draftState || match;
-  const title = match.kind === 'tournament' ? match.name || 'Tournament'
-    : `${match.team1Name || match.team1 || 'Team A'} v ${match.team2Name || match.team2 || 'Team B'}`;
+  const title = inProgressTitle(match);
   let score = '';
   let scoreParts = null;
   let detail = match.kind === 'tournament' ? 'Tournament' : 'Quick match';
@@ -46,6 +53,16 @@ export function inProgressSummary(match) {
   return { title, score, scoreParts, detail: match.tournamentName ? `${match.tournamentName} · ${detail === 'Quick match' ? 'Tournament match' : detail}` : detail, timestamp };
 }
 
+// Never throws: damaged score data gives a named entry with no score, so one bad entry cannot take down Home
+// or hide the Discard that would remove it.
+export function safeInProgressSummary(match) {
+  try {
+    return inProgressSummary(match);
+  } catch {
+    return { title: inProgressTitle(match), score: '', scoreParts: null, detail: "Can't open this match", timestamp: null };
+  }
+}
+
 export function deleteInProgressMatch(match) {
   if (match.draftKey) return clearData(match.draftKey);
   if (match.kind === 'quick') return deleteQuickMatch(match.id);
@@ -58,4 +75,41 @@ export function deleteInProgressMatch(match) {
   return saveData(match.storageKey, tournaments.map(tournament => String(tournament.id) !== String(match.tournamentId) ? tournament : {
     ...tournament, matches: tournament.matches?.map(reset), knockoutMatches: tournament.knockoutMatches?.map(reset),
   }));
+}
+
+/* Why a kept entry cannot open its board, or null when it can. Checked when the list is built, so Home
+   never offers a Resume that leads nowhere. A row that fails shows "Can't open this match" and Remove. */
+export function inProgressProblem(match) {
+  try {
+    inProgressSummary(match);
+  } catch {
+    return 'unreadable-score';
+  }
+  if (match.kind === 'tournament-match' && match.teamsMissing) return 'missing-teams';
+  if (match.kind === 'quick' && match.draftKey && match.sport === 'tennis') {
+    // The tennis scorer finds its draft by the id in the URL.
+    return match.draftKey === getTennisQuickDraftKey(match.entryPath.split('/').pop()) ? null : 'missing-draft';
+  }
+  if (match.kind === 'quick' && match.draftKey) {
+    // A resume link carries the draft's own id: it must reload the draft this entry came from.
+    const resume = new URLSearchParams(match.entryPath.split('?')[1] || '').get('resume');
+    if (resume !== null && getQuickMatchDraftKey(match.sport, resume) !== match.draftKey) return 'missing-draft';
+  }
+  return null;
+}
+
+/* One danger confirm for every discard path (Home Remove, crash-screen Discard). */
+export function discardMatchPrompt(match) {
+  const { title, score, scoreParts } = safeInProgressSummary(match);
+  const name = !score ? title : scoreParts ? score : `${title} (${score})`;
+  const tournament = match.kind === 'tournament-match';
+  return {
+    title: 'Discard match?',
+    message: tournament
+      ? `${name} will go back to not started. The rest of the tournament stays.`
+      : `${name} will be deleted from this device. This cannot be undone.`,
+    cancelLabel: 'Keep match',
+    confirmLabel: 'Discard',
+    tone: 'danger',
+  };
 }
