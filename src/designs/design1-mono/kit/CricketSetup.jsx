@@ -86,7 +86,7 @@ export function CricketRulesStep({ sportConfig, format, cricketPreset, onChange,
           </div>
         </div>}
         <KitNumberStepper label="Players per side" min={2} max={maxPlayers} value={players}
-          hint={`${format.lastManStands ? players : players - 1} wickets to bowl a team out`}
+          hint={(() => { const w = format.lastManStands ? players : players - 1; return `${w} ${w === 1 ? 'wicket' : 'wickets'} to bowl a team out`; })()}
           onChange={v => change({ ...format, players: Math.min(maxPlayers, Math.max(2, v)) })} />
         <RulesSegmentRow label="Match type" hint={format.solo ? 'One team bats, the other bowls' : 'Both teams bat and bowl'}
           value={format.solo ? 'solo' : (format.solo === false ? 'both' : null)}
