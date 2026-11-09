@@ -25,7 +25,7 @@ export function GoalsGameStep({ sport, format, onChange, onSourceChange = () => 
   const options = [
     { id: 'official', label: official.source, hint: `${official.count} × ${official.minutes} min · the scorer ends every period` },
     { id: 'custom', label: 'Custom school/event', hint: 'Set your own periods and minutes' },
-    { id: 'casual', label: 'Quick casual', hint: 'No fixed periods · play to a target, a timer, or free' },
+    { id: 'casual', label: 'Quick casual', hint: 'Play to a target, a timer, or free' },
   ];
   return <section className="kit-setup-field" aria-labelledby="goals-format-label">
     <h2 id="goals-format-label" className="kit-setup-label">What are you playing?</h2>
