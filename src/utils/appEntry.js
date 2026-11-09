@@ -128,9 +128,14 @@ export function loadInProgressMatches(sports = getSportsList()) {
     .sort((a, b) => (inProgressTimestamp(b) || 0) - (inProgressTimestamp(a) || 0));
 }
 
-// The kept entry whose board lives at this URL, if any. The crash screen uses it to offer Discard.
-export function findKeptMatchForUrl(pathname, search = '') {
+// The kept entry whose board lives at this URL, following the scorer's own restore rules (MonoQuickMatch):
+// a result URL and a setup opened with newMatch/teams state restore nothing; ?resume=<id> restores that
+// draft; the bare quick URL restores the newest quick draft of the sport. Anything else: null, so the
+// crash screen never offers to delete a match the board did not load.
+export function findKeptMatchForUrl(pathname, search = '', state = null) {
   const params = new URLSearchParams(search);
+  const quick = /^\/([^/]+)\/quick\/?$/.exec(pathname);
+  if (quick && (params.has('result') || state?.newMatch === true || Array.isArray(state?.teams))) return null;
   const resume = params.get('resume');
   const matches = loadInProgressMatches();
   const decode = (value) => { try { return decodeURI(value); } catch { return value; } };
@@ -139,12 +144,10 @@ export function findKeptMatchForUrl(pathname, search = '') {
     return decode(entryPathname) === decode(pathname) && new URLSearchParams(entrySearch).get('resume') === resume;
   };
   const exact = matches.find(match => match.kind !== 'tournament' && sameUrl(match.entryPath));
-  if (exact) return exact;
-  // The bare quick URL is the board of that sport's only kept quick match.
-  const bare = /^\/([^/]+)\/quick\/?$/.exec(pathname);
-  if (!bare || resume !== null) return null;
-  const sameSport = matches.filter(match => match.kind === 'quick' && match.draftKey && match.sport === bare[1]);
-  return sameSport.length === 1 ? sameSport[0] : null;
+  if (exact || !quick || resume !== null) return exact || null;
+  // Already newest first.
+  return matches.find(match => match.kind === 'quick' && match.sport === quick[1]
+    && match.draftKey?.startsWith(QUICK_MATCH_DRAFT_PREFIX)) || null;
 }
 
 export function loadAppEntryState() {

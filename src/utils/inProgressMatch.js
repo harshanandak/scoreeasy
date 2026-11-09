@@ -10,10 +10,15 @@ export function inProgressTimestamp(match) {
   return times.length ? Math.max(...times) : null;
 }
 
+// The match's name from its team names alone: never reads score data, so it works on a damaged entry.
+export function inProgressTitle(match) {
+  return match.kind === 'tournament' ? match.name || 'Tournament'
+    : `${match.team1Name || match.team1 || 'Team A'} v ${match.team2Name || match.team2 || 'Team B'}`;
+}
+
 export function inProgressSummary(match) {
   const state = match.draftState || match;
-  const title = match.kind === 'tournament' ? match.name || 'Tournament'
-    : `${match.team1Name || match.team1 || 'Team A'} v ${match.team2Name || match.team2 || 'Team B'}`;
+  const title = inProgressTitle(match);
   let score = '';
   let scoreParts = null;
   let detail = match.kind === 'tournament' ? 'Tournament' : 'Quick match';
@@ -48,6 +53,16 @@ export function inProgressSummary(match) {
   return { title, score, scoreParts, detail: match.tournamentName ? `${match.tournamentName} · ${detail === 'Quick match' ? 'Tournament match' : detail}` : detail, timestamp };
 }
 
+// Never throws: damaged score data gives a named entry with no score, so one bad entry cannot take down Home
+// or hide the Discard that would remove it.
+export function safeInProgressSummary(match) {
+  try {
+    return inProgressSummary(match);
+  } catch {
+    return { title: inProgressTitle(match), score: '', scoreParts: null, detail: "Can't open this match", timestamp: null };
+  }
+}
+
 export function deleteInProgressMatch(match) {
   if (match.draftKey) return clearData(match.draftKey);
   if (match.kind === 'quick') return deleteQuickMatch(match.id);
@@ -65,7 +80,11 @@ export function deleteInProgressMatch(match) {
 /* Why a kept entry cannot open its board, or null when it can. Checked when the list is built, so Home
    never offers a Resume that leads nowhere. A row that fails shows "Can't open this match" and Remove. */
 export function inProgressProblem(match) {
-  if (!getSportById(match.sport)) return 'unknown-sport';
+  try {
+    inProgressSummary(match);
+  } catch {
+    return 'unreadable-score';
+  }
   if (match.kind === 'tournament-match' && match.teamsMissing) return 'missing-teams';
   if (match.kind === 'quick' && match.draftKey && match.sport === 'tennis') {
     // The tennis scorer finds its draft by the id in the URL.
@@ -81,7 +100,7 @@ export function inProgressProblem(match) {
 
 /* One danger confirm for every discard path (Home Remove, crash-screen Discard). */
 export function discardMatchPrompt(match) {
-  const { title, score, scoreParts } = inProgressSummary(match);
+  const { title, score, scoreParts } = safeInProgressSummary(match);
   const name = !score ? title : scoreParts ? score : `${title} (${score})`;
   const tournament = match.kind === 'tournament-match';
   return {

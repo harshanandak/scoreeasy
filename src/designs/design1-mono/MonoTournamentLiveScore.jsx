@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { getSportById } from '../../models/sportRegistry';
 import { loadSportTournaments } from '../../utils/storage';
 import { migrateCricketFormat } from '../../utils/formatMigration';
-import ErrorBoundary from '../../components/ErrorBoundary';
+import RouteErrorBoundary from './RouteErrorBoundary';
 import MonoSetsLiveScore from './scoring/MonoSetsLiveScore';
 import MonoGoalsLiveScore from './scoring/MonoGoalsLiveScore';
 import MonoCricketLiveScore from './scoring/MonoCricketLiveScore';
@@ -62,11 +62,11 @@ export default function MonoTournamentLiveScore() {
   }
 
   return (
-    <ErrorBoundary
+    <RouteErrorBoundary
       title="Scoring screen crashed"
       message="This match scorer failed to render. Reload to recover your draft state."
     >
       {scorer}
-    </ErrorBoundary>
+    </RouteErrorBoundary>
   );
 }

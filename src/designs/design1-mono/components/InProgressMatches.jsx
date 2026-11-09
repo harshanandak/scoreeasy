@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { loadInProgressMatches } from '../../../utils/appEntry';
-import { deleteInProgressMatch, discardMatchPrompt, inProgressSummary } from '../../../utils/inProgressMatch';
+import { deleteInProgressMatch, discardMatchPrompt, safeInProgressSummary } from '../../../utils/inProgressMatch';
 import { getSportById } from '../../../models/sportRegistry';
 import { AppScoringConfirmDialog } from './AppScoringPrompt';
 import { KitSection, SportBadge } from '../kit/KitParts';
@@ -33,7 +33,7 @@ export default function InProgressMatches({ onChange = undefined }) {
     <KitSection id="in-progress-matches-title" title="In progress" />
     <div className="kit-list">
       {matches.map(match => {
-        const summary = inProgressSummary(match);
+        const summary = safeInProgressSummary(match);
         const sport = getSportById(match.sport)?.name || match.sport;
         const lastPlayed = summary.timestamp ? relativeDay(new Date(summary.timestamp).getTime()) : '';
         return <article className="kit-row kept-match" key={match.entryPath}>
