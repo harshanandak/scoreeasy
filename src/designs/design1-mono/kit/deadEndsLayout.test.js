@@ -54,10 +54,17 @@ describe('tournament breadcrumb hit areas', () => {
     expect(back).toMatch(/margin:\s*-12px 0 12px/);
   });
 
+  it('gives the Kit setup back button at least a 44 px target', () => {
+    // Tournament setup (Kit) uses se-ctl (min-height 48px or more) plus kit-setup-back for its width.
+    const back = rule(stripComments(read('kit/setup.css')), '.kit-setup-back');
+    const width = Number(back?.match(/width:\s*(\d+)px/)?.[1]);
+    expect(width).toBeGreaterThanOrEqual(44);
+  });
+
   it.each([
     ['MonoSetup.jsx', 'mono-hit'],
     ['MonoTournamentList.jsx', 'mono-hit'],
-    ['MonoTournamentSetup.jsx', 'mono-hit'],
+    ['MonoTournamentSetup.jsx', 'kit-setup-back'],
     ['GenericSetsTournament.jsx', 'mono-hit-back'],
     ['GenericGoalsTournament.jsx', 'mono-hit-back'],
     ['MonoCricketTournament.jsx', 'mono-hit-back'],

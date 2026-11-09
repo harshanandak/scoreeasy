@@ -604,6 +604,7 @@ export default function MonoTournamentSetup() {
     <div className="kit-screen kit-setup" data-screen="tournament-setup" style={sportVars}>
       <KitWash from={sportTint} to={sportTint} />
       <div className="kit-setup-top">
+        {/* Back */}
         <button
           type="button"
           className="se-ctl kit-setup-back"
