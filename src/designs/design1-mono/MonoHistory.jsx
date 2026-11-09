@@ -7,6 +7,7 @@ import { api } from '../../../convex/_generated/api';
 import { useAuth } from '../../hooks/useAuth';
 import { matchSaveOwner } from '../../hooks/usePendingMatchSaves';
 import { mergeAccountHistory } from '../../utils/accountHistory';
+import { MATCH_STORAGE_CHANGED } from '../../utils/accountStorage';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { useGameHistory } from '../../hooks/useGameHistory';
 import {
@@ -316,12 +317,18 @@ export function HistoryContent({ ownerId = null, userId = null, cloudMatches = [
   }, [historyStatus, undoOffered]);
 
   useEffect(() => {
+    const reload = () => {
     const loadedQuick = loadCompletedQuickMatches();
     loadedQuick.sort((a, b) => toTimestamp(b.completedAt || b.date || b.createdAt) - toTimestamp(a.completedAt || a.date || a.createdAt));
 
     setQuickMatches(loadedQuick);
     setTournamentEntries(buildTournamentEntries());
-  }, []);
+    refreshLegacyHistory();
+    };
+    reload();
+    window.addEventListener(MATCH_STORAGE_CHANGED, reload);
+    return () => window.removeEventListener(MATCH_STORAGE_CHANGED, reload);
+  }, [refreshLegacyHistory]);
 
   // The Stats panel mutates the SAME quick-match store (se_quickmatches) with its
   // own local copy, so re-read whenever the Matches tab is (re)entered — otherwise a

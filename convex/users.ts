@@ -248,10 +248,11 @@ export const completeOnboarding = authedMutation({
 });
 
 export const getCurrent = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { expectedOwnerId: v.optional(v.string()) },
+  handler: async (ctx, { expectedOwnerId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
+    if (expectedOwnerId && identity.subject !== expectedOwnerId) return null;
 
     const user = await getUserByTokenIdentifier(ctx, identity.tokenIdentifier);
     return toSafeCurrentUser(user);

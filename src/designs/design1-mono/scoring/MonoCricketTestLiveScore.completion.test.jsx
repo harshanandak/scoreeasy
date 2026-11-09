@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../../utils/accountStorage';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -20,7 +21,7 @@ const { default: MonoCricketTestLiveScore } = await import('./MonoCricketTestLiv
 const modes = ['test-tournament', 'test-quick'];
 const keyFor = (mode) => mode === 'test-quick' ? 'se_quickmatches' : 'se_cricket';
 const storedMatch = (mode) => {
-  const data = JSON.parse(localStorage.getItem(keyFor(mode)));
+  const data = JSON.parse(localStorage.getItem(matchStorageKey(keyFor(mode))));
   return mode === 'test-quick' ? data[0] : data[0].matches[0];
 };
 
@@ -29,7 +30,7 @@ function seed(mode, wickets = 0, amend = () => {}) {
   const match = mode === 'test-quick' ? data.se_quickmatches[0] : data.se_cricket[0].matches[0];
   match.draftState.innings[3].wickets = wickets;
   amend(match);
-  Object.entries(data).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+  Object.entries(data).forEach(([key, value]) => localStorage.setItem(matchStorageKey(key), JSON.stringify(value)));
 }
 
 function rejectResultWrites(mode) {

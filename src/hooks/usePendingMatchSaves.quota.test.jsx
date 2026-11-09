@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from '../utils/accountStorage';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { IDBFactory } from 'fake-indexeddb';
@@ -21,8 +22,8 @@ function mount() {
 beforeEach(() => {
   owner = `quota-status-${++sequence}`;
   vi.stubGlobal('indexedDB', new IDBFactory());
-  localStorage.clear();
-  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...payload, id: 'status-match', status: 'completed' }]));
+  localStorage.clear(); setMatchStorageScope(owner);
+  localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ ...payload, id: 'status-match', status: 'completed' }]));
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
   save.mockReset().mockResolvedValue('server-id');
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError'); });

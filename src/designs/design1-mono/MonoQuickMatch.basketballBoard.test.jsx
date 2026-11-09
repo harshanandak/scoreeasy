@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { act } from 'react';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
@@ -23,7 +24,7 @@ const add = (name, value) => {
   fireEvent.click(screen.getByRole('button', { name: `Add +${value} for ${name}` }));
 };
 function seed(extra = {}) {
-  localStorage.setItem(key, JSON.stringify({
+  localStorage.setItem(matchStorageKey(key), JSON.stringify({
     phase: 'scoring', sport: 'basketball', team1Name: 'Hoops', team2Name: 'Dunkers',
     team1Color: '#111111', team2Color: '#facc15', quickMatchId: 3101,
     format: { mode: 'timed', timeLimit: 2400 }, timerElapsed: 12,
@@ -43,7 +44,7 @@ describe('Basketball on the shared goals board', () => {
     expect(board().style.getPropertyValue('--team-a-core')).toBe(colours.A.core);
     expect(board().style.getPropertyValue('--team-b-core')).toBe(colours.B.core);
     expect(board().style.getPropertyValue('--sport-mark')).toContain('data:image/svg+xml');
-    expect(screen.getByText('40 min match · No draws')).toBeInTheDocument();
+    expect(screen.getByText('40 min match Â· No draws')).toBeInTheDocument();
     for (const name of ['Hoops', 'Dunkers']) {
       const team = screen.getByRole('group', { name: `Score for ${name}` });
       expect(within(team).getAllByRole('button')).toHaveLength(3);
@@ -61,11 +62,11 @@ describe('Basketball on the shared goals board', () => {
     for (const [name, initial] of [['Hoops', 52], ['Dunkers', 49]]) {
       add(name, value);
       expect(score(name)).toHaveTextContent(String(initial + value));
-      const totals = name === 'Hoops' ? `${52 + value}–49` : `52–${49 + value}`;
-      expect(screen.getByLabelText('Last action')).toHaveTextContent(`${name} +${value} · ${totals}`);
+      const totals = name === 'Hoops' ? `${52 + value}â€“49` : `52â€“${49 + value}`;
+      expect(screen.getByLabelText('Last action')).toHaveTextContent(`${name} +${value} Â· ${totals}`);
       expect(score(name)).toHaveClass('tgb-moment');
       expect(document.querySelectorAll('.tgb-moment')).toHaveLength(1);
-      expect(undo()).toHaveTextContent('back to 52–49');
+      expect(undo()).toHaveTextContent('back to 52â€“49');
       fireEvent.click(undo());
       expect(score(name)).toHaveTextContent(String(initial));
       expect(document.querySelector('.tgb-moment')).toBeNull();
@@ -88,13 +89,13 @@ describe('Basketball on the shared goals board', () => {
   it('restores the real saved +3 draft, then corrects and undoes through both history entries', () => {
     const mounted = render(<MonoQuickMatch />);
     add('Hoops', 3);
-    expect(JSON.parse(localStorage.getItem(key))).toMatchObject({
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(key)))).toMatchObject({
       gScore1: 55, gScore2: 49, gScoreHistory: [{ team: 1, value: 3 }],
       team1Color: '#111111', team2Color: '#facc15',
     });
     mounted.unmount(); render(<MonoQuickMatch />);
     expect(score('Hoops')).toHaveTextContent('55');
-    expect(screen.getByLabelText('Last action')).toHaveTextContent('Hoops +3 · 55–49');
+    expect(screen.getByLabelText('Last action')).toHaveTextContent('Hoops +3 Â· 55â€“49');
     fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
     fireEvent.click(screen.getByRole('button', { name: 'Swap sides' }));
     expect([...board().querySelectorAll('.tgb-team')].map(e => e.dataset.team)).toEqual(['b', 'a']);
@@ -102,17 +103,17 @@ describe('Basketball on the shared goals board', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Subtract one from Hoops' }));
     expect(score('Hoops')).toHaveTextContent('54');
     expect(document.querySelector('.tgb-moment')).toBeNull();
-    expect(undo()).toHaveTextContent('back to 49–55');
+    expect(undo()).toHaveTextContent('back to 49â€“55');
     fireEvent.click(undo()); expect(score('Hoops')).toHaveTextContent('55');
     fireEvent.click(undo()); expect(score('Hoops')).toHaveTextContent('52');
-    expect(JSON.parse(localStorage.getItem(key)).gScoreHistory).toEqual([]);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(key))).gScoreHistory).toEqual([]);
   });
 
   it('walks +3, other-team +2 and Undo in order', () => {
     render(<MonoQuickMatch />);
     add('Hoops', 3); add('Dunkers', 2);
-    expect(screen.getByLabelText('Last action')).toHaveTextContent('Dunkers +2 · 55–51');
-    expect(undo()).toHaveTextContent('back to 55–49');
+    expect(screen.getByLabelText('Last action')).toHaveTextContent('Dunkers +2 Â· 55â€“51');
+    expect(undo()).toHaveTextContent('back to 55â€“49');
     fireEvent.click(undo()); expect(score('Dunkers')).toHaveTextContent('49');
     fireEvent.click(undo()); expect(score('Hoops')).toHaveTextContent('52');
   });
@@ -131,7 +132,7 @@ describe('Basketball on the shared goals board', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     await act(async () => fireEvent.click(screen.getByRole('button', { name: 'End match' })));
     expect(screen.getByTestId('winner-card')).toHaveTextContent('Hoops');
-    expect(localStorage.getItem(key)).toBeNull();
+    expect(localStorage.getItem(matchStorageKey(key))).toBeNull();
   });
 
   it('truthfully leaves a level time-up score open for a decider and reopens it on Undo', () => {
@@ -164,14 +165,14 @@ describe('Basketball on the shared goals board', () => {
   });
 
   it('carries quick-setup colours into the board and stored draft', () => {
-    localStorage.removeItem(key); render(<MonoQuickMatch />);
+    localStorage.removeItem(matchStorageKey(key)); render(<MonoQuickMatch />);
     fireEvent.click(within(screen.getByRole('group', { name: 'Team A colour' })).getByRole('button', { name: 'Black' }));
     fireEvent.click(within(screen.getByRole('group', { name: 'Team B colour' })).getByRole('button', { name: 'Yellow' }));
     fireEvent.change(screen.getByLabelText('Team A name'), { target: { value: 'Hoops' } });
     fireEvent.change(screen.getByLabelText('Team B name'), { target: { value: 'Dunkers' } });
     fireEvent.click(screen.getByRole('button', { name: 'Start basketball' }));
-    const savedKey = Object.keys(localStorage).find(storedKey => storedKey.startsWith('se_quickmatch_draft_basketball_'));
-    const saved = JSON.parse(localStorage.getItem(savedKey));
+    const savedKey = Object.keys(localStorage).find(storedKey => storedKey.startsWith(matchStorageKey('se_quickmatch_draft_basketball_')));
+    const saved = JSON.parse(localStorage.getItem(matchStorageKey(savedKey)));
     expect(saved.quickMatchId).toBeDefined();
     const colours = deriveTeamColours(saved.team1Color, saved.team2Color);
     expect(board().style.getPropertyValue('--team-a-core')).toBe(colours.A.core);

@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../../utils/accountStorage';
 import { confirmEarlyFinish } from '../../../test/confirmEarlyFinish';
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { useState } from 'react';
@@ -20,7 +21,7 @@ const { default: MonoCricketTestLiveScore } = await import('./MonoCricketTestLiv
 
 const keyFor = kind => kind === 'test-quick' ? 'se_quickmatches' : 'se_cricket';
 const stored = kind => {
-  const data = JSON.parse(localStorage.getItem(keyFor(kind)));
+  const data = JSON.parse(localStorage.getItem(matchStorageKey(keyFor(kind))));
   return kind === 'test-quick' ? data[0] : data[0].matches[0];
 };
 function seed(kind, amend = () => {}) {
@@ -30,7 +31,7 @@ function seed(kind, amend = () => {}) {
     match.draftState.innings1 = applyDelivery(createInnings({ striker: 'A1', nonStriker: 'A2', bowler: 'B1' }), makeDelivery({ batsmanRuns: 1 }), makeFormat(match.format));
   }
   amend(kind === 'test-quick' ? data.se_quickmatches[0] : data.se_cricket[0].matches[0]);
-  Object.entries(data).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+  Object.entries(data).forEach(([key, value]) => localStorage.setItem(matchStorageKey(key), JSON.stringify(value)));
 }
 function mount(kind, complete = vi.fn()) {
   const quick = kind === 'test-quick';
@@ -106,10 +107,10 @@ describe('cricket persistence transactions', () => {
     expect(cleared.resultType).toBeUndefined();
     expect(cleared.completedAt).toBeUndefined();
     overview.unmount();
-    const tournament = JSON.parse(localStorage.getItem('se_cricket'))[0];
+    const tournament = JSON.parse(localStorage.getItem(matchStorageKey('se_cricket')))[0];
     const replay = cricketFinishSeed('guided').se_cricket[0].matches[0];
     tournament.matches[0] = { ...cleared, status: 'in-progress', team1Score: replay.team1Score, draftState: replay.draftState };
-    localStorage.setItem('se_cricket', JSON.stringify([tournament]));
+    localStorage.setItem(matchStorageKey('se_cricket'), JSON.stringify([tournament]));
     mount('guided');
     fireEvent.click(screen.getByRole('button', { name: 'Four' }));
     expect(stored('guided')).toMatchObject({ resultType: 'decided', winner: 'B', status: 'completed' });
@@ -215,7 +216,7 @@ describe('cricket persistence transactions', () => {
     delete match.team1Score;
     match.format.oversPerInnings = 1;
     match.draftState = { phase: 'setup1' };
-    localStorage.setItem('se_cricket', JSON.stringify(data.se_cricket));
+    localStorage.setItem(matchStorageKey('se_cricket'), JSON.stringify(data.se_cricket));
     const complete = vi.fn();
     const first = mount('guided', complete);
     const lineup = (a, b, bowler) => {

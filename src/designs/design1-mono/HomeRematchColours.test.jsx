@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -62,7 +63,7 @@ describe('Home Rematch keeps the saved team colours', () => {
   afterEach(() => globalThis.localStorage.clear());
 
   it('finishes yellow v green, then Rematch sets up and starts yellow v green', async () => {
-    globalThis.localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify({
       sport: 'volleyball', phase: 'scoring', team1Name: 'Royals', team2Name: 'Strikers',
       team1Color: YELLOW, team2Color: GREEN, format: { type: 'best-of', sets: 3, target: 25, winBy: 2 },
       sets: [{ score1: 0, score2: 0, completed: false }], currentSet: 0, updatedAt: new Date().toISOString(),
@@ -77,7 +78,7 @@ describe('Home Rematch keeps the saved team colours', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     fireEvent.click(within(screen.getByRole('dialog', { name: 'End match?' })).getByRole('button', { name: 'End match' }));
     await waitFor(() => {
-      const saved = JSON.parse(globalThis.localStorage.getItem('se_quickmatches') || '[]');
+      const saved = JSON.parse(globalThis.localStorage.getItem(matchStorageKey('se_quickmatches')) || '[]');
       expect(saved[0]).toMatchObject({ team1: 'Royals', team2: 'Strikers', team1Color: YELLOW, team2Color: GREEN });
     });
     scorer.unmount();
@@ -106,7 +107,7 @@ describe('Home Rematch keeps the saved team colours', () => {
   });
 
   it('keeps the default pair for an older record saved without colours', async () => {
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([{
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{
       id: 'old-1', sport: 'volleyball', team1: 'Royals', team2: 'Strikers', score1: 2, score2: 0, winner: 'Royals',
       status: 'completed', date: new Date().toISOString(),
     }]));

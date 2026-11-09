@@ -30,7 +30,7 @@ export default function CloudAuthProvider({ children }) {
   const storeRetryTimerRef = useRef(null);
   const convexUser = useQuery(
     api.users.getCurrent,
-    isAuthenticated ? {} : 'skip',
+    isAuthenticated && clerkUser?.id ? { expectedOwnerId: clerkUser.id } : 'skip',
   );
   const clerkSyncFingerprint = getClerkSyncFingerprint(
     isAuthenticated,

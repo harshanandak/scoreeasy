@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from '../utils/accountStorage';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AuthContext } from '../auth/AuthContext';
@@ -14,7 +15,8 @@ function Worker() { usePendingMatchSaves(); return null; }
 const wrapper = ({ children }) => <AuthContext.Provider value={auth}><Worker />{children}</AuthContext.Provider>;
 beforeEach(() => {
   localStorage.clear();
-  localStorage.setItem('se_football', JSON.stringify([tournament]));
+  setMatchStorageScope(`hook-owner-${sequence + 1}`);
+  localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([tournament]));
   auth = { isAuthenticated: true, user: { _id: `hook-owner-${++sequence}` } };
   save.mockReset();
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
@@ -51,6 +53,8 @@ it('recovers an offline result after remount and foreground', async () => {
 
 it('queues during account bootstrap and sends only when that owner is ready', async () => {
   auth = { isAuthenticated: true, clerkUser: { id: `clerk-${sequence}` }, user: null };
+  setMatchStorageScope(auth.clerkUser.id);
+  localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([tournament]));
   save.mockResolvedValue('server-id');
   const { result, rerender } = renderHook(() => useTournamentMatchSync({ sport: 'football', matchId: 1 }), { wrapper });
   await act(async () => { result.current(tournament); });

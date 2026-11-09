@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from '../../utils/accountStorage';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -15,7 +16,7 @@ function Harness() {
   const sync = useMatchSync({ ...auth, sport: 'football', team1Players: [], team2Players: [] });
   return <><button onClick={() => sync.syncMatch(match)}>Save cloud</button><MonoHistory /></>;
 }
-beforeEach(() => { localStorage.clear(); localStorage.setItem('se_quickmatches', JSON.stringify([match])); save.mockReset(); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
+beforeEach(() => { localStorage.clear(); setMatchStorageScope('owner'); localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([match])); save.mockReset(); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
 afterEach(cleanup);
 
 it('shows a failed-save badge in History and clears it after Retry succeeds', async () => {
@@ -42,7 +43,7 @@ it('shows Waiting for connection while offline and saves on reconnect', async ()
 });
 
 it('shows confirmed account status on Finish and hides every cloud status for guests', () => {
-  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...match, clientMatchId: 'quick:football:m1', syncOwnerId: 'owner', sync: { status: 'synced' } }]));
+  localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ ...match, clientMatchId: 'quick:football:m1', syncOwnerId: 'owner', sync: { status: 'synced' } }]));
   const { rerender } = render(<AuthContext.Provider value={auth}><MatchSyncStatus clientMatchId="quick:football:m1" quickMatchId="m1" /></AuthContext.Provider>);
   expect(screen.getByText('Saved to your account')).toBeInTheDocument();
   rerender(<AuthContext.Provider value={{ isAuthenticated: false }}><MatchSyncStatus clientMatchId="quick:football:m1" quickMatchId="m1" /></AuthContext.Provider>);

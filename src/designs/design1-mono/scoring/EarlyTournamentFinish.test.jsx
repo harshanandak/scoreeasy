@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../../utils/accountStorage';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -33,7 +34,7 @@ it.each(cases)('tournament %s: cancelling Finish keeps scoring, confirming recor
       draftState: { scoringStarted: true, score1: 2, score2: 1, sets: [set], currentSet: 0, history: [], innings: 1, battingTeam: 1,
         scores: { team1: { runs: 13, wickets: 1, balls: 6 }, team2: { runs: 0, wickets: 0, balls: 0 } } } }],
   };
-  localStorage.setItem(`se_${sport}`, JSON.stringify([tournament]));
+  localStorage.setItem(matchStorageKey(`se_${sport}`), JSON.stringify([tournament]));
   render(<MemoryRouter initialEntries={[`/${sport}/tournament/100/match/m1/score`]}><Routes>
     <Route path="/:sport/tournament/:id/match/:matchId/score" element={<Scorer />} />
     <Route path="/:sport/tournament/:id" element={<h1>Saved</h1>} />
@@ -57,7 +58,7 @@ it.each(['test-tournament', 'test-quick', 'guided'])('%s abandons an undecided f
   } else {
     seed.se_cricket[0].matches[0].draftState.phase = 'innings1';
   }
-  for (const [key, value] of Object.entries(seed)) localStorage.setItem(key, JSON.stringify(value));
+  for (const [key, value] of Object.entries(seed)) localStorage.setItem(matchStorageKey(key), JSON.stringify(value));
   const quick = kind === 'test-quick';
   const Scorer = kind === 'guided' ? GuidedScorer : TestScorer;
   const path = quick ? '/cricket/quick/test-match/300' : '/cricket/tournament/100/match/m1/score';

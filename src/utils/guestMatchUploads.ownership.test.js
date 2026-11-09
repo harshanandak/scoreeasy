@@ -14,6 +14,11 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 it.each([false, true])('never claims X unmarked result after its IndexedDB queue survives a failed marker write (ownerMismatch: %s)', async ownerMismatch => {
+  const scope = await import('./accountStorage');
+  localStorage.removeItem('se_quickmatches');
+  scope.setMatchStorageScope('X');
+  const { saveQuickMatch } = await import('./storage');
+  saveQuickMatch(match);
   const queue = await import('./pendingMatchSaves');
   const blocked = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError'); });
   queue.enqueueMatchSave('X', payload, match.id);
@@ -22,15 +27,19 @@ it.each([false, true])('never claims X unmarked result after its IndexedDB queue
   const store = await import('./pendingMatchSaveStore');
   const [record] = await store.loadPendingSaveFallback('X');
   expect(record).toMatchObject({ ownerId: 'X', payload: { clientMatchId: payload.clientMatchId } });
-  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].syncOwnerId).toBeUndefined();
+  expect(JSON.parse(localStorage.getItem(scope.matchStorageKey('se_quickmatches', 'X')))[0].syncOwnerId).toBeUndefined();
   expect(localStorage.getItem(key)).toBeNull();
   if (ownerMismatch) await store.storePendingSaveFallback(key, { ...record, ownerMismatch: true });
   vi.resetModules();
+  const nextScope = await import('./accountStorage');
+  nextScope.setMatchStorageScope('Y');
   const { claimGuestMatchSaves } = await import('./guestMatchUploads');
   const refreshed = await import('./pendingMatchSaves');
   expect(await claimGuestMatchSaves('Y')).toEqual([]);
   expect(refreshed.pendingMatchSaves('Y')).toEqual([]);
-  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].syncOwnerId).toBeUndefined();
+  expect(localStorage.getItem(nextScope.matchStorageKey('se_quickmatches'))).toBeNull();
+  nextScope.setMatchStorageScope(null);
+  expect((await import('./storage')).loadQuickMatches()).toEqual([]);
   await refreshed.hydratePendingMatchSaves('X');
   expect(refreshed.pendingMatchSaves('X')).toHaveLength(1);
 });
@@ -51,7 +60,9 @@ it('keeps distinct idless tournament results intact and never queues the shared 
   const { pendingMatchSaves } = await import('./pendingMatchSaves');
   expect(await claimGuestMatchSaves('X')).toEqual([]);
   expect(pendingMatchSaves('X')).toEqual([]);
-  expect(JSON.parse(localStorage.getItem('se_football'))[0].matches).toEqual(fixtures);
+  const { setMatchStorageScope, matchStorageKey } = await import('./accountStorage');
+  setMatchStorageScope('X');
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_football')))[0].matches).toEqual(fixtures);
   expect(unuploadedGuestTournamentResults()).toEqual(['Legacy cup result 1', 'Legacy cup result 2']);
 });
 
@@ -65,7 +76,7 @@ it.each([false, true])('interleaved X and Y claims queue exactly one account (We
   const original = Storage.prototype.setItem;
   let second;
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (storageKey, value) {
-    if (storageKey === 'se_quickmatches') throw new DOMException('Full', 'QuotaExceededError');
+    
     if (storageKey === `se_guest_match_claim:${encodeURIComponent(payload.clientMatchId)}` && JSON.parse(value).ownerId === 'X' && !second) {
       second = Promise.resolve(claimGuestMatchSaves('Y'));
     }

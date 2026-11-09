@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from '../../../utils/accountStorage';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -28,7 +29,7 @@ let auth;
 let sequence = 0;
 beforeEach(() => {
   localStorage.clear();
-  auth = { isAuthenticated: true, user: { _id: `tournament-owner-${++sequence}` } };
+  auth = { isAuthenticated: true, user: { _id: `tournament-owner-${++sequence}` } }; setMatchStorageScope(auth.user._id);
   save.mockReset();
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
 });
@@ -45,7 +46,7 @@ function mount(sport = 'football', Scorer = GoalsScorer, kind) {
   };
   const seed = sport === 'cricket' ? cricketFinishSeed(kind || 'aggregate') : { [`se_${sport}`]: [tournament] };
   const Fixtures = sport === 'cricket' ? MonoCricketTournament : ['volleyball', 'tennis'].includes(sport) ? GenericSetsTournament : GenericGoalsTournament;
-  Object.entries(seed).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+  Object.entries(seed).forEach(([key, value]) => localStorage.setItem(matchStorageKey(key), JSON.stringify(value)));
   render(<AuthContext.Provider value={auth}><MemoryRouter initialEntries={[`/${sport}/tournament/100/match/m1/score`]}>
     <Worker /><Routes>
       <Route path="/:sport/tournament/:id/match/:matchId/score" element={<Scorer />} />
@@ -70,7 +71,7 @@ it.each([
   await waitFor(() => expect(pendingMatchSaves(auth.user._id)[0]).toMatchObject({
     state: 'failed', payload: { clientMatchId: `tournament:${sport}:100:m1` },
   }));
-  expect(JSON.parse(localStorage.getItem(`se_${sport}`))[0].matches[0].status).toBe('completed');
+  expect(JSON.parse(localStorage.getItem(matchStorageKey(`se_${sport}`)))[0].matches[0].status).toBe('completed');
   expect(await screen.findByText("Couldn't save")).toBeInTheDocument();
 });
 
@@ -83,7 +84,7 @@ it('fixture badge clears after reconnect retries the same result id and persists
   await waitFor(() => expect(pendingMatchSaves(auth.user._id)).toEqual([]));
   expect(save.mock.calls.map(([payload]) => payload.clientMatchId)).toEqual(['tournament:football:100:m1', 'tournament:football:100:m1']);
   expect(screen.queryByText("Couldn't save")).not.toBeInTheDocument();
-  expect(JSON.parse(localStorage.getItem('se_football'))[0].matches[0]).toMatchObject({ syncOwnerId: auth.user._id, sync: { status: 'synced' } });
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_football')))[0].matches[0]).toMatchObject({ syncOwnerId: auth.user._id, sync: { status: 'synced' } });
 });
 
 it('permanent rejection stays terminal across foreground, and manual Retry reuses its id', async () => {
@@ -102,7 +103,7 @@ it('permanent rejection stays terminal across foreground, and manual Retry reuse
 it('guest tournament results stay local with no cloud status or queue entry', async () => {
   auth = { isAuthenticated: false };
   mount(); await finish();
-  await waitFor(() => expect(JSON.parse(localStorage.getItem('se_football'))[0].matches[0].status).toBe('completed'));
+  await waitFor(() => expect(JSON.parse(localStorage.getItem(matchStorageKey('se_football')))[0].matches[0].status).toBe('completed'));
   expect(save).not.toHaveBeenCalled();
   expect(screen.queryByText(/Couldn't save|Waiting for connection|Saved to your account/)).not.toBeInTheDocument();
   expect(Object.keys(localStorage).filter(key => key.startsWith('se_pending_match:'))).toEqual([]);
@@ -111,7 +112,7 @@ it('guest tournament results stay local with no cloud status or queue entry', as
 it('a late acknowledgement shows the replay as local only, never as saved', async () => {
   const tournamentMatch = { storageKey: 'se_football', tournamentId: 100, matchId: 'm1' };
   const payload = { sport: 'football', team1: 'Alpha', team2: 'Beta', score1: 2, score2: 1, date: 1, clientMatchId: 'tournament:football:100:m1' };
-  const storeResult = (score1, score2, completedAt) => localStorage.setItem('se_football', JSON.stringify([{ id: 100, matches: [{ id: 'm1', status: 'completed', score1, score2, completedAt }] }]));
+  const storeResult = (score1, score2, completedAt) => localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([{ id: 100, matches: [{ id: 'm1', status: 'completed', score1, score2, completedAt }] }]));
   storeResult(2, 1, 1);
   const original = enqueueMatchSave(auth.user._id, payload, undefined, tournamentMatch);
   let acknowledge;
@@ -129,7 +130,7 @@ it('a late acknowledgement shows the replay as local only, never as saved', asyn
 it('warns explicitly that a storage-full pending result is session-only and lost on refresh', () => {
   const tournamentMatch = { storageKey: 'se_football', tournamentId: 100, matchId: 'm1' };
   const payload = { sport: 'football', team1: 'Alpha', team2: 'Beta', score1: 2, score2: 1, date: 1, clientMatchId: 'tournament:football:100:m1' };
-  localStorage.setItem('se_football', JSON.stringify([{ id: 100, matches: [{ id: 'm1', status: 'completed', score1: 2, score2: 1 }] }]));
+  localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([{ id: 100, matches: [{ id: 'm1', status: 'completed', score1: 2, score2: 1 }] }]));
   const write = Storage.prototype.setItem;
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
     if (key.startsWith('se_pending_match:')) throw new DOMException('Full', 'QuotaExceededError');

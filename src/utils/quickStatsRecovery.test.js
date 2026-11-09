@@ -1,3 +1,4 @@
+import { matchStorageKey } from './accountStorage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadData, loadQuickMatches, saveQuickMatch, saveQuickMatches } from './storage';
 import { loadQuickStatsRecoveries, loadQuickStatsRecovery, removeQuickStats, restoreQuickStats } from './quickStatsRecovery';
@@ -40,7 +41,7 @@ describe('durable quick stats recovery', () => {
     const firstRecovery = loadQuickStatsRecovery();
     const setItem = Storage.prototype.setItem;
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (key === 'se_quickmatches') throw new DOMException('quota', 'QuotaExceededError');
+      if (key === matchStorageKey('se_quickmatches')) throw new DOMException('quota', 'QuotaExceededError');
       return setItem.call(this, key, value);
     });
     expect(removeQuickStats([originals[0]], 'delete')).toBeNull();
@@ -76,11 +77,11 @@ describe('durable quick stats recovery', () => {
     const setItem = Storage.prototype.setItem;
     let matchWriteFailed = false;
     const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (key === 'se_quickmatches') {
+      if (key === matchStorageKey('se_quickmatches')) {
         matchWriteFailed = true;
         throw new Error('match write failed');
       }
-      if (key === 'se_stats_pending_undo' && matchWriteFailed) throw new Error('rollback failed');
+      if (key === matchStorageKey('se_stats_pending_undo') && matchWriteFailed) throw new Error('rollback failed');
       return setItem.call(this, key, value);
     });
     expect(removeQuickStats([originals[0]], 'delete')).toBeNull();
@@ -116,7 +117,7 @@ describe('durable quick stats recovery', () => {
     saveQuickMatch(completed('sixth'));
     const setItem = Storage.prototype.setItem;
     const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (key === 'se_quickmatches') throw new Error('sixth match write failed');
+      if (key === matchStorageKey('se_quickmatches')) throw new Error('sixth match write failed');
       return setItem.call(this, key, value);
     });
     expect(removeQuickStats([completed('sixth')], 'delete')).toBeNull();
