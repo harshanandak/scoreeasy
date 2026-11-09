@@ -42,16 +42,18 @@ export async function acquireGuestClaim(claim) {
       open.onsuccess = () => {
         const db = open.result;
         if (blocked) { db.close(); return; }
-        const tx = db.transaction('owners', 'readwrite');
-        const store = tx.objectStore('owners');
-        const read = store.get(claim.clientMatchId);
-        let granted = false;
-        read.onsuccess = () => {
-          granted = !read.result || read.result.ownerId === claim.ownerId;
-          if (!read.result) store.add({ ownerId: claim.ownerId }, claim.clientMatchId);
-        };
-        tx.oncomplete = () => { db.close(); resolve(granted); };
-        tx.onabort = () => { db.close(); reject(tx.error); };
+        try {
+          const tx = db.transaction('owners', 'readwrite');
+          const store = tx.objectStore('owners');
+          const read = store.get(claim.clientMatchId);
+          let granted = false;
+          read.onsuccess = () => {
+            granted = !read.result || read.result.ownerId === claim.ownerId;
+            if (!read.result) store.add({ ownerId: claim.ownerId }, claim.clientMatchId);
+          };
+          tx.oncomplete = () => { db.close(); resolve(granted); };
+          tx.onabort = () => { db.close(); reject(tx.error); };
+        } catch (error) { db.close(); reject(error); }
       };
     });
     if (!acquired) return false;
