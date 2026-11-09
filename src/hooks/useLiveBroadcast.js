@@ -77,7 +77,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     const cmid = clientMatchIdRef.current;
     if (!cmid) return;
     const prior = loadSession(cmid);
-    saveSession(cmid, { ...prior, matchId: matchIdRef.current ?? prior?.matchId, token: tokenRef.current ?? prior?.token, seq: Math.max(seq, prior?.seq ?? 0), ...sharing });
+    saveSession(cmid, { ...prior, isShared: prior?.isShared === true, matchId: matchIdRef.current ?? prior?.matchId, token: tokenRef.current ?? prior?.token, seq: Math.max(seq, prior?.seq ?? 0), ...sharing });
   }, []);
 
   const restore = useCallback(async ({ clientMatchId: baseId }) => {
@@ -113,7 +113,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       setToken(tokenRef.current);
       setIsLive(Boolean(session?.isShared));
       setIsShared(Boolean(session?.isShared));
-      if (session) persistSeq(seqRef.current, { isShared: session.isShared });
+      if (session) persistSeq(seqRef.current, { isShared: session.isShared === true });
       return session;
     } catch (e) {
       if (generation === generationRef.current) setError(e instanceof Error ? e : new Error(String(e)));
@@ -234,10 +234,11 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     }
     saveSession(clientMatchId, {
       ...prior,
+      isShared: true,
       matchId: matchIdRef.current ?? prior?.matchId,
       token: tokenRef.current ?? prior?.token,
       seq: seqRef.current,
-      finalizeIntent: { ...(resultType ? { resultType } : {}) },
+      finalizeIntent: { ...(resultType ? { resultType } : {}), shared: true },
     });
     // Root recovery owns a finish even if this scorer leaves before restore resolves.
     if (!matchIdRef.current) return null;
