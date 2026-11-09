@@ -506,12 +506,15 @@ export function undo(state) {
   assertState(state);
   check(state.phase !== 'finished', 'reopen the finished match before undo');
   check(!state.activeRaid, 'cancel the pending draft before undo');
-  const undone = new Set(state.events.filter((entry) => entry.type === 'undo').map((entry) => entry.targetId));
-  const absorbed = new Set(state.events.flatMap((entry) => entry.absorbedAdminIds ?? []));
-  const target = [...state.events].reverse().find((entry) => !['undo', 'reopen'].includes(entry.type) && !undone.has(entry.id) && !absorbed.has(entry.id));
+  const target = latestUndoTarget(state);
   check(target, 'no action to undo');
   check(target.before.half === state.half || target.action === 'startHalf', 'undo the startHalf action to reopen the previous half first');
   const after = { ...clone(target.before), events: state.events, revision: state.revision };
+  // Pause's before snapshot is still running; review freezes at the recorded pause boundary.
+  if (target.type === 'admin' && target.action === 'pause') {
+    after.clock = frozenClock(after, target.after.clock?.anchorMonotonicMs ?? 0);
+    if (after.activeRaid?.raidClock) after.activeRaid.raidClock = frozenClock(after, target.after.activeRaid.raidClock.anchorMonotonicMs, 'raid');
+  }
   after.resumePhase = after.phase === 'paused' ? after.resumePhase : after.phase;
   after.phase = 'paused';
   if (after.clock) { after.clock.running = false; after.clock.persistedWallAnchor = null; }
@@ -522,7 +525,7 @@ export function undo(state) {
   return append(state, after, { id: `undo-${state.revision + 1}`, type: 'undo', targetId: target.id });
 }
 
-function latestUndoTarget(state) {
+export function latestUndoTarget(state) {
   const undone = new Set(state.events.filter(entry => entry.type === 'undo').map(entry => entry.targetId));
   const absorbed = new Set(state.events.flatMap(entry => entry.absorbedAdminIds ?? []));
   return [...state.events].reverse().find(entry => !['undo', 'reopen'].includes(entry.type) && !undone.has(entry.id) && !absorbed.has(entry.id));
