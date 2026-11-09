@@ -17,7 +17,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useConvex, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { enqueue, size } from '../lib/live/outbox';
-import { beginLivePublication, flushLiveSession, resolvePendingLiveFinish } from '../lib/live/recovery';
+import { beginLivePublication, flushLiveSession, PUBLICATION_RESOLUTION_WINDOW_MS, resolvePendingLiveFinish } from '../lib/live/recovery';
 import { loadSession, saveSession, liveClientMatchId } from '../lib/live/liveSession';
 
 /**
@@ -61,8 +61,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     setFailure(value ? { error: value, source: 'operation' } : null);
   }, []);
 
-  const flush = useCallback(async () => {
-    const clientMatchId = clientMatchIdRef.current;
+  const flush = useCallback(async (clientMatchId = clientMatchIdRef.current) => {
     const result = await flushLiveSession(clientMatchId, { scorePoint: scorePointM, undo: undoM, finalize: finalizeM,
       getOwnedSession: clientMatchId => convex.query(api.live.getOwnedSession, { clientMatchId }) });
     if (clientMatchId === clientMatchIdRef.current) {
@@ -150,7 +149,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       }
 
       const completePublication = beginLivePublication(clientMatchId);
-      let published = false;
+      let publishedSession = null;
       try {
         const res = await createM({
           clientMatchId,
@@ -174,12 +173,13 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         if (!snapshot) throw new Error('Sharing requires the current score snapshot');
         if (generation !== generationRef.current) return null;
         await setVisibilityM({ matchId: res.matchId, visibility: opts.visibility ?? 'public', snapshot, ...(snapshot.kabaddi ? { kabaddiHistory: opts.getKabaddiHistory ? opts.getKabaddiHistory() : opts.kabaddiHistory ?? [] } : {}) });
+        publishedSession = { matchId: res.matchId, token: res.token, isShared: opts.visibility !== 'private' };
+        const originalSession = loadSession(clientMatchId);
+        if (originalSession) saveSession(clientMatchId, { ...originalSession, ...publishedSession });
         if (generation !== generationRef.current) return null;
         setIsLive(opts.visibility !== 'private');
         setIsShared(opts.visibility !== 'private');
         setError(null);
-        persistSeq(seqRef.current, { isShared: opts.visibility !== 'private' });
-        published = true;
         return res;
       } catch (e) {
         // Additive: a failed go-live must never break local scoring.
@@ -187,8 +187,12 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         return null;
       } finally {
         publishingRef.current = false;
-        completePublication(published ? loadSession(clientMatchId) : null);
-        await flush();
+        try {
+          completePublication(publishedSession);
+          await flush(clientMatchId);
+        } catch (e) {
+          if (clientMatchId === clientMatchIdRef.current) setError(e instanceof Error ? e : new Error(String(e)));
+        }
       }
     },
     [enabled, createM, setVisibilityM, flush, persistSeq],
@@ -230,9 +234,11 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     const prior = loadSession(clientMatchId);
     if (clientMatchId && publishingRef.current && !prior?.broadcastError) {
       if (snapshot && !prior?.pendingFinish && !prior?.finalizeIntent) {
+        const at = Date.now();
         saveSession(clientMatchId, { ...prior, isShared: prior?.isShared === true,
           pendingFinish: { snapshot, ...(resultType ? { resultType } : {}),
-            at: Date.now(), clientEventId: `${clientMatchId}:finalize:${crypto.randomUUID()}` } });
+            at, publicationDeadline: at + PUBLICATION_RESOLUTION_WINDOW_MS,
+            clientEventId: `${clientMatchId}:finalize:${crypto.randomUUID()}` } });
       }
       return null;
     }

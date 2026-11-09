@@ -54,7 +54,7 @@ export function sessionKey(clientMatchId) {
 /**
  * Load the persisted broadcast session for a local match, or null.
  * @param {string} clientMatchId
- * @returns {{ matchId?: string, token?: string, seq?: number, pendingFinish?: { snapshot: object, resultType?: 'decided'|'abandoned', at: number, clientEventId: string }, finalizeIntent?: { resultType?: 'decided'|'abandoned', shared: true } }|null}
+ * @returns {{ matchId?: string, token?: string, seq?: number, pendingFinish?: { snapshot: object, resultType?: 'decided'|'abandoned', at: number, publicationDeadline?: number, clientEventId: string }, finalizeIntent?: { resultType?: 'decided'|'abandoned', shared: true } }|null}
  */
 export function loadSession(clientMatchId) {
   if (!clientMatchId) return null;
@@ -65,7 +65,7 @@ export function loadSession(clientMatchId) {
 /**
  * Persist (replace) the broadcast session for a local match.
  * @param {string} clientMatchId
- * @param {{ matchId?: string|null, token?: string|null, seq?: number, pendingFinish?: { snapshot: object, resultType?: 'decided'|'abandoned', at: number, clientEventId: string }, finalizeIntent?: { resultType?: 'decided'|'abandoned', shared: true } }} session
+ * @param {{ matchId?: string|null, token?: string|null, seq?: number, pendingFinish?: { snapshot: object, resultType?: 'decided'|'abandoned', at: number, publicationDeadline?: number, clientEventId: string }, finalizeIntent?: { resultType?: 'decided'|'abandoned', shared: true } }} session
  * @returns {boolean} success
  */
 export function saveSession(clientMatchId, session) {

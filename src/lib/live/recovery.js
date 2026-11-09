@@ -4,17 +4,19 @@ import { loadSession, saveSession } from './liveSession';
 // Both optimistic scorer sends and root recovery share this per-session lock.
 const inFlight = new Map();
 const publications = new Set();
+// Give a submitted publication time to settle after reload without unbounded retention.
+export const PUBLICATION_RESOLUTION_WINDOW_MS = 2 * 60 * 1000;
 
 // A live request owns resolution; after reload only the owned-session query can.
 export function beginLivePublication(clientMatchId) {
   publications.add(clientMatchId);
   return (sharedSession = null) => {
     publications.delete(clientMatchId);
-    resolvePendingLiveFinish(clientMatchId, sharedSession);
+    resolvePendingLiveFinish(clientMatchId, sharedSession, { publicationComplete: true });
   };
 }
 
-export function resolvePendingLiveFinish(clientMatchId, sharedSession) {
+export function resolvePendingLiveFinish(clientMatchId, sharedSession, { publicationComplete = false } = {}) {
   const latest = loadSession(clientMatchId);
   if (!latest?.pendingFinish || publications.has(clientMatchId)) return false;
   const { pendingFinish, ...session } = latest;
@@ -28,6 +30,8 @@ export function resolvePendingLiveFinish(clientMatchId, sharedSession) {
       token: sharedSession.token ?? session.token, seq,
       finalizeIntent: { ...(pendingFinish.resultType ? { resultType: pendingFinish.resultType } : {}), shared: true } });
   } else {
+    const deadline = pendingFinish.publicationDeadline ?? pendingFinish.at + PUBLICATION_RESOLUTION_WINDOW_MS;
+    if (!publicationComplete && Date.now() < deadline) return false;
     saveSession(clientMatchId, { ...session, isShared: shared });
   }
   return Boolean(promoted);
