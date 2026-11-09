@@ -2,117 +2,99 @@ import { describe, expect, it } from 'vitest';
 import { getSportsList } from '../../../models/sportRegistry';
 import { buildDemo, DEMO_SPORT_IDS } from './landingDemo';
 
+const scores = (demo) => demo.teams.map((team) => team.score);
+
 describe('landing demo', () => {
-  it('has an engine-derived example for every registered sport', () => {
+  it('has an engine-derived example for every registered sport, with two sides and one context line', () => {
     expect(DEMO_SPORT_IDS).toEqual(getSportsList().map((sport) => sport.id));
+    expect(DEMO_SPORT_IDS).toHaveLength(9);
     for (const id of DEMO_SPORT_IDS) {
       const demo = buildDemo(id);
       expect(demo.sportId).toBe(id);
       expect(demo.teams).toHaveLength(2);
       expect(demo.colours).toHaveLength(2);
-      expect(demo.status).toBeTruthy();
+      expect(demo.context).toBeTruthy();
+      expect(demo.context).not.toMatch(/\n/);
       for (const team of demo.teams) {
         expect(team.name).toBeTruthy();
-        expect(team.score).toBeTruthy();
+        expect(team.score).toMatch(/^\d+$/);
       }
     }
   });
 
   it('reads volleyball from the sets engine: set 3 of 5, 1-1 in sets, 18-16 in the set', () => {
     const demo = buildDemo('volleyball');
-    expect(demo.status).toBe('Set 3 of 5');
-    expect(demo.teams.map((team) => team.score)).toEqual(['18', '16']);
-    expect(demo.teams.map((team) => team.meta)).toEqual(['Sets won 1', 'Sets won 1']);
+    expect(demo.context).toBe('Set 3 of 5 · sets 1-1');
+    expect(scores(demo)).toEqual(['18', '16']);
   });
 
   it('uses the Game label for badminton', () => {
     const demo = buildDemo('badminton');
-    expect(demo.status).toBe('Game 2 of 3');
-    expect(demo.teams.map((team) => team.score)).toEqual(['15', '12']);
+    expect(demo.context).toBe('Game 2 of 3 · games 1-0');
+    expect(scores(demo)).toEqual(['15', '12']);
+  });
+
+  it('counts table tennis games from the sets engine: game 3 of 5, 1-1 in games, 8-6 in the game', () => {
+    const demo = buildDemo('tabletennis');
+    expect(demo.context).toMatch(/^(Game|Set) 3 of 5 · (games|sets) 1-1$/);
+    expect(scores(demo)).toEqual(['8', '6']);
   });
 
   it('reads tennis as 30-15 in game five of set two, after a 6-3 first set', () => {
     const demo = buildDemo('tennis');
-    expect(demo.status).toBe('Set 2 · best of 3');
-    expect(demo.teams.map((team) => team.score)).toEqual(['30', '15']);
-    expect(demo.teams.map((team) => team.meta)).toEqual(['6 · 3', '3 · 2']);
+    expect(demo.context).toBe('Set 2 · games 3-2');
+    expect(scores(demo)).toEqual(['30', '15']);
   });
 
-  it('sums football goals from the goals engine and names the half', () => {
+  it("sums football goals from the goals engine and gives the minute and half-time score", () => {
     const demo = buildDemo('football');
-    expect(demo.teams.map((team) => team.score)).toEqual(['2', '1']);
-    expect(demo.status).toMatch(/2nd half$/);
+    expect(scores(demo)).toEqual(['2', '1']);
+    expect(demo.context).toBe("63' · HT 1-0");
   });
 
-  it('sums basketball baskets to the scripted totals', () => {
+  it('sums basketball baskets to the scripted totals, with the half-time score from the line score', () => {
     const demo = buildDemo('basketball');
-    expect(demo.teams.map((team) => team.score)).toEqual(['78', '72']);
-    expect(demo.status).toBe('Q3 of 4');
+    expect(scores(demo)).toEqual(['78', '72']);
+    expect(demo.context).toMatch(/^Q3 of 4 · HT \d+-\d+$/);
+    const [htA, htB] = demo.context.match(/HT (\d+)-(\d+)/).slice(1).map(Number);
+    expect(htA).toBeGreaterThan(0);
+    expect(htA).toBeLessThan(78);
+    expect(htB).toBeGreaterThan(0);
+    expect(htB).toBeLessThan(72);
   });
 
   it("plays hockey in the registry's four field-hockey quarters", () => {
     const demo = buildDemo('hockey');
-    expect(demo.teams.map((team) => team.score)).toEqual(['3', '2']);
-    expect(demo.status).toMatch(/^Q[1-4] of 4 · \d+'$/);
+    expect(scores(demo)).toEqual(['3', '2']);
+    expect(demo.context).toMatch(/^Q[1-4] of 4 · HT \d+-\d+$/);
+    const [htA, htB] = demo.context.match(/HT (\d+)-(\d+)/).slice(1).map(Number);
+    expect(htA).toBeLessThanOrEqual(3);
+    expect(htB).toBeLessThanOrEqual(2);
   });
 
   it("reads cricket as a chase: India's full 20 overs, Australia 5.3 overs in, from the innings engine", () => {
     const demo = buildDemo('cricket');
-    expect(demo.teams[0].score).toMatch(/^\d+\/\d+$/);
-    expect(demo.teams[0].meta).toBe('20 overs');
-    expect(demo.teams[1].score).toMatch(/^\d+\/2$/);
-    expect(demo.teams[1].meta).toBe('5.3 overs');
-    expect(demo.live).toBe(1);
-    expect(demo.liveLabel).toBe('Batting');
+    expect(demo.teams.map((team) => team.name)).toEqual(['India', 'Australia']);
+    expect(demo.teams.map((team) => team.suffix)).toEqual([expect.stringMatching(/^\/\d+$/), '/2']);
     // The chase line comes from deriveChase: the target is India's total + 1 and 120 - 33 balls are left.
-    const [indiaRuns] = demo.teams[0].score.split('/').map(Number);
-    const [australiaRuns] = demo.teams[1].score.split('/').map(Number);
-    expect(demo.foot).toContain(`need ${indiaRuns + 1 - australiaRuns} off 87 balls`);
+    const [indiaRuns, australiaRuns] = scores(demo).map(Number);
+    expect(demo.context).toBe(`Australia need ${indiaRuns + 1 - australiaRuns} off 87 balls`);
   });
 
-  it('gives every side the same cells as there are columns', () => {
+  it('only cricket carries a suffix on the big number', () => {
     for (const id of DEMO_SPORT_IDS) {
-      const demo = buildDemo(id);
-      if (demo.kind === 'cricket') continue;
-      for (const team of demo.teams) expect(team.cells).toHaveLength(demo.columns.length);
+      for (const team of buildDemo(id).teams) {
+        if (id === 'cricket') expect(team.suffix).toBeDefined();
+        else expect(team.suffix).toBeUndefined();
+      }
     }
   });
 
-  it('shows the finished sets with their winner, and the server the engine reports', () => {
-    const volleyball = buildDemo('volleyball');
-    expect(volleyball.columns).toEqual(['S1', 'S2']);
-    expect(volleyball.teams[0].cells).toEqual([{ value: '25', won: true }, { value: '23', won: false }]);
-    expect(volleyball.teams[1].cells).toEqual([{ value: '21', won: false }, { value: '25', won: true }]);
-    expect(volleyball.live).toBe(0);
-    expect(buildDemo('badminton').columns).toEqual(['G1']);
-    expect(buildDemo('badminton').live).toBe(0);
-    expect(buildDemo('tabletennis').live).toBeUndefined();
-
-    const tennis = buildDemo('tennis');
-    expect(tennis.columns).toEqual(['S1', 'S2']);
-    expect(tennis.teams[0].cells).toEqual([{ value: '6', won: true }, { value: '3', current: true }]);
-    expect(tennis.live).toBeDefined();
-  });
-
-  it('breaks goal sports into the line score up to the period in play', () => {
-    const basketball = buildDemo('basketball');
-    expect(basketball.columns).toEqual(['Q1', 'Q2', 'Q3']);
-    for (const team of basketball.teams) {
-      expect(team.cells.reduce((sum, cell) => sum + Number(cell.value), 0)).toBe(Number(team.score));
-    }
-    expect(buildDemo('football').columns).toEqual(['1H', '2H']);
-  });
-
-  it('totals kabaddi from the raid engine, with both sides on the mat', () => {
+  it('totals kabaddi from the raid engine and names the side that raids next', () => {
     const demo = buildDemo('kabaddi');
+    expect(demo.teams.map((team) => team.name)).toEqual(['Tigers', 'Bulls']);
     expect(demo.teams.every((team) => Number.isInteger(Number(team.score)))).toBe(true);
-    expect(demo.status).toMatch(/^Half 1 · raid 12$/);
-    // The category cells add up to the total, and each side shows one pip per player.
-    for (const team of demo.teams) {
-      expect(team.cells.reduce((sum, cell) => sum + Number(cell.value), 0)).toBe(Number(team.score));
-      expect(team.pips.total).toBe(7);
-    }
-    expect([0, 1]).toContain(demo.live);
+    expect(demo.context).toMatch(/^Half 1 · (Tigers|Bulls) raid next$/);
   });
 
   it('rejects a sport with no demo', () => {

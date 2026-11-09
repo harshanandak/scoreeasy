@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocalAuthProvider } from '../../../auth/AuthContext';
 import { getSportsList } from '../../../models/sportRegistry';
 import GuestLanding from './GuestLanding';
+import { buildDemo } from './landingDemo';
 import { LANDING_FAQ } from './landingFaq';
 
 function LocationProbe() {
@@ -107,70 +108,82 @@ describe('GuestLanding', () => {
 
     const card = screen.getByTestId('landing-example');
     expect(within(card).getByText('India')).toBeInTheDocument();
-    // Both innings: India's finished 20 overs and Australia's reply.
-    expect(within(card).getAllByText(/^\d+\/\d+$/)).toHaveLength(2);
+    // Both innings: India's finished 20 overs and Australia's reply, each as runs with wickets small beside it.
+    expect([...card.querySelectorAll('.kit-score-num')].map((num) => num.textContent)).toEqual([
+      expect.stringMatching(/^\d+\/\d+$/),
+      expect.stringMatching(/^\d+\/2$/),
+    ]);
 
     fireEvent.click(pickFor('Volleyball'));
     expect(within(card).getByText('Eagles')).toBeInTheDocument();
     expect(within(card).getByText('18')).toBeInTheDocument();
-    expect(within(card).getByText('Set 3 of 5')).toBeInTheDocument();
+    expect(within(card).getByText('16')).toBeInTheDocument();
+    expect(within(card).getByText('Set 3 of 5 · sets 1-1')).toBeInTheDocument();
   });
 
-  it('lays out a scorecard for each sport from what that sport keeps', () => {
+  it('shows one simple card for every sport: two team halves, both numbers and one context line', () => {
     renderLanding();
     const card = screen.getByTestId('landing-example');
 
-    // Cricket: both innings with runs, wickets and overs, who is batting, and the chase.
-    expect(card).toHaveAttribute('data-kind', 'cricket');
-    expect(within(card).getByText('20 overs')).toBeInTheDocument();
-    expect(within(card).getByText('5.3 overs')).toBeInTheDocument();
-    expect(within(card).getByText('Batting')).toBeInTheDocument();
-    expect(within(card).getByText(/^Australia need \d+ off 87 balls · required rate \d+\.\d{2}$/)).toBeInTheDocument();
+    for (const sport of getSportsList()) {
+      fireEvent.click(pickFor(sport.name));
+      const demo = buildDemo(sport.id);
 
-    // Set sports: the finished sets as a grid, the set in play as the big number, and the server.
-    fireEvent.click(pickFor('Volleyball'));
-    expect(card).toHaveAttribute('data-kind', 'sets');
-    expect(within(card).getByText('S1')).toBeInTheDocument();
-    expect(within(card).getByText('S2')).toBeInTheDocument();
-    expect(within(card).getByText('Serving')).toBeInTheDocument();
-
-    // Table tennis has no serve line: its serve alternates every two points and the engine is not fed it.
-    fireEvent.click(pickFor('Table Tennis'));
-    expect(within(card).queryByText('Serving')).not.toBeInTheDocument();
-
-    fireEvent.click(pickFor('Tennis'));
-    expect(card).toHaveAttribute('data-kind', 'tennis');
-    expect(within(card).getByText('Serving')).toBeInTheDocument();
-    expect(within(card).getByText('30')).toBeInTheDocument();
-
-    // Goal sports: the period line score up to the period in play.
-    fireEvent.click(pickFor('Basketball'));
-    expect(card).toHaveAttribute('data-kind', 'goals');
-    expect(['Q1', 'Q2', 'Q3'].map((period) => within(card).getByText(period))).toHaveLength(3);
-    expect(within(card).queryByText('Q4')).not.toBeInTheDocument();
-
-    // Kabaddi: points by category, one pip per player, who raids next.
-    fireEvent.click(pickFor('Kabaddi'));
-    expect(card).toHaveAttribute('data-kind', 'kabaddi');
-    expect(within(card).getAllByText('Touch')).toHaveLength(2);
-    expect(within(card).getByText('Raids next')).toBeInTheDocument();
-    expect(card.querySelectorAll('.kit-score-pips i')).toHaveLength(14);
+      expect(within(card).getByText(sport.name)).toBeInTheDocument();
+      expect(within(card).getByText('LIVE')).toBeInTheDocument();
+      expect(card.querySelectorAll('.kit-score-field')).toHaveLength(2);
+      const fields = [...card.querySelectorAll('.kit-score-field')];
+      demo.teams.forEach((team, i) => {
+        expect(within(fields[i]).getByText(team.name)).toBeInTheDocument();
+        expect(fields[i].querySelector('.kit-score-num')).toHaveTextContent(`${team.score}${team.suffix ?? ''}`);
+      });
+      expect(within(card).getByText('VS')).toBeInTheDocument();
+      expect(card.querySelectorAll('.kit-score-context')).toHaveLength(1);
+      expect(card.querySelector('.kit-score-context')).toHaveTextContent(demo.context);
+      // The sport's icon sits in the header; the old tile mark is gone.
+      expect(card.querySelectorAll('.kit-score-glyph svg')).toHaveLength(1);
+      expect(card.querySelector('.kit-tile-mark')).toBeNull();
+      // Clutter the old card carried: set grids, point categories, mat pips, serve pills, status pill, chip.
+      expect(card.querySelector('.kit-score-pips, .kit-score-cells, .kit-score-cols, .kit-chip')).toBeNull();
+      expect(within(card).queryByText(/^(Serving|Batting|Raids next|Example match)$/)).not.toBeInTheDocument();
+    }
   });
 
-  it('explains the product below the app: four numbered sections in sequence', () => {
+  it('puts the situation in the context line: the chase, the set count, the half-time score', () => {
+    renderLanding();
+    const context = () => screen.getByTestId('landing-example').querySelector('.kit-score-context');
+
+    expect(context()).toHaveTextContent(/^Australia need \d+ off 87 balls$/);
+    fireEvent.click(pickFor('Volleyball'));
+    expect(context()).toHaveTextContent('Set 3 of 5 · sets 1-1');
+    fireEvent.click(pickFor('Football'));
+    expect(context()).toHaveTextContent("63' · HT 1-0");
+    fireEvent.click(pickFor('Kabaddi'));
+    expect(context()).toHaveTextContent(/^Half 1 · (Tigers|Bulls) raid next$/);
+  });
+
+  it('explains the product below the app: three numbered sections in sequence', () => {
     renderLanding();
 
     const sections = [
       ['01 / Features', 'What it does.'],
-      ['02 / Sports', '9 sports you can score.'],
-      ['03 / How it works', 'Score a match in three steps.'],
-      ['04 / FAQ', 'Questions people ask.'],
+      ['02 / How it works', 'Score a match in three steps.'],
+      ['03 / FAQ', 'Questions people ask.'],
     ];
     for (const [eyebrow, heading] of sections) {
       expect(screen.getByText(eyebrow)).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 2, name: heading })).toBeInTheDocument();
     }
     expect(screen.getByText('Scoreboard app for local matches')).toBeInTheDocument();
+  });
+
+  it('lists the sports once, in the picker, and has no second sports section or tile grid', () => {
+    renderLanding();
+
+    expect(screen.queryByText(/\/ Sports$/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: /sports you can score/i })).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('button', { name: /^Quick match:/ })).toHaveLength(0);
+    expect(within(screen.getByRole('group', { name: 'Pick a sport' })).getAllByRole('button')).toHaveLength(9);
   });
 
   it('drops the old Start first section and does not repeat its facts', () => {
@@ -206,10 +219,9 @@ describe('GuestLanding', () => {
       expect(faq.getByRole('heading', { level: 3, name: question })).toBeVisible();
       expect(faq.getByText(answer)).toBeVisible();
     }
-    const sportsAnswer = LANDING_FAQ.find((item) => item.question === 'Which sports can I score?').answer.toLowerCase();
-    for (const sport of getSportsList()) {
-      expect(sportsAnswer).toContain(sport.name.toLowerCase());
-    }
+    expect(LANDING_FAQ.map((item) => item.question)).not.toContain('Which sports can I score?');
+    const free = LANDING_FAQ.find((item) => item.question === 'Is Score Easy free?');
+    expect(free.answer).toBe('Yes. Scoring, tournaments and an account are free.');
   });
 
   it('keeps the FAQPage JSON-LD in index.html word for word with the visible FAQ', () => {
@@ -250,14 +262,6 @@ describe('GuestLanding', () => {
     expect(closing.getByRole('link', { name: 'Create a free account' })).toHaveAttribute('href', '/signup');
   });
 
-  it('turns each sport tile into a start link for that sport', () => {
-    renderLanding();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Quick match: Table Tennis' }));
-
-    expect(screen.getByLabelText('Current route')).toHaveTextContent('/play?sport=tabletennis');
-  });
-
   it('points Create a free account at the app on cloud builds and at production otherwise', () => {
     renderLanding({ cloudAuthAvailable: true });
     expect(screen.getByRole('link', { name: 'Create a free account' })).toHaveAttribute('href', '/signup');
@@ -282,6 +286,6 @@ describe('GuestLanding', () => {
     renderLanding({ cloudAuthAvailable: true });
 
     expect(startLinks('Start Cricket')).toHaveLength(2);
-    expect(screen.getByRole('button', { name: 'Quick match: Kabaddi' })).toBeInTheDocument();
+    expect(pickFor('Kabaddi')).toBeInTheDocument();
   });
 });

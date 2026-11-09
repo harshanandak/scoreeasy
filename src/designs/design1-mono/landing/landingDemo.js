@@ -1,5 +1,5 @@
 // The example match on the guest landing. Nothing here is a typed number: every score, set tally
-// and status line is read from the same pure engines the scorers use (models/live/* for sets,
+// and half-time line is read from the same pure engines the scorers use (models/live/* for sets,
 // tennis and goals; utils/cricketEngine; utils/kabaddiEngine), fed with a short scripted match.
 // Sport rules live in those engines, so this file only scripts the play and formats the result.
 import { appendPoint } from '../../../models/live/scoringEvents';
@@ -11,16 +11,11 @@ import { applyDelivery, createInnings, deriveChase, deriveInnings, makeDelivery,
 import { applyRaid, createKabaddiState, startHalf, teamTotal } from '../../../utils/kabaddiEngine';
 import { PRESETS } from '../../../lib/teamColour';
 
-/** One cell of a team's row: a set, period or point category. `won` marks a set the side took,
- *  `current` the set in play. */
-/** @typedef {{ value: string, won?: boolean, current?: boolean }} DemoCell */
-/** @typedef {{ name: string, score: string, meta?: string, cells?: DemoCell[], pips?: { on: number, total: number } }} DemoTeam */
-/** `columns` heads each team's `cells`; `live` is the side serving, batting or raiding (an index into
- *  `teams`) and `liveLabel` says which; `callout` is a set, match or break point the engine reports;
- *  `foot` is a one-line situation (the chase in cricket). All read from the sport's engine.
- *  @typedef {{ sportId: string, kind: 'sets'|'tennis'|'goals'|'kabaddi'|'cricket', colours: [string, string],
- *    teams: [DemoTeam, DemoTeam], status: string, columns?: string[], live?: 0|1, liveLabel?: string,
- *    callout?: string, foot?: string }} Demo */
+/** One side of the card: the big number, plus a small suffix when the sport has one (cricket wickets, "/5").
+ *  `context` is the one line under the board: the chase in cricket, the set count in volleyball, the
+ *  half-time score in football. Every value is read from the sport's engine.
+ *  @typedef {{ name: string, score: string, suffix?: string }} DemoTeam
+ *  @typedef {{ sportId: string, colours: [string, string], teams: [DemoTeam, DemoTeam], context: string }} Demo */
 
 /** The sports the landing can show: the registered ones, in focus order. */
 export const DEMO_SPORT_IDS = getSportsList().map((sport) => sport.id);
@@ -64,42 +59,34 @@ function timedEvents(...sides) {
 
 const colourPair = (name) => PRESETS[name];
 
-const SIDE_INDEX = { A: 0, B: 1 };
-const POINT_STATE_LABELS = { setPoint: 'Set point', matchPoint: 'Match point' };
+/** Join the parts of a context line, skipping any the engine did not report. */
+const line = (...parts) => parts.filter(Boolean).join(' · ');
+
+const POINT_STATE_LABELS = { setPoint: 'set point', matchPoint: 'match point' };
 
 // ---- sets sports: volleyball, badminton, table tennis ------------------------------------
 
-// `serves` appends the engine's own serve_change event for the side that won the last rally, the
-// rally-scoring rule of volleyball and badminton. Table tennis alternates serve every two points,
-// so it passes nothing and the card shows no server.
-function setsDemo(sportId, { names, bestOf, sets, current, colours, serves = false }) {
+function setsDemo(sportId, { names, bestOf, sets, current, colours }) {
   const sport = getSportById(sportId);
   const unit = sport.config.setLabel || 'Set';
   const letters = [...sets.flatMap(([a, b]) => rallies(a, b)), ...rallies(...current)];
-  const points = pointEvents(letters);
-  const lastScorer = letters.at(-1);
-  const events = serves
-    ? [...points, { seq: points.length + 1, type: 'serve_change', team: lastScorer, servingAfter: lastScorer, at: points.length }]
-    : points;
-  const state = volleyballState(events, {
+  const state = volleyballState(pointEvents(letters), {
     pointsPerSet: sport.config.pointsPerSet,
     deciderPoints: sport.config.deciderPoints,
     winBy: sport.config.winBy,
     bestOf,
   });
-  const cells = (own, other) => state.completedSets.map((set) => ({ value: String(set[own]), won: set[own] > set[other] }));
   return {
     sportId,
-    kind: 'sets',
     colours,
-    status: `${unit} ${state.currentSet} of ${bestOf}`,
-    columns: state.completedSets.map((_, i) => `${unit.charAt(0)}${i + 1}`),
-    live: serves ? SIDE_INDEX[state.servingTeam] : undefined,
-    liveLabel: 'Serving',
-    callout: POINT_STATE_LABELS[state.pointState],
+    context: line(
+      `${unit} ${state.currentSet} of ${bestOf}`,
+      `${unit.toLowerCase()}s ${state.setsA}-${state.setsB}`,
+      POINT_STATE_LABELS[state.pointState],
+    ),
     teams: [
-      { name: names[0], score: String(state.pointsA), meta: `${unit}s won ${state.setsA}`, cells: cells('a', 'b') },
-      { name: names[1], score: String(state.pointsB), meta: `${unit}s won ${state.setsB}`, cells: cells('b', 'a') },
+      { name: names[0], score: String(state.pointsA) },
+      { name: names[1], score: String(state.pointsB) },
     ],
   };
 }
@@ -121,51 +108,43 @@ function tennisDemo() {
     'A', 'A', 'B', // the game in play: A 30, B 15
   ];
   const state = tennisState(pointEvents(points), TENNIS_PRESETS.standard);
-  const games = (side) => [...state.sets.map((set) => set[side]), state.currentSet[side === 'a' ? 'gamesA' : 'gamesB']].join(' · ');
-  const cells = (own, other, gamesKey) => [
-    ...state.sets.map((set) => ({ value: String(set[own]), won: set[own] > set[other] })),
-    { value: String(state.currentSet[gamesKey]), current: true },
-  ];
   let callout;
-  if (state.isMatchPoint) callout = 'Match point';
-  else if (state.isSetPoint) callout = 'Set point';
-  else if (state.isBreakPoint) callout = 'Break point';
+  if (state.isMatchPoint) callout = 'match point';
+  else if (state.isSetPoint) callout = 'set point';
+  else if (state.isBreakPoint) callout = 'break point';
   return {
     sportId: 'tennis',
-    kind: 'tennis',
     colours: colourPair('Sky v Navy'),
-    status: `Set ${state.sets.length + 1} · best of 3`,
-    columns: Array.from({ length: state.sets.length + 1 }, (_, i) => `S${i + 1}`),
-    live: SIDE_INDEX[state.server],
-    liveLabel: 'Serving',
-    callout,
+    context: line(`Set ${state.sets.length + 1} · games ${state.currentSet.gamesA}-${state.currentSet.gamesB}`, callout),
     teams: [
-      { name: 'Player 1', score: state.currentGame.labelA, meta: games('a'), cells: cells('a', 'b', 'gamesA') },
-      { name: 'Player 2', score: state.currentGame.labelB, meta: games('b'), cells: cells('b', 'a', 'gamesB') },
+      { name: 'Player 1', score: state.currentGame.labelA },
+      { name: 'Player 2', score: state.currentGame.labelB },
     ],
   };
 }
 
 // ---- goals sports: football, basketball, hockey -------------------------------------------
 
-function goalsDemo(sportId, { names, totals, values, spacing, periods, status, colours, shortLabels }) {
+// `context` gets the last goal, the period in play and the half-time score ("HT 1-0", from the
+// engine's line score, once play is past the half) and returns the one line under the board.
+function goalsDemo(sportId, { names, totals, values, spacing, periods, context, colours }) {
   const events = timedEvents(
     sideScores('A', totals[0], values[0], spacing[0]),
     sideScores('B', totals[1], values[1], spacing[1]),
   );
   const state = goalsState(events, { periods });
   const last = state.timeline.at(-1);
-  // The engine's line score up to the period in play: the classic periods-by-side grid.
-  const played = state.lineScore.periods.slice(0, (last?.periodIndex ?? 0) + 1);
+  const periodIndex = last?.periodIndex ?? 0;
+  const halfCount = periods.length / 2;
+  const firstHalf = (side) => state.lineScore.periods.slice(0, halfCount).reduce((sum, period) => sum + period[side], 0);
+  const halfTime = periodIndex >= halfCount ? `HT ${firstHalf('a')}-${firstHalf('b')}` : undefined;
   return {
     sportId,
-    kind: 'goals',
     colours,
-    status: status({ last, period: periods[last?.periodIndex ?? 0] }),
-    columns: played.map((period, i) => shortLabels?.[i] ?? period.label),
+    context: context({ last, period: periods[periodIndex], halfTime }),
     teams: [
-      { name: names[0], score: String(state.totalA), cells: played.map((period) => ({ value: String(period.a) })) },
-      { name: names[1], score: String(state.totalB), cells: played.map((period) => ({ value: String(period.b) })) },
+      { name: names[0], score: String(state.totalA) },
+      { name: names[1], score: String(state.totalB) },
     ],
   };
 }
@@ -187,33 +166,14 @@ function kabaddiDemo() {
     ...(count ? { count } : {}),
   }), start);
   const [a, b] = state.teams;
-  // The point categories a scorer sees. "Other" folds the rest (all-out, technical, defender out) so
-  // the cells always add up to the total; it only shows once a side has one.
-  const parts = (team) => [
-    team.score.touch,
-    team.score.bonus,
-    team.score.tackleBase + team.score.superTackleExtra,
-    team.score.allOut + team.score.technical + team.score.defenderOut,
-  ];
-  const labels = ['Touch', 'Bonus', 'Tackle', 'Other'];
-  const shown = labels.map((_, i) => i < 3 || parts(a)[i] > 0 || parts(b)[i] > 0);
-  const cells = (team) => parts(team).filter((_, i) => shown[i]).map((value) => ({ value: String(value) }));
-  const side = (team, i) => ({
-    name: team.name,
-    score: String(teamTotal(team)),
-    meta: `${state.mat[i].length} on the mat`,
-    cells: cells(team),
-    pips: { on: state.mat[i].length, total: state.rules.initialPlayers },
-  });
   return {
     sportId: 'kabaddi',
-    kind: 'kabaddi',
     colours,
-    status: `Half ${state.half} · raid ${state.raidNumber}`,
-    columns: labels.filter((_, i) => shown[i]),
-    live: state.nextRaidTeam,
-    liveLabel: 'Raids next',
-    teams: [side(a, 0), side(b, 1)],
+    context: line(`Half ${state.half}`, `${state.teams[state.nextRaidTeam].name} raid next`),
+    teams: [
+      { name: a.name, score: String(teamTotal(a)) },
+      { name: b.name, score: String(teamTotal(b)) },
+    ],
   };
 }
 
@@ -246,15 +206,11 @@ function cricketDemo() {
   const chase = deriveChase(reply, format);
   return {
     sportId: 'cricket',
-    kind: 'cricket',
     colours: colourPair('Red v Blue'),
-    status: `T20 · ${second.overs} of ${format.oversPerInnings} overs`,
-    live: 1,
-    liveLabel: 'Batting',
-    foot: `Australia need ${chase.runsNeeded} off ${chase.ballsLeft} balls · required rate ${chase.RRR.toFixed(2)}`,
+    context: `Australia need ${chase.runsNeeded} off ${chase.ballsLeft} balls`,
     teams: [
-      { name: 'India', score: `${first.runs}/${first.wkts}`, meta: `${first.overs} overs` },
-      { name: 'Australia', score: `${second.runs}/${second.wkts}`, meta: `${second.overs} overs` },
+      { name: 'India', score: String(first.runs), suffix: `/${first.wkts}` },
+      { name: 'Australia', score: String(second.runs), suffix: `/${second.wkts}` },
     ],
   };
 }
@@ -265,10 +221,10 @@ const BUILDERS = {
   cricket: cricketDemo,
   kabaddi: kabaddiDemo,
   volleyball: () => setsDemo('volleyball', {
-    names: ['Eagles', 'Hawks'], bestOf: 5, sets: [[25, 21], [23, 25]], current: [18, 16], colours: colourPair('Red v Blue'), serves: true,
+    names: ['Eagles', 'Hawks'], bestOf: 5, sets: [[25, 21], [23, 25]], current: [18, 16], colours: colourPair('Red v Blue'),
   }),
   badminton: () => setsDemo('badminton', {
-    names: ['Chen', 'Lee'], bestOf: 3, sets: [[21, 18]], current: [15, 12], colours: colourPair('Purple v Orange'), serves: true,
+    names: ['Chen', 'Lee'], bestOf: 3, sets: [[21, 18]], current: [15, 12], colours: colourPair('Purple v Orange'),
   }),
   football: () => goalsDemo('football', {
     names: ['City', 'United'],
@@ -276,8 +232,7 @@ const BUILDERS = {
     values: [[1], [1]],
     spacing: [1900, 3000],
     periods: [{ label: '1st half', durationSec: 2700 }, { label: '2nd half', durationSec: 2700 }],
-    status: ({ last, period }) => `${last?.minute ?? 0}' · ${period?.label ?? ''}`,
-    shortLabels: ['1H', '2H'],
+    context: ({ last, halfTime }) => line(`${last?.minute ?? 0}'`, halfTime),
     colours: colourPair('Sky v Navy'),
   }),
   basketball: () => goalsDemo('basketball', {
@@ -286,7 +241,7 @@ const BUILDERS = {
     values: [[2, 3, 2, 2, 1], [2, 2, 3, 2, 1]],
     spacing: [42, 44],
     periods: ['Q1', 'Q2', 'Q3', 'Q4'].map((label) => ({ label, durationSec: 600 })),
-    status: ({ period }) => `${period?.label ?? 'Q1'} of 4`,
+    context: ({ period, halfTime }) => line(`${period?.label ?? 'Q1'} of 4`, halfTime),
     colours: colourPair('Yellow v White'),
   }),
   tennis: tennisDemo,
@@ -300,7 +255,7 @@ const BUILDERS = {
     spacing: [900, 1100],
     // Field hockey (registry): four 15-minute quarters.
     periods: ['Q1', 'Q2', 'Q3', 'Q4'].map((label) => ({ label, durationSec: 900 })),
-    status: ({ last, period }) => `${period?.label ?? 'Q1'} of 4 · ${last?.minute ?? 0}'`,
+    context: ({ period, halfTime }) => line(`${period?.label ?? 'Q1'} of 4`, halfTime),
     colours: colourPair('Red v Maroon'),
   }),
 };
