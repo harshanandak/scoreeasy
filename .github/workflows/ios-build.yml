@@ -41,9 +41,12 @@ jobs:
           bun-version: "1.3.13"
 
       - name: Show toolchain
+        id: toolchain
         run: |
           sw_vers
           xcodebuild -version
+          echo "xcode-version=$(xcodebuild -version | tr '\n' '-')" >> "$GITHUB_OUTPUT"
+          echo "SWIFTPM_PATH=$RUNNER_TEMP/swiftpm" >> "$GITHUB_ENV"
           xcodebuild -showsdks
           node --version
           bun --version
@@ -76,6 +79,14 @@ jobs:
       - name: Sync Capacitor iOS
         run: bunx cap sync ios
 
+      - name: Cache Swift packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ${{ env.SWIFTPM_PATH }}/Cache
+            ${{ env.SWIFTPM_PATH }}/SourcePackages
+          key: ${{ runner.os }}-${{ runner.arch }}-swiftpm-${{ steps.toolchain.outputs.xcode-version }}-${{ hashFiles('ios/**/Package.swift', 'ios/**/Package.resolved', 'bun.lock') }}
+
       - name: Resolve Swift packages
         run: |
           artifact_cache="$HOME/Library/Caches/org.swift.swiftpm/artifacts"
@@ -85,15 +96,12 @@ jobs:
           else
             echo "Shared SwiftPM artifact cache does not exist before resolution."
           fi
-          # Keep this job's package resolution out of the runner's shared artifact cache.
-          swiftpm_path="$(mktemp -d "$RUNNER_TEMP/swiftpm.XXXXXX")"
-          echo "SWIFTPM_PATH=$swiftpm_path" >> "$GITHUB_ENV"
           xcodebuild \
             -resolvePackageDependencies \
             -project ios/App/App.xcodeproj \
             -scheme App \
-            -clonedSourcePackagesDirPath "$swiftpm_path/SourcePackages" \
-            -packageCachePath "$swiftpm_path/Cache"
+            -clonedSourcePackagesDirPath "$SWIFTPM_PATH/SourcePackages" \
+            -packageCachePath "$SWIFTPM_PATH/Cache"
 
       - name: List Xcode project
         run: |
