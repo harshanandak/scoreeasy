@@ -11,10 +11,13 @@ import './landing.css';
 import { buildDemo } from './landingDemo';
 import useIsMobile from './useIsMobile';
 
-/* The guest landing (/marketing), in the Kit look of Home, Play and the boards. One job: say what
-   Score Easy is, give one primary action (start a match), keep sign in secondary, show the nine
-   sports, and show a match scored by the real engines. The sport the scorer picks is held once, so
-   the chip, the example card and the Start button always name the same game. */
+/* The guest landing (/marketing), in the Kit look of Home, Play and the boards. Above the fold it is
+   an app: one primary action (start a match), sign in secondary, and a match scored by the real
+   engines. Below it, it explains the product in the numbered, confident voice of the original
+   marketing page (01 / APP EXPERIENCE ... 04 / HOW IT WORKS). The sport the scorer picks is held
+   once, so the chip, the example card and the Start buttons always name the same game. Every claim
+   below the fold is true of the shipped app: guest scoring and tournaments are open to guests,
+   scoring is saved on the device first; saving to an account and the live link need a sign in. */
 
 const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';
 const sports = getSportsList();
@@ -23,10 +26,31 @@ function sportPlayPath(sportId) {
   return sportId ? `/play?sport=${sportId}` : '/play';
 }
 
+const EXPERIENCE_STATS = [
+  { value: String(sports.length), label: 'Sports ready', detail: `Cricket, kabaddi, volleyball and ${sports.length - 3} more, all picked from one list.` },
+  { value: '0', label: 'Sign-ups needed', detail: 'Score your first point without an account.' },
+  { value: 'OFFLINE', label: 'No signal needed', detail: 'Keep scoring with no signal. Your matches save on your phone.' },
+];
+
+const EXPERIENCE_NOTES = [
+  'Pick a sport here and it is already chosen on the play screen.',
+  'You never have to sign in to score.',
+  'Use it in your browser, or on Android and iOS.',
+];
+
+const FEATURES = [
+  { tag: 'Start', title: 'No sign-up to start', desc: 'Start a match from your browser or the app without an account. Every point is saved on your phone first, so a weak signal never costs one.' },
+  { tag: 'Account', title: 'Save to your account', desc: 'Sign in and every match you finish is saved to your account. Without one, matches stay on this phone.' },
+  { tag: 'Share', title: 'Live share link', desc: 'Signed in, you can go live and send a link so friends follow the score. A match stays private until you share it.' },
+  { tag: 'Undo', title: 'Undo that follows', desc: 'Mis-tapped? Undo takes the point back, and the score, serve and set go back with it.' },
+  { tag: 'Rules', title: 'Real rules, every sport', desc: 'Deuce, sets, overs and raids are scored by each sport’s own rules, so the board never disagrees with the game.' },
+  { tag: 'Organize', title: 'Tournaments', desc: 'Round-robin and knockout brackets with standings, scored match by match.' },
+];
+
 const STEPS = [
-  { label: 'Pick a game', sub: 'Nine sports, each with its own rules' },
-  { label: 'Tap to score', sub: 'Works offline, so a weak signal never costs a point' },
-  { label: 'Sign in to sync', sub: 'Optional: your history follows you to any phone' },
+  { num: '01', label: 'Pick sport', sub: `Choose from ${sports.length} sports, each with its own rules.` },
+  { num: '02', label: 'Add teams', sub: 'Name your teams or players. Set match format.' },
+  { num: '03', label: 'Score live', sub: 'Tap to score. Track sets, overs, or goals in real time.' },
 ];
 
 const FOOTER_LINKS = [
@@ -34,6 +58,18 @@ const FOOTER_LINKS = [
   { label: 'Terms', to: '/terms' },
   { label: 'Contact', to: '/contact' },
 ];
+
+/* The numbered mono eyebrow plus a heavy headline that opens each explaining section. */
+function Head({ id, eyebrow, children }) {
+  return (
+    <div className="kit-landing-head">
+      <p className="kit-landing-eyebrow">{eyebrow}</p>
+      <h2 id={id}>{children}</h2>
+    </div>
+  );
+}
+
+Head.propTypes = { id: PropTypes.string.isRequired, eyebrow: PropTypes.string.isRequired, children: PropTypes.node.isRequired };
 
 function ExampleCard({ demo }) {
   const sport = getSportById(demo.sportId);
@@ -99,11 +135,12 @@ export default function GuestLanding() {
 
       <div className="kit-landing-top">
         <header className="kit-landing-hero">
+          <p className="kit-landing-eyebrow">Universal score tracker</p>
           <h1 className="kit-title">
             Score any game <HandUnderline>on your phone</HandUnderline>.
           </h1>
           <p className="kit-sub">
-            Start as a guest in seconds. It works offline, and your matches sync when you sign in.
+            Start in seconds with no account. It works offline, and once you sign in, the matches you score are saved to your account.
           </p>
           <div className="kit-landing-actions">
             <Link className="se-go" to={startPath}>
@@ -128,13 +165,49 @@ export default function GuestLanding() {
           </div>
           <ExampleCard demo={demo} />
           <p className="kit-landing-note">
-            Scored by the same rules engine the app uses. Tap Start to score your own.
+            Scored by the same rules the app uses for each sport. Tap Start to score your own.
           </p>
         </section>
       </div>
 
+      <section aria-labelledby="landing-experience-title">
+        <Head id="landing-experience-title" eyebrow="01 / App experience">Start first. Save later.</Head>
+        <ul className="kit-landing-stats">
+          {EXPERIENCE_STATS.map((stat) => (
+            <li key={stat.label} className="kit-card">
+              <b>{stat.value}</b>
+              <span className="kit-landing-label">{stat.label}</span>
+              <p>{stat.detail}</p>
+            </li>
+          ))}
+        </ul>
+        <ul className="kit-list kit-landing-notes">
+          {EXPERIENCE_NOTES.map((note, i) => (
+            <li key={note} className="kit-row">
+              <span className="kit-row-text">
+                <span className="kit-landing-label">{`App 0${i + 1}`}</span>
+                <span className="kit-row-title">{note}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="landing-features-title">
+        <Head id="landing-features-title" eyebrow="02 / Features">Everything you need.</Head>
+        <ul className="kit-landing-features">
+          {FEATURES.map((feature) => (
+            <li key={feature.title} className="kit-card">
+              <span className="kit-chip">{feature.tag}</span>
+              <h3>{feature.title}</h3>
+              <p>{feature.desc}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <section aria-labelledby="landing-sports-title">
-        <KitSection id="landing-sports-title" title={`${sports.length} sports, one scorer`} />
+        <Head id="landing-sports-title" eyebrow="03 / Sports">{`${sports.length} sports. Your rules.`}</Head>
         <div className="kit-grid3 kit-landing-tiles">
           {sports.map((sport) => (
             <SportTile
@@ -149,11 +222,11 @@ export default function GuestLanding() {
       </section>
 
       <section aria-labelledby="landing-how-title">
-        <KitSection id="landing-how-title" title="How it works" />
+        <Head id="landing-how-title" eyebrow="04 / How it works">Three steps.</Head>
         <ol className="kit-list kit-steps kit-landing-steps">
-          {STEPS.map((step, i) => (
+          {STEPS.map((step) => (
             <li key={step.label} className="kit-row">
-              <span className="kit-step-num" aria-hidden="true">{i + 1}</span>
+              <span className="kit-step-num" aria-hidden="true">{step.num}</span>
               <span className="kit-row-text">
                 <span className="kit-row-title">{step.label}</span>
                 <span className="kit-row-sub">{step.sub}</span>
@@ -166,7 +239,7 @@ export default function GuestLanding() {
       <section className="kit-landing-ready" aria-labelledby="landing-ready-title">
         <div className="kit-hero">
           <div className="kit-hero-intro">
-            <h2 id="landing-ready-title">Ready when you are.</h2>
+            <h2 id="landing-ready-title">Ready?</h2>
             <p>No account needed to score your first point.</p>
           </div>
           <div className="kit-hero-foot kit-landing-actions">

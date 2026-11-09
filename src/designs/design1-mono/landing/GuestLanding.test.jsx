@@ -57,8 +57,8 @@ describe('GuestLanding', () => {
     renderLanding();
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score any game on your phone.');
-    expect(screen.getByText(/start as a guest in seconds/i)).toHaveTextContent(/works offline/i);
-    expect(screen.getByText(/sync when you sign in/i)).toBeInTheDocument();
+    expect(screen.getByText(/start in seconds with no account/i)).toHaveTextContent(/works offline/i);
+    expect(screen.getByText(/once you sign in, the matches you score are saved to your account/i)).toBeInTheDocument();
     expect(startLinks(/^Start /)[0]).toHaveAttribute('href', '/play?sport=cricket');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
   });
@@ -107,6 +107,58 @@ describe('GuestLanding', () => {
     expect(within(card).getByText('Eagles')).toBeInTheDocument();
     expect(within(card).getByText('18')).toBeInTheDocument();
     expect(within(card).getByText('Set 3 of 5')).toBeInTheDocument();
+  });
+
+  it('explains the product below the app: four numbered sections in the original voice', () => {
+    renderLanding();
+
+    const sections = [
+      ['01 / App experience', 'Start first. Save later.'],
+      ['02 / Features', 'Everything you need.'],
+      ['03 / Sports', '9 sports. Your rules.'],
+      ['04 / How it works', 'Three steps.'],
+    ];
+    for (const [eyebrow, heading] of sections) {
+      expect(screen.getByText(eyebrow)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: heading })).toBeInTheDocument();
+    }
+    expect(screen.getByText('Universal score tracker')).toBeInTheDocument();
+  });
+
+  it('shows the stat cards and says what the app does, only with claims the app keeps', () => {
+    renderLanding();
+
+    const stats = within(screen.getByRole('heading', { level: 2, name: 'Start first. Save later.' }).closest('section'));
+    expect(stats.getByText('Sports ready').previousElementSibling).toHaveTextContent('9');
+    expect(stats.getByText('Sign-ups needed').previousElementSibling).toHaveTextContent('0');
+    expect(stats.getByText('No signal needed').previousElementSibling).toHaveTextContent('OFFLINE');
+    expect(stats.getByText(/score your first point without an account/i)).toBeInTheDocument();
+    expect(stats.getByText(/keep scoring with no signal\. your matches save on your phone/i)).toBeInTheDocument();
+    expect(stats.getByText('You never have to sign in to score.')).toBeInTheDocument();
+
+    const features = within(screen.getByRole('heading', { level: 2, name: 'Everything you need.' }).closest('section'));
+    for (const title of ['No sign-up to start', 'Save to your account', 'Live share link', 'Undo that follows', 'Real rules, every sport', 'Tournaments']) {
+      expect(features.getByRole('heading', { level: 3, name: title })).toBeInTheDocument();
+    }
+    expect(features.getByText(/weak signal never costs one/i)).toBeInTheDocument();
+    expect(features.getByText(/every match you finish is saved to your account\. without one, matches stay on this phone/i)).toBeInTheDocument();
+    expect(features.queryByText(/every phone|any phone|follow you/i)).not.toBeInTheDocument();
+    expect(features.getByText(/stays private until you share it/i)).toBeInTheDocument();
+  });
+
+  it('lists the three steps and closes with a Start and a sign up action', () => {
+    renderLanding({ cloudAuthAvailable: true });
+
+    const how = within(screen.getByRole('heading', { level: 2, name: 'Three steps.' }).closest('section'));
+    expect(how.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      expect.stringContaining('Pick sport'),
+      expect.stringContaining('Add teams'),
+      expect.stringContaining('Score live'),
+    ]);
+
+    const closing = within(screen.getByRole('heading', { level: 2, name: 'Ready?' }).closest('section'));
+    expect(closing.getByRole('link', { name: 'Start Cricket' })).toHaveAttribute('href', '/play?sport=cricket');
+    expect(closing.getByRole('link', { name: 'Create a free account' })).toHaveAttribute('href', '/signup');
   });
 
   it('turns each sport tile into a start link for that sport', () => {
