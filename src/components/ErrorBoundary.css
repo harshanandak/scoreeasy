@@ -42,3 +42,23 @@
   font-size: 0.75rem;
   text-align: left;
 }
+
+/* The quiet third action: no button chrome, so it never competes with Try again / Home. Keeps a 44px target. */
+.se-crash-quiet {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink-soft);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.se-crash-quiet:focus-visible {
+  outline: 2px solid var(--se-color-ink);
+  outline-offset: 2px;
+}

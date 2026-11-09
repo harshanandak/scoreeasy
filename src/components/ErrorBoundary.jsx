@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import * as Sentry from '@sentry/react';
 import { clearChunkReloadAttempt, isChunkLoadError, reloadOnceForNewVersion } from '../utils/chunkReload';
 import { hasOutstandingSaveFailure } from '../utils/saveHealth';
+import { AppScoringConfirmDialog } from '../designs/design1-mono/components/AppScoringPrompt';
 import '../designs/design1-mono/kit/kit.css';
 import '../designs/design1-mono/kit/history.css';
 import './ErrorBoundary.css';
@@ -10,7 +11,7 @@ import './ErrorBoundary.css';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, reloading: false };
+    this.state = { hasError: false, error: null, reloading: false, confirmingDiscard: false, discardFailed: false };
   }
 
   static getDerivedStateFromError(error) {
@@ -49,11 +50,30 @@ class ErrorBoundary extends React.Component {
 
   handleRetry = () => {
     clearChunkReloadAttempt();
-    this.setState({ hasError: false, error: null, reloading: false });
+    this.setState({ hasError: false, error: null, reloading: false, confirmingDiscard: false, discardFailed: false });
   };
 
   handleHome = () => {
     globalThis.location.assign('/app');
+  };
+
+  // The kept match behind a crashed scoring board, if there is one. Looked up only when the crash
+  // screen renders, and never allowed to break it.
+  getDiscard() {
+    try {
+      return this.props.getDiscard?.() || null;
+    } catch {
+      return null;
+    }
+  }
+
+  handleDiscard = () => {
+    const discard = this.getDiscard();
+    if (discard && discard.run() !== false) {
+      this.handleHome();
+      return;
+    }
+    this.setState({ confirmingDiscard: false, discardFailed: true });
   };
 
   render() {
@@ -85,6 +105,7 @@ class ErrorBoundary extends React.Component {
         : 'Reload to get it.';
     }
 
+    const discard = isStale ? null : this.getDiscard();
     return (
       <div className="se-crash">
         <section className="kit-card kit-empty se-crash-card" role="alert" aria-labelledby="se-crash-title">
@@ -106,7 +127,22 @@ class ErrorBoundary extends React.Component {
             <button type="button" className="se-ctl" onClick={this.handleHome}>
               Home
             </button>
+            {discard && (
+              <button type="button" className="se-crash-quiet" aria-label={discard.name} onClick={() => this.setState({ confirmingDiscard: true, discardFailed: false })}>
+                {discard.label}
+              </button>
+            )}
           </div>
+          {discard && this.state.discardFailed && (
+            <p className="se-crash-status" role="status">Could not remove this match. Try again.</p>
+          )}
+          {discard && this.state.confirmingDiscard && (
+            <AppScoringConfirmDialog
+              {...discard.prompt}
+              onCancel={() => this.setState({ confirmingDiscard: false })}
+              onConfirm={this.handleDiscard}
+            />
+          )}
         </section>
       </div>
     );
@@ -120,6 +156,8 @@ ErrorBoundary.propTypes = {
   // When provided (including `null`), render this instead of the default panel.
   fallback: PropTypes.node,
   onError: PropTypes.func,
+  // Returns { label, name, prompt, run } when a kept match sits behind this screen; adds a quiet Discard action.
+  getDiscard: PropTypes.func,
   captureToSentry: PropTypes.bool,
 };
 
