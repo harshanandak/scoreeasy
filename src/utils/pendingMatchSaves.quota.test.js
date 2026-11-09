@@ -100,3 +100,57 @@ it('lets a local synced marker suppress a stale fallback record without sending'
   await refresh();
   expect(queue.pendingMatchSaves(owner)).toEqual([]);
 });
+
+it('keeps a fallback acknowledgement when a second tab rejects after it with local metadata blocked', async () => {
+  queue.enqueueMatchSave(owner, payload, 'quota-match');
+  await durable();
+  const tabA = queue;
+  await refresh();
+  Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+  let acknowledge;
+  let reject;
+  const saveA = vi.fn(() => new Promise(resolve => { acknowledge = resolve; }));
+  const saveB = vi.fn(() => new Promise((resolve, rejectSave) => { reject = rejectSave; }));
+  const requestA = tabA.attemptMatchSave(tabA.pendingMatchSaves(owner)[0], saveA);
+  const requestB = queue.attemptMatchSave(queue.pendingMatchSaves(owner)[0], saveB);
+  await waitFor(() => { expect(saveA).toHaveBeenCalledTimes(1); expect(saveB).toHaveBeenCalledTimes(1); });
+  acknowledge('server-id');
+  await requestA;
+  reject(new TypeError('Failed to fetch'));
+  expect(await requestB).toMatchObject({ status: 'synced' });
+  await refresh();
+  expect(queue.pendingMatchSaves(owner)).toEqual([]);
+  expect(queue.isMatchSaveConfirmed(owner, payload.clientMatchId)).toBe(true);
+});
+
+it.each(['success', 'rejection'])('guards a newer durable tournament completion from an old in-flight %s', async outcome => {
+  const reference = { storageKey: 'se_football', tournamentId: 100, matchId: 'final' };
+  const first = { ...payload, clientMatchId: 'tournament:football:100:final' };
+  const replay = { ...first, score1: 0, score2: 3, date: 2 };
+  const setItem = block.getMockImplementation();
+  block.mockRestore();
+  const write = Storage.prototype.setItem;
+  const fixture = result => write.call(localStorage, 'se_football', JSON.stringify([{ id: 100, matches: [{
+    id: 'final', status: 'completed', score1: result.score1, score2: result.score2, completedAt: result.date,
+  }] }]));
+  fixture(first);
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(setItem);
+  const original = queue.enqueueMatchSave(owner, first, undefined, reference);
+  await durable();
+  Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+  let acknowledge;
+  let reject;
+  const save = vi.fn(() => new Promise((resolve, rejectSave) => { acknowledge = resolve; reject = rejectSave; }));
+  const request = queue.attemptMatchSave(original, save);
+  await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+  fixture(replay);
+  queue.enqueueMatchSave(owner, replay, undefined, reference);
+  await durable();
+  if (outcome === 'success') acknowledge('old-server-result');
+  else reject(new TypeError('Failed to fetch'));
+  await request;
+  await refresh();
+  expect(queue.pendingMatchSaves(owner)[0]).toMatchObject({ payload: replay, state: outcome === 'success' ? 'failed' : 'pending' });
+  if (outcome === 'success') expect(queue.pendingMatchSaves(owner)[0]).toMatchObject({ terminal: true, priorCompletionSaved: true });
+  expect(JSON.parse(localStorage.getItem('se_football'))[0].matches[0]).toMatchObject({ score1: 0, score2: 3 });
+});
