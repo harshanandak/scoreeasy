@@ -450,7 +450,7 @@ export default function MonoSetsLiveScore() {
       }
       setSaveWarning('');
       saveTournamentToConvex(updatedTournament);
-      live.finalize({ resultType: isMatchComplete ? 'decided' : 'abandoned' });
+      live.finalize({ resultType: isMatchComplete ? 'decided' : 'abandoned', snapshot: liveSnapshot });
       // Reference wiring (kernel 42f06561): a completed match lands on the
       // FULL-TIME result screen. Unwind the scorer entry AND the active-scoring
       // guard entry through the app-owned seam so Back from Result returns to the

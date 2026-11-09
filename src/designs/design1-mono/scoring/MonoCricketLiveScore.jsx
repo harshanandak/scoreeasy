@@ -601,7 +601,7 @@ export default function MonoCricketLiveScore() {
       }
       setSaveWarning('');
       saveTournamentToConvex(updatedTournament);
-      live.finalize({ resultType: completedMatch.resultType });
+      live.finalize({ resultType: completedMatch.resultType, snapshot: liveSnapshot });
       return true;
     }, () => {
       const destination = `/${sport || 'cricket'}/tournament/${id}`;

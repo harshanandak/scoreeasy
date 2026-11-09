@@ -617,7 +617,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
     void syncQuickMatch(entry);
     clearData(quickDraftKey);
     setSaveWarning('');
-    live.finalize({ resultType: entry.resultType });
+    live.finalize({ resultType: entry.resultType, snapshot: liveSnapshot });
     completeScoring(`/${sport}/quick?result=${encodeURIComponent(matchId)}`);
   };
 
@@ -665,7 +665,7 @@ export default function MonoTennisLiveScore({ storageMode = 'tournament' }) {
       }
       setSaveWarning('');
       saveTournamentToConvex(updatedTournament);
-      live.finalize({ resultType: isMatchComplete ? 'decided' : 'abandoned' });
+      live.finalize({ resultType: isMatchComplete ? 'decided' : 'abandoned', snapshot: liveSnapshot });
       completeScoring(`/${sport}/tournament/${id}`);
     });
   };

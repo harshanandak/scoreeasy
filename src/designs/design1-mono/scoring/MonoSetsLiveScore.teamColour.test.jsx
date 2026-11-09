@@ -114,7 +114,7 @@ describe('tournament team-colour presentation', () => {
     expect(saved().matches[0]).toMatchObject({ status: 'completed', resultType: 'abandoned', winner: null, sets: [set(1, 0)] });
     expect(saved().matches[0].draftState).toBeUndefined();
     expect(h.navigate).toHaveBeenCalledWith('/volleyball/tournament/1/match/m1/result', { replace: true });
-    expect(h.live.finalize).toHaveBeenCalledWith({ resultType: 'abandoned' });
+    expect(h.live.finalize).toHaveBeenCalledWith({ resultType: 'abandoned', snapshot: h.bar.descriptor.snapshot });
     await act(async () => {});
     expect(h.save).toHaveBeenCalled();
     expect(h.save).toHaveBeenCalledWith(expect.objectContaining({ clientMatchId: 'tournament:volleyball:1:m1', resultType: 'abandoned' }));
