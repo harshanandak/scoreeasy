@@ -32,3 +32,15 @@ SetupStepper.propTypes = {
   current: PropTypes.number.isRequired,
   onSelect: PropTypes.func.isRequired,
 };
+
+/** One quiet opt-in row; saved rules are never applied to a new match automatically. */
+export function LastCustomSetup({ saved, summary, onUse }) {
+  if (!saved) return null;
+  return <button type="button" className="kit-rrow" onClick={() => onUse(saved)}>
+    <span className="kit-rrow-text">
+      <span className="kit-rrow-label">Use my last custom setup</span>
+      <span className="kit-rrow-summary">{summary}</span>
+    </span>
+  </button>;
+}
+LastCustomSetup.propTypes = { saved: PropTypes.object, summary: PropTypes.string, onUse: PropTypes.func.isRequired };

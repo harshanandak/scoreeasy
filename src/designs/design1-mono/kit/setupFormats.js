@@ -232,3 +232,8 @@ export function matchesSetupPreset(value, preset) {
 export function setupPresetTitle(label, customised) {
   return customised ? `Customised · from ${label}` : label;
 }
+
+export function isCustomSetup(format) {
+  return format.kabaddiRules?.presetId === 'custom' || format.periodPreset === 'custom'
+    || format.rulesPreset === 'Custom school' || format.formatMode === 'custom' || format.preset === 'custom';
+}

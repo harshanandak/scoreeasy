@@ -60,9 +60,10 @@ import { KitSegmented, KitStepper } from './kit/KitSetupParts';
 import { KitChoiceGrid } from './kit/KitFormControls';
 import TeamCards from './kit/TeamCards';
 import RulesRow from './kit/RulesRow';
-import { SetupStepper } from './kit/SetupSteps';
-import { clearSetupPrefs, loadSetupPrefs, saveSetupPrefs } from '../../utils/setupPrefs';
+import { LastCustomSetup, SetupStepper } from './kit/SetupSteps';
+import { clearSetupPrefs, loadSetupPrefs, saveSetupPrefs, loadCustomSetup, saveCustomSetup } from '../../utils/setupPrefs';
 import {
+  isCustomSetup,
   applyFormatChoice,
   applyGoalsDetail,
   describeFormatChoices,
@@ -403,6 +404,8 @@ export default function MonoQuickMatch() {
   const [team1Color, setTeam1Color] = useState(() => normaliseHex(wizardColours?.[0]) ?? remembered?.colours?.[0] ?? DEFAULT_TEAM_COLOURS.a);
   const [team2Color, setTeam2Color] = useState(() => normaliseHex(wizardColours?.[1]) ?? remembered?.colours?.[1] ?? DEFAULT_TEAM_COLOURS.b);
   const [setupStep, setSetupStep] = useState(0);
+  const [customSetupSource, setCustomSetupSource] = useState(null);
+  const lastCustomSetup = loadCustomSetup(sport);
   const teamColourOn = isTeamColourSport(sport);
   const teamColourStyle = useTeamColours(team1Color, team2Color, sport);
   const [saveWarning, setSaveWarning] = useState('');
@@ -487,7 +490,7 @@ export default function MonoQuickMatch() {
     isRefereeing,
   });
   const buildDefaultFormat = () => {
-    if (sport === 'kabaddi') return { kabaddiRules: resolveKabaddiRules('quick') };
+    if (sport === 'kabaddi') return { kabaddiRules: resolveKabaddiRules('standard') };
     if (isCricket) return buildCricketFormat(initialPreset);
     if (initialFormatMode === 'standard') return supportsGoalPeriods(sport) ? periodPreset(sport) : applyStandardDefaults(sport, {});
     if (isGoals) return { mode: 'free' };
@@ -862,7 +865,7 @@ export default function MonoQuickMatch() {
   useEffect(() => {
     if (restoredDraftRef.current) return;
     if (isCricket || !sport) return;
-    if (sport === 'kabaddi') { setFormat({ kabaddiRules: resolveKabaddiRules('quick') }); return; }
+    if (sport === 'kabaddi') { setFormat({ kabaddiRules: resolveKabaddiRules('standard') }); return; }
 
     setFormatMode('standard');
     setRulesOpen(false);
@@ -1105,6 +1108,7 @@ export default function MonoQuickMatch() {
 
   const startMatch = () => {
     if (!team1Name.trim() || !team2Name.trim()) return;
+    if (isCustomSetup(format)) saveCustomSetup(sport, { format, source: customSetupSource });
     const presetId = format.kabaddiRules?.presetId;
     saveSetupPrefs(sport, {
       colours: teamColourOn ? [team1Color, team2Color] : null,
@@ -1973,20 +1977,8 @@ export default function MonoQuickMatch() {
     }
     setFormat(prev => ({ ...applyFormatChoice(sportConfig, choiceId, prev), ...(supportsSetsRules(sport) && prev.rulesPreset?.startsWith('Official') ? { rulesPreset: 'Custom school' } : {}) }));
   };
-  // Apply the remembered format once per sport, after the default-format effects above have run.
-  useEffect(() => {
-    setSetupStep(0);
-    if (restoredDraftRef.current || !sport || !remembered?.formatId || (isCricket && preselectedFormat)) return;
-    const id = remembered.formatId;
-    if (sport === 'kabaddi') {
-      if (['quick', 'standard', 'women', 'pro'].includes(id)) setFormat({ kabaddiRules: resolveKabaddiRules(id) });
-    } else if (isCricket) {
-      if (CRICKET_FORMATS.some(f => f.id === id)) chooseCricketFormat(id);
-    } else if (formatChoices(sportConfig).choices.some(c => c.id === id)) {
-      chooseFormat(id);
-    }
-    // Once per sport: the remembered choices are read at mount.
-  }, [sport]);
+  // New matches always start with standard rules; saved custom rules are opt-in on Rules.
+  useEffect(() => { setSetupStep(0); setCustomSetupSource(null); }, [sport]);
   const resetRemembered = () => {
     clearSetupPrefs(sport);
     setRemembered(null);
@@ -2284,7 +2276,7 @@ export default function MonoQuickMatch() {
           <>
             {remembered && (
               <div className="kit-remembered" role="status">
-                <span>Using your last colours and format for {sportName}.</span>
+                <span>Using your last colours for {sportName}.</span>
                 <button type="button" className="se-ctl" onClick={resetRemembered}>Reset</button>
               </div>
             )}
@@ -2381,7 +2373,16 @@ export default function MonoQuickMatch() {
           </>
         )}
 
-        {stepId === 'rules' && rulesStepNode}
+        {stepId === 'rules' && <>
+          <LastCustomSetup saved={lastCustomSetup}
+            summary={lastCustomSetup ? (lastCustomSetup.format.kabaddiRules ? kabaddiRulesLine(lastCustomSetup.format.kabaddiRules) : setupRulesLine(sportConfig, lastCustomSetup.format)) : ''}
+            onUse={saved => {
+              setFormat(saved.format);
+              setCustomSetupSource(saved.source);
+              if (isCricket) { setCricketPreset('custom'); setFormatMode('custom'); }
+            }} />
+          {rulesStepNode}
+        </>}
 
         <div className="kit-setup-cta">
           <button
