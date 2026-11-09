@@ -39,13 +39,14 @@ export function RulesPanel({ children, testId }) {
 }
 RulesPanel.propTypes = { children: PropTypes.node, testId: PropTypes.string };
 
-/** A labelled segmented choice as one row of the panel. */
-export function RulesSegmentRow({ label, options, value, onChange }) {
+/** A labelled segmented choice as one row of the panel, with an optional one-line hint. */
+export function RulesSegmentRow({ label, options, value, onChange, hint }) {
   const id = useId();
   return (
     <div className="kit-rules-block">
       <p id={id} className="kit-setup-label">{label}</p>
       <KitSegmented labelledBy={id} options={options} value={value} onChange={onChange} />
+      {hint && <p className="kit-setup-hint">{hint}</p>}
     </div>
   );
 }
@@ -54,7 +55,17 @@ RulesSegmentRow.propTypes = {
   options: PropTypes.array.isRequired,
   value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
+  hint: PropTypes.string,
 };
+
+/**
+ * A row with the label on the left and one native control (select or number box) on the right, for
+ * a rule whose values are not a short fixed list. The control keeps its own accessible name.
+ */
+export function RulesFieldRow({ label, children }) {
+  return <label className="kit-fieldrow"><span>{label}</span>{children}</label>;
+}
+RulesFieldRow.propTypes = { label: PropTypes.string.isRequired, children: PropTypes.node };
 
 /** Rows that only apply while a switch above them is on, set in a step. */
 export function RulesSub({ children }) {
