@@ -25,6 +25,7 @@ export function KitSegmented({ label, options, value, onChange, labelledBy }) {
           key={o.id}
           type="button"
           aria-pressed={o.id === value ? 'true' : 'false'}
+          disabled={o.disabled}
           onClick={() => onChange(o.id)}
         >
           {o.label}
@@ -36,7 +37,7 @@ export function KitSegmented({ label, options, value, onChange, labelledBy }) {
 KitSegmented.propTypes = {
   label: PropTypes.string,
   labelledBy: PropTypes.string,
-  options: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, label: PropTypes.node.isRequired })).isRequired,
+  options: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, label: PropTypes.node.isRequired, disabled: PropTypes.bool })).isRequired,
   value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
 };

@@ -1,0 +1,367 @@
+/* Tournament setup (MonoTournamentSetup): the quick-setup language (kit-setup-*, kit-seg,
+   kit-stepper, kit-rules-*) plus the few parts a multi-step flow needs. Colour only from
+   --se-color-* tokens, so dark mode is a token swap. */
+
+/* progress: one bar per step, number and name under it */
+.kit-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 4px 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-steps li {
+  display: grid;
+  gap: 6px;
+  color: var(--se-color-ink-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.15;
+}
+
+.kit-steps i {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--se-color-line-soft);
+}
+
+.kit-steps b {
+  font-family: var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-steps li.is-done {
+  color: var(--se-color-ink-soft);
+}
+
+.kit-steps li.is-done i {
+  background: var(--se-color-ink);
+}
+
+.kit-steps li.is-now {
+  color: var(--se-color-ink);
+  font-weight: 800;
+}
+
+.kit-steps li.is-now i {
+  background: var(--se-color-action);
+}
+
+.kit-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* choice cards: a title and one line, two across */
+.kit-opts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.kit-opt {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+  color: var(--se-color-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-opt b {
+  font: 800 0.98rem/1.15 var(--se-font-sans);
+  overflow-wrap: anywhere;
+}
+
+.kit-opt span {
+  color: var(--se-color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 550;
+  line-height: 1.25;
+}
+
+.kit-opt[aria-pressed='true'] {
+  border-color: var(--se-color-ink);
+  background: var(--se-ctl-bg);
+  box-shadow: 2px 2px 0 var(--se-color-ink);
+}
+
+.kit-setup .kit-seg button:disabled {
+  border-style: dashed;
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* a nested block of options that belongs to the choice above it (playoff rules) */
+.kit-setup-panel {
+  margin-top: 16px;
+  padding: 2px 14px 14px;
+  border-radius: 18px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+}
+
+.kit-setup-panel h3 {
+  margin: 14px 2px 0;
+  font: 800 1rem/1.2 var(--se-font-display);
+  letter-spacing: -0.01em;
+}
+
+.kit-setup-intro {
+  margin: 12px 2px 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* notes: a sentence the scorer should see, tinted by tone; the words carry it, never colour alone */
+.kit-setup-note {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.kit-setup-note.is-warn {
+  background: var(--se-color-warning-soft);
+  color: var(--se-color-warning);
+}
+
+.kit-setup-note.is-danger {
+  background: var(--se-color-danger-soft);
+  color: var(--se-color-danger);
+}
+
+.kit-setup-input[aria-invalid='true'] {
+  box-shadow: inset 0 0 0 2px var(--se-color-danger);
+}
+
+/* team name rows */
+.kit-setup-teams {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-setup-teams li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.kit-setup-teams li > span {
+  color: var(--se-color-ink-muted);
+  font: 800 0.95rem var(--se-font-num);
+  text-align: right;
+}
+
+/* a short value row: a toggle beside a stepper */
+.kit-setup-inline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kit-setup-inline .se-ctl[aria-pressed='true'] {
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+}
+
+/* review: summary and schedule */
+.kit-setup-sum {
+  display: grid;
+  margin: 8px 0 0;
+}
+
+.kit-setup-sum div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 44px;
+  padding: 10px 0;
+}
+
+.kit-setup-sum div + div {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-setup-sum dt {
+  flex: none;
+  color: var(--se-color-ink-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.kit-setup-sum dd {
+  min-width: 0;
+  margin: 0;
+  font-weight: 750;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.kit-setup-sched {
+  display: grid;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-setup-sched li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 0;
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.kit-setup-sched li + li {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-setup-sched li > span:first-child {
+  flex: none;
+  color: var(--se-color-ink-soft);
+  font-size: 0.8rem;
+}
+
+.kit-setup-sched li > span:last-child {
+  min-width: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.kit-setup-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.kit-setup-head h2 {
+  margin: 0;
+  font: 800 1.05rem/1.2 var(--se-font-display);
+  letter-spacing: -0.01em;
+}
+
+.kit-setup-count {
+  color: var(--se-color-ink-soft);
+  font: 700 0.82rem var(--se-font-num);
+}
+
+.kit-setup-count.is-full {
+  color: var(--se-color-danger);
+}
+
+/* roster: player chips with 44px actions */
+.kit-pl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-pl li {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-left: 4px;
+  border-radius: 14px;
+  background: var(--se-color-surface-warm);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.kit-pl li.is-captain {
+  box-shadow: inset 0 0 0 2px var(--se-color-ink);
+}
+
+.kit-pl button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink-soft);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.kit-pl li.is-captain button:first-child {
+  color: var(--se-color-ink);
+}
+
+.kit-pl em {
+  margin: 0 2px 0 4px;
+  font: 800 0.85rem var(--se-font-sans);
+  font-style: normal;
+}
+
+.kit-setup-card {
+  margin-top: 16px;
+}
+
+.kit-setup-field > .kit-setup-roster {
+  margin-top: 12px;
+}
+
+.kit-setup-pre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kit-setup-pre b {
+  display: block;
+  font: 800 1rem/1.15 var(--se-font-display);
+}
+
+.kit-setup-pre span:not(.kit-chip) {
+  display: block;
+  margin-top: 2px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 550;
+}
+
+.kit-pl li > * {
+  flex: none;
+}
+
+.kit-pl-name {
+  padding: 0 2px;
+}
