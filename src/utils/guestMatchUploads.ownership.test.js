@@ -22,6 +22,8 @@ it.each([false, true])('never claims X unmarked result after its IndexedDB queue
   const blocked = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError'); });
   queue.enqueueMatchSave('X', payload, match.id);
   await queue.hydratePendingMatchSaves('X');
+  // Finish the background migration attempt while its marker/destination writes still fail.
+  await scope.resolveMatchStorageOwnership();
   blocked.mockRestore();
   const store = await import('./pendingMatchSaveStore');
   const [record] = await store.loadPendingSaveFallback('X');
