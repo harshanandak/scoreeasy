@@ -8,7 +8,7 @@ import './kit.css';
 import './setup.css';
 import './formControls.css';
 
-/** A small (i) that reveals a longer explanation under its row; 44px to tap, a 20px mark to see. */
+/** A small (i) that reveals a longer explanation under its row; 48px to tap, a 20px mark to see. */
 function InfoButton({ label, open, onToggle, controls }) {
   return (
     <button type="button" className="kit-info-btn" aria-label={`About ${label}`} aria-expanded={open ? 'true' : 'false'} aria-controls={controls} onClick={onToggle}>

@@ -2,12 +2,12 @@ import { loadQuickMatchDrafts } from '../../utils/appEntry';
 import { applyStandardDefaults } from '../../utils/sportDefaults';
 import { applySetsPreset, freezeSetsFormat } from '../../models/setsRules';
 import { getSportById } from '../../models/sportRegistry';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within, waitFor } from '@testing-library/react';
+import { beforeEach, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
-import { loadCustomSetup, SETUP_PREFS_KEY } from '../../utils/setupPrefs';
-import { closeOpenSheet, findTeamNameInput, goToSetupStep, teamColourGroup } from '../../test/teamColour';
+import { loadCustomSetup, saveCustomSetup } from '../../utils/setupPrefs';
+import { goToSetupStep } from '../../test/teamColour';
 
 vi.mock('convex/react', () => ({
   useConvex: () => ({ query: async () => null }),
@@ -58,4 +58,46 @@ it('starts with standard rules, saves Custom on Start, and applies it only when 
   expect(screen.getByRole('heading', { name: /Standard/ })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: /Use my last custom setup/ }));
   expect(screen.getByRole('heading', { name: /^Customised/ })).toBeInTheDocument();
+});
+
+
+it('keeps card descriptions and started rules consistent with the current edited values', async () => {
+  renderQuick('/volleyball/quick');
+  await screen.findByRole('button', { name: 'Start volleyball' });
+  goToSetupStep('Rules');
+  fireEvent.click(screen.getByRole('button', { name: '15' }));
+  goToSetupStep('Game');
+  const card = screen.getByRole('radio', { name: 'Best of 5' });
+  expect(card).toHaveAccessibleDescription(/15 points a set/);
+  fireEvent.click(card);
+  fireEvent.click(screen.getByRole('button', { name: 'Start volleyball' }));
+  await waitFor(() => expect(loadQuickMatchDrafts().find(d => d.sport === 'volleyball')?.format.setsRules).toMatchObject({ sets: 5, points: 15 }));
+});
+
+it('preserves the match toss when applying saved rules and never stores it as a preference', async () => {
+  const standard = applyStandardDefaults('volleyball', {});
+  saveCustomSetup('volleyball', { format: applySetsPreset('volleyball', 'custom', { ...standard, points: 15, initialServer: 1 }), source: { label: 'Standard', format: standard } });
+  renderQuick('/volleyball/quick');
+  await screen.findByRole('button', { name: 'Start volleyball' });
+  goToSetupStep('Rules');
+  fireEvent.click(screen.getByRole('button', { name: 'Team B' }));
+  expect(screen.queryByRole('heading', { name: /^Customised/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: /Use my last custom setup/ }));
+  expect(screen.getByRole('button', { name: 'Team B' })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: 'Start volleyball' }));
+  expect(loadCustomSetup('volleyball').format).not.toHaveProperty('initialServer');
+  await waitFor(() => expect(loadQuickMatchDrafts().find(d => d.sport === 'volleyball')?.format.setsRules.initialServer).toBe(2));
+});
+
+it('does not overwrite a saved custom setup after selecting an unchanged Custom chip', async () => {
+  const previous = { ...applyStandardDefaults('volleyball', {}), points: 15, rulesPreset: 'Custom school' };
+  saveCustomSetup('volleyball', { format: previous });
+  renderQuick('/volleyball/quick');
+  await screen.findByRole('button', { name: 'Start volleyball' });
+  goToSetupStep('Rules');
+  fireEvent.click(screen.getByRole('radio', { name: 'Custom school' }));
+  expect(screen.getByRole('heading', { name: /^Custom school/ })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Start volleyball' }));
+  expect(loadCustomSetup('volleyball').format).toEqual(previous);
 });

@@ -6,7 +6,7 @@ import { KABADDI_PRESETS, kabaddiRulesLine, resolveKabaddiRules } from '../../..
 import { KitChoiceGrid } from './KitFormControls';
 import { KitSegmented } from './KitSetupParts';
 import KabaddiRulesPanel from './KabaddiRulesPanel';
-import { matchesSetupPreset, setupPresetTitle } from './setupFormats';
+import { matchesSetupPreset, setupPresetTitle, baseKabaddiPreset } from './setupFormats';
 import { RulesSummaryLine } from './RulesParts';
 import './setupSteps.css';
 
@@ -14,12 +14,7 @@ const NAMED = KABADDI_PRESETS.filter(p => p.id !== 'custom');
 const CUSTOM = KABADDI_PRESETS.find(p => p.id === 'custom');
 
 /** The named preset a rules object started from (a Custom copy keeps its source and court). */
-export function basePresetOf(r) {
-  if (NAMED.some(p => p.id === r.presetId)) return r.presetId;
-  if (/^House rules/.test(r.source || '')) return 'quick';
-  if (/^Rectangular baseline/.test(r.source || '')) return 'pro';
-  return r.court ? 'women' : 'standard';
-}
+export const basePresetOf = baseKabaddiPreset;
 
 const endText = end => end.kind === 'timed' ? `2 × ${end.halfMs / 60000} min halves`
   : end.kind === 'target' ? `first to ${end.points}` : `${end.raidsPerTeam} raids each`;
@@ -50,7 +45,7 @@ export function KabaddiGameStep({ format, onChange }) {
   const r = format.kabaddiRules || resolveKabaddiRules('quick');
   const isNamed = NAMED.some(p => p.id === r.presetId);
   const options = [...NAMED.map(p => ({ id: p.id, label: p.label, hint: kabaddiBlurb(resolveKabaddiRules(p.id)) })),
-    ...(isNamed ? [] : [{ ...CUSTOM, label: 'Customised', hint: `Your edited rules: ${kabaddiBlurb(r)}` }])];
+    ...(isNamed ? [] : [{ ...CUSTOM, label: matchesSetupPreset({ ...r, presetId: basePresetOf(r) }, resolveKabaddiRules(basePresetOf(r))) ? 'Custom' : 'Customised', hint: `Your edited rules: ${kabaddiBlurb(r)}` }])];
   return <section className="kit-setup-field" aria-labelledby="kabaddi-format-label">
     <h2 id="kabaddi-format-label" className="kit-setup-label">What are you playing?</h2>
     <KitChoiceGrid labelledBy="kabaddi-format-label" columns={1} options={options} value={isNamed ? r.presetId : 'custom'}

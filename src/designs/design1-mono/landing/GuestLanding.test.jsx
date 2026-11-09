@@ -1,9 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocalAuthProvider } from '../../../auth/AuthContext';
 import { getSportsList } from '../../../models/sportRegistry';
 import GuestLanding from './GuestLanding';
+import { buildDemo } from './landingDemo';
+import { LANDING_FAQ } from './landingFaq';
 
 function LocationProbe() {
   const location = useLocation();
@@ -41,7 +45,7 @@ function setViewport(width, mobile = false) {
   });
 }
 
-const chipFor = (name) => within(screen.getByRole('group', { name: 'Pick a sport' })).getByRole('button', { name });
+const pickFor = (name) => within(screen.getByRole('group', { name: 'Pick a sport' })).getByRole('button', { name });
 const startLinks = (name) => screen.getAllByRole('link', { name });
 
 describe('GuestLanding', () => {
@@ -56,9 +60,11 @@ describe('GuestLanding', () => {
   it('says what the app is and gives one primary action plus a secondary sign in', () => {
     renderLanding();
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score any game on your phone.');
-    expect(screen.getByText(/start in seconds with no account/i)).toHaveTextContent(/works offline/i);
-    expect(screen.getByText(/once you sign in, the matches you score are saved to your account/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Free live scoreboard app, on your phone.');
+    const sub = screen.getByText(/no account needed, and it keeps working offline/i);
+    for (const sport of getSportsList()) {
+      expect(sub).toHaveTextContent(sport.name.toLowerCase());
+    }
     expect(startLinks(/^Start /)[0]).toHaveAttribute('href', '/play?sport=cricket');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
   });
@@ -69,26 +75,27 @@ describe('GuestLanding', () => {
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
   });
 
-  it('shows a chip for every registered sport', () => {
+  it('shows exactly one picker tile for every registered sport', () => {
     renderLanding();
 
     for (const sport of getSportsList()) {
-      expect(chipFor(sport.name)).toBeInTheDocument();
+      expect(pickFor(sport.name)).toBeInTheDocument();
     }
     expect(getSportsList()).toHaveLength(9);
+    expect(within(screen.getByRole('group', { name: 'Pick a sport' })).getAllByRole('button')).toHaveLength(9);
   });
 
-  it('keeps the chip, the example card and every Start button on the same sport', () => {
+  it('keeps the picker, the example card and every Start button on the same sport', () => {
     renderLanding();
 
-    expect(chipFor('Cricket')).toHaveAttribute('aria-pressed', 'true');
+    expect(pickFor('Cricket')).toHaveAttribute('aria-pressed', 'true');
     expect(within(screen.getByTestId('landing-example')).getByText('Cricket')).toBeInTheDocument();
     expect(startLinks('Start Cricket')).toHaveLength(2);
 
-    fireEvent.click(chipFor('Badminton'));
+    fireEvent.click(pickFor('Badminton'));
 
-    expect(chipFor('Badminton')).toHaveAttribute('aria-pressed', 'true');
-    expect(chipFor('Cricket')).toHaveAttribute('aria-pressed', 'false');
+    expect(pickFor('Badminton')).toHaveAttribute('aria-pressed', 'true');
+    expect(pickFor('Cricket')).toHaveAttribute('aria-pressed', 'false');
     expect(within(screen.getByTestId('landing-example')).getByText('Badminton')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Start Cricket' })).not.toBeInTheDocument();
     for (const link of startLinks('Start Badminton')) {
@@ -101,55 +108,149 @@ describe('GuestLanding', () => {
 
     const card = screen.getByTestId('landing-example');
     expect(within(card).getByText('India')).toBeInTheDocument();
-    expect(within(card).getByText(/^\d+\/\d+$/)).toBeInTheDocument();
+    // Both innings: India's finished 20 overs and Australia's reply, each as runs with wickets small beside it.
+    expect([...card.querySelectorAll('.kit-score-num')].map((num) => num.textContent)).toEqual([
+      expect.stringMatching(/^\d+\/\d+$/),
+      expect.stringMatching(/^\d+\/2$/),
+    ]);
 
-    fireEvent.click(chipFor('Volleyball'));
+    fireEvent.click(pickFor('Volleyball'));
     expect(within(card).getByText('Eagles')).toBeInTheDocument();
     expect(within(card).getByText('18')).toBeInTheDocument();
-    expect(within(card).getByText('Set 3 of 5')).toBeInTheDocument();
+    expect(within(card).getByText('16')).toBeInTheDocument();
+    expect(within(card).getByText('Set 3 of 5 · sets 1-1')).toBeInTheDocument();
   });
 
-  it('explains the product below the app: four numbered sections in the original voice', () => {
+  it('shows one simple card for every sport: two team halves, both numbers and one context line', () => {
+    renderLanding();
+    const card = screen.getByTestId('landing-example');
+
+    for (const sport of getSportsList()) {
+      fireEvent.click(pickFor(sport.name));
+      const demo = buildDemo(sport.id);
+
+      expect(within(card).getByText(sport.name)).toBeInTheDocument();
+      expect(within(card).getByText('LIVE')).toBeInTheDocument();
+      expect(card.querySelectorAll('.kit-score-field')).toHaveLength(2);
+      const fields = [...card.querySelectorAll('.kit-score-field')];
+      demo.teams.forEach((team, i) => {
+        expect(within(fields[i]).getByText(team.name)).toBeInTheDocument();
+        expect(fields[i].querySelector('.kit-score-num')).toHaveTextContent(`${team.score}${team.suffix ?? ''}`);
+      });
+      expect(within(card).getByText('VS')).toBeInTheDocument();
+      expect(card.querySelectorAll('.kit-score-context')).toHaveLength(1);
+      expect(card.querySelector('.kit-score-context')).toHaveTextContent(demo.context);
+      // The sport's icon sits in the header; the old tile mark is gone.
+      expect(card.querySelectorAll('.kit-score-glyph svg')).toHaveLength(1);
+      expect(card.querySelector('.kit-tile-mark')).toBeNull();
+      // Clutter the old card carried: set grids, point categories, mat pips, serve pills, status pill, chip.
+      expect(card.querySelector('.kit-score-pips, .kit-score-cells, .kit-score-cols, .kit-chip')).toBeNull();
+      expect(within(card).queryByText(/^(Serving|Batting|Raids next|Example match)$/)).not.toBeInTheDocument();
+    }
+  });
+
+  it('puts the situation in the context line: the chase, the set count, the half-time score', () => {
+    renderLanding();
+    const context = () => screen.getByTestId('landing-example').querySelector('.kit-score-context');
+
+    expect(context()).toHaveTextContent(/^Australia need \d+ off 87 balls$/);
+    fireEvent.click(pickFor('Volleyball'));
+    expect(context()).toHaveTextContent('Set 3 of 5 · sets 1-1');
+    fireEvent.click(pickFor('Football'));
+    expect(context()).toHaveTextContent("63' · HT 1-0");
+    fireEvent.click(pickFor('Kabaddi'));
+    expect(context()).toHaveTextContent(/^Half 1 · (Tigers|Bulls) raid next$/);
+  });
+
+  it('explains the product below the app: three numbered sections in sequence', () => {
     renderLanding();
 
     const sections = [
-      ['01 / App experience', 'Start first. Save later.'],
-      ['02 / Features', 'Everything you need.'],
-      ['03 / Sports', '9 sports. Your rules.'],
-      ['04 / How it works', 'Three steps.'],
+      ['01 / Features', 'What it does.'],
+      ['02 / How it works', 'Score a match in three steps.'],
+      ['03 / FAQ', 'Questions people ask.'],
     ];
     for (const [eyebrow, heading] of sections) {
       expect(screen.getByText(eyebrow)).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 2, name: heading })).toBeInTheDocument();
     }
-    expect(screen.getByText('Universal score tracker')).toBeInTheDocument();
+    expect(screen.getByText('Scoreboard app for local matches')).toBeInTheDocument();
   });
 
-  it('shows the stat cards and says what the app does, only with claims the app keeps', () => {
+  it('has no second sports section or tile grid below the picker', () => {
     renderLanding();
 
-    const stats = within(screen.getByRole('heading', { level: 2, name: 'Start first. Save later.' }).closest('section'));
-    expect(stats.getByText('Sports ready').previousElementSibling).toHaveTextContent('9');
-    expect(stats.getByText('Sign-ups needed').previousElementSibling).toHaveTextContent('0');
-    expect(stats.getByText('No signal needed').previousElementSibling).toHaveTextContent('OFFLINE');
-    expect(stats.getByText(/score your first point without an account/i)).toBeInTheDocument();
-    expect(stats.getByText(/keep scoring with no signal\. your matches save on your phone/i)).toBeInTheDocument();
-    expect(stats.getByText('You never have to sign in to score.')).toBeInTheDocument();
+    expect(screen.queryByText(/\/ Sports$/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: /sports you can score/i })).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('button', { name: /^Quick match:/ })).toHaveLength(0);
+    expect(within(screen.getByRole('group', { name: 'Pick a sport' })).getAllByRole('button')).toHaveLength(9);
+  });
 
-    const features = within(screen.getByRole('heading', { level: 2, name: 'Everything you need.' }).closest('section'));
-    for (const title of ['No sign-up to start', 'Save to your account', 'Live share link', 'Undo that follows', 'Real rules, every sport', 'Tournaments']) {
+  it('drops the old Start first section and does not repeat its facts', () => {
+    renderLanding();
+
+    expect(screen.queryByText('01 / App experience')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'Start first. Save later.' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Sign-ups needed')).not.toBeInTheDocument();
+    expect(screen.queryByText('You never have to sign in to score.')).not.toBeInTheDocument();
+  });
+
+  it('lists at most five short features, only with claims the app keeps', () => {
+    renderLanding();
+
+    const features = within(screen.getByRole('heading', { level: 2, name: 'What it does.' }).closest('section'));
+    const titles = ['Each sport’s own rules', 'Undo that follows', 'Tournaments', 'Live share link', 'Saved to your account'];
+    expect(features.getAllByRole('listitem')).toHaveLength(titles.length);
+    for (const title of titles) {
       expect(features.getByRole('heading', { level: 3, name: title })).toBeInTheDocument();
     }
-    expect(features.getByText(/weak signal never costs one/i)).toBeInTheDocument();
-    expect(features.getByText(/every match you finish is saved to your account\. without one, matches stay on this phone/i)).toBeInTheDocument();
+    expect(features.getByText(/signed in, send a link so friends follow the score/i)).toBeInTheDocument();
+    expect(features.getByText(/sign in to keep every finished match/i)).toBeInTheDocument();
     expect(features.queryByText(/every phone|any phone|follow you/i)).not.toBeInTheDocument();
-    expect(features.getByText(/stays private until you share it/i)).toBeInTheDocument();
+  });
+
+  it('answers each FAQ question as visible text', () => {
+    renderLanding();
+
+    const faq = within(screen.getByRole('heading', { level: 2, name: 'Questions people ask.' }).closest('section'));
+    expect(LANDING_FAQ.length).toBeGreaterThanOrEqual(4);
+    expect(LANDING_FAQ.length).toBeLessThanOrEqual(5);
+    for (const { question, answer } of LANDING_FAQ) {
+      expect(faq.getByRole('heading', { level: 3, name: question })).toBeVisible();
+      expect(faq.getByText(answer)).toBeVisible();
+    }
+    expect(LANDING_FAQ.map((item) => item.question)).not.toContain('Which sports can I score?');
+    const free = LANDING_FAQ.find((item) => item.question === 'Is Score Easy free?');
+    expect(free.answer).toBe('Yes. Scoring, tournaments and an account are free.');
+  });
+
+  it('keeps the FAQPage JSON-LD in index.html word for word with the visible FAQ', () => {
+    const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => JSON.parse(match[1]));
+
+    const faqPage = blocks.find((block) => block['@type'] === 'FAQPage');
+    expect(faqPage.mainEntity.map((item) => [item.name, item.acceptedAnswer.text])).toEqual(
+      LANDING_FAQ.map((item) => [item.question, item.answer]),
+    );
+
+    const app = blocks.find((block) => block['@type'] === 'SoftwareApplication');
+    expect(app).toMatchObject({ name: 'Score Easy', applicationCategory: 'SportsApplication' });
+  });
+
+  it('keeps the page title and description inside search snippet length', () => {
+    const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+    const title = html.match(/<title>([^<]*)<\/title>/)[1];
+    const description = html.match(/<meta name="description" content="([^"]*)"/)[1];
+
+    expect(title.length).toBeLessThan(60);
+    expect(description.length).toBeLessThan(155);
+    expect(html).not.toMatch(/rel="canonical"/);
   });
 
   it('lists the three steps and closes with a Start and a sign up action', () => {
     renderLanding({ cloudAuthAvailable: true });
 
-    const how = within(screen.getByRole('heading', { level: 2, name: 'Three steps.' }).closest('section'));
+    const how = within(screen.getByRole('heading', { level: 2, name: 'Score a match in three steps.' }).closest('section'));
     expect(how.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
       expect.stringContaining('Pick sport'),
       expect.stringContaining('Add teams'),
@@ -159,14 +260,6 @@ describe('GuestLanding', () => {
     const closing = within(screen.getByRole('heading', { level: 2, name: 'Ready?' }).closest('section'));
     expect(closing.getByRole('link', { name: 'Start Cricket' })).toHaveAttribute('href', '/play?sport=cricket');
     expect(closing.getByRole('link', { name: 'Create a free account' })).toHaveAttribute('href', '/signup');
-  });
-
-  it('turns each sport tile into a start link for that sport', () => {
-    renderLanding();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Quick match: Table Tennis' }));
-
-    expect(screen.getByLabelText('Current route')).toHaveTextContent('/play?sport=tabletennis');
   });
 
   it('points Create a free account at the app on cloud builds and at production otherwise', () => {
@@ -193,6 +286,6 @@ describe('GuestLanding', () => {
     renderLanding({ cloudAuthAvailable: true });
 
     expect(startLinks('Start Cricket')).toHaveLength(2);
-    expect(screen.getByRole('button', { name: 'Quick match: Kabaddi' })).toBeInTheDocument();
+    expect(pickFor('Kabaddi')).toBeInTheDocument();
   });
 });

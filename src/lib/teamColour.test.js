@@ -126,6 +126,9 @@ describe('teamColourVars', () => {
       }
       expect(vars[`--team-${side}-scrim`]).toMatch(/^rgba\(\d{1,3}, \d{1,3}, \d{1,3}, (0|1|0\.\d+)\)$/);
       expect(vars[`--team-${side}-motif`]).toMatch(/^rgba\(\d{1,3}, \d{1,3}, \d{1,3}, (0|1|0\.\d+)\)$/);
+      // The motif again as a solid colour plus an alpha: marks set opacity, not an rgba colour.
+      expect(normaliseHex(vars[`--team-${side}-motif-ink`])).not.toBeNull();
+      expect(vars[`--team-${side}-motif-alpha`]).toMatch(/^(0|1|0\.\d+)$/);
     }
   });
 

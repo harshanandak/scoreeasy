@@ -1,15 +1,15 @@
 // Set rules are always visible. Edits use the existing Custom school format; the sport rules module is unchanged.
 import PropTypes from 'prop-types';
-import { applySetsPreset, freezeSetsFormat, SETS_PROFILES } from '../../../models/setsRules';
+import { applySetsPreset, SETS_PROFILES } from '../../../models/setsRules';
 import { KitChoiceGrid } from './KitFormControls';
 import { MoreRules, RulesFieldRow, RulesPanel, RulesSegmentRow, RulesSummaryLine } from './RulesParts';
 import { applyStandardDefaults } from '../../../utils/sportDefaults';
-import { setPointPresets, setupRulesLine, matchesSetupPreset, setupPresetTitle } from './setupFormats';
+import { setPointPresets, setupRulesLine, matchesSetupPreset, isCustomSetup, setupSourcePreset, setupPresetTitle } from './setupFormats';
 import './setupSteps.css';
 
 const CUSTOM = 'Custom school';
 
-/** casual, custom or official, from the format's saved preset name. */
+/** The selected standard, casual, official or custom card, independent of edited values. */
 export function setsPresetOf(format, profile) {
   if (!format.rulesPreset) return 'standard';
   if (format.rulesPreset === profile.label) return 'official';
@@ -94,20 +94,24 @@ export function SetsRulesStep({ sport, sportConfig, format, onChange, source, on
   const profile = SETS_PROFILES[sport];
   const preset = setsPresetOf(format, profile);
   const label = preset === 'official' ? profile.label : preset === 'standard' ? 'Standard' : preset === 'custom' ? CUSTOM : 'Quick casual';
-  const base = source || { label, format };
-  const title = setupPresetTitle(preset === 'custom' ? base.label : label, preset === 'custom');
-  const values = value => {
-    const { preset: _preset, ...rules } = freezeSetsFormat(sportConfig, { ...value, setsRules: undefined }).setsRules;
-    return rules;
-  };
+  const base = setupSourcePreset(sportConfig, format, source);
+  const customised = isCustomSetup(format, base, sportConfig);
+  const title = setupPresetTitle(customised ? base.label : label, customised);
+  const keepToss = next => ({ ...next, ...(Object.hasOwn(format, 'initialServer') ? { initialServer: format.initialServer } : {}) });
+  const reset = () => { onSourceChange(null); onChange(keepToss(base.format)); };
   const change = next => {
-    if (matchesSetupPreset(values(next), values(base.format))) { onSourceChange(null); onChange({ ...base.format, ...(Object.hasOwn(next, 'initialServer') ? { initialServer: next.initialServer } : {}) }); return; }
+    if (!isCustomSetup(next, base, sportConfig)) { reset(); return; }
     onSourceChange(base);
     onChange(applySetsPreset(sport, 'custom', next));
   };
   const choosePreset = id => {
+    if (id === 'custom') {
+      onSourceChange(preset === 'custom' ? base : { label, format });
+      onChange(applySetsPreset(sport, 'custom', format));
+      return;
+    }
     onSourceChange(null);
-    onChange(id === 'standard' ? applyStandardDefaults(sport, {}) : applySetsPreset(sport, id, {}));
+    onChange(id === 'standard' ? keepToss(applyStandardDefaults(sport, {})) : applySetsPreset(sport, id, format));
   };
   const points = setPointPresets(sportConfig);
   const single = format.type !== 'best-of';
@@ -117,11 +121,11 @@ export function SetsRulesStep({ sport, sportConfig, format, onChange, source, on
   };
   return <section className="kit-setup-field" aria-labelledby="sets-rules-summary">
     <RulesSummaryLine id="sets-rules-summary" title={title} detail={setupRulesLine(sportConfig, format)}
-      resetLabel={`Reset to ${base.label}`} onReset={preset === 'custom' ? () => { onSourceChange(null); onChange(base.format); } : undefined} />
+      resetLabel={`Reset to ${base.label}`} onReset={customised ? reset : undefined} />
     <RulesPanel testId="sets-rules-panel">
       <div className="kit-rules-block">
         <KitChoiceGrid label="Rules preset" value={preset} onChange={choosePreset}
-          options={[{ id: 'standard', label: 'Standard' }, { id: 'casual', label: 'Quick casual' }, { id: 'custom', label: CUSTOM }, { id: 'official', label: profile.label }]} />
+          options={[{ id: 'standard', label: 'Standard' }, { id: 'casual', label: 'Quick casual' }, { id: 'custom', label: customised ? 'Customised' : CUSTOM }, { id: 'official', label: profile.label }]} />
       </div>
       {points.length > 0 && <RulesSegmentRow label={single ? 'Points to win' : 'Points per set'}
         options={points.map(n => ({ id: `p-${n}`, label: String(n) }))}
@@ -129,7 +133,7 @@ export function SetsRulesStep({ sport, sportConfig, format, onChange, source, on
       <RulesSegmentRow label="First server" hint="Team-level service. Choose unknown if the toss has not been recorded."
         options={[{ id: 'none', label: 'Unknown' }, { id: '1', label: names[0] || 'Team A' }, { id: '2', label: names[1] || 'Team B' }]}
         value={format.initialServer ? String(format.initialServer) : 'none'}
-        onChange={id => change({ ...format, initialServer: id === 'none' ? null : Number(id) })} />
+        onChange={id => onChange({ ...format, initialServer: id === 'none' ? null : Number(id) })} />
       <MoreRules>
         {preset === 'official' && <p className="kit-setup-hint"><a href={profile.source} target="_blank" rel="noreferrer">Rules source and edition</a></p>}
         <CustomRules sport={sport} profile={profile} format={format} onChange={change} />
@@ -150,7 +154,7 @@ SetsRulesStep.propTypes = {
 
 // The tennis scorer fixes games and tiebreak rules; only the existing set-count path is editable.
 export function TennisRulesStep({ format, onChange }) {
-  const custom = format.formatMode === 'custom';
+  const custom = isCustomSetup(format, null, { id: 'tennis', engine: 'sets' });
   const standard = applyStandardDefaults('tennis', {});
   return <section className="kit-setup-field">
     <RulesSummaryLine title={setupPresetTitle('Standard', custom)} detail="6 games a set, win by 2, tiebreak at 6-6 to 7"
