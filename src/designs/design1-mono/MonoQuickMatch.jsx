@@ -2844,6 +2844,7 @@ export default function MonoQuickMatch() {
             subtitle={`${sportConfig?.name || 'Match'} \u00b7 ${setsRule}`}
             setUnit={setUnit}
             sportColour={sportConfig?.config?.setLabel ? sportIdentity(sport)?.core : undefined}
+            sportId={sport}
             isLive={Boolean(live?.isLive)}
             colourStyle={teamColourStyle}
             halves={boardHalves}

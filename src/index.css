@@ -181,6 +181,8 @@
   --team-a-tint: #ffe6e3;
   --team-a-line: #c7423b;
   --team-a-motif: rgba(0, 0, 0, 0.17);
+  --team-a-motif-ink: #000000;
+  --team-a-motif-a: 0.17;
   --team-b-hi: #2f61e3;
   --team-b-core: #1d4ccc;
   --team-b-lo: #182aa4;
@@ -189,6 +191,8 @@
   --team-b-tint: #e4edff;
   --team-b-line: #2d57be;
   --team-b-motif: rgba(0, 0, 0, 0.17);
+  --team-b-motif-ink: #000000;
+  --team-b-motif-a: 0.17;
 }
 
 /* Kit dark (plan 2026-10-22 §2 and §4): swaps the neutral roles only; Go, sport and team
