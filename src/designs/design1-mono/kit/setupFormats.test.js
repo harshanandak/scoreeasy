@@ -138,6 +138,6 @@ describe('preset rule comparison', () => {
     expect(matchesSetupPreset({ ...preset, extra: false }, preset)).toBe(false);
     expect(matchesSetupPreset(null, {})).toBe(false);
     expect(setupPresetTitle('T20', false)).toBe('T20');
-    expect(setupPresetTitle('T20', true)).toBe('Customised ? from T20');
+    expect(setupPresetTitle('T20', true)).toBe('Customised · from T20');
   });
 });

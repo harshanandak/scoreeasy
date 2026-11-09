@@ -230,5 +230,5 @@ export function matchesSetupPreset(value, preset) {
 }
 
 export function setupPresetTitle(label, customised) {
-  return customised ? `Customised ? from ${label}` : label;
+  return customised ? `Customised · from ${label}` : label;
 }

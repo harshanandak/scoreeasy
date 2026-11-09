@@ -76,7 +76,7 @@ describe('KabaddiRulesStep summary, changes and reset', () => {
   it('counts what changed from the preset and resets in one tap', () => {
     render(<Host />);
     fireEvent.click(screen.getByRole('switch', { name: 'Raid clock' }));
-    expect(screen.getByRole('heading', { level: 2, name: 'Customised ? from Quick casual · 1 change' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Customised · from Quick casual · 1 change' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reset to Quick casual' }));
     expect(latest.kabaddiRules).toEqual(resolveKabaddiRules('quick'));
     expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
@@ -88,7 +88,7 @@ describe('KabaddiRulesStep summary, changes and reset', () => {
     expect(screen.getByRole('spinbutton', { name: 'Players a side' })).toHaveValue('7');
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Minutes a half' }), { target: { value: '15' } });
     expect(latest.kabaddiRules).toEqual(custom(standard, { end: { ...standard.end, halfMs: 900000 } }));
-    expect(screen.getByRole('heading', { name: /^Customised ? from Standard/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Customised · from Standard/ })).toBeInTheDocument();
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Minutes a half' }), { target: { value: '20' } });
     expect(screen.getByRole('heading', { name: /^Standard ?/ })).toBeInTheDocument();
   });

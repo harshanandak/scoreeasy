@@ -72,7 +72,7 @@ describe('quick setup steps', () => {
     expect(screen.getByRole('switch', { name: 'Bonus point' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('switch', { name: 'Raid clock' }));
-    expect(screen.getByRole('heading', { level: 2, name: /^Customised ? from Quick casual/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /^Customised · from Quick casual/ })).toBeInTheDocument();
     goToSetupStep('Game');
     expect(screen.getByRole('radio', { name: 'Customised' })).toHaveAttribute('aria-checked', 'true');
   });
