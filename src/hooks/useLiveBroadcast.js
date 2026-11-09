@@ -17,7 +17,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useConvex, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { enqueue, size } from '../lib/live/outbox';
-import { flushLiveSession } from '../lib/live/recovery';
+import { beginLivePublication, flushLiveSession, PUBLICATION_RESOLUTION_WINDOW_MS, resolvePendingLiveFinish } from '../lib/live/recovery';
 import { loadSession, saveSession, liveClientMatchId } from '../lib/live/liveSession';
 
 /**
@@ -61,8 +61,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     setFailure(value ? { error: value, source: 'operation' } : null);
   }, []);
 
-  const flush = useCallback(async () => {
-    const clientMatchId = clientMatchIdRef.current;
+  const flush = useCallback(async (clientMatchId = clientMatchIdRef.current) => {
     const result = await flushLiveSession(clientMatchId, { scorePoint: scorePointM, undo: undoM, finalize: finalizeM,
       getOwnedSession: clientMatchId => convex.query(api.live.getOwnedSession, { clientMatchId }) });
     if (clientMatchId === clientMatchIdRef.current) {
@@ -114,12 +113,13 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       setIsLive(Boolean(session?.isShared));
       setIsShared(Boolean(session?.isShared));
       if (session) persistSeq(seqRef.current, { isShared: session.isShared === true });
+      if (resolvePendingLiveFinish(clientMatchId, session)) await flush();
       return session;
     } catch (e) {
       if (generation === generationRef.current) setError(e instanceof Error ? e : new Error(String(e)));
       return null;
     }
-  }, [convex, persistSeq]);
+  }, [convex, persistSeq, flush]);
 
   const goLive = useCallback(
     async (opts) => {
@@ -148,6 +148,8 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         }
       }
 
+      const completePublication = beginLivePublication(clientMatchId);
+      let publishedSession = null;
       try {
         const res = await createM({
           clientMatchId,
@@ -171,11 +173,13 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         if (!snapshot) throw new Error('Sharing requires the current score snapshot');
         if (generation !== generationRef.current) return null;
         await setVisibilityM({ matchId: res.matchId, visibility: opts.visibility ?? 'public', snapshot, ...(snapshot.kabaddi ? { kabaddiHistory: opts.getKabaddiHistory ? opts.getKabaddiHistory() : opts.kabaddiHistory ?? [] } : {}) });
+        publishedSession = { matchId: res.matchId, token: res.token, isShared: opts.visibility !== 'private' };
+        const originalSession = loadSession(clientMatchId);
+        if (originalSession) saveSession(clientMatchId, { ...originalSession, ...publishedSession });
         if (generation !== generationRef.current) return null;
         setIsLive(opts.visibility !== 'private');
         setIsShared(opts.visibility !== 'private');
         setError(null);
-        persistSeq(seqRef.current, { isShared: opts.visibility !== 'private' });
         return res;
       } catch (e) {
         // Additive: a failed go-live must never break local scoring.
@@ -183,7 +187,12 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         return null;
       } finally {
         publishingRef.current = false;
-        void flush();
+        try {
+          completePublication(publishedSession);
+          await flush(clientMatchId);
+        } catch (e) {
+          if (clientMatchId === clientMatchIdRef.current) setError(e instanceof Error ? e : new Error(String(e)));
+        }
       }
     },
     [enabled, createM, setVisibilityM, flush, persistSeq],
@@ -223,6 +232,16 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   const finalize = useCallback(async ({ resultType, snapshot } = {}) => {
     const clientMatchId = clientMatchIdRef.current;
     const prior = loadSession(clientMatchId);
+    if (clientMatchId && publishingRef.current && !prior?.broadcastError) {
+      if (snapshot && !prior?.pendingFinish && !prior?.finalizeIntent) {
+        const at = Date.now();
+        saveSession(clientMatchId, { ...prior, isShared: prior?.isShared === true,
+          pendingFinish: { snapshot, ...(resultType ? { resultType } : {}),
+            at, publicationDeadline: at + PUBLICATION_RESOLUTION_WINDOW_MS,
+            clientEventId: `${clientMatchId}:finalize:${crypto.randomUUID()}` } });
+      }
+      return null;
+    }
     if (!clientMatchId || prior?.broadcastError || prior?.isShared !== true
       || (!matchIdRef.current && !snapshot)) return null;
     seqRef.current = Math.max(seqRef.current, prior?.seq ?? 0);
