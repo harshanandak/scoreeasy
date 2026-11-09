@@ -54,7 +54,7 @@
   height: 32px;
   border-radius: 16px;
   background: var(--se-color-surface-warm);
-  box-shadow: inset 0 0 0 2px var(--se-color-ink-muted);
+  box-shadow: inset 0 0 0 2px var(--se-color-ink-soft);
   transition: background 120ms ease;
 }
 
@@ -65,7 +65,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--se-color-ink-muted);
+  background: var(--se-color-ink-soft);
   transition: transform 120ms ease, background 120ms ease;
 }
 
