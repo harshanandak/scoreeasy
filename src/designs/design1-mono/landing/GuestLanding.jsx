@@ -27,28 +27,28 @@ function sportPlayPath(sportId) {
 }
 
 const EXPERIENCE_STATS = [
-  { value: String(sports.length), label: 'Sports ready', detail: 'Cricket, kabaddi, volleyball, and the other ground and court games start from one picker.' },
-  { value: 'NOW', label: 'Guest mode', detail: 'No account required before the first score tap.' },
-  { value: 'ON', label: 'Local first', detail: 'History and scoring continue when cloud auth is unavailable.' },
+  { value: String(sports.length), label: 'Sports ready', detail: `Cricket, kabaddi, volleyball and ${sports.length - 3} more, all picked from one list.` },
+  { value: '0', label: 'Sign-ups needed', detail: 'Score your first point without an account.' },
+  { value: 'OFFLINE', label: 'No signal needed', detail: 'Keep scoring with no signal. Your matches save on your phone.' },
 ];
 
 const EXPERIENCE_NOTES = [
-  'Sport choices route into the same play setup used by the app.',
-  'Guest, offline, and sync paths are separated so scoring is never blocked by login.',
-  'One scorer on the web, Android, and iOS.',
+  'Pick a sport here and it is already chosen on the play screen.',
+  'You never have to sign in to score.',
+  'Use it in your browser, or on Android and iOS.',
 ];
 
 const FEATURES = [
-  { tag: 'Core', title: 'Guest first', desc: 'Start a match from the browser or app without signup. Every point is saved on your phone first, so a weak signal never costs one.' },
-  { tag: 'Sync', title: 'Sync when you sign in', desc: 'Sign in when you want your history on every phone. Until then, matches and stats stay on this one.' },
+  { tag: 'Start', title: 'No sign-up to start', desc: 'Start a match from your browser or the app without an account. Every point is saved on your phone first, so a weak signal never costs one.' },
+  { tag: 'Account', title: 'Your history, any phone', desc: 'Sign in when you want your matches on every phone. Until then, they stay on this one.' },
   { tag: 'Share', title: 'Live share link', desc: 'Signed in, you can go live and send a link so friends follow the score. A match stays private until you share it.' },
-  { tag: 'Track', title: 'Undo that follows', desc: 'Mis-tapped? Undo takes the point back, and the score, serve and set go back with it.' },
-  { tag: 'Rules', title: 'Rules engine', desc: 'Deuce, sets, overs and raids are scored by each sport’s own rules, so the board never disagrees with the game.' },
+  { tag: 'Undo', title: 'Undo that follows', desc: 'Mis-tapped? Undo takes the point back, and the score, serve and set go back with it.' },
+  { tag: 'Rules', title: 'Real rules, every sport', desc: 'Deuce, sets, overs and raids are scored by each sport’s own rules, so the board never disagrees with the game.' },
   { tag: 'Organize', title: 'Tournaments', desc: 'Round-robin and knockout brackets with standings, scored match by match.' },
 ];
 
 const STEPS = [
-  { num: '01', label: 'Pick sport', sub: `Choose from ${sports.length} sports with pre-configured rules.` },
+  { num: '01', label: 'Pick sport', sub: `Choose from ${sports.length} sports, each with its own rules.` },
   { num: '02', label: 'Add teams', sub: 'Name your teams or players. Set match format.' },
   { num: '03', label: 'Score live', sub: 'Tap to score. Track sets, overs, or goals in real time.' },
 ];
@@ -140,7 +140,7 @@ export default function GuestLanding() {
             Score any game <HandUnderline>on your phone</HandUnderline>.
           </h1>
           <p className="kit-sub">
-            Start as a guest in seconds. It works offline, and your matches sync when you sign in.
+            Start in seconds with no account. It works offline, and your matches follow you when you sign in.
           </p>
           <div className="kit-landing-actions">
             <Link className="se-go" to={startPath}>
@@ -165,7 +165,7 @@ export default function GuestLanding() {
           </div>
           <ExampleCard demo={demo} />
           <p className="kit-landing-note">
-            Scored by the same rules engine the app uses. Tap Start to score your own.
+            Scored by the same rules the app uses for each sport. Tap Start to score your own.
           </p>
         </section>
       </div>

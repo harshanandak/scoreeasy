@@ -57,8 +57,8 @@ describe('GuestLanding', () => {
     renderLanding();
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score any game on your phone.');
-    expect(screen.getByText(/start as a guest in seconds/i)).toHaveTextContent(/works offline/i);
-    expect(screen.getByText(/sync when you sign in/i)).toBeInTheDocument();
+    expect(screen.getByText(/start in seconds with no account/i)).toHaveTextContent(/works offline/i);
+    expect(screen.getByText(/follow you when you sign in/i)).toBeInTheDocument();
     expect(startLinks(/^Start /)[0]).toHaveAttribute('href', '/play?sport=cricket');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
   });
@@ -130,12 +130,14 @@ describe('GuestLanding', () => {
 
     const stats = within(screen.getByRole('heading', { level: 2, name: 'Start first. Save later.' }).closest('section'));
     expect(stats.getByText('Sports ready').previousElementSibling).toHaveTextContent('9');
-    expect(stats.getByText('Guest mode')).toBeInTheDocument();
-    expect(stats.getByText('Local first')).toBeInTheDocument();
-    expect(stats.getByText(/no account required before the first score tap/i)).toBeInTheDocument();
+    expect(stats.getByText('Sign-ups needed').previousElementSibling).toHaveTextContent('0');
+    expect(stats.getByText('No signal needed').previousElementSibling).toHaveTextContent('OFFLINE');
+    expect(stats.getByText(/score your first point without an account/i)).toBeInTheDocument();
+    expect(stats.getByText(/keep scoring with no signal\. your matches save on your phone/i)).toBeInTheDocument();
+    expect(stats.getByText('You never have to sign in to score.')).toBeInTheDocument();
 
     const features = within(screen.getByRole('heading', { level: 2, name: 'Everything you need.' }).closest('section'));
-    for (const title of ['Guest first', 'Sync when you sign in', 'Live share link', 'Undo that follows', 'Rules engine', 'Tournaments']) {
+    for (const title of ['No sign-up to start', 'Your history, any phone', 'Live share link', 'Undo that follows', 'Real rules, every sport', 'Tournaments']) {
       expect(features.getByRole('heading', { level: 3, name: title })).toBeInTheDocument();
     }
     expect(features.getByText(/weak signal never costs one/i)).toBeInTheDocument();
