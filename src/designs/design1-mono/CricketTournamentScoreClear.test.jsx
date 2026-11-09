@@ -48,7 +48,7 @@ function mount(matches, overrides = {}) {
   </MemoryRouter>);
 }
 
-function expectCleared(match) {
+function expectCleared(match, original) {
   expect(match).toMatchObject({
     status: 'pending', winner: null, score1: null, score2: null,
     team1Score: null, team2Score: null, innings: null, guidedInnings: null,
@@ -56,8 +56,11 @@ function expectCleared(match) {
   });
   for (const field of [
     'resultType', 'winDesc', 'completedAt', 'startedAt', 'endedAt', 'elapsedSeconds',
-    'draftState', 'currentInningsIndex', 'clientMatchId', 'syncOwnerId', 'sync',
+    'draftState', 'currentInningsIndex',
   ]) expect(match[field], field).toBeUndefined();
+  for (const field of ['clientMatchId', 'syncOwnerId', 'sync']) {
+    expect(match[field], field).toEqual(original[field]);
+  }
 }
 
 beforeEach(() => localStorage.clear());
@@ -82,7 +85,7 @@ describe('cricket tournament Clear safety', () => {
 
     click('Clear');
     click('Confirm clear score for Team A vs Team B');
-    await waitFor(() => expectCleared(saved().matches[0]));
+    await waitFor(() => expectCleared(saved().matches[0], match));
     expect(liveClientMatchId(baseId)).not.toBe(originalLiveId);
     expect(screen.getByRole('status')).toHaveTextContent('Cleared the saved score for Team A vs Team B.');
     click('Undo clear score');
@@ -108,7 +111,7 @@ describe('cricket tournament Clear safety', () => {
     click('Confirm clear score for Team A vs Team B');
     await waitFor(() => {
       const bracket = saved().knockoutMatches;
-      expectCleared(bracket[0]);
+      expectCleared(bracket[0], semi1);
       expect(bracket[1]).toEqual(semi2);
       expect(bracket.slice(2).map(m => [m.team1Id, m.team2Id])).toEqual([[null, null], [null, null]]);
     });
