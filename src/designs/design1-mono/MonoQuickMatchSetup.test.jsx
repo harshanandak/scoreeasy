@@ -328,7 +328,7 @@ describe('MonoQuickMatch setup clarity', () => {
       expect(start).not.toHaveAttribute('aria-disabled', 'true');
       expect(screen.queryAllByRole('group', { name: /colour$/ })).toHaveLength(0);
       if (rulesAction) expect(screen.getByRole('button', { name: rulesAction })).toBeInTheDocument();
-      else if (sport === 'kabaddi') expect(screen.getByRole('button', { name: 'Rules' })).toBeInTheDocument();
+      else if (sport === 'kabaddi' || sport === 'tennis') expect(screen.getByRole('button', { name: 'Rules' })).toBeInTheDocument();
       else expect(screen.queryByRole('button', { name: /rules$/i })).toBeNull();
       expect(teamNameInput('A')).toHaveValue('Team A');
     },

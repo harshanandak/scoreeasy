@@ -1,8 +1,4 @@
-// Quick setup Rules step for the set sports that have rules to edit (volleyball, badminton, table
-// tennis). Game keeps its cards (single set, best of 3 ...). Rules: one summary line, the preset,
-// points a set and who serves first, and under More rules the source link or, for Custom school,
-// every other rule. The patches are the ones the old rules screen produced; the rules module
-// (models/setsRules) and the saved match are unchanged.
+// Set rules are always visible. Edits use the existing Custom school format; the sport rules module is unchanged.
 import PropTypes from 'prop-types';
 import { applySetsPreset, freezeSetsFormat, SETS_PROFILES } from '../../../models/setsRules';
 import { KitChoiceGrid } from './KitFormControls';
@@ -20,7 +16,7 @@ export function setsPresetOf(format, profile) {
   return format.rulesPreset === CUSTOM ? 'custom' : 'casual';
 }
 
-/** The rules that only Custom school edits. Each control keeps the name it always had. */
+/** Editable rules for every preset. Each control keeps its existing name. */
 function CustomRules({ sport, profile, format, onChange }) {
   const custom = format.customization || {};
   const change = (key, value) => onChange({ ...format, rulesPreset: CUSTOM, customization: { ...custom, [key]: value } });
@@ -105,7 +101,7 @@ export function SetsRulesStep({ sport, sportConfig, format, onChange, source, on
     return rules;
   };
   const change = next => {
-    if (matchesSetupPreset(values(next), values(base.format))) { onSourceChange(null); onChange(base.format); return; }
+    if (matchesSetupPreset(values(next), values(base.format))) { onSourceChange(null); onChange({ ...base.format, ...(Object.hasOwn(next, 'initialServer') ? { initialServer: next.initialServer } : {}) }); return; }
     onSourceChange(base);
     onChange(applySetsPreset(sport, 'custom', next));
   };
