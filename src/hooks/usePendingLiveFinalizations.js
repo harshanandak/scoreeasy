@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useConvex, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useAuth } from './useAuth';
 import { addAppStateChangeListener } from '../mobile/lifecycle';
@@ -10,11 +10,12 @@ import { size } from '../lib/live/outbox';
 export function usePendingLiveFinalizations() {
   const { isAuthenticated, user } = useAuth();
   const ready = Boolean(isAuthenticated && user);
+  const convex = useConvex();
   const scorePoint = useMutation(api.live.scorePoint);
   const undo = useMutation(api.live.undo);
   const finalize = useMutation(api.live.finalize);
   const mutations = useRef(null);
-  mutations.current = { scorePoint, undo, finalize };
+  mutations.current = { scorePoint, undo, finalize, getOwnedSession: clientMatchId => convex.query(api.live.getOwnedSession, { clientMatchId }) };
   const [, refresh] = useState(0);
   useEffect(() => {
     let disposed = false;

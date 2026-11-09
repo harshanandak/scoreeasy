@@ -63,19 +63,21 @@ export function useLiveBroadcast({ enabled = true } = {}) {
 
   const flush = useCallback(async () => {
     const clientMatchId = clientMatchIdRef.current;
-    const result = await flushLiveSession(clientMatchId, { scorePoint: scorePointM, undo: undoM, finalize: finalizeM });
+    const result = await flushLiveSession(clientMatchId, { scorePoint: scorePointM, undo: undoM, finalize: finalizeM,
+      getOwnedSession: clientMatchId => convex.query(api.live.getOwnedSession, { clientMatchId }) });
     if (clientMatchId === clientMatchIdRef.current) {
       setFailure(current => result?.error
         ? { error: result.error, source: 'drain' }
         : current?.source === 'drain' ? null : current);
     }
     return result;
-  }, [scorePointM, undoM, finalizeM]);
+  }, [convex, scorePointM, undoM, finalizeM]);
 
-  const persistSeq = useCallback((seq) => {
+  const persistSeq = useCallback((seq, sharing = {}) => {
     const cmid = clientMatchIdRef.current;
     if (!cmid) return;
-    saveSession(cmid, { ...loadSession(cmid), matchId: matchIdRef.current, token: tokenRef.current, seq });
+    const prior = loadSession(cmid);
+    saveSession(cmid, { ...prior, matchId: matchIdRef.current ?? prior?.matchId, token: tokenRef.current ?? prior?.token, seq: Math.max(seq, prior?.seq ?? 0), ...sharing });
   }, []);
 
   const restore = useCallback(async ({ clientMatchId: baseId }) => {
@@ -88,6 +90,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     setIsLive(false);
     setIsShared(false);
     const pending = loadSession(clientMatchId);
+    seqRef.current = pending?.seq ?? 0;
     if (pending?.broadcastError) {
       setError(new Error(pending.broadcastError.message));
       return null;
@@ -110,7 +113,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       setToken(tokenRef.current);
       setIsLive(Boolean(session?.isShared));
       setIsShared(Boolean(session?.isShared));
-      if (session) persistSeq(seqRef.current);
+      if (session) persistSeq(seqRef.current, { isShared: session.isShared });
       return session;
     } catch (e) {
       if (generation === generationRef.current) setError(e instanceof Error ? e : new Error(String(e)));
@@ -172,7 +175,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         setIsLive(opts.visibility !== 'private');
         setIsShared(opts.visibility !== 'private');
         setError(null);
-        persistSeq(seqRef.current);
+        persistSeq(seqRef.current, { isShared: opts.visibility !== 'private' });
         return res;
       } catch (e) {
         // Additive: a failed go-live must never break local scoring.
@@ -219,18 +222,28 @@ export function useLiveBroadcast({ enabled = true } = {}) {
 
   const finalize = useCallback(async ({ resultType, snapshot } = {}) => {
     const clientMatchId = clientMatchIdRef.current;
-    if (!enabled || !clientMatchId || !matchIdRef.current || loadSession(clientMatchId)?.broadcastError) return null;
-    if (snapshot) void point({ team: 'A', value: 0, type: 'correction', at: Date.now(), snapshot });
+    const prior = loadSession(clientMatchId);
+    if (!clientMatchId || prior?.broadcastError || prior?.isShared !== true
+      || (!matchIdRef.current && !snapshot)) return null;
+    seqRef.current = Math.max(seqRef.current, prior?.seq ?? 0);
+    if (snapshot) {
+      seqRef.current += 1;
+      // The server orders events; a restore-time id must not trust the cached sequence.
+      const clientEventId = matchIdRef.current ? `${clientMatchId}:${seqRef.current}` : `${clientMatchId}:finalize:${crypto.randomUUID()}`;
+      enqueue({ kind: 'point', team: 'A', value: 0, type: 'correction', at: Date.now(), snapshot, clientMatchId, clientEventId });
+    }
     saveSession(clientMatchId, {
-      ...loadSession(clientMatchId),
-      matchId: matchIdRef.current,
-      token: tokenRef.current,
+      ...prior,
+      matchId: matchIdRef.current ?? prior?.matchId,
+      token: tokenRef.current ?? prior?.token,
       seq: seqRef.current,
       finalizeIntent: { ...(resultType ? { resultType } : {}) },
     });
+    // Root recovery owns a finish even if this scorer leaves before restore resolves.
+    if (!matchIdRef.current) return null;
     const result = await flush();
     return result?.finalized ?? null;
-  }, [enabled, point, flush]);
+  }, [flush]);
 
   const setVisibility = useCallback(
     async (visibility, opts) => {
@@ -247,6 +260,8 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         const result = await setVisibilityM({ matchId, visibility, ...(snapshot ? { snapshot } : {}), ...(visibility !== 'private' && snapshot?.kabaddi ? { kabaddiHistory: opts?.getKabaddiHistory ? opts.getKabaddiHistory() : opts?.kabaddiHistory ?? [] } : {}) });
         setIsShared(visibility !== 'private');
         setIsLive(visibility !== 'private');
+        const clientMatchId = clientMatchIdRef.current;
+        saveSession(clientMatchId, { ...loadSession(clientMatchId), isShared: visibility !== 'private' });
         setError(null);
         return result;
       } catch (e) {
