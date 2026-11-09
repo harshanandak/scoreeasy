@@ -1,0 +1,96 @@
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { createKabaddiMatch } from '../../utils/kabaddiQuickMatch';
+import { resolveKabaddiRules } from '../../utils/kabaddiRules';
+import { clearData, listDataKeys, loadData, saveData } from '../../utils/storage';
+import { remainingTime, teamTotal } from '../../utils/kabaddiEngine';
+
+vi.mock('convex/react', () => ({ useMutation: () => vi.fn(), useQuery: () => undefined, useConvex: () => ({ query: async () => null }) }));
+vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn(), useParams: () => ({ sport: 'kabaddi' }), useLocation: () => ({ pathname: '/kabaddi/quick', search: '?resume=undo-clock' }), useSearchParams: () => [new URLSearchParams('?resume=undo-clock'), vi.fn()] }));
+vi.mock('../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, cloudAuthAvailable: false }) }));
+vi.mock('../../hooks/useLiveBroadcast', () => ({ useLiveBroadcast: () => ({ point: vi.fn(), undo: vi.fn(), finalize: vi.fn(), reset: vi.fn() }) }));
+const { default: MonoQuickMatch } = await import('./MonoQuickMatch');
+const KEY = 'se_quickmatch_draft_kabaddi_undo-clock';
+const saved = () => loadData(KEY).kabaddi.state;
+const undoTap = () => fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
+const clockTap = label => {
+  fireEvent.click(screen.getByRole('button', { name: 'Match options' }));
+  fireEvent.click(screen.getByRole('button', { name: label }));
+};
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-11-09T12:00:00Z'));
+  listDataKeys().forEach(clearData);
+  const format = { kabaddiRules: resolveKabaddiRules('standard') };
+  saveData(KEY, { phase: 'scoring', sport: 'kabaddi', quickMatchId: 'undo-clock', team1Name: 'Royals', team2Name: 'Strikers', format, kabaddi: createKabaddiMatch({ format, names: ['Royals', 'Strikers'] }) });
+});
+afterEach(() => vi.useRealTimers());
+
+it.each([false, true])('Undo walks clock actions then reopens saved raid marks, refresh=%s', refresh => {
+  let mounted = render(<MonoQuickMatch />);
+  const reload = () => { if (refresh) { mounted.unmount(); mounted = render(<MonoQuickMatch />); } };
+  fireEvent.click(screen.getByRole('button', { name: 'Raid by Royals' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Player 1' }));
+  act(() => vi.advanceTimersByTime(1000));
+  fireEvent.click(screen.getByRole('button', { name: /Back safe/ }));
+  act(() => vi.advanceTimersByTime(4000));
+  clockTap('Pause clock');
+  act(() => vi.advanceTimersByTime(3000));
+  clockTap('Resume clock');
+  const journal = structuredClone(saved().events);
+  const mat = structuredClone(saved().mat);
+  reload();
+  expect(screen.getByRole('button', { name: 'Undo last action' })).toHaveTextContent('Resume clock');
+  undoTap();
+  expect(saved().events.at(-1).targetId).toBe(journal.at(-1).id);
+  expect(saved().teams.map(teamTotal)).toEqual([1, 0]);
+  expect(saved().mat).toEqual(mat);
+  expect(remainingTime(saved(), Date.now())).toBe(1195000);
+  reload();
+  expect(screen.getByRole('button', { name: 'Undo last action' })).toHaveTextContent('Pause clock');
+  undoTap();
+  expect(saved().events.at(-1).targetId).toBe(journal.at(-2).id);
+  expect(saved().teams.map(teamTotal)).toEqual([1, 0]);
+  expect(remainingTime(saved(), Date.now())).toBe(1195000);
+  reload();
+  expect(screen.getByRole('button', { name: 'Undo last action' })).toHaveTextContent('Reopen raid');
+  undoTap();
+  expect(saved().teams.map(teamTotal)).toEqual([0, 0]);
+  expect(saved().mat.map(slots => slots.length)).toEqual([7, 7]);
+  expect(saved().outQueue).toEqual([[], []]);
+  expect(saved().activeRaid.draft.marks).toEqual([{ slot: 'B1', kind: 'touched' }]);
+  expect(remainingTime(saved(), Date.now())).toBe(1200000);
+  expect(remainingTime(saved(), Date.now(), 'raid')).toBe(30000);
+  expect(saved().events.slice(0, journal.length)).toEqual(journal);
+  reload();
+  expect(screen.getByRole('button', { name: 'Player 1, touched' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /Back safe/ }));
+  expect(saved().teams.map(teamTotal)).toEqual([1, 0]);
+  expect(saved().mat).toEqual(mat);
+  expect(saved().events.slice(0, journal.length)).toEqual(journal);
+});
+
+it.each([false, true])('Undo elapsed half time keeps 0:00 and the landed raid after refresh=%s', refresh => {
+  let mounted = render(<MonoQuickMatch />);
+  fireEvent.click(screen.getByRole('button', { name: 'Raid by Royals' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Player 1' }));
+  fireEvent.click(screen.getByRole('button', { name: /Back safe/ }));
+  const raid = structuredClone(saved());
+  act(() => vi.advanceTimersByTime(1200000));
+  clockTap('Call half time');
+  const journal = structuredClone(saved().events);
+  if (refresh) { mounted.unmount(); mounted = render(<MonoQuickMatch />); }
+  undoTap();
+  if (refresh) { mounted.unmount(); render(<MonoQuickMatch />); }
+  expect(saved()).toMatchObject({ half: 1, phase: 'paused', resumePhase: 'playing' });
+  expect(remainingTime(saved(), Date.now())).toBe(0);
+  expect(saved().teams).toEqual(raid.teams);
+  expect(saved().mat).toEqual(raid.mat);
+  expect(saved().outQueue).toEqual(raid.outQueue);
+  expect(saved().events.slice(0, journal.length)).toEqual(journal);
+  expect(screen.getByRole('button', { name: 'Undo last action' })).toHaveTextContent('Reopen raid');
+  undoTap();
+  expect(saved().activeRaid.draft.marks).toEqual([{ slot: 'B1', kind: 'touched' }]);
+  expect(saved().teams.map(teamTotal)).toEqual([0, 0]);
+});

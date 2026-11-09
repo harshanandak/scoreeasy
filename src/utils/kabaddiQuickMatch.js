@@ -17,7 +17,7 @@ export function resolveKabaddiFinishState(state, atMs) {
   if (phase !== 'playing' || state.activeRaid || state.rules.end.kind !== 'timed' || state.half !== state.rules.end.halves) return state;
   const now = Math.max(atMs, state.clock.anchorMonotonicMs);
   if (remainingTime(state, now) !== 0) return state;
-  return timeUp(state.phase === 'paused' ? resume(state, { atMs: now }) : state);
+  return timeUp(state.phase === 'paused' ? resume(state, { atMs: now }) : state, { atMs: now });
 }
 
 /** Unknown/corrupt engine data throws; it must never fall back to an empty match. */
