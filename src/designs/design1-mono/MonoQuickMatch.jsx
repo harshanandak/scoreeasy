@@ -1,6 +1,5 @@
 import { createPeriodMatch, applyPeriodAction, undoPeriodAction, periodTotals, periodResultDecided, supportsGoalPeriods, periodPreset, freezePeriodMatch, periodPlayedSeconds, periodSnapshot } from '../../utils/goalsPeriods';
 import { useGoalsPeriodClock } from '../../hooks/useGoalsPeriodClock';
-import GoalsPeriodSetup from './components/GoalsPeriodSetup';
 import GoalsPeriodControls from './scoring/GoalsPeriodControls';
 import { getQuickCricketTransition } from '../../utils/cricketCalculations';
 import { recordMatchOutcome, EARLY_FINISH_MESSAGE } from '../../utils/matchOutcome';
@@ -17,6 +16,7 @@ import { kabaddiRulesLine } from '../../utils/kabaddiRules';
 import { KabaddiFirstRaid, KabaddiGameStep, KabaddiRulesStep } from './kit/KabaddiSetup';
 import { SetsRulesStep, TennisRulesStep } from './kit/SetsSetup';
 import { CricketRulesStep } from './kit/CricketSetup';
+import { GoalsGameStep, GoalsRulesStep } from './kit/GoalsSetup';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
 import './scoring/cricketBoard.css';
@@ -1125,6 +1125,7 @@ export default function MonoQuickMatch() {
     saveSetupPrefs(sport, {
       colours: teamColourOn ? [team1Color, team2Color] : null,
       formatId: sport === 'kabaddi' ? (['quick', 'standard', 'women', 'pro'].includes(presetId) ? presetId : null)
+        : supportsGoalPeriods(sport) ? (['official', 'casual'].includes(format.periodPreset) ? format.periodPreset : null)
         : isCricket ? cricketPreset : selectedFormatChoice(sportConfig, format, cricketPreset),
     });
     setSaveWarning('');
@@ -2236,7 +2237,7 @@ export default function MonoQuickMatch() {
     const rulesStepNode = (() => {
       if (isKabaddi) return <KabaddiRulesStep format={format} onChange={setFormat} />;
 
-      if (supportsGoalPeriods(sport)) return null; // goals sports (basketball, football, hockey)
+      if (supportsGoalPeriods(sport)) return <GoalsRulesStep source={customSetupSource} onSourceChange={setCustomSetupSource} sport={sport} sportConfig={sportConfig} format={format} onChange={setFormat} />; // goals sports (basketball, football, hockey)
 
       if (isTennis) return <TennisRulesStep format={format} onChange={setFormat} />;
       if (supportsSetsRules(sport)) return <SetsRulesStep source={customSetupSource} onSourceChange={setCustomSetupSource} sport={sport} sportConfig={sportConfig} format={format} onChange={setFormat} names={[team1Name, team2Name]} />; // Set sports use their existing editable rules; tennis keeps its fixed scoring rules.
@@ -2281,9 +2282,8 @@ export default function MonoQuickMatch() {
                 <button type="button" className="se-ctl" onClick={resetRemembered}>Reset</button>
               </div>
             )}
-            {isGoals && <GoalsPeriodSetup sport={sport} format={format} onChange={setFormat} />}
-            {isKabaddi ? <KabaddiGameStep format={format} onChange={setFormat} /> : (
-              !format.periods && <section className="kit-setup-field" aria-labelledby="setup-format-label">
+            {isKabaddi ? <KabaddiGameStep format={format} onChange={setFormat} /> : supportsGoalPeriods(sport) ? <GoalsGameStep onSourceChange={setCustomSetupSource} sport={sport} format={format} onChange={setFormat} /> : (
+              <section className="kit-setup-field" aria-labelledby="setup-format-label">
                 <h2 id="setup-format-label" className="kit-setup-label">What are you playing?</h2>
                 {formatCards.length > 0 && (
                   <KitChoiceGrid labelledBy="setup-format-label" columns={1} options={formatCards} value={selectedFormat} onChange={chooseFormat} />
