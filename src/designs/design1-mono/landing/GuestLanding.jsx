@@ -9,18 +9,18 @@ import { GoArrow, HandUnderline, KitSection, KitTop, KitWash, SportBadge, SportT
 import '../kit/history.css';
 import './landing.css';
 import { buildDemo } from './landingDemo';
+import { LANDING_FAQ } from './landingFaq';
 import { ICON_BY_SPORT_ID } from './sportIcons';
 import useIsMobile from './useIsMobile';
 
 /* The guest landing (/marketing), in the Kit look of Home, Play and the boards. Above the fold it is
    an app: one primary action (start a match), sign in secondary, and a match scored by the real
-   engines. Below it, it explains the product in the numbered, confident voice of the original
-   marketing page (01 / APP EXPERIENCE ... 04 / HOW IT WORKS). The sport the scorer picks is held
-   once, so the picker, the example card, the lead feature and the Start buttons always name the same
-   game. Every claim below the fold is true of the shipped app: guest scoring and tournaments are open
-   to guests, scoring is saved on the device first; saving to an account and the live link need a
-   sign in. Each section has one lead: the example scorecard, the stat band, the sport-coloured
-   feature card, the numbered steps. */
+   engines. Below it, it explains the product in the numbered voice of the original marketing page
+   (01 / FEATURES ... 04 / FAQ). The sport the scorer picks is held once, so the picker, the example
+   card and the Start buttons always name the same game. Every claim here is true of the shipped app:
+   guest scoring and tournaments are open to guests, scoring is saved on the device first; saving to
+   an account and the live link need a sign in. The hero sub-line carries the no-account, offline and
+   sport-list facts once; the FAQ answers (landingFaq.js) are also in index.html as JSON-LD. */
 
 const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';
 const sports = getSportsList();
@@ -29,42 +29,22 @@ function sportPlayPath(sportId) {
   return sportId ? `/play?sport=${sportId}` : '/play';
 }
 
-const EXPERIENCE_STATS = [
-  { value: String(sports.length), label: 'Sports ready', detail: `Cricket, kabaddi, volleyball and ${sports.length - 3} more, all picked from one list.` },
-  { value: '0', label: 'Sign-ups needed', detail: 'Score your first point without an account.' },
-  { value: 'OFFLINE', label: 'No signal needed', detail: 'Keep scoring with no signal. Your matches save on your phone.' },
-];
-
-const EXPERIENCE_NOTES = [
-  'Pick a sport here and it is already chosen on the play screen.',
-  'You never have to sign in to score.',
-  'Use it in your browser, or on Android and iOS.',
-];
-
-/* Hand-drawn 24px glyphs, one per feature. `sportId` only tints the tile with that sport's engine-gated
-   identity, so the six rows are not one flat grey. */
+/* Hand-drawn 24px glyphs, one per feature. `sportId` only tints the badge with that sport's engine-gated
+   identity, so the five rows are not one flat grey. */
 const GLYPHS = {
   rules: <><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.7 2.7L16 9.5" /></>,
-  start: <path d="M8 5v14l11-7z" />,
   account: <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></>,
   share: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 10.7l6.8-4.4M8.6 13.3l6.8 4.4" /></>,
   undo: <><path d="M9 14L4 9l5-5" /><path d="M4 9h10a6 6 0 010 12h-3" /></>,
   trophy: <><path d="M8 4h8v5a4 4 0 01-8 0V4z" /><path d="M8 6H4v1a4 4 0 004 4M16 6h4v1a4 4 0 01-4 4M12 13v4M8 20h8" /></>,
 };
 
-const LEAD_FEATURE = {
-  glyph: 'rules',
-  tag: 'Rules',
-  title: 'Real rules, every sport',
-  desc: 'Deuce, sets, overs and raids are scored by each sport’s own rules, so the board never disagrees with the game.',
-};
-
 const FEATURES = [
-  { glyph: 'start', sportId: 'volleyball', tag: 'Start', title: 'No sign-up to start', desc: 'Start a match from your browser or the app without an account. Every point is saved on your phone first, so a weak signal never costs one.' },
-  { glyph: 'account', sportId: 'tennis', tag: 'Account', title: 'Save to your account', desc: 'Sign in and every match you finish is saved to your account. Without one, matches stay on this phone.' },
-  { glyph: 'share', sportId: 'football', tag: 'Share', title: 'Live share link', desc: 'Signed in, you can go live and send a link so friends follow the score. A match stays private until you share it.' },
-  { glyph: 'undo', sportId: 'badminton', tag: 'Undo', title: 'Undo that follows', desc: 'Mis-tapped? Undo takes the point back, and the score, serve and set go back with it.' },
-  { glyph: 'trophy', sportId: 'hockey', tag: 'Organize', title: 'Tournaments', desc: 'Round-robin and knockout brackets with standings, scored match by match.' },
+  { glyph: 'rules', sportId: 'cricket', title: 'Each sport’s own rules', desc: 'Deuce, sets, overs and raids follow the real game.' },
+  { glyph: 'undo', sportId: 'badminton', title: 'Undo that follows', desc: 'Undo takes a point back, with the score, serve and set.' },
+  { glyph: 'trophy', sportId: 'hockey', title: 'Tournaments', desc: 'Round-robin and knockout brackets with standings.' },
+  { glyph: 'share', sportId: 'football', title: 'Live share link', desc: 'Signed in, send a link so friends follow the score.' },
+  { glyph: 'account', sportId: 'tennis', title: 'Saved to your account', desc: 'Sign in to keep every finished match.' },
 ];
 
 const STEPS = [
@@ -255,12 +235,12 @@ export default function GuestLanding() {
 
       <div className="kit-landing-top">
         <header className="kit-landing-hero">
-          <p className="kit-landing-eyebrow">Universal score tracker</p>
+          <p className="kit-landing-eyebrow">Scoreboard app for local matches</p>
           <h1 className="kit-title">
-            Score any game <HandUnderline>on your phone</HandUnderline>.
+            Free live scoreboard app, <HandUnderline>on your phone</HandUnderline>.
           </h1>
           <p className="kit-sub">
-            Start in seconds with no account. It works offline, and once you sign in, the matches you score are saved to your account.
+            Score cricket, kabaddi, volleyball, badminton, football, basketball, tennis, table tennis and hockey. No account needed, and it keeps working offline.
           </p>
           <div className="kit-landing-actions">
             <Link className="se-go" to={startPath}>
@@ -280,60 +260,25 @@ export default function GuestLanding() {
         </section>
       </div>
 
-      <section aria-labelledby="landing-experience-title">
-        <Head id="landing-experience-title" eyebrow="01 / App experience">Start first. Save later.</Head>
-        <ul className="kit-landing-band">
-          {EXPERIENCE_STATS.map((stat) => (
-            <li key={stat.label}>
-              <b>{stat.value}</b>
-              <span className="kit-landing-label">{stat.label}</span>
-              <p>{stat.detail}</p>
-            </li>
-          ))}
-        </ul>
-        <ul className="kit-list kit-landing-notes">
-          {EXPERIENCE_NOTES.map((note) => (
-            <li key={note} className="kit-row">
-              <span className="kit-landing-check" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-              </span>
-              <span className="kit-row-text">
-                <span className="kit-row-title">{note}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <section aria-labelledby="landing-features-title">
-        <Head id="landing-features-title" eyebrow="02 / Features">Everything you need.</Head>
-        <div className="kit-landing-features">
-          <article className="kit-landing-lead">
-            <span className="kit-tile-mark" aria-hidden="true" />
-            <span className="kit-landing-lead-glyph"><Glyph name={LEAD_FEATURE.glyph} /></span>
-            <span className="kit-chip">{LEAD_FEATURE.tag}</span>
-            <h3>{LEAD_FEATURE.title}</h3>
-            <p>{LEAD_FEATURE.desc}</p>
-          </article>
-          <ul className="kit-list kit-landing-featlist">
-            {FEATURES.map((feature) => (
-              <li key={feature.title} className="kit-row">
-                <span className="kit-badge" style={sportIdentityVars(feature.sportId)} aria-hidden="true">
-                  <Glyph name={feature.glyph} />
-                </span>
-                <div className="kit-row-text">
-                  <span className="kit-landing-label">{feature.tag}</span>
-                  <h3 className="kit-row-title">{feature.title}</h3>
-                  <p className="kit-row-sub">{feature.desc}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Head id="landing-features-title" eyebrow="01 / Features">What it does.</Head>
+        <ul className="kit-list kit-landing-featlist">
+          {FEATURES.map((feature) => (
+            <li key={feature.title} className="kit-row">
+              <span className="kit-badge" style={sportIdentityVars(feature.sportId)} aria-hidden="true">
+                <Glyph name={feature.glyph} />
+              </span>
+              <div className="kit-row-text">
+                <h3 className="kit-row-title">{feature.title}</h3>
+                <p className="kit-row-sub">{feature.desc}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section aria-labelledby="landing-sports-title">
-        <Head id="landing-sports-title" eyebrow="03 / Sports">{`${sports.length} sports. Your rules.`}</Head>
+        <Head id="landing-sports-title" eyebrow="02 / Sports">{`${sports.length} sports you can score.`}</Head>
         <div className="kit-grid3 kit-landing-tiles">
           {sports.map((sport) => (
             <SportTile
@@ -348,7 +293,7 @@ export default function GuestLanding() {
       </section>
 
       <section aria-labelledby="landing-how-title">
-        <Head id="landing-how-title" eyebrow="04 / How it works">Three steps.</Head>
+        <Head id="landing-how-title" eyebrow="03 / How it works">Score a match in three steps.</Head>
         <ol className="kit-list kit-steps kit-landing-steps">
           {STEPS.map((step) => (
             <li key={step.label} className="kit-row">
@@ -360,6 +305,20 @@ export default function GuestLanding() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section aria-labelledby="landing-faq-title">
+        <Head id="landing-faq-title" eyebrow="04 / FAQ">Questions people ask.</Head>
+        <ul className="kit-list kit-landing-faq">
+          {LANDING_FAQ.map((item) => (
+            <li key={item.question} className="kit-row">
+              <div className="kit-row-text">
+                <h3 className="kit-row-title">{item.question}</h3>
+                <p className="kit-row-sub">{item.answer}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="kit-landing-ready" aria-labelledby="landing-ready-title">

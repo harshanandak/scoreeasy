@@ -1,9 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LocalAuthProvider } from '../../../auth/AuthContext';
 import { getSportsList } from '../../../models/sportRegistry';
 import GuestLanding from './GuestLanding';
+import { LANDING_FAQ } from './landingFaq';
 
 function LocationProbe() {
   const location = useLocation();
@@ -56,9 +59,11 @@ describe('GuestLanding', () => {
   it('says what the app is and gives one primary action plus a secondary sign in', () => {
     renderLanding();
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score any game on your phone.');
-    expect(screen.getByText(/start in seconds with no account/i)).toHaveTextContent(/works offline/i);
-    expect(screen.getByText(/once you sign in, the matches you score are saved to your account/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Free live scoreboard app, on your phone.');
+    const sub = screen.getByText(/no account needed, and it keeps working offline/i);
+    for (const sport of getSportsList()) {
+      expect(sub).toHaveTextContent(sport.name.toLowerCase());
+    }
     expect(startLinks(/^Start /)[0]).toHaveAttribute('href', '/play?sport=cricket');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
   });
@@ -152,47 +157,88 @@ describe('GuestLanding', () => {
     expect(card.querySelectorAll('.kit-score-pips i')).toHaveLength(14);
   });
 
-  it('explains the product below the app: four numbered sections in the original voice', () => {
+  it('explains the product below the app: four numbered sections in sequence', () => {
     renderLanding();
 
     const sections = [
-      ['01 / App experience', 'Start first. Save later.'],
-      ['02 / Features', 'Everything you need.'],
-      ['03 / Sports', '9 sports. Your rules.'],
-      ['04 / How it works', 'Three steps.'],
+      ['01 / Features', 'What it does.'],
+      ['02 / Sports', '9 sports you can score.'],
+      ['03 / How it works', 'Score a match in three steps.'],
+      ['04 / FAQ', 'Questions people ask.'],
     ];
     for (const [eyebrow, heading] of sections) {
       expect(screen.getByText(eyebrow)).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 2, name: heading })).toBeInTheDocument();
     }
-    expect(screen.getByText('Universal score tracker')).toBeInTheDocument();
+    expect(screen.getByText('Scoreboard app for local matches')).toBeInTheDocument();
   });
 
-  it('shows the stat cards and says what the app does, only with claims the app keeps', () => {
+  it('drops the old Start first section and does not repeat its facts', () => {
     renderLanding();
 
-    const stats = within(screen.getByRole('heading', { level: 2, name: 'Start first. Save later.' }).closest('section'));
-    expect(stats.getByText('Sports ready').previousElementSibling).toHaveTextContent('9');
-    expect(stats.getByText('Sign-ups needed').previousElementSibling).toHaveTextContent('0');
-    expect(stats.getByText('No signal needed').previousElementSibling).toHaveTextContent('OFFLINE');
-    expect(stats.getByText(/score your first point without an account/i)).toBeInTheDocument();
-    expect(stats.getByText(/keep scoring with no signal\. your matches save on your phone/i)).toBeInTheDocument();
-    expect(stats.getByText('You never have to sign in to score.')).toBeInTheDocument();
+    expect(screen.queryByText('01 / App experience')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'Start first. Save later.' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Sign-ups needed')).not.toBeInTheDocument();
+    expect(screen.queryByText('You never have to sign in to score.')).not.toBeInTheDocument();
+  });
 
-    const features = within(screen.getByRole('heading', { level: 2, name: 'Everything you need.' }).closest('section'));
-    for (const title of ['No sign-up to start', 'Save to your account', 'Live share link', 'Undo that follows', 'Real rules, every sport', 'Tournaments']) {
+  it('lists at most five short features, only with claims the app keeps', () => {
+    renderLanding();
+
+    const features = within(screen.getByRole('heading', { level: 2, name: 'What it does.' }).closest('section'));
+    const titles = ['Each sport’s own rules', 'Undo that follows', 'Tournaments', 'Live share link', 'Saved to your account'];
+    expect(features.getAllByRole('listitem')).toHaveLength(titles.length);
+    for (const title of titles) {
       expect(features.getByRole('heading', { level: 3, name: title })).toBeInTheDocument();
     }
-    expect(features.getByText(/weak signal never costs one/i)).toBeInTheDocument();
-    expect(features.getByText(/every match you finish is saved to your account\. without one, matches stay on this phone/i)).toBeInTheDocument();
+    expect(features.getByText(/signed in, send a link so friends follow the score/i)).toBeInTheDocument();
+    expect(features.getByText(/sign in to keep every finished match/i)).toBeInTheDocument();
     expect(features.queryByText(/every phone|any phone|follow you/i)).not.toBeInTheDocument();
-    expect(features.getByText(/stays private until you share it/i)).toBeInTheDocument();
+  });
+
+  it('answers each FAQ question as visible text', () => {
+    renderLanding();
+
+    const faq = within(screen.getByRole('heading', { level: 2, name: 'Questions people ask.' }).closest('section'));
+    expect(LANDING_FAQ.length).toBeGreaterThanOrEqual(4);
+    expect(LANDING_FAQ.length).toBeLessThanOrEqual(5);
+    for (const { question, answer } of LANDING_FAQ) {
+      expect(faq.getByRole('heading', { level: 3, name: question })).toBeVisible();
+      expect(faq.getByText(answer)).toBeVisible();
+    }
+    const sportsAnswer = LANDING_FAQ.find((item) => item.question === 'Which sports can I score?').answer.toLowerCase();
+    for (const sport of getSportsList()) {
+      expect(sportsAnswer).toContain(sport.name.toLowerCase());
+    }
+  });
+
+  it('keeps the FAQPage JSON-LD in index.html word for word with the visible FAQ', () => {
+    const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => JSON.parse(match[1]));
+
+    const faqPage = blocks.find((block) => block['@type'] === 'FAQPage');
+    expect(faqPage.mainEntity.map((item) => [item.name, item.acceptedAnswer.text])).toEqual(
+      LANDING_FAQ.map((item) => [item.question, item.answer]),
+    );
+
+    const app = blocks.find((block) => block['@type'] === 'SoftwareApplication');
+    expect(app).toMatchObject({ name: 'Score Easy', applicationCategory: 'SportsApplication' });
+  });
+
+  it('keeps the page title and description inside search snippet length', () => {
+    const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+    const title = html.match(/<title>([^<]*)<\/title>/)[1];
+    const description = html.match(/<meta name="description" content="([^"]*)"/)[1];
+
+    expect(title.length).toBeLessThan(60);
+    expect(description.length).toBeLessThan(155);
+    expect(html).not.toMatch(/rel="canonical"/);
   });
 
   it('lists the three steps and closes with a Start and a sign up action', () => {
     renderLanding({ cloudAuthAvailable: true });
 
-    const how = within(screen.getByRole('heading', { level: 2, name: 'Three steps.' }).closest('section'));
+    const how = within(screen.getByRole('heading', { level: 2, name: 'Score a match in three steps.' }).closest('section'));
     expect(how.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
       expect.stringContaining('Pick sport'),
       expect.stringContaining('Add teams'),
