@@ -7,7 +7,7 @@ import { periodPreset } from '../../../utils/goalsPeriods';
 import { resolveKabaddiRules, KABADDI_PRESETS } from '../../../utils/kabaddiRules';
 import { withoutSetupToss } from '../../../utils/setupPrefs';
 import { applyStandardDefaults } from '../../../utils/sportDefaults';
-import { freezeSetsFormat, supportsSetsRules } from '../../../models/setsRules';
+import { freezeSetsFormat, supportsSetsRules, applySetsPreset, SETS_PROFILES } from '../../../models/setsRules';
 
 const CRICKET_LABELS = { test: 'Test', gully: 'Gully' };
 
@@ -283,6 +283,12 @@ export function setupSourcePreset(sportConfig, format, source) {
   if (sportConfig?.engine === 'goals') {
     const preset = periodPreset(sportConfig.id, format.periods ? (format.periodPreset || 'custom') : 'casual');
     return { label: preset.periods?.source || 'Quick casual', format: preset };
+  }
+  if (supportsSetsRules(sportConfig?.id)) {
+    const sport = sportConfig.id;
+    if (format.rulesPreset === SETS_PROFILES[sport].label) return { label: format.rulesPreset, format: applySetsPreset(sport, 'official') };
+    if (format.rulesPreset === 'Quick casual') return { label: 'Quick casual', format: applySetsPreset(sport, 'casual') };
+    if (format.rulesPreset === 'Custom school') return { label: 'Custom school', format };
   }
   return { label: 'Standard', format: applyStandardDefaults(sportConfig?.id, {}) };
 }

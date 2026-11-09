@@ -151,3 +151,16 @@ it('compares only rule values for custom labels and preference saves', async () 
   expect(isCustomSetup({ kabaddiRules: resolveKabaddiRules('custom', standard), openingRaidTeam: 1 }, null, config)).toBe(false);
   expect(isCustomSetup({ kabaddiRules: resolveKabaddiRules('custom', { ...standard, raidLimitMs: 45000 }) }, null, config)).toBe(true);
 });
+
+
+it('does not treat a named rules preset or an unchanged Custom chip as edited', async () => {
+  const { isCustomSetup } = await import('./setupFormats');
+  const { applySetsPreset } = await import('../../../models/setsRules');
+  const { getSportById } = await import('../../../models/sportRegistry');
+  const sport = getSportById('volleyball');
+  for (const preset of ['official', 'casual']) {
+    const format = applySetsPreset('volleyball', preset);
+    expect(isCustomSetup({ ...format, initialServer: 2 }, null, sport)).toBe(false);
+    expect(isCustomSetup(applySetsPreset('volleyball', 'custom', format), { label: preset, format }, sport)).toBe(false);
+  }
+});
