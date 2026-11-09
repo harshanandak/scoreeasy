@@ -104,6 +104,56 @@ it('refuses a guest claim when another owner commits after the ownership scan', 
   expect((await queue.matchOwners()).get(id)).toEqual(new Set(['X']));
 });
 
+it('blocks Y finishing a stale tab after X commits ownership without a local marker', async () => {
+  const tabX = queue;
+  const full = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError'); });
+  tabX.enqueueMatchSave('X', payload, match.id);
+  await tabX.hydratePendingMatchSaves('X');
+  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].syncOwnerId).toBeUndefined();
+  full.mockRestore();
+  vi.resetModules();
+  const tabY = await import('./pendingMatchSaves');
+  const { saveQuickMatch } = await import('./storage');
+  expect(saveQuickMatch({ ...match, clientMatchId: id })).toBe(true);
+  const stale = tabY.enqueueMatchSave('Y', payload, match.id);
+  await tabY.hydratePendingMatchSaves('Y');
+  expect(tabY.pendingMatchSaves('Y')).toEqual([expect.objectContaining({ ownerMismatch: true, terminal: false, state: 'pending' })]);
+  const save = vi.fn().mockResolvedValue('wrong-account-copy');
+  await tabY.attemptMatchSave(stale, save, () => true, true);
+  expect(save).not.toHaveBeenCalled();
+  expect((await tabY.matchOwners()).get(id)).toEqual(new Set(['X']));
+  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].syncOwnerId).not.toBe('Y');
+  expect(tabX.pendingMatchSaves('X')).toHaveLength(1);
+});
+
+it('keeps explicit guest provenance visible without IndexedDB, including after reload', async () => {
+  vi.stubGlobal('indexedDB', undefined);
+  queue.recordGuestMatch(id);
+  expect(await history(queue.localMatchOwners())).toHaveLength(1);
+  vi.resetModules(); queue = await import('./pendingMatchSaves');
+  expect(await history(queue.localMatchOwners(), 'Y')).toHaveLength(1);
+});
+
+it('revokes guest provenance before an ordinary owned enqueue even when its local marker fails', async () => {
+  vi.stubGlobal('indexedDB', undefined);
+  queue.recordGuestMatch(id);
+  const write = Storage.prototype.setItem;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (name, value) {
+    if (name === 'se_quickmatches') throw new DOMException('Full', 'QuotaExceededError');
+    return write.call(this, name, value);
+  });
+  const record = queue.enqueueMatchSave('X', payload, match.id);
+  const save = vi.fn().mockResolvedValue('server-id');
+  await queue.attemptMatchSave(record, save);
+  expect(save).toHaveBeenCalledOnce();
+  expect(localStorage.getItem(key)).toBeNull();
+  vi.resetModules(); queue = await import('./pendingMatchSaves');
+  const owners = queue.localMatchOwners();
+  expect(await history(owners)).toEqual([]);
+  expect(await history(owners, 'Y')).toEqual([]);
+  expect(await history(owners, 'X')).toHaveLength(1);
+});
+
 it.each(['missing', 'blocked'])('fails closed when IndexedDB is %s, then recovers genuine guest claiming', async failure => {
   const database = indexedDB;
   if (failure === 'missing') vi.stubGlobal('indexedDB', undefined);
