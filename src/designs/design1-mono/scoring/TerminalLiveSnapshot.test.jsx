@@ -147,15 +147,30 @@ describe.each(cases)('$name terminal broadcast', c => {
       else if (c.sport === 'cricket') expect(result.team2Score.runs).toBe(c.expected.pointsB);
       else expect(result.score1).toBe(c.expected.pointsA);
     }
-    if (state === 'restoring') expect(h.scorePoint).not.toHaveBeenCalled();
+    if (state === 'restoring') {
+      if (c.auto) {
+        // The explicit drain above recovers the queued auto-finish using its
+        // cached server id, independently of the scorer's pending restore.
+        expect(h.scorePoint).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+          value: 0, type: 'correction', snapshot: expect.objectContaining(c.expected),
+        }));
+        expect(h.finalize).toHaveBeenCalledTimes(1);
+        expect(h.scorePoint.mock.invocationCallOrder[0]).toBeLessThan(h.finalize.mock.invocationCallOrder[0]);
+      } else expect(h.scorePoint).not.toHaveBeenCalled();
+    }
     if (!c.auto) {
       fireEvent.click(screen.getByRole('button', { name: /Finish/ }));
       const confirm = screen.queryByRole('button', { name: 'End match' });
       if (confirm) fireEvent.click(confirm);
     }
     if (state === 'restoring') {
-      expect(loadSession(clientMatchId)).toHaveProperty('finalizeIntent');
-      expect(load().at(-1).snapshot).toMatchObject(c.expected);
+      if (c.auto) {
+        expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
+        expect(load()).toEqual([]);
+      } else {
+        expect(loadSession(clientMatchId)).toHaveProperty('finalizeIntent');
+        expect(load().at(-1).snapshot).toMatchObject(c.expected);
+      }
       board.unmount();
       h.query.mockResolvedValue(shared);
       await act(async () => { resolveRestore(shared); await h.restoring; });

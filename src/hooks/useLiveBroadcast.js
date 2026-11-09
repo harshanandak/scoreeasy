@@ -238,7 +238,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       matchId: matchIdRef.current ?? prior?.matchId,
       token: tokenRef.current ?? prior?.token,
       seq: seqRef.current,
-      finalizeIntent: { ...(resultType ? { resultType } : {}) },
+      finalizeIntent: { ...(resultType ? { resultType } : {}), shared: true },
     });
     // Root recovery owns a finish even if this scorer leaves before restore resolves.
     if (!matchIdRef.current) return null;

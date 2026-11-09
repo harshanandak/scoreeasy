@@ -78,7 +78,7 @@ it.each([true, false])('persists finish before shared restore resolves and drain
     await scorer.result.current.point({ team: 'A', at: 1 });
     await scorer.result.current.finalize(finish);
   });
-  expect(loadSession(clientMatchId)).toHaveProperty('finalizeIntent', { resultType: 'abandoned' });
+  expect(loadSession(clientMatchId)).toHaveProperty('finalizeIntent', { resultType: 'abandoned', shared: true });
   h.scorePoint.mockClear().mockImplementation(async ({ snapshot }) => { order.push(snapshot ? 'terminal' : 'point'); });
   h.finalize.mockImplementation(async () => { order.push('finalize'); });
   h.online = true;
@@ -105,7 +105,7 @@ it.each([true, false])('recovers finish after reload before shared restore resol
   enqueue({ kind: 'point', team: 'A', value: 1, at: 1, clientMatchId, clientEventId: `${clientMatchId}:8` });
   saveSession(clientMatchId, { ...loadSession(clientMatchId), seq: 8 });
   await act(async () => { await scorer.result.current.finalize(finish); });
-  expect(loadSession(clientMatchId)).toHaveProperty('finalizeIntent', { resultType: 'abandoned' });
+  expect(loadSession(clientMatchId)).toHaveProperty('finalizeIntent', { resultType: 'abandoned', shared: true });
   scorer.unmount();
   const order = [];
   h.scorePoint.mockImplementation(async ({ snapshot }) => { order.push(snapshot ? 'terminal' : 'point'); });
@@ -165,7 +165,7 @@ it('recovers when an unresolved scorer drain and root recovery overlap the finis
 
 it.each(['match_not_found', 'not_authorized'])('retains broadcastError and cancels a permanently rejected unresolved session: %s', async code => {
   enqueue({ kind: 'point', team: 'A', value: 0, type: 'correction', snapshot: terminal, at: 1, clientMatchId, clientEventId: `${clientMatchId}:8` });
-  saveSession(clientMatchId, { seq: 8, isShared: true, finalizeIntent: { resultType: 'abandoned' } });
+  saveSession(clientMatchId, { seq: 8, isShared: true, finalizeIntent: { resultType: 'abandoned', shared: true } });
   h.query.mockRejectedValue(Object.assign(new Error('Server Error'), { data: { code } }));
   const root = renderHook(() => usePendingLiveFinalizations());
   await waitFor(() => expect(root.result.current).toHaveLength(1));
@@ -182,7 +182,7 @@ it.each(['match_not_found', 'not_authorized'])('retains broadcastError and cance
 
 it('retains an unresolved finish after a transport failure and retries from root on reconnect', async () => {
   enqueue({ kind: 'point', team: 'A', value: 0, type: 'correction', snapshot: terminal, at: 1, clientMatchId, clientEventId: `${clientMatchId}:8` });
-  saveSession(clientMatchId, { seq: 8, isShared: true, finalizeIntent: { resultType: 'abandoned' } });
+  saveSession(clientMatchId, { seq: 8, isShared: true, finalizeIntent: { resultType: 'abandoned', shared: true } });
   h.query.mockRejectedValueOnce(new Error('offline'));
   const root = renderHook(() => usePendingLiveFinalizations());
   await act(async () => { await flushLiveSession(clientMatchId, h); });
@@ -286,7 +286,7 @@ it('does not persist or send a disabled private session with a saved id but no p
 
 it('cancels a null lookup and does not query the unresolved finish again on the next trigger', async () => {
   enqueue({ kind: 'point', team: 'A', value: 0, type: 'correction', snapshot: terminal, at: 1, clientMatchId, clientEventId: `${clientMatchId}:8` });
-  saveSession(clientMatchId, { seq: 8, isShared: true, finalizeIntent: { resultType: 'abandoned' } });
+  saveSession(clientMatchId, { seq: 8, isShared: true, finalizeIntent: { resultType: 'abandoned', shared: true } });
   h.query.mockResolvedValue(null);
   const root = renderHook(() => usePendingLiveFinalizations());
   await act(async () => { await flushLiveSession(clientMatchId, h); });

@@ -14,7 +14,7 @@ export function flushLiveSession(clientMatchId, mutations) {
   if (inFlight.has(clientMatchId)) return inFlight.get(clientMatchId);
   const task = Promise.resolve().then(async () => {
     let session = loadSession(clientMatchId);
-    if (!session || session.broadcastError || (session.finalizeIntent && session.isShared !== true)) return null;
+    if (!session || session.broadcastError || (session.finalizeIntent && session.finalizeIntent.shared !== true)) return null;
     const current = () => {
       const latest = loadSession(clientMatchId);
       return Boolean(latest && latest.matchId === session.matchId);
@@ -53,7 +53,7 @@ export function flushLiveSession(clientMatchId, mutations) {
         return { error };
       }
     }
-    if (!session?.matchId || (session.finalizeIntent && session.isShared !== true)) return null;
+    if (!session?.matchId || (session.finalizeIntent && session.finalizeIntent.shared !== true)) return null;
     let result = await reconcile(send, { clientMatchId });
     // A terminal snapshot may be appended while an empty drain is resolving.
     while (!result.error && current() && size(clientMatchId) > 0) {
@@ -65,10 +65,11 @@ export function flushLiveSession(clientMatchId, mutations) {
       return result;
     }
     const latest = current() && loadSession(clientMatchId);
-    const intent = latest?.isShared === true && latest.finalizeIntent;
+    // Stop changes current visibility, not permission for an already-queued finish.
+    const intent = latest?.finalizeIntent?.shared === true && latest.finalizeIntent;
     if (!intent) return result;
     try {
-      const finalized = await mutations.finalize({ matchId: session.matchId, ...intent });
+      const finalized = await mutations.finalize({ matchId: session.matchId, ...(intent.resultType ? { resultType: intent.resultType } : {}) });
       if (current()) {
         const updated = loadSession(clientMatchId);
         delete updated.finalizeIntent;
