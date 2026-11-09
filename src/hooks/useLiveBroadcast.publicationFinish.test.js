@@ -1,12 +1,16 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useLiveBroadcast } from './useLiveBroadcast';
 import { usePendingLiveFinalizations } from './usePendingLiveFinalizations';
 import { loadSession, saveSession } from '../lib/live/liveSession';
 import { flushLiveSession } from '../lib/live/recovery';
 import { load } from '../lib/live/outbox';
 
-const h = vi.hoisted(() => ({ query: vi.fn(), create: vi.fn(), scorePoint: vi.fn(), undo: vi.fn(), finalize: vi.fn(), setVisibility: vi.fn() }));
+const h = vi.hoisted(() => ({ query: vi.fn(), create: vi.fn(), scorePoint: vi.fn(), undo: vi.fn(), finalize: vi.fn(), setVisibility: vi.fn(), drainError: null }));
+vi.mock('../lib/live/recovery', async importOriginal => {
+  const actual = await importOriginal();
+  return { ...actual, flushLiveSession: (...args) => h.drainError ? Promise.reject(h.drainError) : actual.flushLiveSession(...args) };
+});
 vi.mock('convex/react', () => ({ useConvex: () => h, useMutation: name => h[name] }));
 vi.mock('../../convex/_generated/api', () => ({ api: { live: {
   create: 'create', scorePoint: 'scorePoint', undo: 'undo', finalize: 'finalize',
@@ -30,11 +34,13 @@ function deferred() {
 beforeEach(() => {
   localStorage.clear();
   vi.resetAllMocks();
+  h.drainError = null;
   h.create.mockResolvedValue({ matchId: session.matchId, token: session.token });
   h.query.mockResolvedValue(session);
   h.scorePoint.mockResolvedValue({});
   h.finalize.mockResolvedValue({ archived: true });
 });
+afterEach(() => vi.restoreAllMocks());
 
 async function expectFinalizedOnce() {
   await act(async () => { await flushLiveSession(clientMatchId, { ...h, getOwnedSession: () => h.query('getOwnedSession', { clientMatchId }) }); });
@@ -171,4 +177,128 @@ it.each([false, null])('drops a reloaded pending finish when owned-session looku
   expect(h.create).not.toHaveBeenCalled();
   expect(h.setVisibility).not.toHaveBeenCalled();
   root.unmount();
+});
+
+it.each([
+  ['root', false], ['root', null], ['scorer', false], ['scorer', null],
+])('retains a reloaded finish through %s private/absent lookup (%s), then finishes once after a later commit', async (recovery, shared) => {
+  const at = 1_800_000_000_000;
+  vi.spyOn(Date, 'now').mockReturnValue(at + 1_000);
+  // Fresh runtime: only the persisted pending finish survives the unloaded request.
+  const pendingFinish = { ...finish, at, publicationDeadline: at + 120_000, clientEventId: `${clientMatchId}:finalize:late-commit` };
+  saveSession(clientMatchId, { matchId: session.matchId, seq: 7, isShared: false, pendingFinish });
+  h.query.mockResolvedValue(shared === null ? null : { ...session, isShared: false });
+  const root = recovery === 'root' ? renderHook(() => usePendingLiveFinalizations()) : null;
+  const scorer = recovery === 'scorer' ? renderHook(() => useLiveBroadcast()) : null;
+  await act(async () => {
+    if (scorer) await scorer.result.current.restore({ clientMatchId });
+    else await flushLiveSession(clientMatchId, { ...h, getOwnedSession: () => h.query('getOwnedSession', { clientMatchId }) });
+  });
+  const retained = loadSession(clientMatchId)?.pendingFinish;
+  const lookups = h.query.mock.calls.length;
+  await act(async () => { await Promise.resolve(); });
+  expect(h.query).toHaveBeenCalledTimes(lookups);
+  expect(h.scorePoint).not.toHaveBeenCalled();
+  expect(h.finalize).not.toHaveBeenCalled();
+  expect(load()).toEqual([]);
+  // The original request commits after the reload's first private/null answer.
+  h.query.mockResolvedValue(session);
+  await act(async () => {
+    if (scorer) await scorer.result.current.restore({ clientMatchId });
+    else {
+      globalThis.dispatchEvent(new Event('focus'));
+      await flushLiveSession(clientMatchId, { ...h, getOwnedSession: () => h.query('getOwnedSession', { clientMatchId }) });
+    }
+  });
+  await expectFinalizedOnce();
+  expect(retained).toEqual(pendingFinish);
+  expect(h.scorePoint.mock.calls[0][0].clientEventId).toBe(pendingFinish.clientEventId);
+  expect(h.create).not.toHaveBeenCalled();
+  expect(h.setVisibility).not.toHaveBeenCalled();
+  scorer?.unmount();
+  root?.unmount();
+});
+
+it.each([false, null])('expires a private/absent pending publication (%s) only after its two-minute window and a lifecycle trigger', async shared => {
+  const at = 1_800_000_000_000;
+  const now = vi.spyOn(Date, 'now').mockReturnValue(at + 1_000);
+  const pendingFinish = { ...finish, at, publicationDeadline: at + 120_000, clientEventId: `${clientMatchId}:finalize:expires` };
+  saveSession(clientMatchId, { matchId: session.matchId, seq: 7, isShared: false, pendingFinish });
+  h.query.mockResolvedValue(shared === null ? null : { ...session, isShared: false });
+  const root = renderHook(() => usePendingLiveFinalizations());
+  await act(async () => { await flushLiveSession(clientMatchId, { ...h, getOwnedSession: () => h.query('getOwnedSession', { clientMatchId }) }); });
+  const retained = loadSession(clientMatchId)?.pendingFinish;
+  const lookups = h.query.mock.calls.length;
+  now.mockReturnValue(at + 120_001);
+  await act(async () => { await Promise.resolve(); });
+  expect(h.query).toHaveBeenCalledTimes(lookups);
+  await act(async () => {
+    globalThis.dispatchEvent(new Event('focus'));
+    await flushLiveSession(clientMatchId, { ...h, getOwnedSession: () => h.query('getOwnedSession', { clientMatchId }) });
+  });
+  expect(loadSession(clientMatchId)).not.toHaveProperty('pendingFinish');
+  expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
+  const afterExpiry = h.query.mock.calls.length;
+  await act(async () => {
+    globalThis.dispatchEvent(new Event('online'));
+    globalThis.dispatchEvent(new Event('focus'));
+    await flushLiveSession(clientMatchId, h);
+  });
+  expect(h.query).toHaveBeenCalledTimes(afterExpiry);
+  expect(h.scorePoint).not.toHaveBeenCalled();
+  expect(h.undo).not.toHaveBeenCalled();
+  expect(h.finalize).not.toHaveBeenCalled();
+  expect(h.create).not.toHaveBeenCalled();
+  expect(h.setVisibility).not.toHaveBeenCalled();
+  expect(load()).toEqual([]);
+  expect(retained).toEqual(pendingFinish);
+  root.unmount();
+});
+
+it('finalizes the original publication after Rematch without touching the new match', async () => {
+  const publication = deferred();
+  h.setVisibility.mockReturnValueOnce(publication.promise);
+  const at = Date.now();
+  vi.spyOn(Date, 'now').mockReturnValue(at);
+  const scorer = renderHook(() => useLiveBroadcast());
+  let publishing;
+  await act(async () => { publishing = scorer.result.current.goLive(go); });
+  await waitFor(() => expect(h.setVisibility).toHaveBeenCalledTimes(1));
+  await act(async () => { await scorer.result.current.finalize(finish); });
+  const savedFinish = loadSession(clientMatchId)?.pendingFinish;
+  const nextClientMatchId = 'rematch-publication';
+  const next = { matchId: 'live-rematch', token: 'NEXT', lastSeq: 0, isShared: false };
+  saveSession(nextClientMatchId, { matchId: next.matchId, token: next.token, seq: 0, isShared: false });
+  h.query.mockResolvedValue(next);
+  await act(async () => {
+    scorer.result.current.reset();
+    await scorer.result.current.restore({ clientMatchId: nextClientMatchId });
+  });
+  const untouched = loadSession(nextClientMatchId);
+  await act(async () => { publication.resolve({ ok: true }); await publishing; });
+  // No root worker or manual old-session flush can hide a drain through new refs.
+  expect(h.finalize).toHaveBeenCalledExactlyOnceWith({ matchId: session.matchId, resultType: 'abandoned' });
+  expect(h.scorePoint).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ matchId: session.matchId, snapshot, type: 'correction', value: 0 }));
+  expect(h.scorePoint.mock.invocationCallOrder[0]).toBeLessThan(h.finalize.mock.invocationCallOrder[0]);
+  expect(loadSession(nextClientMatchId)).toEqual(untouched);
+  expect(scorer.result.current.token).toBe(next.token);
+  expect(scorer.result.current.isShared).toBe(false);
+  expect(loadSession(clientMatchId)).not.toHaveProperty('pendingFinish');
+  expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
+  expect(savedFinish).toHaveProperty('publicationDeadline', at + 120_000);
+  await expectFinalizedOnce();
+  scorer.unmount();
+});
+
+it('keeps an unexpected post-publication drain rejection from escaping goLive', async () => {
+  const drainError = new Error('unexpected drain failure');
+  h.setVisibility.mockImplementation(async () => { h.drainError = drainError; return { ok: true }; });
+  const scorer = renderHook(() => useLiveBroadcast());
+  await act(async () => {
+    await expect(scorer.result.current.goLive(go)).resolves.toMatchObject({ matchId: session.matchId, token: session.token });
+  });
+  expect(scorer.result.current.isShared).toBe(true);
+  expect(scorer.result.current.error).toBe(drainError);
+  expect(loadSession(clientMatchId)).toMatchObject({ matchId: session.matchId, isShared: true });
+  scorer.unmount();
 });
