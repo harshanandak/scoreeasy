@@ -6,6 +6,7 @@ import { getSetWinRule } from '../../../utils/quickMatchSets';
 import {
   applyFormatChoice,
   applyGoalsDetail,
+  describeFormatChoices,
   formatChoices,
   goalsDetail,
   selectedFormatChoice,
@@ -105,4 +106,71 @@ describe('quick setup rules line', () => {
     expect(setupRulesLine(sport('hockey'), { mode: 'points', target: 5 })).toBe('First to 5 goals wins');
     expect(setupRulesLine(sport('kabaddi'), { mode: 'free' })).toBe('No limit · finish when you are done');
   });
+});
+
+describe('format cards describe each choice in one plain line', () => {
+  it('sets sports say how many sets and what a set is', () => {
+    const volleyball = describeFormatChoices(sport('volleyball'), applyStandardDefaults('volleyball', {}));
+    expect(volleyball.map((c) => c.label)).toEqual(['Single set', 'Best of 3', 'Best of 5']);
+    expect(volleyball[0].hint).toMatch(/^One set · First to 25/);
+    expect(volleyball[1].hint).toMatch(/^First to 2 sets · 25 points a set/);
+    expect(volleyball[2].hint).toMatch(/^First to 3 sets/);
+    const tennis = describeFormatChoices(sport('tennis'), {});
+    expect(tennis[1].hint).toMatch(/^First to 2 sets · \d+ games a set/);
+  });
+
+  it('cricket uses the format description, goals sports name their mode', () => {
+    const cricket = describeFormatChoices(sport('cricket'), {});
+    expect(cricket.find((c) => c.id === 'T20').hint).toBe('20 overs per side');
+    expect(cricket.every((c) => c.hint)).toBe(true);
+    expect(describeFormatChoices(sport('football'), {}).map((c) => c.id)).toEqual(['timed', 'points', 'free']);
+  });
+});
+
+
+describe('preset rule comparison', () => {
+  it('compares nested rules regardless of key order and detects every changed value', async () => {
+    const { matchesSetupPreset, setupPresetTitle } = await import('./setupFormats');
+    const preset = { end: { kind: 'target', points: 21 }, extras: [30, null] };
+    expect(matchesSetupPreset({ extras: [30, null], end: { points: 21, kind: 'target' } }, preset)).toBe(true);
+    expect(matchesSetupPreset({ ...preset, end: { kind: 'target', points: 22 } }, preset)).toBe(false);
+    expect(matchesSetupPreset({ ...preset, extras: [null, 30] }, preset)).toBe(false);
+    expect(matchesSetupPreset({ ...preset, extra: false }, preset)).toBe(false);
+    expect(matchesSetupPreset(null, {})).toBe(false);
+    expect(setupPresetTitle('T20', false)).toBe('T20');
+    expect(setupPresetTitle('T20', true)).toBe('Customised · from T20');
+  });
+});
+
+
+it('compares only rule values for custom labels and preference saves', async () => {
+  const { isCustomSetup } = await import('./setupFormats');
+  const { resolveKabaddiRules } = await import('../../../utils/kabaddiRules');
+  const standard = resolveKabaddiRules('standard');
+  const config = { id: 'kabaddi' };
+  expect(isCustomSetup({ kabaddiRules: resolveKabaddiRules('custom', standard), openingRaidTeam: 1 }, null, config)).toBe(false);
+  expect(isCustomSetup({ kabaddiRules: resolveKabaddiRules('custom', { ...standard, raidLimitMs: 45000 }) }, null, config)).toBe(true);
+});
+
+
+it('does not treat a named rules preset or an unchanged Custom chip as edited', async () => {
+  const { isCustomSetup } = await import('./setupFormats');
+  const { applySetsPreset } = await import('../../../models/setsRules');
+  const { getSportById } = await import('../../../models/sportRegistry');
+  const sport = getSportById('volleyball');
+  for (const preset of ['official', 'casual']) {
+    const format = applySetsPreset('volleyball', preset);
+    expect(isCustomSetup({ ...format, initialServer: 2 }, null, sport)).toBe(false);
+    expect(isCustomSetup(applySetsPreset('volleyball', 'custom', format), { label: preset, format }, sport)).toBe(false);
+  }
+});
+
+
+it('ignores display-only powerplay metadata when comparing cricket rules', async () => {
+  const { isCustomSetup } = await import('./setupFormats');
+  const { buildCricketFormat } = await import('../../../utils/cricketCalculations');
+  const { getSportById } = await import('../../../models/sportRegistry');
+  const format = buildCricketFormat('T20');
+  expect(isCustomSetup({ ...format, powerplay: [] }, { label: 'T20', format }, getSportById('cricket'))).toBe(false);
+  expect(isCustomSetup({ ...format, freeHit: false }, { label: 'T20', format }, getSportById('cricket'))).toBe(true);
 });

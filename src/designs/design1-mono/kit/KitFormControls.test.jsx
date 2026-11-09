@@ -133,3 +133,33 @@ describe('KitChoiceGrid', () => {
     expect(screen.getByRole('radio', { name: 'Gamma' })).toHaveAttribute('aria-checked', 'true');
   });
 });
+
+describe('KitChoiceGrid cards', () => {
+  it('turns options with a hint into cards named by the label and described by the hint', () => {
+    render(<KitChoiceGrid label="Format" columns={1} value="a" onChange={() => {}}
+      options={[{ id: 'a', label: 'Best of 3', hint: 'First to 2 sets' }, { id: 'b', label: 'Single set', hint: 'One set' }]} />);
+    const card = screen.getByRole('radio', { name: 'Best of 3' });
+    expect(card).toHaveAccessibleDescription('First to 2 sets');
+    expect(card).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radiogroup', { name: 'Format' })).toHaveClass('is-cards');
+  });
+});
+
+describe('KitToggleRow info', () => {
+  it('hides a long explanation behind a small (i) that reveals it', () => {
+    render(<KitToggleRow label="Bonus point" info="An extra point." checked={false} onChange={() => {}} />);
+    expect(screen.queryByText('An extra point.')).toBeNull();
+    const info = screen.getByRole('button', { name: 'About Bonus point' });
+    expect(info).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(info);
+    expect(info).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('An extra point.')).toBeInTheDocument();
+  });
+
+  it('does not toggle the switch when the (i) is tapped', () => {
+    const onChange = vi.fn();
+    render(<KitToggleRow label="Bonus point" info="An extra point." checked={false} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'About Bonus point' }));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});

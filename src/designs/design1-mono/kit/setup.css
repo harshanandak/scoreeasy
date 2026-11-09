@@ -6,7 +6,7 @@
    and 3.6rem numerals become ~92px keys with 2.4rem numerals; one Go only, the Start action. */
 
 .kit-screen.kit-setup {
-  padding-bottom: 0;
+  padding-bottom: calc(140px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 /* ---- header: navigation chrome, always clean ---- */
@@ -85,91 +85,6 @@
   cursor: pointer;
 }
 
-/* ---- matchup preview ---- */
-.kit-mu {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin: 4px 0 2px;
-}
-
-.kit-mu-key {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-width: 0;
-  min-height: 92px;
-  padding: 10px 26px;
-  border-radius: 20px;
-  background: var(--se-color-surface);
-  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
-  color: var(--se-color-ink);
-  text-align: center;
-  transition: background 240ms ease, color 240ms ease;
-}
-
-.kit-mu-key b {
-  display: -webkit-box;
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 1rem;
-  font-weight: 750;
-  line-height: 1.15;
-  overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.kit-mu-key span {
-  font: 800 2.4rem/0.95 var(--se-font-num);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Team-colour sports: each key is its engine-gated gradient (hi/core/lo plus the 7% sheen the
-   engine measures), and its text is the engine's on-colour. No blend between the two teams. */
-.kit-mu.is-team .kit-mu-a {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
-    linear-gradient(168deg, var(--team-a-hi), var(--team-a-core) 52%, var(--team-a-lo));
-  color: var(--team-a-on);
-}
-
-.kit-mu.is-team .kit-mu-b {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
-    linear-gradient(168deg, var(--team-b-hi), var(--team-b-core) 52%, var(--team-b-lo));
-  color: var(--team-b-on);
-}
-
-.kit-mu-vs {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  left: 50%;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--se-color-surface);
-  box-shadow: inset 0 0 0 2px var(--se-color-ink);
-  color: var(--se-color-ink);
-  transform: translate(-50%, -50%);
-}
-
-.kit-mu-v {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.1;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 /* ---- fields ---- */
 .kit-setup-field {
   position: relative;
@@ -244,112 +159,6 @@
 .kit-setup-suggest small {
   color: var(--se-color-ink-muted);
   font-size: 0.78rem;
-}
-
-/* ---- colour swatches (TeamColourPicker) ----
-   48px swatches, six across (five kit colours plus "More colours"). Selection is a check in the
-   engine's on-colour plus an ink ring, and aria-pressed. Focus is NOT styled here beyond moving
-   the global ink ring (index.css :focus-visible) clear of the selection ring. */
-.kit-picker {
-  margin-top: 10px;
-}
-
-.kit-sw-row {
-  display: grid;
-  grid-template-columns: repeat(6, 48px);
-  justify-content: space-between;
-  row-gap: 12px;
-}
-
-.kit-sw {
-  position: relative;
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  min-height: 48px;
-  padding: 0;
-  border: 0;
-  border-radius: 14px;
-  background: var(--kit-sw, var(--se-color-surface));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--se-color-ink) 16%, transparent);
-  color: var(--kit-sw-on, var(--se-color-ink));
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.kit-sw[aria-pressed='true'],
-.kit-sw-more.is-holding,
-.kit-sw-custom.is-selected .kit-sw-dot {
-  box-shadow: 0 0 0 2px var(--se-color-canvas), 0 0 0 4px var(--se-color-ink);
-}
-
-/* The global ring sits 3px off a control; a swatch's selection ring already fills 2-4px, so the
-   focus ring moves out past it and stays visible on a selected swatch too. */
-.kit-sw:focus-visible {
-  outline-offset: 6px;
-}
-
-.kit-sw-check,
-.kit-sw-plus {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.kit-sw-more {
-  background: var(--kit-sw, var(--se-color-surface));
-  box-shadow: inset 0 0 0 2px var(--se-color-ink);
-}
-
-.kit-sw-plus {
-  stroke-width: 2.4;
-}
-
-.kit-sw-more-panel {
-  margin-top: 12px;
-}
-
-.kit-sw-custom {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 48px;
-  margin-top: 12px;
-  border-radius: 14px;
-  color: var(--se-color-ink);
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-
-.kit-sw-custom.is-focused {
-  outline: 3px solid var(--se-color-focus-ring);
-  outline-offset: 3px;
-}
-
-.kit-sw-custom input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.kit-sw-dot {
-  flex: none;
 }
 
 /* ---- stepper (the segmented control lives in kit.css, shared with History) ---- */
@@ -427,29 +236,28 @@
   font-weight: 700;
 }
 
-/* ---- the one Go: sticky at the bottom, above the dock when the dock shows ---- */
+/* Fixed within the same 672px column on every sport and every step. */
 .kit-screen > .kit-setup-cta {
-  position: sticky;
+  position: fixed;
   z-index: 5;
   bottom: 0;
-  margin-top: 18px;
-  padding: 14px 0 16px;
-  background: linear-gradient(180deg, transparent, var(--se-color-canvas) 30%);
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 672px;
+  padding: 14px 16px calc(16px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
+  background: var(--se-color-canvas);
+  box-shadow: 0 -1px 0 var(--se-color-line-soft);
 }
 
-body.has-mobile-bottom-nav .kit-screen > .kit-setup-cta {
-  bottom: calc(78px + var(--se-safe-bottom));
+.kit-setup-cta .se-go {
+  width: 100%;
+  min-height: 52px;
 }
 
-/* Anything focused or scrolled into view stops above the sticky Start bar (about 86 px) and, when
-   the dock shows, above the dock as well, so a Format or Match length control is never left
-   underneath them. */
 html:has(.kit-setup) {
-  scroll-padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
-}
-
-html:has(body.has-mobile-bottom-nav .kit-setup) {
-  scroll-padding-bottom: calc(182px + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: calc(140px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 /* Missing a name: still focusable and announced (aria-disabled + the hint), but it no longer
@@ -462,6 +270,13 @@ html:has(body.has-mobile-bottom-nav .kit-setup) {
 }
 
 .kit-setup-cta .kit-setup-hint {
+  position: absolute;
+  right: 16px;
+  bottom: 100%;
+  left: 16px;
+  margin: 0;
+  padding: 8px;
+  background: var(--se-color-canvas);
   text-align: center;
 }
 
@@ -489,10 +304,4 @@ html:has(body.has-mobile-bottom-nav .kit-setup) {
 .kit-rules-done {
   width: 100%;
   margin-top: 24px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .kit-mu-key {
-    transition: none;
-  }
 }

@@ -8,6 +8,7 @@ import Design1Mono from './index';
 import { getGoalsSports } from '../../models/sportRegistry';
 import { cricketFinishSeed } from '../../test/cricketFinishFixtures';
 import { loadInProgressMatches } from '../../utils/appEntry';
+import { teamNameInput } from '../../test/teamColour';
 
 // Route contracts for the routing audit (docs/plans/2026-10-21-routing-audit.md).
 //
@@ -155,13 +156,29 @@ describe('board dock visibility', () => {
     expect(nativeBack.install).not.toHaveBeenCalled();
   });
 
+  it.each(['/app', '/play', '/history', '/tennis/tournament', '/profile/no-such-user'])('shows the dock on ordinary app screens %s', async path => {
+    if (path.startsWith('/profile')) {
+      authState.current = { ...GUEST, authMode: 'cloud', cloudAuthAvailable: true };
+      convexState.useQuery = (_fn, args) => (args && args !== 'skip' && 'username' in args ? null : []);
+    }
+    renderApp([path]);
+    await settleRoute();
+    expectBoardDock(false);
+  });
+
+  it.each(['/volleyball/quick', '/kabaddi/quick', '/basketball/quick', '/tennis/tournament/new'])('hides the dock on setup with a fixed Start bar %s', async path => {
+    renderApp([path]);
+    await settleRoute();
+    expectBoardDock(true);
+  });
+
   it.each(['volleyball', 'cricket', 'kabaddi'])('%s hides the dock from Start through an unscored refresh and Back', async sport => {
     const path = `/${sport}/quick`;
     let view = renderApp(['/history', path]);
     await settleRoute();
-    expectBoardDock(false);
-    fireEvent.change(screen.getByLabelText('Team A name'), { target: { value: 'Red' } });
-    fireEvent.change(screen.getByLabelText('Team B name'), { target: { value: 'Blue' } });
+    expectBoardDock(true);
+    fireEvent.change(teamNameInput('A'), { target: { value: 'Red' } });
+    fireEvent.change(teamNameInput('B'), { target: { value: 'Blue' } });
     fireEvent.click(screen.getByRole('button', { name: /^Start/ }));
     await settleRoute();
     expectBoardDock(true);
@@ -597,7 +614,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     renderApp(['/cricket/quick?result=300']);
     fireEvent.click(await screen.findByRole('button', { name: 'New Match' }));
     expect(currentRoute()).toBe('/cricket/quick');
-    expect(screen.getByRole('button', { name: 'Test' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: 'Test' })).toHaveAttribute('aria-checked', 'true');
     fireEvent.click(screen.getByRole('button', { name: 'Start cricket' }));
     await waitFor(() => expect(currentRoute()).toMatch(/^\/cricket\/quick\/test-match\//));
   });
@@ -957,7 +974,8 @@ describe('navigation decisions (2026-10-21)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
     fireEvent.click(await screen.findByRole('button', { name: action, exact: true }));
-    expectBoardDock(action === 'Rematch');
+    // Rematch opens a scorer and New Match opens setup; neither is a top-level tab screen.
+    expectBoardDock(true);
     const draft = loadInProgressMatches().find(match => match.sport === 'football') || null;
     if (action === 'Rematch') expect(draft.scoringStarted).toBe(false);
     else expect(draft).toBeNull();
@@ -1021,11 +1039,11 @@ describe('navigation decisions (2026-10-21)', () => {
     await waitFor(() => expect(currentRoute()).toBe('/app'));
   });
 
-  it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'hockey', 'kabaddi', 'cricket', 'tennis'])('%s setup leaves without a guard and shows bottom navigation', async (sport) => {
+  it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'hockey', 'kabaddi', 'cricket', 'tennis'])('%s setup leaves without a guard and hides the bottom navigation (a sub-screen with its own Back)', async (sport) => {
     renderApp([`/${sport}/quick`]);
     await settleRoute();
     expect(nativeBack.install).not.toHaveBeenCalled();
-    expect(document.querySelector('.global-bottom-nav')).toBeInTheDocument();
+    expectBoardDock(true);
   });
 
   it('tournament results hide Rematch and return to their tournament', async () => {

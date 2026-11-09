@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import { deriveTeamColours } from '../../lib/teamColour';
 import Design1Mono from './index';
+import { findTeamColourGroup, teamColourGroup, teamNameInput } from '../../test/teamColour';
 
 // Kit S1 round 2: Home's Rematch keeps the colours the hero shows. A real handoff through the app
 // shell and real storage: finish yellow v green, open Home, tap Rematch, and the setup and the
@@ -50,7 +51,7 @@ async function settleRoute() {
   await act(async () => {});
 }
 
-const checkedSwatch = (group) => within(screen.getByRole('group', { name: group })).getByRole('button', { pressed: true });
+const checkedSwatch = (group) => within(teamColourGroup(group.charAt(5))).getByRole('button', { pressed: true });
 
 describe('Home Rematch keeps the saved team colours', () => {
   beforeEach(() => {
@@ -93,10 +94,10 @@ describe('Home Rematch keeps the saved team colours', () => {
     await settleRoute();
 
     // 3. The setup pickers hold yellow v green ...
-    expect(await screen.findByRole('group', { name: 'Team A colour' })).toBeInTheDocument();
+    expect(await findTeamColourGroup('A')).toBeInTheDocument();
     expect(checkedSwatch('Team A colour')).toHaveAccessibleName('Yellow');
     expect(checkedSwatch('Team B colour')).toHaveAccessibleName('Green');
-    expect(screen.getByLabelText('Team A name')).toHaveValue('Royals');
+    expect(teamNameInput('A')).toHaveValue('Royals');
 
     // ... and the match that starts is painted yellow v green.
     fireEvent.click(screen.getByRole('button', { name: 'Start volleyball' }));
@@ -115,7 +116,7 @@ describe('Home Rematch keeps the saved team colours', () => {
     await settleRoute();
     fireEvent.click(screen.getByRole('button', { name: 'Rematch: Royals vs Strikers' }));
     await settleRoute();
-    await screen.findByRole('group', { name: 'Team A colour' });
+    await findTeamColourGroup('A');
     expect(checkedSwatch('Team A colour')).toHaveAccessibleName('Red');
     expect(checkedSwatch('Team B colour')).toHaveAccessibleName('Blue');
   });

@@ -14,7 +14,7 @@ import { createKabaddiMatch, matchTotals, persistKabaddiDraft, resolveKabaddiFin
 import { isKabaddiMigrationBackup, kabaddiMigrationBackupKey, migrateLegacyKabaddiBackups } from '../../utils/kabaddiMigrationBackups';
 import { finish as finishKabaddi } from '../../utils/kabaddiEngine';
 import { kabaddiRulesLine } from '../../utils/kabaddiRules';
-import KabaddiSetup from './kit/KabaddiSetup';
+import { KabaddiFirstRaid, KabaddiGameStep, KabaddiRulesStep } from './kit/KabaddiSetup';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
 import './scoring/cricketBoard.css';
@@ -56,11 +56,18 @@ import KitFinish from './kit/KitFinish';
 import { finishFromQuickResult, formatDuration } from './kit/finishModel';
 import { getSetupStartLabel } from '../../utils/startActions';
 import { KitWash, GoArrow } from './kit/KitParts';
+import { KitSegmented, KitStepper } from './kit/KitSetupParts';
+import { KitChoiceGrid } from './kit/KitFormControls';
+import TeamCards from './kit/TeamCards';
+import RulesRow from './kit/RulesRow';
+import { LastCustomSetup, SetupStepper } from './kit/SetupSteps';
+import { clearSetupPrefs, loadSetupPrefs, saveSetupPrefs, loadCustomSetup, saveCustomSetup, withoutSetupToss } from '../../utils/setupPrefs';
 import SportMark from './kit/SportMark';
-import { KitSegmented, KitStepper, MatchupPreview } from './kit/KitSetupParts';
 import {
+  isCustomSetup,
   applyFormatChoice,
   applyGoalsDetail,
+  describeFormatChoices,
   formatChoices,
   goalsDetail,
   selectedFormatChoice,
@@ -393,8 +400,13 @@ export default function MonoQuickMatch() {
   // Direction E: each team's colour owns its half of the board, for sports that opt in.
   // A Home Rematch hands over the saved pair; only plain hex survives, else the default pair.
   const wizardColours = Array.isArray(location.state?.colours) ? location.state.colours : null;
-  const [team1Color, setTeam1Color] = useState(() => normaliseHex(wizardColours?.[0]) ?? DEFAULT_TEAM_COLOURS.a);
-  const [team2Color, setTeam2Color] = useState(() => normaliseHex(wizardColours?.[1]) ?? DEFAULT_TEAM_COLOURS.b);
+  // Remembered on this device: colours and format per sport (never names). A Rematch's colours win.
+  const [remembered, setRemembered] = useState(() => (sport ? loadSetupPrefs(sport) : null));
+  const [team1Color, setTeam1Color] = useState(() => normaliseHex(wizardColours?.[0]) ?? remembered?.colours?.[0] ?? DEFAULT_TEAM_COLOURS.a);
+  const [team2Color, setTeam2Color] = useState(() => normaliseHex(wizardColours?.[1]) ?? remembered?.colours?.[1] ?? DEFAULT_TEAM_COLOURS.b);
+  const [setupStep, setSetupStep] = useState(0);
+  const [customSetupSource, setCustomSetupSource] = useState(null);
+  const lastCustomSetup = loadCustomSetup(sport);
   const teamColourOn = isTeamColourSport(sport);
   const teamColourStyle = useTeamColours(team1Color, team2Color, sport);
   const [saveWarning, setSaveWarning] = useState('');
@@ -478,13 +490,14 @@ export default function MonoQuickMatch() {
     team2Players,
     isRefereeing,
   });
-  const [format, setFormat] = useState(() => {
-    if (sport === 'kabaddi') return { kabaddiRules: resolveKabaddiRules('quick') };
+  const buildDefaultFormat = () => {
+    if (sport === 'kabaddi') return { kabaddiRules: resolveKabaddiRules('standard') };
     if (isCricket) return buildCricketFormat(initialPreset);
     if (initialFormatMode === 'standard') return supportsGoalPeriods(sport) ? periodPreset(sport) : applyStandardDefaults(sport, {});
     if (isGoals) return { mode: 'free' };
     return { type: 'single', target: 15, points: 25 };
-  });
+  };
+  const [format, setFormat] = useState(buildDefaultFormat);
   const [showCustomOvers, setShowCustomOvers] = useState(false);
   const [customOvers, setCustomOvers] = useState('');
 
@@ -596,6 +609,7 @@ export default function MonoQuickMatch() {
       setTeam2Name(saved.team2Name || saved.team2 || 'Team B');
       setTeam1Color(normaliseHex(saved.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
       setTeam2Color(normaliseHex(saved.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
+      if (saved.customSetupSource) setCustomSetupSource(saved.customSetupSource);
       if (saved.format) setFormat(saved.format);
       if (isCricket) {
         const preset = CRICKET_FORMATS.find(f => f.id === saved.format?.preset)
@@ -646,6 +660,7 @@ export default function MonoQuickMatch() {
     setTeam1Color(normaliseHex(draft.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
     setTeam2Color(normaliseHex(draft.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
     setPeriodState(draft.periodState?.version === 1 ? draft.periodState : draft.format?.periods?.version === 1 ? createPeriodMatch(draft.format.periods, Date.now()) : null);
+    if (draft.customSetupSource) setCustomSetupSource(draft.customSetupSource);
     if (draft.format) setFormat(freezeSetsFormat(sportConfig, draft.format, { legacy: true }));
     if (draft.scores) setScores(draft.scores);
     if (Array.isArray(draft.sets)) setSets(draft.sets);
@@ -706,6 +721,7 @@ export default function MonoQuickMatch() {
       phase,
       sport,
       scoringStarted,
+      customSetupSource,
       team1Name,
       team2Name,
       team1Color,
@@ -740,7 +756,7 @@ export default function MonoQuickMatch() {
     // re-serialize and re-save the entire draft each tick. We persist `startedAt`
     // and reconstruct elapsed from wall-clock on restore, so the per-tick write is
     // pure churn. The body still snapshots the latest timer value on real changes.
-  }, [periodState, kabaddiMatch, battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sidesSwapped, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
+  }, [customSetupSource, periodState, kabaddiMatch, battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sidesSwapped, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
   // Whether this sport rotates serve to the point winner (drives the snapshot's
   // servingTeam). Declared HERE, before the broadcast effect that reads it, so the
@@ -853,7 +869,7 @@ export default function MonoQuickMatch() {
   useEffect(() => {
     if (restoredDraftRef.current) return;
     if (isCricket || !sport) return;
-    if (sport === 'kabaddi') { setFormat({ kabaddiRules: resolveKabaddiRules('quick') }); return; }
+    if (sport === 'kabaddi') { setFormat({ kabaddiRules: resolveKabaddiRules('standard') }); return; }
 
     setFormatMode('standard');
     setRulesOpen(false);
@@ -969,6 +985,7 @@ export default function MonoQuickMatch() {
     const canonicalDate = entry.date || entry.completedAt || entry.createdAt || nowIso;
     const normalized = {
       ...entry,
+      ...(customSetupSource ? { customSetupSource } : {}),
       team1: canonicalTeam1,
       team2: canonicalTeam2,
       team1Name: entry.team1Name || canonicalTeam1,
@@ -1096,6 +1113,13 @@ export default function MonoQuickMatch() {
 
   const startMatch = () => {
     if (!team1Name.trim() || !team2Name.trim()) return;
+    if (isCustomSetup(format, customSetupSource, sportConfig)) saveCustomSetup(sport, { format, source: customSetupSource });
+    const presetId = format.kabaddiRules?.presetId;
+    saveSetupPrefs(sport, {
+      colours: teamColourOn ? [team1Color, team2Color] : null,
+      formatId: sport === 'kabaddi' ? (['quick', 'standard', 'women', 'pro'].includes(presetId) ? presetId : null)
+        : isCricket ? cricketPreset : selectedFormatChoice(sportConfig, format, cricketPreset),
+    });
     setSaveWarning('');
     setShareStatus('');
     setVScore1(0);
@@ -1958,9 +1982,28 @@ export default function MonoQuickMatch() {
     }
     setFormat(prev => ({ ...applyFormatChoice(sportConfig, choiceId, prev), ...(supportsSetsRules(sport) && prev.rulesPreset?.startsWith('Official') ? { rulesPreset: 'Custom school' } : {}) }));
   };
+  // New matches always start with standard rules; saved custom rules are opt-in on Rules.
+  useEffect(() => { setSetupStep(0); if (!restoredDraftRef.current && !resultMatchId) setCustomSetupSource(null); }, [sport]);
+  const resetRemembered = () => {
+    setCustomSetupSource(null);
+    clearSetupPrefs(sport);
+    setRemembered(null);
+    setTeam1Color(DEFAULT_TEAM_COLOURS.a);
+    setTeam2Color(DEFAULT_TEAM_COLOURS.b);
+    if (isCricket) { setCricketPreset(initialPreset); setFormatMode(initialFormatMode); }
+    setFormat(buildDefaultFormat());
+  };
+  const goToStep = (index) => {
+    setSetupStep(index);
+    document.querySelector('[data-screen="setup"]')?.scrollIntoView?.({ block: 'start' });
+  };
   const handleSetupBack = () => {
     if (rulesOpen) {
       setRulesOpen(false);
+      return;
+    }
+    if (phase === 'setup' && setupStep > 0) {
+      goToStep(setupStep - 1);
       return;
     }
     const browserHistoryIndex = globalThis.history?.state?.idx;
@@ -2193,10 +2236,32 @@ export default function MonoQuickMatch() {
         empty: team2Empty, results: sortedTeam2, query: debouncedTeam2, colour: team2Color, setColour: setTeam2Color,
       },
     ];
+    // Steps: what you are playing, the teams, and the rules. Any step opens at any time and Start
+    // works from every step, so the untouched steps keep their defaults. Each sport family brings
+    // its own Rules step (the shared layout lives in kit/RulesParts); a family without one yet has
+    // no Rules step. One line per family, so a family's change touches only its line.
+    const rulesStepNode = (() => {
+      if (isKabaddi) return <KabaddiRulesStep format={format} onChange={setFormat} />;
+
+      if (supportsGoalPeriods(sport)) return null; // goals sports (basketball, football, hockey)
+
+      if (engine === 'sets') return null; // set sports (volleyball, badminton, tennis, table tennis)
+
+      if (isCricket) return null; // cricket
+
+      return null;
+    })();
+    const setupSteps = [{ id: 'game', label: 'Game' }, { id: 'teams', label: 'Teams' }, ...(rulesStepNode ? [{ id: 'rules', label: 'Rules' }] : [])];
+    const stepIndex = Math.min(setupStep, setupSteps.length - 1);
+    const stepId = setupSteps[stepIndex].id;
+    const formatCards = describeFormatChoices(sportConfig, format);
+    // The cards already say the rules (a sets sport's card ends with them), so a separate Rules row
+    // would only repeat the chosen card; keep just the Edit rules action there.
+    const rulesRepeatPreset = Boolean(rulesLine) && Boolean(formatCards.find(c => c.id === selectedFormat)?.hint?.includes(rulesLine));
     return (
       <div className="kit-screen kit-setup" data-screen="setup" style={sportVars}>
         <KitWash from={sportTint} to={sportTint} />
-        {setupHeader(sportName, 'Quick match', 'Go back', (
+        {setupHeader(sportName, 'Quick match', stepIndex > 0 ? `Back to ${setupSteps[stepIndex - 1].label}` : 'Go back', (
           <button
             type="button"
             className="kit-setup-link"
@@ -2211,106 +2276,123 @@ export default function MonoQuickMatch() {
             {saveWarning}
           </div>
         )}
+        <SetupStepper steps={setupSteps} current={stepIndex} onSelect={goToStep} />
 
-        <MatchupPreview nameA={team1Name} nameB={team2Name} coloured={teamColourOn} colourStyle={teamColourStyle} />
-
-        {teamFields.map(t => (
-          <div key={t.n} ref={t.ref} className="kit-setup-field">
-            <label htmlFor={`quick-team-${t.n}`} className="kit-setup-label">
-              Team {t.letter} name
-            </label>
-            <input
-              id={`quick-team-${t.n}`}
-              type="text"
-              className="kit-setup-input"
-              placeholder={`Team ${t.letter}`}
-              value={t.name}
-              onChange={e => { t.setName(e.target.value); t.setShow(e.target.value.length >= 2); }}
-              onFocus={() => t.setShow(true)}
-              maxLength={50}
-              autoComplete="off"
-            />
-            {t.show && (t.loading || t.empty || t.results.length > 0) && (
-              <div className="kit-setup-suggest">
-                {t.loading && <p role="status">Searching teams…</p>}
-                {t.empty && <p role="status">No saved teams match “{t.query}”.</p>}
-                {t.results.map(r => (
-                  <button
-                    key={r._id}
-                    type="button"
-                    onClick={() => { t.setName(r.name); t.setShow(false); }}
-                    onMouseDown={e => e.preventDefault()}
-                  >
-                    <span>{r.name}</span>
-                    <small>{r.matchCount} match{r.matchCount !== 1 ? 'es' : ''}</small>
-                  </button>
-                ))}
+        {stepId === 'game' && (
+          <>
+            {remembered && (
+              <div className="kit-remembered" role="status">
+                <span>Using your last colours for {sportName}.</span>
+                <button type="button" className="se-ctl" onClick={resetRemembered}>Reset</button>
               </div>
             )}
-            {teamColourOn && (
-              <TeamColourPicker label={`Team ${t.letter} colour`} value={t.colour} onChange={t.setColour} />
+            {isGoals && <GoalsPeriodSetup sport={sport} format={format} onChange={setFormat} />}
+            {isKabaddi ? <KabaddiGameStep format={format} onChange={setFormat} /> : (
+              !format.periods && <section className="kit-setup-field" aria-labelledby="setup-format-label">
+                <h2 id="setup-format-label" className="kit-setup-label">What are you playing?</h2>
+                {formatCards.length > 0 && (
+                  <KitChoiceGrid labelledBy="setup-format-label" columns={1} options={formatCards} value={selectedFormat} onChange={chooseFormat} />
+                )}
+                {goalsRow && (
+                  <div className="kit-rules-group" style={{ marginTop: 12 }}>
+                    <p id="setup-detail-label" className="kit-setup-label">{goalsRow.label}</p>
+                    <KitSegmented
+                      labelledBy="setup-detail-label"
+                      options={goalsRow.options}
+                      value={goalsRow.selected}
+                      onChange={(id) => setFormat(prev => applyGoalsDetail(prev, id))}
+                    />
+                  </div>
+                )}
+                {rulesRepeatPreset
+                  ? hasRulesEditor && <button type="button" className="kit-linkbtn" onClick={() => setRulesOpen(true)}>Edit rules</button>
+                  : <RulesRow label="Rules" summary={rulesLine} actionLabel="Edit rules" onClick={hasRulesEditor ? () => setRulesOpen(true) : undefined} />}
+              </section>
             )}
-          </div>
-        ))}
-
-        {isGoals && <GoalsPeriodSetup sport={sport} format={format} onChange={setFormat} />}
-        {sport === 'kabaddi' ? <KabaddiSetup format={format} onChange={setFormat} names={[team1Name, team2Name]} /> : (
-        !format.periods && <section className="kit-setup-field" aria-labelledby="setup-format-label">
-          <h2 id="setup-format-label" className="kit-setup-label">Format</h2>
-          <KitSegmented labelledBy="setup-format-label" options={formatOptions} value={selectedFormat} onChange={chooseFormat} />
-          {goalsRow && (
-            <div className="kit-rules-group" style={{ marginTop: 12 }}>
-              <p id="setup-detail-label" className="kit-setup-label">{goalsRow.label}</p>
-              <KitSegmented
-                labelledBy="setup-detail-label"
-                options={goalsRow.options}
-                value={goalsRow.selected}
-                onChange={(id) => setFormat(prev => applyGoalsDetail(prev, id))}
-              />
-            </div>
-          )}
-          <div className="kit-setup-rules-row">
-            <p className="kit-setup-rules">{rulesLine}</p>
-            {hasRulesEditor && (
-              <button type="button" className="kit-setup-link" onClick={() => setRulesOpen(true)}>
-                Edit rules
-              </button>
-            )}
-          </div>
-        </section>
+          </>
         )}
 
-        <div className="kit-setup-field">
-          <button type="button" onClick={toggleRosterSetup} className="kit-setup-link" aria-expanded={showRosterSetup}>
-            {showRosterSetup ? 'Hide players' : 'Add players'}
-            {playerCount > 0 && !showRosterSetup && <span>&nbsp;({playerCount})</span>}
-          </button>
-          {showRosterSetup && (
-            <div className="kit-setup-roster">
-              {teamFields.map(t => (
-                <div key={t.n}>
-                  <h3>Team {t.letter} players</h3>
-                  <PlayerSearchInput
-                    players={t.n === 1 ? team1Players : team2Players}
-                    onAdd={p => (t.n === 1 ? setTeam1Players : setTeam2Players)(prev => [...prev, p])}
-                    onRemove={i => (t.n === 1 ? setTeam1Players : setTeam2Players)(prev => prev.filter((_, idx) => idx !== i))}
-                    placeholder="Search @username or type name"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-          {showRefereeOption && (
-            <label className="kit-setup-check">
-              <input
-                type="checkbox"
-                checked={isRefereeing}
-                onChange={e => setIsRefereeing(e.target.checked)}
+        {stepId === 'teams' && (
+          <>
+            <TeamCards
+              coloured={teamColourOn}
+              colourStyle={teamColourStyle}
+              teams={teamFields.map(t => ({
+                n: t.n, letter: t.letter, name: t.name, colour: t.colour, rowRef: t.ref,
+                onName: e => { t.setName(e.target.value); t.setShow(e.target.value.length >= 2); },
+                onFocus: () => t.setShow(true),
+                onColour: t.setColour,
+                suggestions: t.show && (t.loading || t.empty || t.results.length > 0) && (
+                  <div className="kit-setup-suggest">
+                    {t.loading && <p role="status">Searching teams…</p>}
+                    {t.empty && <p role="status">No saved teams match “{t.query}”.</p>}
+                    {t.results.map(r => (
+                      <button
+                        key={r._id}
+                        type="button"
+                        onClick={() => { t.setName(r.name); t.setShow(false); }}
+                        onMouseDown={e => e.preventDefault()}
+                      >
+                        <span>{r.name}</span>
+                        <small>{r.matchCount} match{r.matchCount !== 1 ? 'es' : ''}</small>
+                      </button>
+                    ))}
+                  </div>
+                ),
+              }))}
+            />
+            {isKabaddi && <KabaddiFirstRaid format={format} onChange={setFormat} names={[team1Name, team2Name]} />}
+            <div className="kit-setup-field">
+              <RulesRow
+                label="Players"
+                summary={playerCount > 0 ? `${playerCount} added` : 'Optional: name who plays'}
+                actionLabel={showRosterSetup ? 'Hide players' : `Add players${playerCount > 0 ? ` (${playerCount})` : ''}`}
+                expanded={showRosterSetup}
+                onClick={toggleRosterSetup}
               />
-              <span>I&apos;m refereeing this match</span>
-            </label>
-          )}
-        </div>
+              {showRosterSetup && (
+                <div className="kit-setup-roster">
+                  {teamFields.map(t => (
+                    <div key={t.n}>
+                      <h3>Team {t.letter} players</h3>
+                      <PlayerSearchInput
+                        players={t.n === 1 ? team1Players : team2Players}
+                        onAdd={p => (t.n === 1 ? setTeam1Players : setTeam2Players)(prev => [...prev, p])}
+                        onRemove={i => (t.n === 1 ? setTeam1Players : setTeam2Players)(prev => prev.filter((_, idx) => idx !== i))}
+                        placeholder="Search @username or type name"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {showRefereeOption && (
+                <label className="kit-setup-check">
+                  <input
+                    type="checkbox"
+                    checked={isRefereeing}
+                    onChange={e => setIsRefereeing(e.target.checked)}
+                  />
+                  <span>I&apos;m refereeing this match</span>
+                </label>
+              )}
+            </div>
+          </>
+        )}
+
+        {stepId === 'rules' && <>
+          <LastCustomSetup saved={lastCustomSetup}
+            summary={lastCustomSetup ? (lastCustomSetup.format.kabaddiRules ? kabaddiRulesLine(lastCustomSetup.format.kabaddiRules) : setupRulesLine(sportConfig, lastCustomSetup.format)) : ''}
+            onUse={saved => {
+              try {
+                const rules = withoutSetupToss(saved.format);
+                setFormat(isKabaddi ? { ...format, kabaddiRules: resolveKabaddiRules('custom', rules.kabaddiRules) }
+                  : { ...rules, ...(Object.hasOwn(format, 'initialServer') ? { initialServer: format.initialServer } : {}) });
+              } catch { return; }
+              setCustomSetupSource(saved.source);
+              if (isCricket) { setCricketPreset('custom'); setFormatMode('custom'); }
+            }} />
+          {rulesStepNode}
+        </>}
 
         <div className="kit-setup-cta">
           <button

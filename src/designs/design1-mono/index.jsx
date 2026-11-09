@@ -673,7 +673,12 @@ function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) 
   const mobileMenuRef = useRef(null);
   const pathname = location.pathname;
   const homePath = pathname === PUBLIC_MARKETING_PATH ? '/' : APP_ENTRY_PATH;
-  const showBottomNav = isAppShellPath(pathname) && !boardVisible;
+  // Only setup screens with a fixed Start bar replace the dock. Scoring keeps its existing guard.
+  const setupWithStart = isSportAppPath(pathname) && (
+    (/^\/[^/]+\/quick$/.test(normalizePathname(pathname)) && !new URLSearchParams(location.search).has('result'))
+    || /^\/[^/]+\/tournament\/new$/.test(normalizePathname(pathname))
+  );
+  const showBottomNav = isAppShellPath(pathname) && !setupWithStart && !boardVisible;
 
   useEffect(() => {
     setOpen(false);

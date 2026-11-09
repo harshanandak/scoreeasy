@@ -5,6 +5,7 @@ import { DEFAULT_TEAM_COLOURS, deriveTeamColours } from '../../lib/teamColour';
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
 import * as sportRegistry from '../../models/sportRegistry';
+import { closeOpenSheet, findTeamColourGroup, findTeamNameInput, teamColourGroup, teamNameInput } from '../../test/teamColour';
 
 vi.mock('convex/react', () => ({
   useConvex: () => ({ query: async () => null }),
@@ -64,20 +65,21 @@ describe('MonoQuickMatch setup clarity', () => {
   it('opens volleyball quick match on labeled teams with an immediate start path', async () => {
     renderQuickMatch();
 
-    expect(await screen.findByRole('textbox', { name: 'Team A name' })).toHaveValue('Team A');
-    expect(screen.getByRole('textbox', { name: 'Team B name' })).toHaveValue('Team B');
+    expect(await screen.findByRole('radio', { name: 'Best of 3' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByRole('heading', { level: 1, name: 'Volleyball' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Best of 3' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Start volleyball' })).toBeEnabled();
     expect(screen.queryByText('Format Mode')).not.toBeInTheDocument();
+    expect(await findTeamNameInput('A')).toHaveValue('Team A');
+    expect(teamNameInput('B')).toHaveValue('Team B');
   });
 
   it('keeps the start control focusable + aria-disabled with linked guidance when names are missing', async () => {
     renderQuickMatch();
 
-    fireEvent.change(await screen.findByRole('textbox', { name: 'Team B name' }), {
+    fireEvent.change(await findTeamNameInput('B'), {
       target: { value: '' },
     });
+    closeOpenSheet();
 
     const start = screen.getByRole('button', { name: 'Start volleyball' });
     // Not hard-disabled — it stays focusable/tappable so a tap can surface guidance
@@ -90,7 +92,7 @@ describe('MonoQuickMatch setup clarity', () => {
 
     // Tapping it with a missing name must NOT start the match (startMatch self-guards).
     fireEvent.click(start);
-    expect(screen.getByRole('textbox', { name: 'Team A name' })).toBeInTheDocument();
+    expect(teamNameInput('A')).toBeInTheDocument();
   });
 
   it('uses the selected sport name in the setup start action', async () => {
@@ -153,7 +155,7 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Switch to cricket' }));
 
     expect(await screen.findByRole('button', { name: 'Start cricket' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'T20' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: 'T20' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByText('20 overs · 11 players · 1 innings each')).toBeInTheDocument();
   });
 
@@ -165,9 +167,9 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Switch to gully cricket' }));
 
     expect(await screen.findByRole('button', { name: 'Start cricket' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Gully' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: 'Gully' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByRole('button', { name: 'Edit rules' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Next:/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Game', current: 'step' })).toBeInTheDocument();
   });
 
   it('resets non-cricket rules after leaving a cricket query preset', async () => {
@@ -178,13 +180,14 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Switch to volleyball' }));
 
     expect(await screen.findByRole('button', { name: 'Start volleyball' })).toBeEnabled();
-    expect(screen.getByText('25 points a set · win by 2 · decider to 15 · cap 27')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Gully' })).not.toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Best of 3' })).toHaveAccessibleDescription(/25 points a set · win by 2 · decider to 15 · cap 27/);
+    expect(screen.queryByRole('radio', { name: 'Gully' })).not.toBeInTheDocument();
   });
 
   it('keeps optional player entry behind one roster section after both teams', async () => {
     renderQuickMatch();
 
+    fireEvent.click(await screen.findByRole('button', { name: 'Teams' }));
     expect(await screen.findByRole('button', { name: 'Add players' })).toBeInTheDocument();
     expect(screen.queryByPlaceholderText('Search @username or type name')).not.toBeInTheDocument();
 
@@ -228,30 +231,30 @@ describe('MonoQuickMatch setup clarity', () => {
   it('clears team names when starting a distinct new match from the result screen', async () => {
     renderQuickMatch();
 
-    fireEvent.change(await screen.findByRole('textbox', { name: 'Team A name' }), { target: { value: 'Eagles' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Team B name' }), { target: { value: 'Hawks' } });
+    fireEvent.change(await findTeamNameInput('A'), { target: { value: 'Eagles' } });
+    fireEvent.change(teamNameInput('B'), { target: { value: 'Hawks' } });
     fireEvent.click(screen.getByRole('button', { name: 'Start volleyball' }));
 
     fireEvent.click(await screen.findByRole('button', { name: /^Finish( match)?$/ }));
     fireEvent.click(screen.getByRole('button', { name: 'End match' }));
     fireEvent.click(await screen.findByRole('button', { name: 'New Match' }));
 
-    expect(await screen.findByRole('textbox', { name: 'Team A name' })).toHaveValue('Team A');
-    expect(screen.getByRole('textbox', { name: 'Team B name' })).toHaveValue('Team B');
+    expect(await findTeamNameInput('A')).toHaveValue('Team A');
+    expect(teamNameInput('B')).toHaveValue('Team B');
   });
 
   // Kit S2 (plan 2026-10-22 §9 S2)
   it('previews the matchup live from the names and the colour picker', async () => {
     renderQuickMatch();
-    fireEvent.change(await screen.findByRole('textbox', { name: 'Team A name' }), { target: { value: 'Royals' } });
+    fireEvent.change(await findTeamNameInput('A'), { target: { value: 'Royals' } });
     const preview = screen.getByTestId('matchup-preview');
-    expect(preview).toHaveTextContent('Royals');
+    expect(within(preview).getByText('Royals')).toBeInTheDocument();
 
-    fireEvent.click(within(screen.getByRole('group', { name: 'Team A colour' })).getByRole('button', { name: 'Yellow' }));
+    fireEvent.click(within(teamColourGroup('A')).getByRole('button', { name: 'Yellow' }));
     const expected = deriveTeamColours('#facc15', DEFAULT_TEAM_COLOURS.b);
     expect(preview.style.getPropertyValue('--team-a-core')).toBe(expected.A.core);
     expect(preview.style.getPropertyValue('--team-a-on')).toBe(expected.A.on);
-    expect(within(screen.getByRole('group', { name: 'Team A colour' })).getByRole('button', { name: 'Yellow' }))
+    expect(within(teamColourGroup('A')).getByRole('button', { name: 'Yellow' }))
       .toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -259,7 +262,9 @@ describe('MonoQuickMatch setup clarity', () => {
     const flag = vi.spyOn(sportRegistry, 'isTeamColourSport').mockReturnValue(false);
     try {
       renderQuickMatch('/tabletennis/quick');
-      const preview = await screen.findByTestId('matchup-preview');
+      await findTeamNameInput('A');
+      closeOpenSheet();
+      const preview = screen.getByTestId('matchup-preview');
       expect(preview).not.toHaveClass('is-team');
       expect(screen.queryByRole('group', { name: 'Team A colour' })).toBeNull();
     } finally {
@@ -269,17 +274,17 @@ describe('MonoQuickMatch setup clarity', () => {
 
   it('offers cricket team colours and uses them in its matchup preview', async () => {
     renderQuickMatch('/cricket/quick');
-    expect(await screen.findByTestId('matchup-preview')).toHaveClass('is-team');
-    expect(screen.getByRole('group', { name: 'Team A colour' })).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: 'Team B colour' })).toBeInTheDocument();
+    expect(await findTeamColourGroup('A')).toBeInTheDocument();
+    expect(screen.getByTestId('matchup-preview')).toHaveClass('is-team');
+    expect(teamColourGroup('B')).toBeInTheDocument();
   });
 
   it('switches format from the segmented control and states the new rules', async () => {
     renderQuickMatch();
-    fireEvent.click(await screen.findByRole('button', { name: 'Single set' }));
-    expect(screen.getByRole('button', { name: 'Single set' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Best of 3' })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.getByText('First to 25 · win by 2 · cap 27')).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('radio', { name: 'Single set' }));
+    expect(screen.getByRole('radio', { name: 'Single set' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'Best of 3' })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('radio', { name: 'Single set' })).toHaveAccessibleDescription(/First to 25 · win by 2 · cap 27/);
   });
 
   it('gives goals sports a clock or a target under the format', async () => {
@@ -289,7 +294,7 @@ describe('MonoQuickMatch setup clarity', () => {
     expect(screen.getByRole('spinbutton', { name: 'Number of periods' })).toHaveValue(2);
     expect(screen.getByRole('spinbutton', { name: 'Minutes per period' })).toHaveValue(45);
     fireEvent.change(screen.getByRole('combobox', { name: 'Timing preset' }), { target: { value: 'casual' } });
-    fireEvent.click(screen.getByRole('button', { name: 'First to' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'First to' }));
     fireEvent.click(screen.getByRole('button', { name: '5 goals' }));
     expect(screen.getByText('First to 5 goals wins')).toBeInTheDocument();
   });
@@ -311,8 +316,22 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Edit rules' }));
     fireEvent.click(screen.getByRole('button', { name: '21' }));
     fireEvent.click(screen.getByRole('button', { name: 'Return to match setup' }));
-    expect(await screen.findByText('21 points a set · win by 2 · decider to 15 · cap 27')).toBeInTheDocument();
+    expect(await screen.findByRole('radio', { name: 'Best of 3' })).toHaveAccessibleDescription(/21 points a set · win by 2 · decider to 15 · cap 27/);
   });
+
+  it.each([['volleyball', 'Edit rules'], ['kabaddi', null], ['tennis', null], ['cricket', null], ['football', null]])(
+    '%s: Start is available with the defaults on the first step',
+    async (sport, rulesAction) => {
+      renderQuickMatch(`/${sport}/quick`);
+      const start = await screen.findByRole('button', { name: /^Start / });
+      expect(start).not.toHaveAttribute('aria-disabled', 'true');
+      expect(screen.queryAllByRole('group', { name: /colour$/ })).toHaveLength(0);
+      if (rulesAction) expect(screen.getByRole('button', { name: rulesAction })).toBeInTheDocument();
+      else if (sport === 'kabaddi') expect(screen.getByRole('button', { name: 'Rules' })).toBeInTheDocument();
+      else expect(screen.queryByRole('button', { name: /rules$/i })).toBeNull();
+      expect(teamNameInput('A')).toHaveValue('Team A');
+    },
+  );
 
   it('keeps the switch to tournament setup', async () => {
     renderQuickMatchWithLocation('/football/quick');
@@ -328,12 +347,12 @@ describe('MonoQuickMatch setup clarity', () => {
         </Routes>
       </MemoryRouter>,
     );
-    expect(await screen.findByRole('textbox', { name: 'Team A name' })).toHaveValue('Royals');
-    expect(within(screen.getByRole('group', { name: 'Team A colour' })).getByRole('button', { name: 'Maroon' }))
+    expect(await findTeamNameInput('A')).toHaveValue('Royals');
+    expect(within(teamColourGroup('A')).getByRole('button', { name: 'Maroon' }))
       .toHaveAttribute('aria-pressed', 'true');
-    expect(within(screen.getByRole('group', { name: 'Team B colour' })).getByRole('button', { name: 'Sky' }))
+    expect(within(teamColourGroup('B')).getByRole('button', { name: 'Sky' }))
       .toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('matchup-preview')).toHaveTextContent('Strikers');
+    expect(within(screen.getByTestId('matchup-preview')).getByText('Strikers')).toBeInTheDocument();
   });
 });
 

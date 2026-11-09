@@ -1,9 +1,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { deriveIdentityColour } from '../../lib/teamColour';
-import TeamColourPicker, { QUICK_COUNT, TEAM_SWATCHES } from './TeamColourPicker';
-import setupCss from './kit/setup.css?raw';
+import TeamColourPicker, { TEAM_SWATCHES, colourNameOf } from './TeamColourPicker';
+import sheetCss from './kit/teamSheet.css?raw';
 
 const renderPicker = (props = {}) => {
   const onChange = vi.fn();
@@ -13,20 +12,15 @@ const renderPicker = (props = {}) => {
 
 const group = () => screen.getByRole('group', { name: 'Team A colour' });
 const swatch = (name) => within(group()).getByRole('button', { name });
-const swatches = () => within(group()).getAllByRole('button').filter((b) => b.hasAttribute('aria-pressed'));
-
-function Controlled({ initial }) {
-  const [value, setValue] = useState(initial);
-  return <TeamColourPicker label="Team A colour" value={value} onChange={setValue} />;
-}
+const swatches = () => within(group()).getAllByRole('button');
 
 describe('TeamColourPicker', () => {
-  it('is a labelled group of named toggle swatches: five kit colours and More colours', () => {
+  it('is a labelled group with every kit colour as a named toggle, no More colours step', () => {
     renderPicker();
-    expect(swatches()).toHaveLength(QUICK_COUNT);
+    expect(swatches()).toHaveLength(TEAM_SWATCHES.length);
     expect(swatch('Red')).toHaveAttribute('aria-pressed', 'true');
     expect(swatch('Blue')).toHaveAttribute('aria-pressed', 'false');
-    expect(swatch('More colours for Team A colour')).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: /More colours/ })).toBeNull();
   });
 
   it('marks the selected swatch with a check as well as aria-pressed (not colour alone)', () => {
@@ -49,41 +43,24 @@ describe('TeamColourPicker', () => {
     expect(onChange).toHaveBeenCalledWith('#1d4ed8');
   });
 
-  it('puts every swatch in the tab order and never suppresses the focus ring inline (efaeb4bd)', () => {
-    // A custom colour (the case the issue named) opens More colours, so every swatch is rendered.
-    renderPicker({ value: '#123456' });
-    expect(swatches()).toHaveLength(TEAM_SWATCHES.length);
-    for (const button of within(group()).getAllByRole('button')) {
-      expect(button).not.toHaveAttribute('tabindex', '-1');
-      expect(button.style.outline).toBe('');
-    }
-    // The stylesheet styles selection with a box-shadow ring and never turns the outline off.
-    const css = setupCss;
-    expect(css).not.toMatch(/outline:\s*(none|0)/);
+  it('blocks the other team colour: disabled, named, and never sent to onChange', () => {
+    const onChange = renderPicker({ blockedHex: '#1d4ed8', blockedLabel: 'Team B' });
+    const blocked = swatch('Blue, used by Team B');
+    expect(blocked).toBeDisabled();
+    expect(blocked).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(blocked);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(swatch('Yellow')).toBeEnabled();
   });
 
-  it('opens More colours with the other kit colours and a custom colour', () => {
-    renderPicker();
-    fireEvent.click(swatch('More colours for Team A colour'));
-    expect(swatch('More colours for Team A colour')).toHaveAttribute('aria-expanded', 'true');
-    expect(swatches()).toHaveLength(TEAM_SWATCHES.length);
-    expect(screen.getByLabelText('Custom colour for Team A colour')).toBeInTheDocument();
-  });
-
-  it('opens with More colours expanded when the colour lives there (a Rematch prefill)', () => {
-    renderPicker({ value: '#7a1020' });
-    expect(swatch('Maroon')).toHaveAttribute('aria-pressed', 'true');
-  });
-
-  it('keeps a collapsed selection visible on the More control', () => {
-    render(<Controlled initial="#f97316" />);
-    fireEvent.click(swatch('More colours for Team A colour'));
-    expect(swatch('More colours for Team A colour, Orange selected')).toHaveAttribute('aria-expanded', 'false');
+  it('ignores a custom colour equal to the blocked one', () => {
+    const onChange = renderPicker({ blockedHex: '#123456', blockedLabel: 'Team B' });
+    fireEvent.change(screen.getByLabelText('Custom colour for Team A colour'), { target: { value: '#123456' } });
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('accepts a valid custom colour and ignores an invalid one', () => {
     const onChange = renderPicker();
-    fireEvent.click(swatch('More colours for Team A colour'));
     const custom = screen.getByLabelText('Custom colour for Team A colour');
     fireEvent.change(custom, { target: { value: '#123456' } });
     expect(onChange).toHaveBeenCalledWith('#123456');
@@ -94,30 +71,26 @@ describe('TeamColourPicker', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('draws the focus ring round the custom control while its colour input has focus', () => {
-    renderPicker();
-    fireEvent.click(swatch('More colours for Team A colour'));
-    const input = screen.getByLabelText('Custom colour for Team A colour');
-    const control = input.closest('label');
-    expect(control).not.toHaveClass('is-focused');
-    fireEvent.focus(input);
-    expect(control).toHaveClass('is-focused');
-    fireEvent.blur(input);
-    expect(control).not.toHaveClass('is-focused');
-  });
-
   it('presses no kit swatch for a custom colour and says the custom one is selected', () => {
     renderPicker({ value: '#123456' });
     for (const b of swatches()) expect(b).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByLabelText('Custom colour for Team A colour (selected)')).toBeInTheDocument();
+    expect(colourNameOf('#123456')).toBe('Custom');
+    expect(colourNameOf('#7a1020')).toBe('Maroon');
   });
 
-  it('keeps every swatch a 48px thumb target', () => {
+  it('keeps every swatch at least 48px and never turns the focus ring off', () => {
+    const face = sheetCss.match(/\n\.kit-sw-face \{[^}]*\}/)[0];
+    expect(Number(face.match(/height: (\d+)px/)[1])).toBeGreaterThanOrEqual(48);
+    const cell = sheetCss.match(/\n\.kit-sw \{[^}]*\}/)[0];
+    expect(Number(cell.match(/min-width: (\d+)px/)[1])).toBeGreaterThanOrEqual(48);
+    expect(Number(cell.match(/min-height: (\d+)px/)[1])).toBeGreaterThanOrEqual(48);
+    expect(sheetCss).not.toMatch(/outline:\s*(none|0)\b/);
     renderPicker();
-    const css = setupCss;
-    const rule = css.match(/\n\.kit-sw \{[^}]*\}/)[0];
-    expect(rule).toMatch(/min-width: 48px/);
-    expect(rule).toMatch(/min-height: 48px/);
-    for (const b of within(group()).getAllByRole('button')) expect(b).toHaveClass('kit-sw');
+    for (const b of swatches()) {
+      expect(b).toHaveClass('kit-sw');
+      expect(b).not.toHaveAttribute('tabindex', '-1');
+      expect(b.style.outline).toBe('');
+    }
   });
 });
