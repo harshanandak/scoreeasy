@@ -70,3 +70,27 @@ it.each([false, true])('Undo walks clock actions then reopens saved raid marks, 
   expect(saved().mat).toEqual(mat);
   expect(saved().events.slice(0, journal.length)).toEqual(journal);
 });
+
+it.each([false, true])('Undo elapsed half time keeps 0:00 and the landed raid after refresh=%s', refresh => {
+  let mounted = render(<MonoQuickMatch />);
+  fireEvent.click(screen.getByRole('button', { name: 'Raid by Royals' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Player 1' }));
+  fireEvent.click(screen.getByRole('button', { name: /Back safe/ }));
+  const raid = structuredClone(saved());
+  act(() => vi.advanceTimersByTime(1200000));
+  clockTap('Call half time');
+  const journal = structuredClone(saved().events);
+  if (refresh) { mounted.unmount(); mounted = render(<MonoQuickMatch />); }
+  undoTap();
+  if (refresh) { mounted.unmount(); render(<MonoQuickMatch />); }
+  expect(saved()).toMatchObject({ half: 1, phase: 'paused', resumePhase: 'playing' });
+  expect(remainingTime(saved(), Date.now())).toBe(0);
+  expect(saved().teams).toEqual(raid.teams);
+  expect(saved().mat).toEqual(raid.mat);
+  expect(saved().outQueue).toEqual(raid.outQueue);
+  expect(saved().events.slice(0, journal.length)).toEqual(journal);
+  expect(screen.getByRole('button', { name: 'Undo last action' })).toHaveTextContent('Reopen raid');
+  undoTap();
+  expect(saved().activeRaid.draft.marks).toEqual([{ slot: 'B1', kind: 'touched' }]);
+  expect(saved().teams.map(teamTotal)).toEqual([0, 0]);
+});
