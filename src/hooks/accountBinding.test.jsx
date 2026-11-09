@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from '../utils/accountStorage';
 import { act, cleanup, render, renderHook, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ConvexError } from 'convex/values';
@@ -17,15 +18,16 @@ const wrapper = ({ account, children }) => <AuthContext.Provider value={auth(acc
 const mismatch = () => new ConvexError({ code: 'owner_mismatch', message: 'Queued action belongs to another account' });
 const payload = { sport: 'football', team1: 'North', team2: 'South', score1: 2, score2: 1, date: 1, clientMatchId: 'bound-result' };
 beforeEach(() => {
-  localStorage.clear(); vi.resetAllMocks();
+  localStorage.clear(); setMatchStorageScope(null); vi.resetAllMocks();
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
 it('retains A\'s submitted save rejected after switching to B, hides its status, and retries automatically for A', async () => {
+  setMatchStorageScope('A');
   let reject;
   h.save.mockImplementationOnce(() => new Promise((_, fail) => { reject = fail; })).mockResolvedValue('saved');
-  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...payload, id: 'local-bound', status: 'completed' }]));
+  localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ ...payload, id: 'local-bound', status: 'completed' }]));
   enqueueMatchSave('A', payload, 'local-bound');
   const worker = renderHook(({ account }) => usePendingMatchSaves(auth(account)), { initialProps: { account: 'A' } });
   await act(async () => { await Promise.resolve(); });

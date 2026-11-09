@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { getSportById } from '../../models/sportRegistry';
@@ -18,7 +19,7 @@ const { default: MonoQuickMatch } = await import('./MonoQuickMatch');
 const line = () => document.querySelector('.tsb-last');
 const scores = () => [...document.querySelectorAll('.tsb-big')].map(el => el.textContent);
 const draftKey = () => `se_quickmatch_draft_${ctx.sport}_3003`;
-const savedDraft = () => JSON.parse(localStorage.getItem(draftKey()));
+const savedDraft = () => JSON.parse(localStorage.getItem(matchStorageKey(draftKey())));
 let now;
 const point = (team = 'Royals') => {
   now += 200;
@@ -28,7 +29,7 @@ const undo = () => fireEvent.click(screen.getByRole('button', { name: 'Undo last
 function seed(sport, extra = {}) {
   ctx.sport = sport;
   const target = getSportById(sport).config.pointsPerSet;
-  localStorage.setItem(draftKey(), JSON.stringify({
+  localStorage.setItem(matchStorageKey(draftKey()), JSON.stringify({
     phase: 'scoring', sport, quickMatchId: 3003, team1Name: 'Royals', team2Name: 'Strikers',
     format: { type: 'best-of', sets: 3 }, updatedAt: new Date().toISOString(),
     sets: [{ score1: target - 2, score2: target - 2, completed: false }], currentSet: 0,
@@ -115,8 +116,8 @@ describe('sets board last-action line', () => {
     await screen.findByRole('region', { name: 'Match result' });
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Winner: Royals');
     expect(line()).toBeNull();
-    expect(localStorage.getItem(draftKey())).toBeNull();
-    const result = JSON.parse(localStorage.getItem('se_quickmatches'))[0];
+    expect(localStorage.getItem(matchStorageKey(draftKey()))).toBeNull();
+    const result = JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))[0];
     expect(result).toMatchObject({ status: 'completed', setsWon1: 2, setsWon2: 0 });
     expect(result.sets.at(-1)).toMatchObject({ score1: target, score2: 0, completed: true });
   });

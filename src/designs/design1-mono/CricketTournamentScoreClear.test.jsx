@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -7,7 +8,7 @@ import { liveClientMatchId } from '../../lib/live/liveSession';
 const storageKey = 'se_cricket';
 const teams = ['A', 'B', 'C', 'D'].map(id => ({ id, name: `Team ${id}` }));
 const format = { formatMode: 'custom', overs: 20, players: 11, ballsPerOver: 6 };
-const saved = () => JSON.parse(localStorage.getItem(storageKey))[0];
+const saved = () => JSON.parse(localStorage.getItem(matchStorageKey(storageKey)))[0];
 const click = name => fireEvent.click(screen.getByRole('button', { name, exact: true }));
 
 function result(test = false, overrides = {}) {
@@ -42,7 +43,7 @@ function mount(matches, overrides = {}) {
     format, teams, matches, phase: 'group', winnerMode: 'table-topper',
     knockoutConfig: null, knockoutMatches: [], ...overrides,
   };
-  localStorage.setItem(storageKey, JSON.stringify([tournament]));
+  localStorage.setItem(matchStorageKey(storageKey), JSON.stringify([tournament]));
   return render(<MemoryRouter initialEntries={['/cricket/tournament/tour-1']}>
     <Routes><Route path="/:sport/tournament/:id" element={<MonoCricketTournament />} /></Routes>
   </MemoryRouter>);

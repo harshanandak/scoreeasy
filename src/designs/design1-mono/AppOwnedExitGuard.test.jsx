@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -51,7 +52,7 @@ vi.mock('../../mobile/backButton', async (importOriginal) => ({
 describe('app-owned scoring exit guard', () => {
   beforeEach(() => {
     localStorage.clear();
-    localStorage.setItem('se_quickmatch_draft_volleyball', JSON.stringify({
+    localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify({
       sport: 'volleyball', phase: 'scoring', team1Name: 'Red', team2Name: 'Blue',
       sets: [{ score1: 1, score2: 0, completed: false }], updatedAt: new Date().toISOString(),
     }));

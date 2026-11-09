@@ -1,10 +1,12 @@
+import { matchStorageKey, setMatchStorageScope } from './accountStorage';
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 
 const payload = { sport: 'football', team1: 'North', team2: 'South', score1: 2, score2: 1, date: 1, clientMatchId: 'cross-tab-result' };
 const key = 'se_pending_match:tab-owner:cross-tab-result';
 beforeEach(() => {
   localStorage.clear();
-  localStorage.setItem('se_quickmatches', JSON.stringify([{ ...payload, id: 'tab-match', status: 'completed' }]));
+  setMatchStorageScope('tab-owner');
+  localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ ...payload, id: 'tab-match', status: 'completed' }]));
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
 });
 afterEach(() => vi.restoreAllMocks());
@@ -24,7 +26,7 @@ it.each([false, true])('drops a second tab late rejection after acknowledgement 
   if (blockMetadata) {
     const write = Storage.prototype.setItem;
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (name, value) {
-      if (name === 'se_quickmatches') throw new DOMException('Full', 'QuotaExceededError');
+      if (name === matchStorageKey('se_quickmatches')) throw new DOMException('Full', 'QuotaExceededError');
       return write.call(this, name, value);
     });
   }
@@ -32,8 +34,8 @@ it.each([false, true])('drops a second tab late rejection after acknowledgement 
   await requestA;
   reject(new TypeError('Failed to fetch'));
   expect(await requestB).toMatchObject({ status: 'synced' });
-  expect(localStorage.getItem(key)).toBeNull();
+  expect(localStorage.getItem(matchStorageKey(key))).toBeNull();
   expect(tabB.pendingMatchSaves('tab-owner')).toEqual([]);
   expect(tabB.isMatchSaveConfirmed('tab-owner', payload.clientMatchId)).toBe(true);
-  if (!blockMetadata) expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].sync.status).toBe('synced');
+  if (!blockMetadata) expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))[0].sync.status).toBe('synced');
 });

@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -12,7 +13,7 @@ const completed = id => ({
   score1: 2, score2: 1, winner: id, completedAt: '2026-11-01T12:00:00Z',
 });
 const ids = () => loadQuickMatches().map(match => match.id);
-const legacy = () => JSON.parse(localStorage.getItem('gs_history') || '[]');
+const legacy = () => JSON.parse(localStorage.getItem(matchStorageKey('gs_history')) || '[]');
 function olderMatch(name) {
   const participants = ['North', 'South'].map(value => createParticipant({ name: value }));
   const session = createGameSession({ templateId: 'preset_volleyball', name, participants });
@@ -32,7 +33,7 @@ function remove(id = 'middle') {
 function failWrites(key) {
   const setItem = Storage.prototype.setItem;
   return vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (name, value) {
-    if (name === key) throw new Error('storage write failed');
+    if (name === matchStorageKey(key)) throw new Error('storage write failed');
     return setItem.call(this, name, value);
   });
 }
@@ -91,7 +92,7 @@ describe('Matches operation-bound Undo', () => {
   it.each(['clear', 'delete'])('refuses a %s operation consumed elsewhere instead of choosing a newer one', kind => {
     mount();
     if (kind === 'clear') clear(); else remove();
-    localStorage.setItem(RECOVERY_KEY, JSON.stringify([{
+    localStorage.setItem(matchStorageKey(RECOVERY_KEY), JSON.stringify([{
       id: 'different-operation', kind: 'delete', createdAt: Date.now(),
       items: [{ match: completed('unrelated'), index: 0 }], order: ['unrelated'],
     }]));
@@ -125,11 +126,11 @@ describe('Matches operation-bound Undo', () => {
 
   it('merges older history too and preserves its current records', () => {
     const old = olderMatch('Old court');
-    localStorage.setItem('gs_history', JSON.stringify([old]));
+    localStorage.setItem(matchStorageKey('gs_history'), JSON.stringify([old]));
     mount();
     clear();
     const later = olderMatch('Later court');
-    localStorage.setItem('gs_history', JSON.stringify([later]));
+    localStorage.setItem(matchStorageKey('gs_history'), JSON.stringify([later]));
     fireEvent.click(screen.getByRole('button', { name: 'Undo clear' }));
     expect(legacy().map(match => match.id)).toEqual([old.id, later.id]);
     expect(screen.getByText('Later court')).toBeInTheDocument();
@@ -137,7 +138,7 @@ describe('Matches operation-bound Undo', () => {
 
   it('does not announce clear or restore success after an older-history write fails', () => {
     const old = olderMatch('Old court');
-    localStorage.setItem('gs_history', JSON.stringify([old]));
+    localStorage.setItem(matchStorageKey('gs_history'), JSON.stringify([old]));
     mount();
     const failure = failWrites('gs_history');
     clear();
@@ -157,7 +158,7 @@ describe('Matches operation-bound Undo', () => {
 
   it('keeps quick and older-history records with the same id distinct', () => {
     const old = { ...olderMatch('Old court'), id: 'middle' };
-    localStorage.setItem('gs_history', JSON.stringify([old]));
+    localStorage.setItem(matchStorageKey('gs_history'), JSON.stringify([old]));
     mount();
     clear();
     fireEvent.click(screen.getByRole('button', { name: 'Undo clear' }));
@@ -189,21 +190,21 @@ describe('Matches operation-bound Undo', () => {
 
   it('retains durable recovery and offers Undo when clearing older history and rollback both fail', () => {
     const old = olderMatch('Old court');
-    localStorage.setItem('gs_history', JSON.stringify([old]));
+    localStorage.setItem(matchStorageKey('gs_history'), JSON.stringify([old]));
     mount();
     const setItem = Storage.prototype.setItem;
     let olderFailed = false;
     const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (key === 'gs_history') {
+      if (key === matchStorageKey('gs_history')) {
         olderFailed = true;
         throw new Error('older write failed');
       }
-      if (key === 'se_quickmatches' && olderFailed) throw new Error('rollback failed');
+      if (key === matchStorageKey('se_quickmatches') && olderFailed) throw new Error('rollback failed');
       return setItem.call(this, key, value);
     });
     clear();
     expect(screen.getByRole('status')).toHaveTextContent(/Could not/);
-    expect(JSON.parse(localStorage.getItem(RECOVERY_KEY))).toHaveLength(1);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(RECOVERY_KEY)))).toHaveLength(1);
     failure.mockRestore();
     fireEvent.click(screen.getByRole('button', { name: 'Undo clear' }));
     expect(ids()).toEqual(['first', 'middle', 'last']);
@@ -217,22 +218,22 @@ describe('Matches operation-bound Undo', () => {
       return removeMatchHistory(match.id, 'delete');
     });
     const old = olderMatch('Old court');
-    localStorage.setItem('gs_history', JSON.stringify([old]));
+    localStorage.setItem(matchStorageKey('gs_history'), JSON.stringify([old]));
     mount();
     const setItem = Storage.prototype.setItem;
     let olderFailed = false;
     const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (key === 'gs_history') {
+      if (key === matchStorageKey('gs_history')) {
         olderFailed = true;
         throw new Error('older write failed');
       }
-      if (key === 'se_quickmatches' && olderFailed) throw new Error('rollback failed');
+      if (key === matchStorageKey('se_quickmatches') && olderFailed) throw new Error('rollback failed');
       return setItem.call(this, key, value);
     });
     clear();
     expect(screen.getByRole('status')).toHaveTextContent(/Could not/);
     failure.mockRestore();
-    const stored = JSON.parse(localStorage.getItem(RECOVERY_KEY));
+    const stored = JSON.parse(localStorage.getItem(matchStorageKey(RECOVERY_KEY)));
     const partial = stored.at(-1);
     const results = operations.map(operation => restoreMatchHistory(operation.id));
     results.push(restoreMatchHistory(partial.id));
@@ -264,7 +265,7 @@ describe('Matches operation-bound Undo', () => {
     const failure = failWrites('se_quickmatches');
     expect(removeMatchHistory('first', 'delete')).toBeNull();
     failure.mockRestore();
-    const stored = JSON.parse(localStorage.getItem(RECOVERY_KEY));
+    const stored = JSON.parse(localStorage.getItem(matchStorageKey(RECOVERY_KEY)));
     expect(stored).toHaveLength(6);
     expect(stored.slice(0, 5).map(operation => operation.id)).toEqual(operations.map(operation => operation.id));
     vi.setSystemTime(new Date('2026-11-10T10:00:00Z'));
@@ -278,12 +279,12 @@ describe('Matches operation-bound Undo', () => {
     const setItem = Storage.prototype.setItem;
     let recoveryWrites = 0;
     const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (key === RECOVERY_KEY && ++recoveryWrites === 2) throw new Error('clear barrier write failed');
+      if (key === matchStorageKey(RECOVERY_KEY) && ++recoveryWrites === 2) throw new Error('clear barrier write failed');
       return setItem.call(this, key, value);
     });
     clear();
     expect(screen.getByRole('status')).toHaveTextContent(/Could not/);
-    expect(JSON.parse(localStorage.getItem(RECOVERY_KEY))).toHaveLength(2);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(RECOVERY_KEY)))).toHaveLength(2);
     failure.mockRestore();
     fireEvent.click(screen.getByRole('button', { name: 'Undo clear' }));
     expect(ids()).toEqual(['first', 'last']);

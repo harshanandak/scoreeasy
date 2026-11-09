@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, deleteSportTournament, saveData } from '../../utils/storage';
+import { MATCH_STORAGE_CHANGED } from '../../utils/accountStorage';
 import { getSportById } from '../../models/sportRegistry';
 import { getCricketFormat } from '../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../utils/formatMigration';
@@ -50,9 +51,14 @@ export default function MonoTournamentList() {
 
   useEffect(() => {
     if (!sportConfig) return;
-    const loaded = loadSportTournaments(sportConfig.storageKey);
-    setTournaments(loaded.filter(t => t.mode === 'tournament' || !t.mode));
-    setDeletedTournament(null);
+    const reload = () => {
+      const loaded = loadSportTournaments(sportConfig.storageKey);
+      setTournaments(loaded.filter(t => t.mode === 'tournament' || !t.mode));
+      setDeletedTournament(null);
+    };
+    reload();
+    window.addEventListener(MATCH_STORAGE_CHANGED, reload);
+    return () => window.removeEventListener(MATCH_STORAGE_CHANGED, reload);
   }, [sport, sportConfig]);
 
   const openTournament = (id) => {

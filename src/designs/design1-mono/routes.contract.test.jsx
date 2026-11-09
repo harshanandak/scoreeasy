@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { confirmEarlyFinish } from '../../test/confirmEarlyFinish';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
@@ -87,7 +88,7 @@ function footballTournament(id = 100) {
 }
 
 function seed(key, value) {
-  globalThis.localStorage.setItem(key, JSON.stringify(value));
+  globalThis.localStorage.setItem(matchStorageKey(key), JSON.stringify(value));
 }
 
 // Test-only controls rendered inside the router: the current location, an
@@ -284,17 +285,17 @@ describe('route contracts: already correct (pinned)', () => {
       expectBoardDock(true);
       expect(screen.getByText('Won by 10 wickets')).toBeInTheDocument();
     }
-    const saved = JSON.parse(localStorage.getItem(storageKey));
+    const saved = JSON.parse(localStorage.getItem(matchStorageKey(storageKey)));
     expect(quick ? saved[0] : saved[0].matches[0]).toMatchObject({ status: 'completed', winner: quick ? 'Beta' : 'B' });
     await pressProbeBack();
     await waitFor(() => expect(currentRoute()).toBe('/history'));
-    expect(JSON.parse(localStorage.getItem(storageKey))).toEqual(saved);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(storageKey)))).toEqual(saved);
     if (quick) {
       fireEvent.click(screen.getByRole('button', { name: 'Probe forward' }));
       expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
       expectBoardDock(true);
       expect(screen.queryByRole('button', { name: 'Four runs' })).not.toBeInTheDocument();
-      expect(JSON.parse(localStorage.getItem(storageKey))).toEqual(saved);
+      expect(JSON.parse(localStorage.getItem(matchStorageKey(storageKey)))).toEqual(saved);
     }
   });
 
@@ -311,13 +312,13 @@ describe('route contracts: already correct (pinned)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Undo last action' }));
     fireEvent.click(screen.getByRole('button', { name: 'Four runs' }));
     expect(await screen.findByText('Match saved to History on this device.')).toBeInTheDocument();
-    const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
+    const saved = JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')));
     expect(saved).toEqual([expect.objectContaining({ sport: 'cricket', winner: 'Beta' })]);
     expect(saved[0].team1Score).toMatchObject({ runs: 1, balls: 6 });
     expect(saved[0].team2Score).toMatchObject({ runs: 4, balls: 1 });
     await pressProbeBack();
     await waitFor(() => expect(currentRoute()).toBe('/app'));
-    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual(saved);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))).toEqual(saved);
   });
 
   it('renders the 404 recovery screen, with Play and Home, for an unknown multi-segment path', async () => {
@@ -356,7 +357,7 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Red' }));
     fireEvent.click(screen.getByRole('button', { name: 'Finish' })); confirmEarlyFinish();
     await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
-    const finished = JSON.parse(localStorage.getItem('se_football'));
+    const finished = JSON.parse(localStorage.getItem(matchStorageKey('se_football')));
     await act(async () => {
       const popped = new Promise(resolve => globalThis.addEventListener('popstate', resolve, { once: true }));
       globalThis.history.forward();
@@ -366,7 +367,7 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
     const score = screen.queryByRole('button', { name: 'Add 1 point to Red' });
     if (score) fireEvent.click(score);
     fireEvent.keyDown(globalThis, { key: 'q' });
-    expect(JSON.parse(localStorage.getItem('se_football'))).toEqual(finished);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey('se_football')))).toEqual(finished);
     await waitFor(() => expect(currentRoute()).toBe('/football/tournament/100'));
     expect(screen.queryByRole('button', { name: 'Add 1 point to Red' })).not.toBeInTheDocument();
   });
@@ -407,7 +408,7 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
     await pressProbeBack();
 
     expect(currentRoute()).toBe(tournamentPath);
-    expect(JSON.parse(localStorage.getItem(storageKey))[0].matches[0]).toMatchObject({
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(storageKey)))[0].matches[0]).toMatchObject({
       status: 'completed', score1: 2, score2: 1, winner: null, resultType: 'abandoned',
     });
     expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
@@ -427,12 +428,12 @@ describe('route contracts: goals completion (RA-1/RA-2)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'End match' }));
     expect(await screen.findByText('Match saved to History on this device.')).toBeInTheDocument();
-    const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
+    const saved = JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')));
     expect(saved).toEqual([expect.objectContaining({ sport, score1: 2, score2: 1, winner: null, resultType: 'abandoned' })]);
-    expect(localStorage.getItem(`se_quickmatch_draft_${sport}`)).toBeNull();
+    expect(localStorage.getItem(matchStorageKey(`se_quickmatch_draft_${sport}`))).toBeNull();
     await pressProbeBack();
     expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
-    expect(localStorage.getItem('se_quickmatches')).toBe(JSON.stringify(saved));
+    expect(localStorage.getItem(matchStorageKey('se_quickmatches'))).toBe(JSON.stringify(saved));
   });
 });
 
@@ -456,7 +457,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     expect(currentRoute()).toBe('/tennis/tournament/100');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
-    const saved = JSON.parse(localStorage.getItem('se_tennis'))[0].matches[0];
+    const saved = JSON.parse(localStorage.getItem(matchStorageKey('se_tennis')))[0].matches[0];
     expect(saved).toMatchObject({ status: 'completed', winner: 't1', sets: [{ score1: 6, score2: 0, completed: true }, { score1: 6, score2: 0, completed: true }, { score1: 0, score2: 0, completed: false }] });
     expect(screen.queryByRole('heading', { name: 'Tennis match scorer' })).not.toBeInTheDocument();
   });
@@ -473,7 +474,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     await waitFor(() => expect(currentRoute()).toBe(`/tennis/quick?result=${TENNIS_ID}`));
     expect(await screen.findByRole('region', { name: 'Match result' })).toHaveAttribute('data-screen', 'finish');
     expect(screen.getByText('Took the last set 6–0')).toBeInTheDocument();
-    const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
+    const saved = JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')));
 
     await pressProbeBack();
 
@@ -481,14 +482,14 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     expect(screen.queryByRole('heading', { name: 'Match not found' })).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument();
-    expect(localStorage.getItem(`se_tennis_quick_draft_${TENNIS_ID}`)).toBeNull();
-    expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0]).toMatchObject({
+    expect(localStorage.getItem(matchStorageKey(`se_tennis_quick_draft_${TENNIS_ID}`))).toBeNull();
+    expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))[0]).toMatchObject({
       sport: 'tennis', status: 'completed', setsWon1: 2, setsWon2: 0,
       sets: [{ score1: 6, score2: 0, completed: true }, { score1: 6, score2: 0, completed: true }, { score1: 0, score2: 0, completed: false }],
     });
     fireEvent.click(screen.getByRole('button', { name: 'Probe forward' }));
     expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual(saved);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))).toEqual(saved);
   });
 
   it.each(['quick', 'tournament'])('tennis %s keeps the saved draft and Undo history across a remount', async (mode) => {
@@ -512,8 +513,8 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
       seed('se_tennis', [tournament]);
     }
     const savedDraft = () => mode === 'quick'
-      ? JSON.parse(localStorage.getItem(`se_tennis_quick_draft_${TENNIS_ID}`)).draftState
-      : JSON.parse(localStorage.getItem('se_tennis'))[0].matches[0].draftState;
+      ? JSON.parse(localStorage.getItem(matchStorageKey(`se_tennis_quick_draft_${TENNIS_ID}`))).draftState
+      : JSON.parse(localStorage.getItem(matchStorageKey('se_tennis')))[0].matches[0].draftState;
     renderApp(['/app', path]);
     await settleRoute();
     fireEvent.click(await screen.findByRole('button', { name: /^Ana: 30/ }));
@@ -546,15 +547,15 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     first.unmount();
     renderApp([`/${sport}/quick?result=300`]);
     expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([finished]);
-    expect(localStorage.getItem(`se_quickmatch_draft_${sport}`)).toBeNull();
+    expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))).toEqual([finished]);
+    expect(localStorage.getItem(matchStorageKey(`se_quickmatch_draft_${sport}`))).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Rematch' }));
     await waitFor(() => expect(currentRoute()).toMatch(sport === 'tennis' ? /^\/tennis\/quick\/live\// : /^\/cricket\/quick\/test-match\//));
     const nextId = currentRoute().split('/').pop();
-    const fresh = sport === 'tennis' ? JSON.parse(localStorage.getItem(`se_tennis_quick_draft_${nextId}`))
-      : JSON.parse(localStorage.getItem('se_quickmatches')).find(m => String(m.id) === nextId);
+    const fresh = sport === 'tennis' ? JSON.parse(localStorage.getItem(matchStorageKey(`se_tennis_quick_draft_${nextId}`)))
+      : JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches'))).find(m => String(m.id) === nextId);
     expect(fresh).toMatchObject({ team1Name: 'Alpha', team2Name: 'Beta', team1Color: '#123456', team2Color: '#654321', format, status: 'in-progress' });
-    expect(JSON.parse(localStorage.getItem('se_quickmatches')).find(m => m.id === 300)).toEqual(finished);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches'))).find(m => m.id === 300)).toEqual(finished);
   });
 
   it.each(['tennis', 'cricket'])('a completed %s quick scorer deep link opens Finish without rewriting its saved result', async sport => {
@@ -566,7 +567,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     renderApp([sport === 'tennis' ? '/tennis/quick/live/300' : '/cricket/quick/test-match/300']);
     expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
     expect(currentRoute()).toBe(`/${sport}/quick?result=300`);
-    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([JSON.parse(JSON.stringify(saved))]);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))).toEqual([JSON.parse(JSON.stringify(saved))]);
     expect(screen.queryByRole('button', { name: 'Four runs' })).not.toBeInTheDocument();
   });
 
@@ -585,8 +586,8 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     seed('se_quickmatch_draft_tennis', draft);
     renderApp([`/tennis/quick?result=${kind === 'missing' ? '999' : '300'}`]);
     await waitFor(() => expect(currentRoute()).toBe('/history'));
-    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([match]);
-    expect(JSON.parse(localStorage.getItem('se_quickmatch_draft_tennis_100'))).toEqual(draft);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))).toEqual([match]);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatch_draft_tennis_100')))).toEqual(draft);
   });
 
   it('New Match after Test Finish keeps the displayed format consistent with the scorer it starts', async () => {
@@ -610,7 +611,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     expect(await screen.findByRole('heading', { name: /winner: alpha/i })).toBeInTheDocument();
     const write = Storage.prototype.setItem;
     const failure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (sport === 'tennis' ? key.startsWith('se_tennis_quick_draft_') : key === 'se_quickmatches') {
+      if (sport === 'tennis' ? key.startsWith(matchStorageKey('se_tennis_quick_draft_')) : key === matchStorageKey('se_quickmatches')) {
         throw new DOMException('Storage full', 'QuotaExceededError');
       }
       return write.call(this, key, value);
@@ -619,7 +620,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     expect(screen.getByRole('heading', { name: /winner: alpha/i })).toBeInTheDocument();
     expect(screen.getByText(/save failed/i)).toBeInTheDocument();
     expect(currentRoute()).toBe(`/${sport}/quick?result=300`);
-    expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([JSON.parse(JSON.stringify(match))]);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))).toEqual([JSON.parse(JSON.stringify(match))]);
     failure.mockRestore();
     fireEvent.click(screen.getByRole('button', { name: 'Rematch' }));
     await waitFor(() => expect(currentRoute()).toMatch(sport === 'tennis' ? /^\/tennis\/quick\/live\// : /^\/cricket\/quick\/test-match\//));
@@ -817,13 +818,13 @@ describe('navigation decisions (2026-10-21)', () => {
     await settleRoute();
     fireEvent.click(screen.getByRole('button', { name: 'Add point for Royals' }));
     const key = 'se_quickmatch_draft_volleyball_808';
-    const saved = JSON.parse(localStorage.getItem(key));
+    const saved = JSON.parse(localStorage.getItem(matchStorageKey(key)));
     fireEvent.click(document.querySelector('.global-nav-brand'));
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('Your match is saved. Resume it from Home or History.');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Leave page' }));
     await waitFor(() => expect(currentRoute()).toBe('/app'));
-    expect(JSON.parse(localStorage.getItem(key))).toEqual(saved);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(key)))).toEqual(saved);
     fireEvent.click(screen.getByRole('button', { name: /Resume Volleyball/ }));
     await settleRoute();
     expect(screen.getByRole('button', { name: 'Add point for Royals' })).toHaveTextContent('1');
@@ -843,7 +844,7 @@ describe('navigation decisions (2026-10-21)', () => {
     else fireEvent.click(screen.getByRole('button', { name: goals ? 'Add 1 to Red' : 'Add point for Red' }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
-    const saved = JSON.parse(localStorage.getItem(key));
+    const saved = JSON.parse(localStorage.getItem(matchStorageKey(key)));
     expect(goals ? saved.gScore1 : saved.vScore1).toBe(0);
     view.unmount();
     nativeBack.install.mockClear();
@@ -851,7 +852,7 @@ describe('navigation decisions (2026-10-21)', () => {
     await settleRoute();
     fireEvent.click(document.querySelector('.global-nav-brand'));
     expect(await screen.findByRole('dialog')).toHaveTextContent('Leave this page?');
-    expect(JSON.parse(localStorage.getItem(key)).scoringStarted).toBe(true);
+    expect(JSON.parse(localStorage.getItem(matchStorageKey(key))).scoringStarted).toBe(true);
   });
 
   it.each(['privacy', 'terms', 'contact'])('Round 2: legal %s brand opens /app with one resumable draft', async page => {
@@ -882,7 +883,7 @@ describe('navigation decisions (2026-10-21)', () => {
     fireEvent.click(screen.getByRole('button', { name: goals ? 'Add 1 point to Red' : sport === 'volleyball' ? 'Add point for Red' : /^Red: / }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
-    const saved = JSON.parse(localStorage.getItem(`se_${sport}`))[0].matches[0].draftState;
+    const saved = JSON.parse(localStorage.getItem(matchStorageKey(`se_${sport}`)))[0].matches[0].draftState;
     expect(goals ? saved.score1 : saved.sets[0].score1).toBe(0);
     expect(saved.history).toEqual([]);
     await remountAndCheckGuard(view, path);
@@ -903,7 +904,7 @@ describe('navigation decisions (2026-10-21)', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Red: / }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: 'Undo last action', exact: true }));
-    const saved = mode === 'quick' ? JSON.parse(localStorage.getItem(`se_tennis_quick_draft_${TENNIS_ID}`)) : JSON.parse(localStorage.getItem('se_tennis'))[0].matches[0];
+    const saved = mode === 'quick' ? JSON.parse(localStorage.getItem(matchStorageKey(`se_tennis_quick_draft_${TENNIS_ID}`))) : JSON.parse(localStorage.getItem(matchStorageKey('se_tennis')))[0].matches[0];
     expect(saved.draftState.sets[0].points1).toBe(0);
     expect(saved.draftState.history).toEqual([]);
     await remountAndCheckGuard(view, path);
@@ -926,7 +927,7 @@ describe('navigation decisions (2026-10-21)', () => {
     fireEvent.click(screen.getByRole('button', { name: kind === 'guided' ? 'Dot' : kind === 'limited' ? '0' : '0 runs', exact: true }));
     await waitFor(() => expect(nativeBack.install).toHaveBeenCalled());
     fireEvent.click(screen.getByRole('button', { name: /Undo/ }));
-    const saved = kind === 'quick' ? loadInProgressMatches().find(match => match.sport === 'cricket') : kind === 'test-quick' ? JSON.parse(localStorage.getItem('se_quickmatches'))[0] : JSON.parse(localStorage.getItem('se_cricket'))[0].matches[0];
+    const saved = kind === 'quick' ? loadInProgressMatches().find(match => match.sport === 'cricket') : kind === 'test-quick' ? JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))[0] : JSON.parse(localStorage.getItem(matchStorageKey('se_cricket')))[0].matches[0];
     if (kind === 'quick') expect(saved.scores.team1.balls).toBe(0);
     else if (kind === 'guided') expect(saved.draftState.guidedInnings.deliveries).toEqual([]);
     else if (kind.startsWith('test')) expect(saved.draftState.innings[0].balls).toBe(0);
@@ -1088,14 +1089,14 @@ describe('navigation decisions (2026-10-21)', () => {
       act(() => globalThis.dispatchEvent(new Event('popstate')));
       expect(await screen.findByRole('region', { name: 'Match result' })).toBeInTheDocument();
       expect(currentRoute()).toBe('/cricket/quick?result=300');
-      const saved = JSON.parse(localStorage.getItem('se_quickmatches'));
+      const saved = JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')));
       historyGo.mockClear();
       historyBack.mockClear();
       act(() => globalThis.dispatchEvent(new Event('popstate')));
       expect(historyGo).not.toHaveBeenCalled();
       expect(historyBack).not.toHaveBeenCalled();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-      expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual(saved);
+      expect(JSON.parse(localStorage.getItem(matchStorageKey('se_quickmatches')))).toEqual(saved);
     } finally {
       historyGo.mockRestore();
       historyBack.mockRestore();

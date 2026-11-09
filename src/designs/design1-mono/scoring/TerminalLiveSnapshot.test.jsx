@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../../utils/accountStorage';
 import { useEffect } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -88,12 +89,12 @@ function seed(c) {
     base.kabaddi = createKabaddiMatch({ format: base.format, names: ['Alpha', 'Beta'], colours: [undefined, undefined] });
   }
   if (c.mode) {
-    Object.entries(cricketFinishSeed(c.mode)).forEach(([key, value]) => localStorage.setItem(key, JSON.stringify(value)));
+    Object.entries(cricketFinishSeed(c.mode)).forEach(([key, value]) => localStorage.setItem(matchStorageKey(key), JSON.stringify(value)));
   } else if (c.quick) {
     const key = c.sport === 'tennis' ? 'se_tennis_quick_draft_300' : `se_quickmatch_draft_${c.sport}_300`;
-    localStorage.setItem(key, JSON.stringify({ id: 300, ...base }));
+    localStorage.setItem(matchStorageKey(key), JSON.stringify({ id: 300, ...base }));
   } else {
-    localStorage.setItem(`se_${c.sport}`, JSON.stringify([{ id: 100, format: c.format,
+    localStorage.setItem(matchStorageKey(`se_${c.sport}`), JSON.stringify([{ id: 100, format: c.format,
       teams: [{ id: 'A', name: 'Alpha' }, { id: 'B', name: 'Beta' }], knockoutMatches: [],
       matches: [{ id: 'm1', team1Id: 'A', team2Id: 'B', status: 'in-progress', draftState: c.draft }],
     }]));
@@ -140,7 +141,7 @@ describe.each(cases)('$name terminal broadcast', c => {
     if (c.kabaddi) committed.kabaddi.resultType = 'abandoned';
     if (committed) expect(committed).toMatchObject(c.expected);
     if (c.auto) {
-      const saved = JSON.parse(localStorage.getItem(c.quick ? 'se_quickmatches' : `se_${c.sport}`));
+      const saved = JSON.parse(localStorage.getItem(matchStorageKey(c.quick ? 'se_quickmatches' : `se_${c.sport}`)));
       const result = c.quick ? saved[0] : saved[0].matches[0];
       expect(result.status).toBe('completed');
       if (c.mode) expect(result.innings[3].runs).toBe(c.expected.pointsB);

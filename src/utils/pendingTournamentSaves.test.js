@@ -1,3 +1,4 @@
+import { matchStorageKey, setMatchStorageScope } from './accountStorage';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { attemptMatchSave, enqueueMatchSave, pendingMatchSaves, pruneSyncedMatchSaves } from './pendingMatchSaves';
 import { loadSportTournaments, saveSportTournament } from './storage';
@@ -9,46 +10,48 @@ let sequence = 0;
 beforeEach(() => {
   localStorage.clear();
   owner = `knockout-owner-${++sequence}`;
-  localStorage.setItem('se_football', JSON.stringify([{ id: 100, matches: [{ id: 'group', score1: 3 }], knockoutMatches: [{ id: 'final', status: 'completed', score1: 2, score2: 1 }] }]));
+  setMatchStorageScope(owner);
+  localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([{ id: 100, matches: [{ id: 'group', score1: 3 }], knockoutMatches: [{ id: 'final', status: 'completed', score1: 2, score2: 1 }] }]));
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
 });
 afterEach(() => vi.restoreAllMocks());
 
 it('updates only the queued knockout fixture, preserving scores and new local edits', async () => {
   const record = enqueueMatchSave(owner, payload, undefined, reference);
-  const tournament = JSON.parse(localStorage.getItem('se_football'))[0];
+  const tournament = JSON.parse(localStorage.getItem(matchStorageKey('se_football')))[0];
   tournament.name = 'Renamed while pending';
-  localStorage.setItem('se_football', JSON.stringify([tournament]));
+  localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([tournament]));
   await attemptMatchSave(record, vi.fn().mockResolvedValue('server-id'));
-  expect(JSON.parse(localStorage.getItem('se_football'))[0]).toMatchObject({ name: 'Renamed while pending', matches: [{ id: 'group', score1: 3 }], knockoutMatches: [{ id: 'final', score1: 2, score2: 1, syncOwnerId: owner, sync: { status: 'synced' } }] });
-  expect(localStorage.getItem('se_quickmatches')).toBeNull();
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_football')))[0]).toMatchObject({ name: 'Renamed while pending', matches: [{ id: 'group', score1: 3 }], knockoutMatches: [{ id: 'final', score1: 2, score2: 1, syncOwnerId: owner, sync: { status: 'synced' } }] });
+  expect(localStorage.getItem(matchStorageKey('se_quickmatches'))).toBeNull();
   expect(pendingMatchSaves(owner)).toEqual([]);
 });
 
 it('persisted owner-scoped confirmation wins over a stale queue record and prunes it', () => {
   const record = enqueueMatchSave(owner, payload, undefined, reference);
-  const tournament = JSON.parse(localStorage.getItem('se_football'))[0];
+  const tournament = JSON.parse(localStorage.getItem(matchStorageKey('se_football')))[0];
   tournament.knockoutMatches[0] = { ...tournament.knockoutMatches[0], clientMatchId: payload.clientMatchId, syncOwnerId: owner, sync: { status: 'synced', completionId: record.completionId } };
-  localStorage.setItem('se_football', JSON.stringify([tournament]));
+  localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([tournament]));
   const key = `se_pending_match:${encodeURIComponent(owner)}:${encodeURIComponent(payload.clientMatchId)}`;
-  localStorage.setItem(key, JSON.stringify({ ...record, state: 'failed' }));
+  localStorage.setItem(matchStorageKey(key), JSON.stringify({ ...record, state: 'failed' }));
   expect(pendingMatchSaves(owner)).toEqual([]);
   pruneSyncedMatchSaves(owner);
-  expect(localStorage.getItem(key)).toBeNull();
+  expect(localStorage.getItem(matchStorageKey(key))).toBeNull();
   const other = enqueueMatchSave('other-account', payload, undefined, reference);
-  expect(pendingMatchSaves('other-account')).toEqual([other]);
+  expect(other).toBeUndefined();
+  expect(pendingMatchSaves('other-account')).toEqual([]);
 });
 
 it('keeps a failed result and its durable record when transport fails', async () => {
   const record = enqueueMatchSave(owner, payload, undefined, reference);
   await attemptMatchSave(record, vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
   expect(pendingMatchSaves(owner)[0]).toMatchObject({ state: 'failed', terminal: false, tournamentMatch: reference });
-  expect(JSON.parse(localStorage.getItem('se_football'))[0].knockoutMatches[0]).toMatchObject({ status: 'completed', score1: 2, score2: 1, sync: { status: 'failed' } });
+  expect(JSON.parse(localStorage.getItem(matchStorageKey('se_football')))[0].knockoutMatches[0]).toMatchObject({ status: 'completed', score1: 2, score2: 1, sync: { status: 'failed' } });
   expect(pendingMatchSaves('another-account')).toEqual([]);
 });
 
 it.each(['matches', 'knockoutMatches'])('preserves reconnect confirmation when a stale fixture screen saves %s after acknowledgement', async (collection) => {
-  localStorage.setItem('se_football', JSON.stringify([{ id: 100, [collection]: [{ id: 'final', status: 'completed', score1: 2, score2: 1 }] }]));
+  localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([{ id: 100, [collection]: [{ id: 'final', status: 'completed', score1: 2, score2: 1 }] }]));
   const record = enqueueMatchSave(owner, payload, undefined, reference);
   await attemptMatchSave(record, vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
   // The fixture screen captures the failed result before its passive save effect runs.
@@ -101,7 +104,7 @@ it.each([undefined, 'different-completion'])('does not preserve an unproven stor
   await attemptMatchSave(record, vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
   const snapshot = loadSportTournaments('se_football')[0];
   const match = snapshot.knockoutMatches[0];
-  localStorage.setItem('se_football', JSON.stringify([{ ...snapshot, knockoutMatches: [{ ...match, sync: { status: 'synced', completionId } }] }]));
+  localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([{ ...snapshot, knockoutMatches: [{ ...match, sync: { status: 'synced', completionId } }] }]));
   saveSportTournament('se_football', snapshot);
   expect(loadSportTournaments('se_football')[0].knockoutMatches[0]).toEqual(match);
 });

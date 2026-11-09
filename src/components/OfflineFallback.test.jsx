@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../utils/accountStorage';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -33,7 +34,7 @@ describe('OfflineFallback', () => {
 
   it('explains local scoring and exposes offline-safe actions', () => {
     setOnlineState(false);
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([
       { id: 'match-1', team1: 'Team A', team2: 'Team B' },
     ]));
 
@@ -68,10 +69,10 @@ describe('OfflineFallback', () => {
 
   it('pluralizes saved counts for singular and plural values', () => {
     setOnlineState(false);
-    globalThis.localStorage.setItem('se_quickmatches', JSON.stringify([
+    globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([
       { id: 'match-1', team1: 'Team A', team2: 'Team B' },
     ]));
-    globalThis.localStorage.setItem('se_volleyball', JSON.stringify([
+    globalThis.localStorage.setItem(matchStorageKey('se_volleyball'), JSON.stringify([
       { id: 'tournament-1' },
     ]));
 

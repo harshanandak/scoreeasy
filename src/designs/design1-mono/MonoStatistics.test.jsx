@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -60,7 +61,7 @@ function seedQuickMatches() {
 }
 
 function seedFootballCup() {
-  globalThis.localStorage.setItem(FOOTBALL_KEY, JSON.stringify([{
+  globalThis.localStorage.setItem(matchStorageKey(FOOTBALL_KEY), JSON.stringify([{
     id: 'cup',
     name: 'City Cup',
     format: { mode: 'timed' },
@@ -71,7 +72,7 @@ function seedFootballCup() {
 }
 
 function readQuickMatches() {
-  const raw = globalThis.localStorage.getItem(QUICK_MATCHES_KEY);
+  const raw = globalThis.localStorage.getItem(matchStorageKey(QUICK_MATCHES_KEY));
   return raw ? JSON.parse(raw) : [];
 }
 
@@ -88,7 +89,7 @@ function renderStatistics() {
 
 describe('MonoStatistics', () => {
   it('tournament one win plus one abandoned keeps played two, win rate 100% and average margin over the one result', async () => {
-    localStorage.setItem('se_football', JSON.stringify([{ id: 100, name: 'Cup', format: { mode: 'timed' },
+    localStorage.setItem(matchStorageKey('se_football'), JSON.stringify([{ id: 100, name: 'Cup', format: { mode: 'timed' },
       teams: [{ id: 'A', name: 'Alpha' }, { id: 'B', name: 'Beta' }], knockoutMatches: [], matches: [
         { id: 'win', team1Id: 'A', team2Id: 'B', status: 'completed', resultType: 'decided', winner: 'A', score1: 3, score2: 1 },
         { id: 'abandoned', team1Id: 'A', team2Id: 'B', status: 'completed', resultType: 'abandoned', winner: null, score1: 99, score2: 0 },

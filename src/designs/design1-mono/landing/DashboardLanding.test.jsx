@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../../utils/accountStorage';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -54,7 +55,7 @@ const volleyball = {
 };
 const kabaddi = { id: 'kb-1', sport: 'kabaddi', team1: 'Bulls', team2: 'Panthers', score1: 38, score2: 31, winner: 'Bulls', date: iso(3 * day) };
 const football = { id: 'fb-1', sport: 'football', team1: 'City', team2: 'United', score1: 2, score2: 2, winner: 'Draw', date: iso(4 * day) };
-const seed = (matches) => globalThis.localStorage.setItem('se_quickmatches', JSON.stringify(matches));
+const seed = (matches) => globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify(matches));
 
 describe('DashboardLanding (Kit Home)', () => {
   beforeEach(() => {
@@ -301,7 +302,7 @@ describe('DashboardLanding (Kit Home)', () => {
     });
 
     it('renders the returning Home when session storage is corrupt', () => {
-      globalThis.localStorage.setItem('gs_sessions', JSON.stringify({ id: 'bad-session' }));
+      globalThis.localStorage.setItem(matchStorageKey('gs_sessions'), JSON.stringify({ id: 'bad-session' }));
       seed([volleyball]);
       renderDashboard();
       expect(screen.getByRole('heading', { name: 'Last match' })).toBeInTheDocument();
@@ -322,12 +323,12 @@ describe('DashboardLanding (Kit Home)', () => {
         sets: [{ score1: 12, score2: 9, completed: false }], format: { type: 'single', target: 25 },
         updatedAt: iso(3600e3), ...overrides,
       };
-      globalThis.localStorage.setItem(`se_quickmatch_draft_${sport}_${id}`, JSON.stringify(value));
+      globalThis.localStorage.setItem(matchStorageKey(`se_quickmatch_draft_${sport}_${id}`), JSON.stringify(value));
     };
     // A kept-match row only resumes; Discard lives on the scoring board and clears the draft.
     // Returning Home re-reads the list on focus.
     const discardOnBoard = (sport, id) => act(() => {
-      globalThis.localStorage.removeItem(`se_quickmatch_draft_${sport}_${id}`);
+      globalThis.localStorage.removeItem(matchStorageKey(`se_quickmatch_draft_${sport}_${id}`));
       globalThis.dispatchEvent(new Event('focus'));
     });
     const cricket = {

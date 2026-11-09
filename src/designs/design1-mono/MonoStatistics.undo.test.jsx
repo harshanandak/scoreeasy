@@ -1,3 +1,4 @@
+import { matchStorageKey } from '../../utils/accountStorage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -136,11 +137,11 @@ describe('Stats recovery against current storage', () => {
     const setItem = Storage.prototype.setItem;
     const removeItem = Storage.prototype.removeItem;
     const saveFailure = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (key === 'se_stats_pending_undo' && value === '[]') throw new Error('cleanup failed');
+      if (key === matchStorageKey('se_stats_pending_undo') && value === '[]') throw new Error('cleanup failed');
       return setItem.call(this, key, value);
     });
     const removeFailure = vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(function (key) {
-      if (key === 'se_stats_pending_undo') throw new Error('cleanup failed');
+      if (key === matchStorageKey('se_stats_pending_undo')) throw new Error('cleanup failed');
       return removeItem.call(this, key);
     });
     undo('delete');
@@ -184,11 +185,11 @@ describe('Stats recovery against current storage', () => {
     const setItem = Storage.prototype.setItem;
     const removeItem = Storage.prototype.removeItem;
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (key === 'se_stats_pending_undo') throw new Error('cannot clear recovery');
+      if (key === matchStorageKey('se_stats_pending_undo')) throw new Error('cannot clear recovery');
       return setItem.call(this, key, value);
     });
     vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(function (key) {
-      if (key === 'se_stats_pending_undo') throw new Error('cannot clear recovery');
+      if (key === matchStorageKey('se_stats_pending_undo')) throw new Error('cannot clear recovery');
       return removeItem.call(this, key);
     });
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));

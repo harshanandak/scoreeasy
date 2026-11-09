@@ -4,6 +4,7 @@ import { cricketScorePair, cricketScoreLine } from '../../../utils/cricketScoreF
 import { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadSportTournaments, loadData } from '../../../utils/storage';
+import { MATCH_STORAGE_CHANGED } from '../../../utils/accountStorage';
 import { getActiveSessions } from '../../../utils/universalStorage';
 import { getSportsList, getSportById } from '../../../models/sportRegistry';
 import { useAuth } from '../../../hooks/useAuth';
@@ -548,6 +549,10 @@ export default function DashboardLanding() {
   const [{ sessions, inProgressMatches, allTournaments, recentMatches, playedCount, weekCount }, setDashboard] = useState(readDashboardState);
   /* The In progress list re-reads on focus/storage and after a delete; Home recounts with it. */
   const refreshDashboard = useCallback(() => setDashboard(readDashboardState()), []);
+  useEffect(() => {
+    window.addEventListener(MATCH_STORAGE_CHANGED, refreshDashboard);
+    return () => window.removeEventListener(MATCH_STORAGE_CHANGED, refreshDashboard);
+  }, [refreshDashboard]);
 
   useEffect(() => {
     /* Mount-only fade-in trigger; data is already loaded via lazy init above. */

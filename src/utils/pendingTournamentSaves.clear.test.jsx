@@ -1,3 +1,4 @@
+import { setMatchStorageScope } from './accountStorage';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { useEffect, useState } from 'react';
@@ -16,6 +17,7 @@ const cases = [
 beforeEach(() => {
   vi.resetModules();
   localStorage.clear();
+  setMatchStorageScope(owner);
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
