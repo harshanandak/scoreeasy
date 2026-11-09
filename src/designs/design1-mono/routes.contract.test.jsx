@@ -156,7 +156,11 @@ describe('board dock visibility', () => {
     expect(nativeBack.install).not.toHaveBeenCalled();
   });
 
-  it.each(['/app', '/play', '/history', '/tennis/tournament', '/profile/no-such-user'])('shows the dock on the top-level tab screen %s', async path => {
+  it.each(['/app', '/play', '/history', '/tennis/tournament', '/profile/no-such-user'])('shows the dock on ordinary app screens %s', async path => {
+    if (path.startsWith('/profile')) {
+      authState.current = { ...GUEST, authMode: 'cloud', cloudAuthAvailable: true };
+      convexState.useQuery = (_fn, args) => (args && args !== 'skip' && 'username' in args ? null : []);
+    }
     renderApp([path]);
     await settleRoute();
     expectBoardDock(false);

@@ -609,6 +609,7 @@ export default function MonoQuickMatch() {
       setTeam2Name(saved.team2Name || saved.team2 || 'Team B');
       setTeam1Color(normaliseHex(saved.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
       setTeam2Color(normaliseHex(saved.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
+      if (saved.customSetupSource) setCustomSetupSource(saved.customSetupSource);
       if (saved.format) setFormat(saved.format);
       if (isCricket) {
         const preset = CRICKET_FORMATS.find(f => f.id === saved.format?.preset)
@@ -984,6 +985,7 @@ export default function MonoQuickMatch() {
     const canonicalDate = entry.date || entry.completedAt || entry.createdAt || nowIso;
     const normalized = {
       ...entry,
+      ...(customSetupSource ? { customSetupSource } : {}),
       team1: canonicalTeam1,
       team2: canonicalTeam2,
       team1Name: entry.team1Name || canonicalTeam1,
@@ -1981,7 +1983,7 @@ export default function MonoQuickMatch() {
     setFormat(prev => ({ ...applyFormatChoice(sportConfig, choiceId, prev), ...(supportsSetsRules(sport) && prev.rulesPreset?.startsWith('Official') ? { rulesPreset: 'Custom school' } : {}) }));
   };
   // New matches always start with standard rules; saved custom rules are opt-in on Rules.
-  useEffect(() => { setSetupStep(0); setCustomSetupSource(null); }, [sport]);
+  useEffect(() => { setSetupStep(0); if (!restoredDraftRef.current && !resultMatchId) setCustomSetupSource(null); }, [sport]);
   const resetRemembered = () => {
     setCustomSetupSource(null);
     clearSetupPrefs(sport);
