@@ -38,19 +38,55 @@ export function loadPendingSaveFallback(ownerId) {
   });
 }
 
+export function matchSaveFingerprint(value) {
+  const serialized = JSON.stringify(value, (key, entry) => entry && typeof entry === 'object' && !Array.isArray(entry)
+    ? Object.fromEntries(Object.keys(entry).sort().map(name => [name, entry[name]])) : entry);
+  let hash = 0xcbf29ce484222325n;
+  for (let index = 0; index < serialized.length; index += 1) {
+    hash = BigInt.asUintN(64, (hash ^ BigInt(serialized.charCodeAt(index))) * 0x100000001b3n);
+  }
+  return hash.toString(16).padStart(16, '0');
+}
+
+export function fallbackCompletionMatches(a, b) {
+  if (!a || !b) return false;
+  if (a.completionId !== b.completionId) return false;
+  if (a.quickCompletionFingerprint && b.quickCompletionFingerprint
+    && a.quickCompletionFingerprint !== b.quickCompletionFingerprint) return false;
+  return payloadFingerprint(a) === payloadFingerprint(b);
+}
+
+function payloadFingerprint(record) {
+  if (record.payloadFingerprint) return record.payloadFingerprint;
+  // Quick payload dates are generated during normalization, not completion identity.
+  return matchSaveFingerprint(record.tournamentMatch ? record.payload : { ...record.payload, date: undefined });
+}
+
 export function storePendingSaveFallback(key, record) {
+  const fingerprint = payloadFingerprint(record);
+  const compact = {
+    ownerId: record.ownerId, clientMatchId: record.clientMatchId || record.payload.clientMatchId,
+    completionId: record.completionId, payloadFingerprint: fingerprint, state: 'synced',
+    syncedAt: record.syncedAt || Date.now(), storageBackend: 'indexedDB', storageFailed: false,
+    ...(record.quickCompletionFingerprint ? { quickCompletionFingerprint: record.quickCompletionFingerprint } : {}),
+  };
+  const marker = record.state === 'synced' ? compact : record;
   return transaction('readwrite', (store, complete) => {
     const read = store.get(key);
     read.onsuccess = () => {
       const previous = read.result;
       // A stale tab cannot overwrite acknowledgement of the same completion.
-      if (previous?.state === 'synced' && previous.completionId === record.completionId
-        && (!record.completionId || JSON.stringify(previous.payload) === JSON.stringify(record.payload))) {
+      if (previous?.state === 'synced' && fallbackCompletionMatches(previous, record)) {
+        if (previous.payload) {
+          store.put(compact, key);
+          complete(compact);
+          return;
+        }
         complete(previous);
         return;
       }
-      store.put(record, key);
-      complete(record);
+      store.put(marker, key);
+      complete(marker);
     };
   });
 }

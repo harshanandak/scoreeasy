@@ -39,7 +39,7 @@ it('reports durable fallback accurately and retries once when connection returns
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   await act(async () => { window.dispatchEvent(new Event('online')); });
   await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved to your account'));
-  expect(save).toHaveBeenCalledExactlyOnceWith(payload);
+  expect(save).toHaveBeenCalledExactlyOnceWith({ ...payload, expectedOwnerId: owner });
 });
 
 it('continues warning when both storage APIs are unavailable', async () => {
@@ -66,7 +66,7 @@ it('hydrates a refreshed worker from durable storage before reconnect sends once
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   await act(async () => { window.dispatchEvent(new Event('online')); window.dispatchEvent(new Event('focus')); });
   await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved to your account'));
-  expect(save).toHaveBeenCalledExactlyOnceWith(payload);
+  expect(save).toHaveBeenCalledExactlyOnceWith({ ...payload, expectedOwnerId: owner });
 });
 
 it('leaves another owner fallback untouched until that owner signs in', async () => {
@@ -81,5 +81,5 @@ it('leaves another owner fallback untouched until that owner signs in', async ()
   owner = originalOwner;
   mount();
   await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved to your account'));
-  expect(save).toHaveBeenCalledExactlyOnceWith(payload);
+  expect(save).toHaveBeenCalledExactlyOnceWith({ ...payload, expectedOwnerId: owner });
 });
