@@ -5,7 +5,7 @@ import { DEFAULT_TEAM_COLOURS, deriveTeamColours } from '../../lib/teamColour';
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
 import * as sportRegistry from '../../models/sportRegistry';
-import { closeOpenSheet, findTeamColourGroup, findTeamNameInput, teamColourGroup, teamNameInput } from '../../test/teamColour';
+import { closeOpenSheet, findTeamColourGroup, findTeamNameInput, goToSetupStep, teamColourGroup, teamNameInput } from '../../test/teamColour';
 
 vi.mock('convex/react', () => ({
   useConvex: () => ({ query: async () => null }),
@@ -289,14 +289,20 @@ describe('MonoQuickMatch setup clarity', () => {
 
   it('gives goals sports a clock or a target under the format', async () => {
     renderQuickMatch('/football/quick');
-    expect(await screen.findByRole('combobox', { name: 'Timing preset' })).toHaveValue('official');
-    expect(screen.getByRole('option', { name: /IFAB 2026\/27/ })).toBeInTheDocument();
-    expect(screen.getByRole('spinbutton', { name: 'Number of periods' })).toHaveValue(2);
-    expect(screen.getByRole('spinbutton', { name: 'Minutes per period' })).toHaveValue(45);
-    fireEvent.change(screen.getByRole('combobox', { name: 'Timing preset' }), { target: { value: 'casual' } });
-    fireEvent.click(screen.getByRole('radio', { name: 'First to' }));
+    // Game: one card per timing preset, the official one chosen by default.
+    expect(await screen.findByRole('radio', { name: 'IFAB 2026/27' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'Custom school/event' })).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('radio', { name: 'Quick casual' })).toHaveAttribute('aria-checked', 'false');
+    // Rules: the periods and minutes of the official preset.
+    goToSetupStep('Rules');
+    expect(screen.getByRole('spinbutton', { name: 'Number of periods' })).toHaveValue('2');
+    expect(screen.getByRole('spinbutton', { name: 'Minutes per period' })).toHaveValue('45');
+    goToSetupStep('Game');
+    fireEvent.click(screen.getByRole('radio', { name: 'Quick casual' }));
+    goToSetupStep('Rules');
+    fireEvent.click(screen.getByRole('button', { name: 'First to' }));
     fireEvent.click(screen.getByRole('button', { name: '5 goals' }));
-    expect(screen.getByText('First to 5 goals wins')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /First to 5 goals wins/ })).toBeInTheDocument();
   });
 
   it('edits gully rules one tap away and returns to setup with them', async () => {
@@ -319,7 +325,7 @@ describe('MonoQuickMatch setup clarity', () => {
     expect(await screen.findByRole('radio', { name: 'Best of 3' })).toHaveAccessibleDescription(/21 points a set · win by 2 · decider to 15 · cap 27/);
   });
 
-  it.each([['volleyball', 'Edit rules'], ['kabaddi', null], ['tennis', null], ['cricket', null], ['football', null]])(
+  it.each([['volleyball', 'Edit rules'], ['kabaddi', 'Rules'], ['tennis', null], ['cricket', null], ['football', 'Rules']])(
     '%s: Start is available with the defaults on the first step',
     async (sport, rulesAction) => {
       renderQuickMatch(`/${sport}/quick`);
@@ -327,7 +333,6 @@ describe('MonoQuickMatch setup clarity', () => {
       expect(start).not.toHaveAttribute('aria-disabled', 'true');
       expect(screen.queryAllByRole('group', { name: /colour$/ })).toHaveLength(0);
       if (rulesAction) expect(screen.getByRole('button', { name: rulesAction })).toBeInTheDocument();
-      else if (sport === 'kabaddi') expect(screen.getByRole('button', { name: 'Rules' })).toBeInTheDocument();
       else expect(screen.queryByRole('button', { name: /rules$/i })).toBeNull();
       expect(teamNameInput('A')).toHaveValue('Team A');
     },
@@ -360,10 +365,13 @@ describe('MonoQuickMatch setup clarity', () => {
 it.each([['football', 2, 45], ['basketball', 4, 10], ['hockey', 4, 15]])('freezes %s timing in the match and hides clock controls for casual play', async (sport, count, minutes) => {
   globalThis.localStorage.clear();
   const first = renderQuickMatch(`/${sport}/quick`);
-  expect(await screen.findByRole('spinbutton', { name: 'Number of periods' })).toHaveValue(count);
-  expect(screen.getByRole('spinbutton', { name: 'Minutes per period' })).toHaveValue(minutes);
-  fireEvent.change(screen.getByRole('spinbutton', { name: 'Minutes per period' }), { target: { value: 3 } });
-  expect(screen.getByRole('combobox', { name: 'Timing preset' })).toHaveValue('custom');
+  await screen.findByRole('button', { name: 'Rules' });
+  goToSetupStep('Rules');
+  expect(screen.getByRole('spinbutton', { name: 'Number of periods' })).toHaveValue(String(count));
+  expect(screen.getByRole('spinbutton', { name: 'Minutes per period' })).toHaveValue(String(minutes));
+  fireEvent.change(screen.getByRole('spinbutton', { name: 'Minutes per period' }), { target: { value: '3' } });
+  // Editing a period makes the rules Custom: the summary says so.
+  expect(screen.getByRole('heading', { name: /^Custom school\/event/ })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: `Start ${sport}` }));
   expect(screen.getByRole('button', { name: 'Pause clock' })).toBeInTheDocument();
   const key = Object.keys(localStorage).find(key => key.startsWith(matchStorageKey(`se_quickmatch_draft_${sport}_`)));
@@ -371,7 +379,7 @@ it.each([['football', 2, 45], ['basketball', 4, 10], ['hockey', 4, 15]])('freeze
   expect(draft.periodState).toMatchObject({ version: 1, sport, durations: Array(count).fill(180) });
   first.unmount(); globalThis.localStorage.clear();
   renderQuickMatch(`/${sport}/quick`);
-  fireEvent.change(await screen.findByRole('combobox', { name: 'Timing preset' }), { target: { value: 'casual' } });
+  fireEvent.click(await screen.findByRole('radio', { name: 'Quick casual' }));
   fireEvent.click(screen.getByRole('button', { name: `Start ${sport}` }));
   expect(screen.queryByRole('button', { name: 'Pause clock' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /End half|End quarter/ })).not.toBeInTheDocument();

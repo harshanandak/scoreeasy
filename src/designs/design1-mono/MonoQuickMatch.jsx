@@ -1,6 +1,5 @@
 import { createPeriodMatch, applyPeriodAction, undoPeriodAction, periodTotals, periodResultDecided, supportsGoalPeriods, periodPreset, freezePeriodMatch, periodPlayedSeconds, periodSnapshot } from '../../utils/goalsPeriods';
 import { useGoalsPeriodClock } from '../../hooks/useGoalsPeriodClock';
-import GoalsPeriodSetup from './components/GoalsPeriodSetup';
 import GoalsPeriodControls from './scoring/GoalsPeriodControls';
 import { getQuickCricketTransition } from '../../utils/cricketCalculations';
 import { recordMatchOutcome, EARLY_FINISH_MESSAGE } from '../../utils/matchOutcome';
@@ -15,6 +14,7 @@ import { isKabaddiMigrationBackup, kabaddiMigrationBackupKey, migrateLegacyKabad
 import { finish as finishKabaddi } from '../../utils/kabaddiEngine';
 import { kabaddiRulesLine } from '../../utils/kabaddiRules';
 import { KabaddiFirstRaid, KabaddiGameStep, KabaddiRulesStep } from './kit/KabaddiSetup';
+import { GoalsGameStep, GoalsRulesStep } from './kit/GoalsSetup';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
 import './scoring/cricketBoard.css';
@@ -1109,6 +1109,7 @@ export default function MonoQuickMatch() {
     saveSetupPrefs(sport, {
       colours: teamColourOn ? [team1Color, team2Color] : null,
       formatId: sport === 'kabaddi' ? (['quick', 'standard', 'women', 'pro'].includes(presetId) ? presetId : null)
+        : supportsGoalPeriods(sport) ? (['official', 'casual'].includes(format.periodPreset) ? format.periodPreset : null)
         : isCricket ? cricketPreset : selectedFormatChoice(sportConfig, format, cricketPreset),
     });
     setSaveWarning('');
@@ -1980,6 +1981,8 @@ export default function MonoQuickMatch() {
     const id = remembered.formatId;
     if (sport === 'kabaddi') {
       if (['quick', 'standard', 'women', 'pro'].includes(id)) setFormat({ kabaddiRules: resolveKabaddiRules(id) });
+    } else if (supportsGoalPeriods(sport)) {
+      if (id === 'official' || id === 'casual') setFormat(periodPreset(sport, id));
     } else if (isCricket) {
       if (CRICKET_FORMATS.some(f => f.id === id)) chooseCricketFormat(id);
     } else if (formatChoices(sportConfig).choices.some(c => c.id === id)) {
@@ -2245,7 +2248,7 @@ export default function MonoQuickMatch() {
     const rulesStepNode = (() => {
       if (isKabaddi) return <KabaddiRulesStep format={format} onChange={setFormat} />;
 
-      if (supportsGoalPeriods(sport)) return null; // goals sports (basketball, football, hockey)
+      if (supportsGoalPeriods(sport)) return <GoalsRulesStep sport={sport} sportConfig={sportConfig} format={format} onChange={setFormat} />; // goals sports (basketball, football, hockey)
 
       if (engine === 'sets') return null; // set sports (volleyball, badminton, tennis, table tennis)
 
@@ -2288,9 +2291,8 @@ export default function MonoQuickMatch() {
                 <button type="button" className="se-ctl" onClick={resetRemembered}>Reset</button>
               </div>
             )}
-            {isGoals && <GoalsPeriodSetup sport={sport} format={format} onChange={setFormat} />}
-            {isKabaddi ? <KabaddiGameStep format={format} onChange={setFormat} /> : (
-              !format.periods && <section className="kit-setup-field" aria-labelledby="setup-format-label">
+            {isKabaddi ? <KabaddiGameStep format={format} onChange={setFormat} /> : supportsGoalPeriods(sport) ? <GoalsGameStep sport={sport} format={format} onChange={setFormat} /> : (
+              <section className="kit-setup-field" aria-labelledby="setup-format-label">
                 <h2 id="setup-format-label" className="kit-setup-label">What are you playing?</h2>
                 {formatCards.length > 0 && (
                   <KitChoiceGrid labelledBy="setup-format-label" columns={1} options={formatCards} value={selectedFormat} onChange={chooseFormat} />
