@@ -6,7 +6,7 @@
    and 3.6rem numerals become ~92px keys with 2.4rem numerals; one Go only, the Start action. */
 
 .kit-screen.kit-setup {
-  padding-bottom: 0;
+  padding-bottom: calc(140px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 /* ---- header: navigation chrome, always clean ---- */
@@ -239,25 +239,28 @@
   font-weight: 700;
 }
 
-/* ---- the one Go: pinned to the bottom safe area ----
-   Setup is a sub-screen with its own Back, so the dock never shows here. The bar is solid (not a
-   fade), so a row scrolling under it is cut cleanly instead of showing half-hidden behind the
-   button. It is the last thing in the screen and the screen has no bottom padding, so at the end
-   of the scroll the last row sits fully above it. */
+/* Fixed within the same 672px column on every sport and every step. */
 .kit-screen > .kit-setup-cta {
-  position: sticky;
+  position: fixed;
   z-index: 5;
   bottom: 0;
-  margin-top: 18px;
-  padding: 14px 0 calc(16px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 672px;
+  padding: 14px 16px calc(16px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
   background: var(--se-color-canvas);
   box-shadow: 0 -1px 0 var(--se-color-line-soft);
 }
 
-/* Anything focused or scrolled into view stops above the sticky Start bar (about 90 px plus the
-   safe area), so a Format or Match length control is never left underneath it. */
+.kit-setup-cta .se-go {
+  width: 100%;
+  min-height: 52px;
+}
+
 html:has(.kit-setup) {
-  scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: calc(140px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 /* Missing a name: still focusable and announced (aria-disabled + the hint), but it no longer
@@ -270,6 +273,13 @@ html:has(.kit-setup) {
 }
 
 .kit-setup-cta .kit-setup-hint {
+  position: absolute;
+  right: 16px;
+  bottom: 100%;
+  left: 16px;
+  margin: 0;
+  padding: 8px;
+  background: var(--se-color-canvas);
   text-align: center;
 }
 
