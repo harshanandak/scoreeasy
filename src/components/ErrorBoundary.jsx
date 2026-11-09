@@ -1,11 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as Sentry from '@sentry/react';
+import { isChunkLoadError, reloadOnceForNewVersion } from '../utils/chunkReload';
+import '../designs/design1-mono/kit/kit.css';
+import '../designs/design1-mono/kit/history.css';
+import './ErrorBoundary.css';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, reloading: false };
   }
 
   static getDerivedStateFromError(error) {
@@ -13,6 +17,15 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
+    // A stale chunk after a deploy is not a crash: reload once to pick up the new
+    // build. Only full-screen boundaries do this; a silent-fallback widget keeps
+    // isolating its own failure. The live match is saved on every change, so the
+    // reload restores it.
+    if (this.props.fallback === undefined && isChunkLoadError(error) && reloadOnceForNewVersion()) {
+      this.setState({ reloading: true });
+      return;
+    }
+
     if (this.props.captureToSentry !== false) {
       Sentry.captureException(error, {
         extra: {
@@ -31,15 +44,11 @@ class ErrorBoundary extends React.Component {
   };
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, reloading: false });
   };
 
   handleHome = () => {
     globalThis.location.assign('/app');
-  };
-
-  handlePlay = () => {
-    globalThis.location.assign('/play');
   };
 
   render() {
@@ -50,68 +59,45 @@ class ErrorBoundary extends React.Component {
     // "Live now" strip) so its failure never takes down the surrounding page.
     if (this.props.fallback !== undefined) return this.props.fallback;
 
+    if (this.state.reloading) {
+      return (
+        <div className="se-crash">
+          <p className="se-crash-status" role="status">Updating Score Easy…</p>
+        </div>
+      );
+    }
+
+    const isStale = isChunkLoadError(this.state.error);
+    const title = isStale
+      ? 'A new version of Score Easy is ready'
+      : this.props.title || 'This screen hit a problem';
+    const message = isStale
+      ? 'Reload to get it. Your scores are saved.'
+      : this.props.message || 'Your scores are saved.';
+
     return (
-      <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <div className="mono-table-panel w-full max-w-lg" style={{ padding: '20px 24px' }}>
-          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
-            Something went wrong
-          </p>
-          <h2 className="text-lg font-semibold mb-2" style={{ color: '#111' }}>
-            {this.props.title || 'Unexpected application error'}
-          </h2>
-          <p className="text-sm mb-4" style={{ color: '#666' }}>
-            {this.props.message || 'A crash was caught so the app can keep running.'}
-          </p>
+      <div className="se-crash">
+        <section className="kit-card kit-empty se-crash-card" role="alert" aria-labelledby="se-crash-title">
+          <h2 id="se-crash-title">{title}</h2>
+          <p>{message}</p>
           {import.meta.env.DEV && this.state.error?.message && (
-            <pre
-              className="text-xs mb-4"
-              style={{
-                color: '#dc2626',
-                background: 'var(--se-color-surface)',
-                border: '1px solid #fecaca',
-                borderRadius: 'var(--radius)',
-                padding: '10px',
-                overflowX: 'auto',
-              }}
-            >
-              {this.state.error.message}
-            </pre>
+            <pre className="se-crash-detail">{this.state.error.message}</pre>
           )}
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="mono-btn-primary flex-1"
-              style={{ minWidth: 120, padding: '10px 12px', fontSize: '0.8125rem' }}
-              onClick={this.handleRetry}
-            >
-              Try again
-            </button>
-            <button
-              type="button"
-              className="mono-btn flex-1"
-              style={{ minWidth: 120, padding: '10px 12px', fontSize: '0.8125rem' }}
-              onClick={this.handlePlay}
-            >
-              Play
-            </button>
-            <button
-              type="button"
-              className="mono-btn flex-1"
-              style={{ minWidth: 120, padding: '10px 12px', fontSize: '0.8125rem' }}
-              onClick={this.handleReload}
-            >
-              Reload
-            </button>
-            <button
-              type="button"
-              className="mono-btn flex-1"
-              style={{ minWidth: 120, padding: '10px 12px', fontSize: '0.8125rem' }}
-              onClick={this.handleHome}
-            >
+          <div className="kit-btnstack">
+            {isStale ? (
+              <button type="button" className="se-go" onClick={this.handleReload}>
+                Reload
+              </button>
+            ) : (
+              <button type="button" className="se-go" onClick={this.handleRetry}>
+                Try again
+              </button>
+            )}
+            <button type="button" className="se-ctl" onClick={this.handleHome}>
               Home
             </button>
           </div>
-        </div>
+        </section>
       </div>
     );
   }

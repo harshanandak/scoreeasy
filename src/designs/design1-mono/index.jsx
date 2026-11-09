@@ -58,6 +58,7 @@ const MonoMatchCardShowcase = lazy(() => import('./MonoMatchCardShowcase'));
 const MonoSetDisplayShowcase = lazy(() => import('./MonoSetDisplayShowcase'));
 const BrutalistColorShowcase = lazy(() => import('./landing-designs/BrutalistColorShowcase'));
 const DashboardShowcase = lazy(() => import('./landing/DashboardShowcase'));
+const CrashShowcase = lazy(() => import('./CrashShowcase'));
 const LegalPage = lazy(() => import('./landing/LegalPage'));
 
 // Lazy-loaded auth pages (not needed for guests)
@@ -1736,7 +1737,7 @@ export default function Design1Mono() {
         <ScoringBoardContext.Provider value={registerBoard}>
         <ScoringCompletionContext.Provider value={completeProtectedScoring}>
         <Suspense fallback={<LazyFallback />}>
-          <ErrorBoundary title="App route crashed" message="The route tree failed to render.">
+          <ErrorBoundary>
             <OnboardingGuard>
               <Routes>
                 <Route path="" element={<AppEntryRoute />} />
@@ -1788,6 +1789,7 @@ export default function Design1Mono() {
                     <Route path="showcase/set-display" element={<MonoSetDisplayShowcase />} />
                     <Route path="showcase/brutalist-colors" element={<BrutalistColorShowcase />} />
                     <Route path="showcase/dashboard-variants" element={<DashboardShowcase />} />
+                    <Route path="showcase/crash" element={<CrashShowcase />} />
                   </>
                 )}
 
