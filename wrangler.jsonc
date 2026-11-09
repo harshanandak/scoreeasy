@@ -8,9 +8,16 @@
   "compatibility_date": "2026-06-25",
   "workers_dev": true,
   "preview_urls": true,
-  // Assets-only Worker (no server code): serve the Vite SPA build from ./dist.
+  // Worker entry: redirects plain http to https and adds HSTS, then hands every
+  // request to the static assets below (see worker/index.js).
+  "main": "worker/index.js",
+  // Serve the Vite SPA build from ./dist.
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
+    // Run the Worker on every request (not only asset misses) so the http
+    // redirect also covers requests that match a static file.
+    "run_worker_first": true,
     "html_handling": "auto-trailing-slash",
     // SPA fallback — serve index.html (200) for any unmatched client route
     // (/live/:token, /history, …). Replaces the old vercel.json rewrite.
