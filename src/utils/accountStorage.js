@@ -4,7 +4,7 @@ import { markSaveFailed, markSaveOk } from './saveHealth';
 const ROOT = 'se_local:';
 const BACKUP = 'se_local_migration:';
 export const MATCH_STORAGE_CHANGED = 'se-match-storage-changed';
-const matchKeys = new Set(['se_quickmatches', 'se_tournaments', 'se_statistics', 'gs_history', 'gs_sessions', 'gs_templates',
+const matchKeys = new Set(['se_custom_setup_v1', 'se_quickmatches', 'se_tournaments', 'se_statistics', 'gs_history', 'gs_sessions', 'gs_templates',
   'se_matches_pending_undo', 'se_stats_pending_undo', ...getSportsList().map(sport => sport.storageKey)]);
 let activeOwner = null;
 let legacyOwner = null;

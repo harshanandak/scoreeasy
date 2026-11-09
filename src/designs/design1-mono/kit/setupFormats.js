@@ -218,3 +218,22 @@ export function describeFormatChoices(sportConfig, format = {}) {
   if (kind === 'goals') return choices.map((c) => ({ ...c, hint: GOALS_HINTS[c.id] || '' }));
   return [];
 }
+
+/** Compare resolved rule values, ignoring object key order. Callers omit format labels/identity. */
+export function matchesSetupPreset(value, preset) {
+  if (Object.is(value, preset)) return true;
+  if (!value || !preset || typeof value !== 'object' || typeof preset !== 'object') return false;
+  if (Array.isArray(value) !== Array.isArray(preset)) return false;
+  const keys = Object.keys(value);
+  return keys.length === Object.keys(preset).length
+    && keys.every(key => Object.hasOwn(preset, key) && matchesSetupPreset(value[key], preset[key]));
+}
+
+export function setupPresetTitle(label, customised) {
+  return customised ? `Customised · from ${label}` : label;
+}
+
+export function isCustomSetup(format) {
+  return format.kabaddiRules?.presetId === 'custom' || format.periodPreset === 'custom'
+    || format.rulesPreset === 'Custom school' || format.formatMode === 'custom' || format.preset === 'custom';
+}

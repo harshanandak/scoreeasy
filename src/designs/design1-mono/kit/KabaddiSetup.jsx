@@ -6,6 +6,7 @@ import { KABADDI_PRESETS, kabaddiRulesLine, resolveKabaddiRules } from '../../..
 import { KitChoiceGrid } from './KitFormControls';
 import { KitSegmented } from './KitSetupParts';
 import KabaddiRulesPanel from './KabaddiRulesPanel';
+import { matchesSetupPreset, setupPresetTitle } from './setupFormats';
 import { RulesSummaryLine } from './RulesParts';
 import './setupSteps.css';
 
@@ -49,7 +50,7 @@ export function KabaddiGameStep({ format, onChange }) {
   const r = format.kabaddiRules || resolveKabaddiRules('quick');
   const isNamed = NAMED.some(p => p.id === r.presetId);
   const options = [...NAMED.map(p => ({ id: p.id, label: p.label, hint: kabaddiBlurb(resolveKabaddiRules(p.id)) })),
-    ...(isNamed ? [] : [{ ...CUSTOM, hint: `Your edited rules: ${kabaddiBlurb(r)}` }])];
+    ...(isNamed ? [] : [{ ...CUSTOM, label: 'Customised', hint: `Your edited rules: ${kabaddiBlurb(r)}` }])];
   return <section className="kit-setup-field" aria-labelledby="kabaddi-format-label">
     <h2 id="kabaddi-format-label" className="kit-setup-label">What are you playing?</h2>
     <KitChoiceGrid labelledBy="kabaddi-format-label" columns={1} options={options} value={isNamed ? r.presetId : 'custom'}
@@ -72,11 +73,14 @@ export function KabaddiRulesStep({ format, onChange }) {
   const r = format.kabaddiRules || resolveKabaddiRules('quick');
   const baseId = basePresetOf(r);
   const baseLabel = NAMED.find(p => p.id === baseId).label;
-  const isCustom = r.presetId === 'custom';
+  const isCustom = !matchesSetupPreset({ ...r, presetId: baseId }, resolveKabaddiRules(baseId));
   const count = isCustom ? kabaddiChanges(resolveKabaddiRules(baseId), r).length : 0;
-  const setRules = kabaddiRules => onChange({ ...format, kabaddiRules });
+  const setRules = kabaddiRules => {
+    const base = resolveKabaddiRules(baseId);
+    onChange({ ...format, kabaddiRules: matchesSetupPreset({ ...kabaddiRules, presetId: baseId }, base) ? base : kabaddiRules });
+  };
   return <section className="kit-setup-field" aria-labelledby="kabaddi-rules-summary">
-    <RulesSummaryLine id="kabaddi-rules-summary" title={isCustom ? `Custom, based on ${baseLabel}` : baseLabel}
+    <RulesSummaryLine id="kabaddi-rules-summary" title={setupPresetTitle(baseLabel, isCustom)}
       detail={isCustom && count > 0 ? `${count} ${count === 1 ? 'change' : 'changes'}` : kabaddiBlurb(r)}
       resetLabel={`Reset to ${baseLabel}`} onReset={isCustom ? () => setRules(resolveKabaddiRules(baseId)) : undefined} />
     <KabaddiRulesPanel rules={r} onChange={setRules} />

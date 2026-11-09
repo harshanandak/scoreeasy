@@ -1,3 +1,4 @@
+import { matchStorageKey } from './accountStorage';
 // Remembered quick-setup choices, per sport, on this device only: the two team colours and the
 // format the scorer last started with. Team names are never remembered (they belong to one match).
 // Stored as one JSON object in localStorage; anything malformed (or storage that is unavailable)
@@ -47,4 +48,24 @@ export function clearSetupPrefs(sport) {
   if (!(sport in all)) return;
   delete all[sport];
   writeAll(all);
+}
+
+// Custom rules belong to the same guest/account scope as local matches. They never auto-apply.
+export const CUSTOM_SETUP_PREFS_KEY = 'se_custom_setup_v1';
+export function loadCustomSetup(sport) {
+  try {
+    const entry = JSON.parse(globalThis.localStorage?.getItem(matchStorageKey(CUSTOM_SETUP_PREFS_KEY)) || '{}')[sport];
+    return entry?.format && typeof entry.format === 'object' && !Array.isArray(entry.format) ? entry : null;
+  } catch { return null; }
+}
+
+export function saveCustomSetup(sport, { format, source = null } = {}) {
+  if (!sport || !format) return;
+  try {
+    const key = matchStorageKey(CUSTOM_SETUP_PREFS_KEY);
+    let all;
+    try { all = JSON.parse(globalThis.localStorage?.getItem(key) || '{}'); } catch { all = {}; }
+    if (!all || typeof all !== 'object' || Array.isArray(all)) all = {};
+    globalThis.localStorage?.setItem(key, JSON.stringify({ ...all, [sport]: { format, source } }));
+  } catch { /* Remembering rules must never block starting a match. */ }
 }

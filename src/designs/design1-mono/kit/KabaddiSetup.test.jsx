@@ -39,12 +39,12 @@ describe('KabaddiGameStep presets', () => {
     expect(screen.getAllByRole('radio')).toHaveLength(4);
     openRules();
     fireEvent.click(screen.getByRole('switch', { name: 'Raid clock' }));
-    const chip = screen.getByRole('radio', { name: 'Custom' });
+    const chip = screen.getByRole('radio', { name: 'Customised' });
     expect(chip).toHaveAttribute('aria-checked', 'true');
     expect(latest.kabaddiRules.presetId).toBe('custom');
     fireEvent.click(screen.getByRole('radio', { name: 'Pro Kabaddi style' }));
     expect(latest.kabaddiRules).toEqual(resolveKabaddiRules('pro'));
-    expect(screen.queryByRole('radio', { name: 'Custom' })).toBeNull();
+    expect(screen.queryByRole('radio', { name: 'Customised' })).toBeNull();
   });
 
   it('keeps the first raid choice', () => {
@@ -76,10 +76,21 @@ describe('KabaddiRulesStep summary, changes and reset', () => {
   it('counts what changed from the preset and resets in one tap', () => {
     render(<Host />);
     fireEvent.click(screen.getByRole('switch', { name: 'Raid clock' }));
-    expect(screen.getByRole('heading', { level: 2, name: 'Custom, based on Quick casual · 1 change' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Customised · from Quick casual · 1 change' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reset to Quick casual' }));
     expect(latest.kabaddiRules).toEqual(resolveKabaddiRules('quick'));
     expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
+  });
+
+  it('shows standard values, uses the existing Custom rules and recognises restored values', () => {
+    const standard = resolveKabaddiRules('standard');
+    render(<Host initial={{ kabaddiRules: standard }} />);
+    expect(screen.getByRole('spinbutton', { name: 'Players a side' })).toHaveValue('7');
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Minutes a half' }), { target: { value: '15' } });
+    expect(latest.kabaddiRules).toEqual(custom(standard, { end: { ...standard.end, halfMs: 900000 } }));
+    expect(screen.getByRole('heading', { name: /^Customised · from Standard/ })).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Minutes a half' }), { target: { value: '20' } });
+    expect(screen.getByRole('heading', { name: /^Standard ?/ })).toBeInTheDocument();
   });
 
   it('works out the base preset of an edited copy and diffs against it', () => {
