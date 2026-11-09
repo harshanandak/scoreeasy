@@ -1,5 +1,17 @@
 import { normalizeMatchForConvex } from './normalizeMatch';
 
+// Exclude sync metadata and guided delivery history; include the persisted result sent to the account.
+export function tournamentCompletionId(match) {
+  if (!match) return undefined;
+  return JSON.stringify([
+    match.status, match.completedAt, match.endedAt, match.date, match.savedAt, match.createdAt,
+    match.team1Id, match.team2Id, match.team1, match.team2, match.winner, match.resultType,
+    match.score1, match.score2, match.sets, match.setsWon1, match.setsWon2,
+    match.team1Score, match.team2Score, match.innings, match.winDesc, match.format,
+    match.elapsedSeconds, match.periodState, match.matchRole,
+  ]);
+}
+
 function normalizeToken(value) {
   if (typeof value !== 'string') return value;
   const lower = value.trim().toLowerCase();
