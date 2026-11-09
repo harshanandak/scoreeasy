@@ -3,7 +3,8 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Sentry from '@sentry/react';
 import ErrorBoundary from './ErrorBoundary';
-import { CHUNK_RELOAD_KEY } from '../utils/chunkReload';
+import { CHUNK_RELOAD_KEY, clearChunkReloadAttempt } from '../utils/chunkReload';
+import { markSaveFailed, resetSaveHealth } from '../utils/saveHealth';
 
 vi.mock('@sentry/react', () => ({
   captureException: vi.fn(),
@@ -28,12 +29,14 @@ describe('ErrorBoundary', () => {
     assign = vi.fn();
     vi.stubGlobal('location', { ...globalThis.location, reload, assign });
     globalThis.sessionStorage.clear();
+    resetSaveHealth();
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    resetSaveHealth();
     vi.mocked(Sentry.captureException).mockClear();
   });
 
@@ -93,8 +96,24 @@ describe('ErrorBoundary', () => {
     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
   });
 
-  it('allows another automatic reload once the guard window has passed', async () => {
+  it('shows the new-version screen when the same failure comes back 12 seconds after the reload', async () => {
+    globalThis.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now() - 12_000));
+
+    render(
+      <Suspense fallback={<p>Loading</p>}>
+        <ErrorBoundary>
+          <StaleRoute />
+        </ErrorBoundary>
+      </Suspense>,
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('A new version of Score Easy is ready');
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('reloads again after a successful startup clears the attempt', async () => {
     globalThis.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now() - 60_000));
+    clearChunkReloadAttempt();
 
     render(
       <Suspense fallback={<p>Loading</p>}>
@@ -107,6 +126,57 @@ describe('ErrorBoundary', () => {
     await waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
   });
 
+  it('does not auto-reload while a local save failure is outstanding, and warns instead of promising', async () => {
+    markSaveFailed('se_quickmatch_draft_volleyball_1');
+
+    render(
+      <Suspense fallback={<p>Loading</p>}>
+        <ErrorBoundary>
+          <StaleRoute />
+        </ErrorBoundary>
+      </Suspense>,
+    );
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('A new version of Score Easy is ready');
+    expect(alert).toHaveTextContent('may not be saved');
+    expect(alert).not.toHaveTextContent('Your scores are saved');
+    expect(reload).not.toHaveBeenCalled();
+    expect(globalThis.sessionStorage.getItem(CHUNK_RELOAD_KEY)).toBeNull();
+  });
+
+  it('Reload clears the recorded attempt before reloading', async () => {
+    globalThis.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+
+    render(
+      <Suspense fallback={<p>Loading</p>}>
+        <ErrorBoundary>
+          <StaleRoute />
+        </ErrorBoundary>
+      </Suspense>,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Reload' }));
+    expect(globalThis.sessionStorage.getItem(CHUNK_RELOAD_KEY)).toBeNull();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('Try again clears the recorded attempt', () => {
+    globalThis.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+    const boundaryRef = createRef();
+    render(
+      <ErrorBoundary ref={boundaryRef}>
+        <p>Recovered content</p>
+      </ErrorBoundary>,
+    );
+    act(() => {
+      boundaryRef.current.setState({ hasError: true, error: new Error('test crash') });
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(globalThis.sessionStorage.getItem(CHUNK_RELOAD_KEY)).toBeNull();
+  });
+
   it('shows the Kit crash screen for a normal error, with Try again and Home', () => {
     render(
       <ErrorBoundary>
@@ -116,7 +186,8 @@ describe('ErrorBoundary', () => {
 
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('This screen hit a problem');
-    expect(alert).toHaveTextContent('Your scores are saved.');
+    expect(alert).toHaveTextContent('Try again, or go Home.');
+    expect(alert).not.toHaveTextContent(/saved/i);
     expect(screen.queryByRole('button', { name: 'Play' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Reload' })).not.toBeInTheDocument();
     expect(reload).not.toHaveBeenCalled();
