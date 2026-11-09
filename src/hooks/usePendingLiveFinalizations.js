@@ -24,7 +24,7 @@ export function usePendingLiveFinalizations() {
       refresh(value => value + 1);
       if (!ready || navigator.onLine === false) return;
       for (const session of liveSessions()) {
-        if (!session.broadcastError && (session.finalizeIntent || size(session.clientMatchId) > 0)) {
+        if (!session.broadcastError && (session.pendingFinish || session.finalizeIntent || size(session.clientMatchId) > 0)) {
           void flushLiveSession(session.clientMatchId, mutations.current).then(() => {
             if (!disposed) refresh(value => value + 1);
           });
