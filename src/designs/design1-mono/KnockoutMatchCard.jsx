@@ -3,6 +3,7 @@ import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import PropTypes from 'prop-types';
 import { FixtureCard, FixtureResult, FixtureTeam, SetChips } from './kit/TournamentParts';
 import { cricketFixtureView } from './kit/cricketFixture';
+import TournamentScoreClearActions from './components/TournamentScoreClearActions';
 
 function getScoreInfo(match, engine) {
   let hasScore = false;
@@ -51,7 +52,7 @@ function getStatusChip(match) {
   return null;
 }
 
-export default function KnockoutMatchCard({ match, tournament, sport, id, navigate, getTeamName, engine }) {
+export default function KnockoutMatchCard({ match, tournament, sport, id, navigate, getTeamName, engine, scoreClear }) {
   const team1Ready = match.team1Id !== null;
   const team2Ready = match.team2Id !== null;
   const bothReady = team1Ready && team2Ready;
@@ -75,8 +76,12 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
     : null;
 
   return (
-    <FixtureCard label={match.label} chips={getStatusChip(match)} live={match.status === 'in-progress'}>
+    <FixtureCard label={match.label} chips={getStatusChip(match)} live={match.status === 'in-progress'}
+      end={scoreClear && match.status === 'completed' && (
+        <button type="button" onClick={() => scoreClear.requestScoreClear(match)} className="kit-quiet kit-fx-clear">Clear</button>
+      )}>
       <TournamentMatchSyncStatus compact sport={sport} tournament={tournament} match={match} />
+      {scoreClear && <TournamentScoreClearActions matchId={match.id} scoreClear={scoreClear} showUndo={false} />}
 
       <div className="kit-last-teams">
         <FixtureTeam
@@ -126,4 +131,5 @@ KnockoutMatchCard.propTypes = {
   navigate: PropTypes.func,
   getTeamName: PropTypes.func,
   engine: PropTypes.string,
+  scoreClear: PropTypes.object,
 };

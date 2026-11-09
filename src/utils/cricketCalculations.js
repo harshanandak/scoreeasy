@@ -1,6 +1,22 @@
-import { isAbandoned } from './matchOutcome';
+import { isAbandoned, resetMatchOutcome } from './matchOutcome';
 // Cricket scoring calculations
 import { guidedMaxWickets, resolveGuidedRules } from './cricketRules';
+
+export function clearCricketMatchScore(match) {
+  const cleared = {
+    ...resetMatchOutcome(match),
+    score1: null,
+    score2: null,
+    guidedInnings: null,
+    team1Score: null,
+    team2Score: null,
+    innings: null,
+    followOnEnforced: false,
+    superOver: null,
+  };
+  delete cleared.currentInningsIndex;
+  return cleared;
+}
 
 // ==========================================
 // CRICKET FORMAT PRESETS

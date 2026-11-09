@@ -99,6 +99,8 @@ describe('cricket persistence transactions', () => {
       <Route path="/:sport/tournament/:id" element={<MonoCricketTournament />} />
     </Routes></MemoryRouter>);
     fireEvent.click(screen.getByRole('button', { name: 'Clear', exact: true }));
+    expect(stored('guided').resultType).toBe('abandoned');
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm clear score for Alpha vs Beta' }));
     const cleared = stored('guided');
     expect(cleared).toMatchObject({ status: 'pending', winner: null });
     expect(cleared.resultType).toBeUndefined();

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { resetMatchOutcome } from '../../../utils/matchOutcome';
 import { resetLiveGeneration } from '../../../lib/live/liveSession';
+import { clearCricketMatchScore } from '../../../utils/cricketCalculations';
+import { updateMatchInTournament } from '../../../utils/knockoutManager';
 
 export function useTournamentScoreClear({
   scoreKind,
@@ -30,20 +32,16 @@ export function useTournamentScoreClear({
   const confirmScoreClear = () => {
     if (!pendingScoreClear || pendingScoreClear.tournamentScopeKey !== tournamentScopeKey) return;
     resetLiveGeneration(`${tournamentScopeKey}:${pendingScoreClear.matchId}`);
-    const updatedMatches = tournament.matches.map((match) =>
-      match.id === pendingScoreClear.matchId ? clearMatchScore(match, scoreKind) : match
-    );
-    setTournament({ ...tournament, matches: updatedMatches });
+    setTournament(updateMatchInTournament(tournament, pendingScoreClear.matchId,
+      (match) => clearMatchScore(match, scoreKind)));
     setClearedScore(pendingScoreClear);
     setPendingScoreClear(null);
   };
 
   const undoScoreClear = () => {
     if (!clearedScore || clearedScore.tournamentScopeKey !== tournamentScopeKey) return;
-    const updatedMatches = tournament.matches.map((match) =>
-      match.id === clearedScore.matchId ? clearedScore.snapshot : match
-    );
-    setTournament({ ...tournament, matches: updatedMatches });
+    setTournament(updateMatchInTournament(tournament, clearedScore.matchId,
+      () => clearedScore.snapshot));
     setClearedScore(null);
   };
 
@@ -63,6 +61,7 @@ function getTeamName(teams, teamId) {
 }
 
 function clearMatchScore(match, scoreKind) {
+  if (scoreKind === 'cricket') return clearCricketMatchScore(match);
   return scoreKind === 'sets'
     ? { ...resetMatchOutcome(match), sets: [], score1: null, score2: null }
     : { ...resetMatchOutcome(match), score1: null, score2: null };

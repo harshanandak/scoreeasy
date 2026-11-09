@@ -3,7 +3,7 @@ import ConfirmActionPanel from './ConfirmActionPanel';
 import '../kit/kit.css';
 import '../kit/tournament.css';
 
-export default function TournamentScoreClearActions({ matchId, scoreClear }) {
+export default function TournamentScoreClearActions({ matchId, scoreClear, showUndo = true }) {
   const pendingScoreClear = scoreClear.pendingScoreClear?.matchId === matchId
     ? scoreClear.pendingScoreClear
     : null;
@@ -21,7 +21,7 @@ export default function TournamentScoreClearActions({ matchId, scoreClear }) {
         />
       )}
 
-      {canUndoClear && (
+      {showUndo && canUndoClear && (
         <button
           type="button"
           className="se-ctl kit-fx-undo"
@@ -35,6 +35,7 @@ export default function TournamentScoreClearActions({ matchId, scoreClear }) {
 }
 
 TournamentScoreClearActions.propTypes = {
+  showUndo: PropTypes.bool,
   matchId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   scoreClear: PropTypes.shape({
     cancelScoreClear: PropTypes.func.isRequired,
