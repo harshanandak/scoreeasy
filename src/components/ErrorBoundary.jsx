@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as Sentry from '@sentry/react';
-import { isChunkLoadError, reloadOnceForNewVersion } from '../utils/chunkReload';
+import { clearChunkReloadAttempt, isChunkLoadError, reloadOnceForNewVersion } from '../utils/chunkReload';
+import { hasOutstandingSaveFailure } from '../utils/saveHealth';
 import '../designs/design1-mono/kit/kit.css';
 import '../designs/design1-mono/kit/history.css';
 import './ErrorBoundary.css';
@@ -19,8 +20,10 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // A stale chunk after a deploy is not a crash: reload once to pick up the new
     // build. Only full-screen boundaries do this; a silent-fallback widget keeps
-    // isolating its own failure. The live match is saved on every change, so the
-    // reload restores it.
+    // isolating its own failure. The live match draft is saved on every change, so the
+    // reload restores it. reloadOnceForNewVersion refuses when a reload was already tried
+    // (it must reach a successful startup first) or when a local save failed and the newest
+    // score may exist only in memory; the screen below then takes over.
     if (this.props.fallback === undefined && isChunkLoadError(error) && reloadOnceForNewVersion()) {
       this.setState({ reloading: true });
       return;
@@ -40,10 +43,12 @@ class ErrorBoundary extends React.Component {
   }
 
   handleReload = () => {
+    clearChunkReloadAttempt();
     globalThis.location.reload();
   };
 
   handleRetry = () => {
+    clearChunkReloadAttempt();
     this.setState({ hasError: false, error: null, reloading: false });
   };
 
@@ -71,9 +76,14 @@ class ErrorBoundary extends React.Component {
     const title = isStale
       ? 'A new version of Score Easy is ready'
       : this.props.title || 'This screen hit a problem';
-    const message = isStale
-      ? 'Reload to get it. Your scores are saved.'
-      : this.props.message || 'Your scores are saved.';
+    // No promise that scores are saved: a failed local save can leave the newest point in memory
+    // only. Say what is true, and warn when a save failure is outstanding.
+    let message = this.props.message || 'Try again, or go Home.';
+    if (isStale) {
+      message = hasOutstandingSaveFailure()
+        ? 'Your latest score may not be saved on this device. Reloading can lose it.'
+        : 'Reload to get it.';
+    }
 
     return (
       <div className="se-crash">

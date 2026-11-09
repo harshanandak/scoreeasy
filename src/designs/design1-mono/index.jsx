@@ -15,6 +15,7 @@ import {
 } from '../../utils/appEntry';
 import { AuthUserButton } from '../../components/AuthButtons';
 import ErrorBoundary from '../../components/ErrorBoundary';
+import ChunkReloadReset from '../../components/ChunkReloadReset';
 import OfflineFallback from '../../components/OfflineFallback';
 import ConvexReconnectingFallback from '../../components/ConvexReconnectingFallback';
 import {
@@ -1738,6 +1739,7 @@ export default function Design1Mono() {
         <ScoringCompletionContext.Provider value={completeProtectedScoring}>
         <Suspense fallback={<LazyFallback />}>
           <ErrorBoundary>
+            <ChunkReloadReset />
             <OnboardingGuard>
               <Routes>
                 <Route path="" element={<AppEntryRoute />} />
