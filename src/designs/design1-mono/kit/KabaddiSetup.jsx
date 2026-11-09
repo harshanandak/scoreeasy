@@ -6,6 +6,7 @@ import { KABADDI_PRESETS, kabaddiRulesLine, resolveKabaddiRules } from '../../..
 import { KitChoiceGrid } from './KitFormControls';
 import { KitSegmented } from './KitSetupParts';
 import KabaddiRulesPanel from './KabaddiRulesPanel';
+import { RulesSummaryLine } from './RulesParts';
 import './setupSteps.css';
 
 const NAMED = KABADDI_PRESETS.filter(p => p.id !== 'custom');
@@ -75,14 +76,9 @@ export function KabaddiRulesStep({ format, onChange }) {
   const count = isCustom ? kabaddiChanges(resolveKabaddiRules(baseId), r).length : 0;
   const setRules = kabaddiRules => onChange({ ...format, kabaddiRules });
   return <section className="kit-setup-field" aria-labelledby="kabaddi-rules-summary">
-    <div className="kit-rules-line">
-      <h2 id="kabaddi-rules-summary">
-        <b>{isCustom ? `Custom, based on ${baseLabel}` : baseLabel}</b>
-        {' '}
-        <span>{isCustom && count > 0 ? `· ${count} ${count === 1 ? 'change' : 'changes'}` : `· ${kabaddiBlurb(r)}`}</span>
-      </h2>
-      {isCustom && <button type="button" className="kit-linkbtn" onClick={() => setRules(resolveKabaddiRules(baseId))}>Reset to {baseLabel}</button>}
-    </div>
+    <RulesSummaryLine id="kabaddi-rules-summary" title={isCustom ? `Custom, based on ${baseLabel}` : baseLabel}
+      detail={isCustom && count > 0 ? `${count} ${count === 1 ? 'change' : 'changes'}` : kabaddiBlurb(r)}
+      resetLabel={`Reset to ${baseLabel}`} onReset={isCustom ? () => setRules(resolveKabaddiRules(baseId)) : undefined} />
     <KabaddiRulesPanel rules={r} onChange={setRules} />
   </section>;
 }

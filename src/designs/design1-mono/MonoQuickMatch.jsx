@@ -2238,9 +2238,22 @@ export default function MonoQuickMatch() {
         empty: team2Empty, results: sortedTeam2, query: debouncedTeam2, colour: team2Color, setColour: setTeam2Color,
       },
     ];
-    // Steps: what you are playing, the teams, and (kabaddi only, so far) the rules. Any step opens at
-    // any time and Start works from every step, so the untouched steps keep their defaults.
-    const setupSteps = [{ id: 'game', label: 'Game' }, { id: 'teams', label: 'Teams' }, ...(isKabaddi ? [{ id: 'rules', label: 'Rules' }] : [])];
+    // Steps: what you are playing, the teams, and the rules. Any step opens at any time and Start
+    // works from every step, so the untouched steps keep their defaults. Each sport family brings
+    // its own Rules step (the shared layout lives in kit/RulesParts); a family without one yet has
+    // no Rules step. One line per family, so a family's change touches only its line.
+    const rulesStepNode = (() => {
+      if (isKabaddi) return <KabaddiRulesStep format={format} onChange={setFormat} />;
+
+      if (supportsGoalPeriods(sport)) return null; // goals sports (basketball, football, hockey)
+
+      if (engine === 'sets') return null; // set sports (volleyball, badminton, tennis, table tennis)
+
+      if (isCricket) return null; // cricket
+
+      return null;
+    })();
+    const setupSteps = [{ id: 'game', label: 'Game' }, { id: 'teams', label: 'Teams' }, ...(rulesStepNode ? [{ id: 'rules', label: 'Rules' }] : [])];
     const stepIndex = Math.min(setupStep, setupSteps.length - 1);
     const stepId = setupSteps[stepIndex].id;
     const formatCards = describeFormatChoices(sportConfig, format);
@@ -2368,7 +2381,7 @@ export default function MonoQuickMatch() {
           </>
         )}
 
-        {stepId === 'rules' && <KabaddiRulesStep format={format} onChange={setFormat} />}
+        {stepId === 'rules' && rulesStepNode}
 
         <div className="kit-setup-cta">
           <button
