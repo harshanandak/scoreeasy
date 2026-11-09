@@ -46,9 +46,10 @@ async function expectRecovered(order) {
     expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
   });
   expect(order).toEqual(['point', 'terminal', 'finalize']);
-  expect(h.scorePoint.mock.calls.map(([args]) => args.clientEventId)).toEqual([
-    `${clientMatchId}:8`, `${clientMatchId}:9`,
-  ]);
+  const ids = h.scorePoint.mock.calls.map(([args]) => args.clientEventId);
+  expect(ids[0]).toBe(`${clientMatchId}:8`);
+  expect(ids[1]).toMatch(/^restore-window:finalize:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  expect(loadSession(clientMatchId).seq).toBeGreaterThanOrEqual(9);
   expect(h.scorePoint).toHaveBeenLastCalledWith(expect.objectContaining({
     matchId: 'live-restored', value: 0, type: 'correction', snapshot: terminal,
   }));

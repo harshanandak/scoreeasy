@@ -39,6 +39,11 @@ export function flushLiveSession(clientMatchId, mutations) {
         const restored = await mutations.getOwnedSession(clientMatchId);
         const latest = loadSession(clientMatchId);
         if (!latest?.finalizeIntent || latest.broadcastError) return null;
+        if (!latest.matchId && !restored) {
+          const error = Object.assign(new Error('Live match not found'), { data: { code: 'match_not_found' } });
+          rejectSession(error);
+          return { error };
+        }
         if (!latest.matchId && restored?.matchId) {
           saveSession(clientMatchId, { ...latest, matchId: restored.matchId, token: restored.token, seq: Math.max(latest.seq ?? 0, restored.lastSeq ?? 0) });
         }

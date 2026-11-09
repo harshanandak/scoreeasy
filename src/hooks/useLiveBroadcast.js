@@ -223,12 +223,14 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   const finalize = useCallback(async ({ resultType, snapshot } = {}) => {
     const clientMatchId = clientMatchIdRef.current;
     const prior = loadSession(clientMatchId);
-    if (!clientMatchId || prior?.broadcastError || (!enabled && prior?.isShared === false)
-      || (!matchIdRef.current && !prior?.matchId && !prior?.isShared)) return null;
+    if (!clientMatchId || prior?.broadcastError || prior?.isShared !== true
+      || (!matchIdRef.current && !snapshot)) return null;
     seqRef.current = Math.max(seqRef.current, prior?.seq ?? 0);
     if (snapshot) {
       seqRef.current += 1;
-      enqueue({ kind: 'point', team: 'A', value: 0, type: 'correction', at: Date.now(), snapshot, clientMatchId, clientEventId: `${clientMatchId}:${seqRef.current}` });
+      // The server orders events; a restore-time id must not trust the cached sequence.
+      const clientEventId = matchIdRef.current ? `${clientMatchId}:${seqRef.current}` : `${clientMatchId}:finalize:${crypto.randomUUID()}`;
+      enqueue({ kind: 'point', team: 'A', value: 0, type: 'correction', at: Date.now(), snapshot, clientMatchId, clientEventId });
     }
     saveSession(clientMatchId, {
       ...prior,
@@ -241,7 +243,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     if (!matchIdRef.current) return null;
     const result = await flush();
     return result?.finalized ?? null;
-  }, [enabled, flush]);
+  }, [flush]);
 
   const setVisibility = useCallback(
     async (visibility, opts) => {
