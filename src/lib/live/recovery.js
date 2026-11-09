@@ -1,8 +1,37 @@
-import { reconcile, removeSessionItems, size } from './outbox';
+import { enqueue, reconcile, removeSessionItems, size } from './outbox';
 import { loadSession, saveSession } from './liveSession';
 
 // Both optimistic scorer sends and root recovery share this per-session lock.
 const inFlight = new Map();
+const publications = new Set();
+
+// A live request owns resolution; after reload only the owned-session query can.
+export function beginLivePublication(clientMatchId) {
+  publications.add(clientMatchId);
+  return (sharedSession = null) => {
+    publications.delete(clientMatchId);
+    resolvePendingLiveFinish(clientMatchId, sharedSession);
+  };
+}
+
+export function resolvePendingLiveFinish(clientMatchId, sharedSession) {
+  const latest = loadSession(clientMatchId);
+  if (!latest?.pendingFinish || publications.has(clientMatchId)) return false;
+  const { pendingFinish, ...session } = latest;
+  const shared = sharedSession?.isShared === true;
+  const promoted = shared && sharedSession.matchId && pendingFinish.snapshot && !session.broadcastError;
+  if (promoted) {
+    const seq = Math.max(session.seq ?? 0, sharedSession.lastSeq ?? 0) + 1;
+    enqueue({ kind: 'point', team: 'A', value: 0, type: 'correction',
+      at: pendingFinish.at, snapshot: pendingFinish.snapshot, clientMatchId, clientEventId: pendingFinish.clientEventId });
+    saveSession(clientMatchId, { ...session, isShared: true, matchId: sharedSession.matchId,
+      token: sharedSession.token ?? session.token, seq,
+      finalizeIntent: { ...(pendingFinish.resultType ? { resultType: pendingFinish.resultType } : {}), shared: true } });
+  } else {
+    saveSession(clientMatchId, { ...session, isShared: shared });
+  }
+  return Boolean(promoted);
+}
 
 function permanentSessionError(error) {
   return ['match_not_found', 'not_authorized', 'match_final'].includes(error?.data?.code)
@@ -30,10 +59,27 @@ export function flushLiveSession(clientMatchId, mutations) {
         removeSessionItems(clientMatchId);
         const updated = loadSession(clientMatchId);
         delete updated.finalizeIntent;
+        delete updated.pendingFinish;
         updated.broadcastError = { code: error?.data?.code || 'session_rejected', message: 'Live sharing could not sync. Your local scores are saved.' };
         saveSession(clientMatchId, updated);
       }
     };
+    if (session.pendingFinish && !publications.has(clientMatchId)) {
+      if (!mutations.getOwnedSession) return null;
+      try {
+        const restored = await mutations.getOwnedSession(clientMatchId);
+        const latest = loadSession(clientMatchId);
+        if (publications.has(clientMatchId)) return null;
+        if (latest?.pendingFinish) {
+          if (latest.pendingFinish.clientEventId !== session.pendingFinish.clientEventId
+            || !resolvePendingLiveFinish(clientMatchId, restored)) return null;
+        } else if (latest?.finalizeIntent?.shared !== true) return null;
+        session = loadSession(clientMatchId);
+      } catch (error) {
+        if (permanentSessionError(error)) rejectSession(error);
+        return { error };
+      }
+    }
     if (!session.matchId && session.finalizeIntent && mutations.getOwnedSession) {
       try {
         const restored = await mutations.getOwnedSession(clientMatchId);

@@ -17,7 +17,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useConvex, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { enqueue, size } from '../lib/live/outbox';
-import { flushLiveSession } from '../lib/live/recovery';
+import { beginLivePublication, flushLiveSession, resolvePendingLiveFinish } from '../lib/live/recovery';
 import { loadSession, saveSession, liveClientMatchId } from '../lib/live/liveSession';
 
 /**
@@ -114,12 +114,13 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       setIsLive(Boolean(session?.isShared));
       setIsShared(Boolean(session?.isShared));
       if (session) persistSeq(seqRef.current, { isShared: session.isShared === true });
+      if (resolvePendingLiveFinish(clientMatchId, session)) await flush();
       return session;
     } catch (e) {
       if (generation === generationRef.current) setError(e instanceof Error ? e : new Error(String(e)));
       return null;
     }
-  }, [convex, persistSeq]);
+  }, [convex, persistSeq, flush]);
 
   const goLive = useCallback(
     async (opts) => {
@@ -148,6 +149,8 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         }
       }
 
+      const completePublication = beginLivePublication(clientMatchId);
+      let published = false;
       try {
         const res = await createM({
           clientMatchId,
@@ -176,6 +179,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         setIsShared(opts.visibility !== 'private');
         setError(null);
         persistSeq(seqRef.current, { isShared: opts.visibility !== 'private' });
+        published = true;
         return res;
       } catch (e) {
         // Additive: a failed go-live must never break local scoring.
@@ -183,7 +187,8 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         return null;
       } finally {
         publishingRef.current = false;
-        void flush();
+        completePublication(published ? loadSession(clientMatchId) : null);
+        await flush();
       }
     },
     [enabled, createM, setVisibilityM, flush, persistSeq],
@@ -223,6 +228,14 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   const finalize = useCallback(async ({ resultType, snapshot } = {}) => {
     const clientMatchId = clientMatchIdRef.current;
     const prior = loadSession(clientMatchId);
+    if (clientMatchId && publishingRef.current && !prior?.broadcastError) {
+      if (snapshot && !prior?.pendingFinish && !prior?.finalizeIntent) {
+        saveSession(clientMatchId, { ...prior, isShared: prior?.isShared === true,
+          pendingFinish: { snapshot, ...(resultType ? { resultType } : {}),
+            at: Date.now(), clientEventId: `${clientMatchId}:finalize:${crypto.randomUUID()}` } });
+      }
+      return null;
+    }
     if (!clientMatchId || prior?.broadcastError || prior?.isShared !== true
       || (!matchIdRef.current && !snapshot)) return null;
     seqRef.current = Math.max(seqRef.current, prior?.seq ?? 0);

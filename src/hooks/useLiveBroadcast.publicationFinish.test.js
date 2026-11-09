@@ -68,7 +68,7 @@ it.each(['create', 'setVisibility'])('holds a finish during delayed %s, then pub
   await act(async () => { await scorer.result.current.finalize(finish); });
   const pending = loadSession(clientMatchId);
   // Finish is durable, but it does not yet authorize any public write.
-  expect(pending).toHaveProperty('pendingFinish', expect.objectContaining(finish));
+  expect(pending?.pendingFinish).toEqual(expect.objectContaining(finish));
   expect(pending).not.toHaveProperty('finalizeIntent');
   expect(load()).toEqual([]);
   await act(async () => {
