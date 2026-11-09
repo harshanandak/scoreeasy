@@ -79,10 +79,13 @@ export function KitNumberStepper({ label, hint, value, min, max, step = 1, unit,
           value={draft ?? String(value)}
           onFocus={(e) => e.target.select()}
           onChange={(e) => {
-            const text = e.target.value.replace(/\D/g, '').slice(0, 4);
+            // Read the whole entry: only a plain whole number counts. Never strip or cut characters,
+            // which would change its meaning (00021 is 21; 2.5 and 1a2 are rejected, not 25 or 12).
+            const text = e.target.value;
             typing.current = true;
             setDraft(text);
-            if (text !== '') commit(Number(text));
+            const trimmed = text.trim();
+            if (/^\d+$/.test(trimmed)) commit(Number(trimmed));
           }}
           onBlur={() => { typing.current = false; setDraft(null); }}
           onKeyDown={(e) => {
