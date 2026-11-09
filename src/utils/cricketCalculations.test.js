@@ -454,3 +454,16 @@ describe('OVERS_PRESETS', () => {
     expect(OVERS_PRESETS[4]).toEqual({ label: '50 ov', value: 50 });
   });
 });
+
+
+it('counts cricket scores and NRR only after a fixture is completed', () => {
+  const teams = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }];
+  const match = { team1Id: 'a', team2Id: 'b', team1Score: { runs: 150, balls: 120 }, team2Score: { runs: 100, balls: 120 }, format: { overs: 20 } };
+  const empty = calculateCricketPointsTable(teams, []);
+  for (const status of ['pending', 'in_progress']) {
+    expect(calculateCricketPointsTable(teams, [{ ...match, status }])).toEqual(empty);
+  }
+  const completed = calculateCricketPointsTable(teams, [{ ...match, status: 'completed' }]);
+  expect(completed.find(row => row.teamId === 'a')).toMatchObject({ played: 1, won: 1, lost: 0, points: 2, nrr: 2.5 });
+  expect(completed.find(row => row.teamId === 'b')).toMatchObject({ played: 1, won: 0, lost: 1, points: 0, nrr: -2.5 });
+});

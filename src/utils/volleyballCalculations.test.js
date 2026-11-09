@@ -210,14 +210,14 @@ describe('calculateVolleyballStandings', () => {
   });
 
   it('skips matches with null scores', () => {
-    const matches = [{ team1Id: 't1', team2Id: 't2', score1: null, score2: null }];
+    const matches = [{ status: 'completed', team1Id: 't1', team2Id: 't2', score1: null, score2: null }];
     const standings = calculateVolleyballStandings(teams, matches);
     standings.forEach(s => expect(s.played).toBe(0));
   });
 
   it('awards 2 match points for a win', () => {
     const matches = [
-      { team1Id: 't1', team2Id: 't2', score1: 3, score2: 1 },
+      { status: 'completed', team1Id: 't1', team2Id: 't2', score1: 3, score2: 1 },
     ];
 
     const standings = calculateVolleyballStandings(teams, matches);
@@ -232,7 +232,7 @@ describe('calculateVolleyballStandings', () => {
 
   it('calculates point differential', () => {
     const matches = [
-      { team1Id: 't1', team2Id: 't2', score1: 3, score2: 1 },
+      { status: 'completed', team1Id: 't1', team2Id: 't2', score1: 3, score2: 1 },
     ];
 
     const standings = calculateVolleyballStandings(teams, matches);
@@ -244,8 +244,8 @@ describe('calculateVolleyballStandings', () => {
 
   it('sorts by matchPoints desc, then won desc, then diff desc', () => {
     const matches = [
-      { team1Id: 't1', team2Id: 't2', score1: 3, score2: 0 },
-      { team1Id: 't3', team2Id: 't2', score1: 3, score2: 2 },
+      { status: 'completed', team1Id: 't1', team2Id: 't2', score1: 3, score2: 0 },
+      { status: 'completed', team1Id: 't3', team2Id: 't2', score1: 3, score2: 2 },
     ];
 
     const standings = calculateVolleyballStandings(teams, matches);
@@ -259,8 +259,8 @@ describe('calculateVolleyballStandings', () => {
 
   it('accumulates stats across multiple matches', () => {
     const matches = [
-      { team1Id: 't1', team2Id: 't2', score1: 3, score2: 1 },
-      { team1Id: 't1', team2Id: 't3', score1: 3, score2: 0 },
+      { status: 'completed', team1Id: 't1', team2Id: 't2', score1: 3, score2: 1 },
+      { status: 'completed', team1Id: 't1', team2Id: 't3', score1: 3, score2: 0 },
     ];
 
     const standings = calculateVolleyballStandings(teams, matches);
@@ -305,4 +305,17 @@ describe('SET_FORMATS', () => {
     const bo5 = SET_FORMATS.find(f => f.value === 'bo5');
     expect(bo5.setsToWin).toBe(3);
   });
+});
+
+
+it('counts volleyball scores only after a fixture is completed', () => {
+  const teams = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }];
+  const match = { team1Id: 'a', team2Id: 'b', score1: 25, score2: 18 };
+  const empty = calculateVolleyballStandings(teams, []);
+  for (const status of ['pending', 'in_progress']) {
+    expect(calculateVolleyballStandings(teams, [{ ...match, status }])).toEqual(empty);
+  }
+  const completed = calculateVolleyballStandings(teams, [{ ...match, status: 'completed' }]);
+  expect(completed.find(row => row.teamId === 'a')).toMatchObject({ played: 1, won: 1, lost: 0, matchPoints: 2 });
+  expect(completed.find(row => row.teamId === 'b')).toMatchObject({ played: 1, won: 0, lost: 1, matchPoints: 0 });
 });

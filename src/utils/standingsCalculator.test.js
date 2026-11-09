@@ -407,3 +407,21 @@ describe('calculateGoalsStandings', () => {
     expect(t2.points).toBe(1);
   });
 });
+
+
+describe('finished fixtures in generic standings', () => {
+  const teams = [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }];
+  it.each([
+    ['sets', calculateSetsStandings, { sets: [{ score1: 25, score2: 18 }] }, 'matchPoints'],
+    ['goals', calculateGoalsStandings, { score1: 3, score2: 1 }, 'points'],
+  ])('counts only completed %s fixtures', (_sport, calculate, score, pointsField) => {
+    const match = { team1Id: 'a', team2Id: 'b', ...score };
+    const empty = calculate(teams, [], {});
+    for (const status of ['pending', 'in_progress']) {
+      expect(calculate(teams, [{ ...match, status }], {})).toEqual(empty);
+    }
+    const completed = calculate(teams, [{ ...match, status: 'completed' }], {});
+    expect(completed.find(row => row.teamId === 'a')).toMatchObject({ played: 1, won: 1, lost: 0, [pointsField]: 2 });
+    expect(completed.find(row => row.teamId === 'b')).toMatchObject({ played: 1, won: 0, lost: 1, [pointsField]: 0 });
+  });
+});
