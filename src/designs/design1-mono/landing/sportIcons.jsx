@@ -87,9 +87,19 @@ function FootballIcon({ size = 32, color = 'currentColor' }) {
 }
 
 function BasketballIcon({ size = 32, color = 'currentColor' }) {
+  const maskId = useMaskId('se-basketball');
   return (
-    <svg width={size} height={size} {...SOLID} fill={color}>
-      <path fillRule="evenodd" d="M2 12a10 10 0 1 0 20 0a10 10 0 1 0 -20 0zM11 2.5L13 2.5L13 11L21.5 11L21.5 13L13 13L13 21.5L11 21.5L11 13L2.5 13L2.5 11L11 11zM6.35 4.04A5.44 5.44 0 0 1 9.58 11.29A27.76 27.76 0 0 1 6.35 4.04zM9.58 12.71A5.44 5.44 0 0 1 6.35 19.96A27.76 27.76 0 0 1 9.58 12.71zM17.65 4.04A27.76 27.76 0 0 1 14.42 11.29A5.44 5.44 0 0 1 17.65 4.04zM14.42 12.71A27.76 27.76 0 0 1 17.65 19.96A5.44 5.44 0 0 1 14.42 12.71z" />
+    <svg width={size} height={size} {...SOLID}>
+      <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+        <rect width="24" height="24" fill="white" />
+        <g transform="rotate(-20 12 12)" fill="none" stroke="black">
+          <path d="M12 0V24M0 12H24" strokeWidth="1.6" />
+          <path d="M4 3.8A9.61 9.61 0 0 1 4 20.2M20 3.8A9.61 9.61 0 0 0 20 20.2" strokeWidth="1.5" />
+        </g>
+      </mask>
+      <g mask={`url(#${maskId})`}>
+        <circle cx="12" cy="12" r="10" fill={color} />
+      </g>
     </svg>
   );
 }
