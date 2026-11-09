@@ -25,7 +25,8 @@ function renderQuick(path) {
 
 const dropDrafts = () => {
   for (const key of Object.keys(globalThis.localStorage)) {
-    if (key.startsWith('se_quickmatch_draft')) globalThis.localStorage.removeItem(key);
+    // Drafts live under the per-account storage scope (se_local:guest:...), so match the key name inside it.
+    if (key.includes('se_quickmatch_draft')) globalThis.localStorage.removeItem(key);
   }
 };
 
