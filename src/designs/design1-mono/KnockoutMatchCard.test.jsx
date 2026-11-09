@@ -12,24 +12,24 @@ describe('knockout card set outcomes', () => {
         : [{ score1: 25, score2: 23, completed: true }, { score1: 25, score2: 20, completed: true }],
     };
     const { container } = render(<KnockoutMatchCard match={match} tournament={{ format: { type: 'best-of', sets: 3 } }} sport="volleyball" id="1" engine="sets" navigate={vi.fn()} getTeamName={id => id === 1 ? 'Alpha' : 'Beta'} />);
-    const totals = [...container.querySelectorAll('.text-3xl')].map(node => node.textContent);
+    const totals = [...container.querySelectorAll('.kit-fx-score')].map(node => node.textContent);
     expect.soft(totals, 'only completed sets count toward knockout-card totals').toEqual(abandoned ? ['0', '0'] : ['2', '0']);
     expect.soft(screen.queryByText(abandoned ? 'Abandoned · no result' : 'Completed'), 'knockout-card outcome label').toBeInTheDocument();
-    const chips = container.querySelectorAll('span.rounded.font-mono');
+    const chips = container.querySelectorAll('.kit-fx-set');
     for (const chip of chips) {
       if (abandoned) {
-        expect.soft(chip, 'abandoned knockout-card chip has no winner colour').not.toHaveStyle({ background: '#dcfce7' });
-        expect.soft(chip, 'abandoned knockout-card chip has no loser colour').not.toHaveStyle({ background: '#fee2e2' });
-        expect.soft(chip.firstElementChild, 'abandoned knockout-card score has no winner emphasis').toHaveStyle({ fontWeight: 'normal' });
+        expect.soft(chip, 'abandoned knockout-card chip has no winner colour').not.toHaveClass('is-won');
+        expect.soft(chip, 'abandoned knockout-card chip has no loser colour').not.toHaveClass('is-lost');
+        expect.soft(chip.querySelector('b'), 'abandoned knockout-card score has no winner emphasis').toBeNull();
       } else {
-        expect(chip, 'decided knockout-card winning sets stay green').toHaveStyle({ background: '#dcfce7' });
-        expect(chip.firstElementChild).toHaveStyle({ fontWeight: '600' });
+        expect(chip, 'decided knockout-card winning sets stay won').toHaveClass('is-won');
+        expect(chip.querySelector('b')).toHaveTextContent('25');
       }
     }
     expect(chips).toHaveLength(abandoned ? 1 : 2);
     if (!abandoned) {
-      expect(screen.getByText('Alpha')).toHaveStyle({ color: '#111' });
-      expect(screen.getByText('Beta')).toHaveStyle({ color: '#888' });
+      expect(screen.getByText('Alpha').closest('.kit-last-team')).toHaveClass('is-winner');
+      expect(screen.getByText('Beta').closest('.kit-last-team')).toHaveClass('is-loser');
     }
   });
 });

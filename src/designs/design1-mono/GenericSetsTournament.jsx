@@ -1,5 +1,5 @@
 import TournamentMatchSyncStatus from './components/TournamentMatchSyncStatus';
-import { isAbandoned, ABANDONED_LABEL, resetMatchOutcome } from '../../utils/matchOutcome';
+import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../utils/storage';
@@ -12,6 +12,19 @@ import TournamentScoreClearActions from './components/TournamentScoreClearAction
 import useTournamentKnockoutDisplay from './hooks/useTournamentKnockoutDisplay';
 import { useTournamentScoreClear } from './hooks/useTournamentScoreClear';
 import { getKnockoutRoundGroups, getTournamentProgressCounts } from '../../utils/tournamentDisplay';
+import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
+import BackArrow from './components/BackArrow';
+import { KitSection, KitWash } from './kit/KitParts';
+import {
+  ChampionCard, FixtureCard, FixtureTeam, SetChips, StandingsTable, TourProgress, TourTabs,
+  marginTone, signedMargin,
+} from './kit/TournamentParts';
+
+// Full names for the hidden header row of the standings table, so each number has a spoken column.
+const STANDINGS_HEADERS = {
+  P: 'Played', W: 'Won', L: 'Lost', SW: 'Sets won', SL: 'Sets lost', GW: 'Games won', GL: 'Games lost',
+  PF: 'Points for', PA: 'Points against', '+/-': 'Margin', Pts: 'Points',
+};
 
 export default function GenericSetsTournament() {
   const navigate = useNavigate();
@@ -20,7 +33,6 @@ export default function GenericSetsTournament() {
 
   const [tournament, setTournament] = useState(null);
   const [tab, setTab] = useState('matches');
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (!sportConfig) return;
@@ -47,7 +59,6 @@ export default function GenericSetsTournament() {
       });
       setTournament(needsRepair ? { ...found, matches: repairedMatches } : found);
     }
-    requestAnimationFrame(() => setVisible(true));
   }, [id, sportConfig]);
 
   useEffect(() => {
@@ -97,16 +108,20 @@ export default function GenericSetsTournament() {
 
   if (!sportConfig) {
     return (
-      <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <p style={{ color: '#888' }}>Sport not found</p>
+      <div className="kit-screen">
+        <section className="kit-card kit-empty" aria-labelledby="tournament-sport-missing">
+          <h2 id="tournament-sport-missing">Sport not found</h2>
+        </section>
       </div>
     );
   }
 
   if (!tournament) {
     return (
-      <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <TournamentNotFoundActions navigate={navigate} sport={sport} />
+      <div className="kit-screen">
+        <div className="kit-tour-lost" style={{ paddingTop: 48 }}>
+          <TournamentNotFoundActions navigate={navigate} sport={sport} />
+        </div>
       </div>
     );
   }
@@ -123,475 +138,263 @@ export default function GenericSetsTournament() {
   const tournamentDone = isTournamentComplete(tournament);
   const winner = getTournamentWinner(tournament);
 
-  let badgeClass = 'mono-badge-live';
-  let badgeText = 'Live';
+  let statusClass = 'kit-chip is-live';
+  let statusText = 'Live';
   if (tournamentDone) {
-    badgeClass = 'mono-badge-final';
-    badgeText = 'Complete';
+    statusClass = 'kit-chip is-done';
+    statusText = 'Complete';
   } else if (tournament.phase === 'knockout') {
-    badgeClass = 'mono-badge-paused';
-    badgeText = 'Knockout';
+    statusClass = 'kit-chip is-warn';
+    statusText = 'Knockout';
   }
 
-  const deleteKnockoutScore = (matchId) => {
-    const updatedKO = tournament.knockoutMatches.map(m => {
-      if (m.id === matchId) {
-        return { ...resetMatchOutcome(m), sets: [], score1: null, score2: null };
-      }
-      return m;
-    });
-    setTournament({ ...tournament, knockoutMatches: updatedKO });
-  };
+  const knockoutCard = (match) => (
+    <KnockoutMatchCard
+      key={match.id}
+      match={match}
+      tournament={tournament}
+      sport={sport}
+      id={id}
+      navigate={navigate}
+      getTeamName={getTeamName}
+      engine="sets"
+    />
+  );
+
+  const hasKnockoutMatches = Boolean(tournament.knockoutMatches && tournament.knockoutMatches.length > 0);
+  const standingsColumns = sportConfig.standingsColumns.map((label) => ({
+    label,
+    header: STANDINGS_HEADERS[label] || label,
+    ...(label === '+/-' ? { tone: marginTone, format: signedMargin } : {}),
+  }));
+  const standingsRows = standings.map((team) => ({
+    key: team.teamId,
+    name: team.teamName,
+    values: [
+      team.played, team.won, team.lost, team.setsWon, team.setsLost,
+      team.pointsFor, team.pointsAgainst, team.diff, team.matchPoints,
+    ].slice(0, standingsColumns.length),
+  }));
+
+  const placeholderCard = (key, label) => (
+    <FixtureCard key={key} label={label}>
+      <div className="kit-last-teams">
+        <FixtureTeam name="TBD" tbd />
+        <FixtureTeam name="TBD" tbd />
+      </div>
+    </FixtureCard>
+  );
 
   return (
-    <div className={`min-h-screen mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-      <div className="max-w-2xl mx-auto px-6 py-10">
-        {/* Back */}
-        <button
-          onClick={() => navigate(`/${sport}/tournament`)}
-          className="flex items-center gap-1 text-sm mono-hit-back"
-          style={{ color: '#888' }}
-        >
-          <span>←</span>
-          <span>Tournaments</span>
-        </button>
+    <div className="kit-screen kit-tour" data-screen="tournament" style={sportIdentityVars(sport)}>
+      <KitWash from={sportIdentity(sport)?.tint} />
 
-        {/* Title row */}
-        <div className="flex items-center gap-3 mb-1">
-          <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
-            {tournament.name}
-          </h1>
-          <span className={`mono-badge ${badgeClass}`}>
-            {badgeText}
-          </span>
+      {/* Back */}
+      <button
+        type="button"
+        onClick={() => navigate(`/${sport}/tournament`)}
+        className="kit-back mono-hit-back"
+      >
+        <BackArrow />
+        <span>Tournaments</span>
+      </button>
+
+      <header className="kit-tour-head">
+        <div className="kit-tour-titlerow">
+          <h1 className="kit-tour-title">{tournament.name}</h1>
+          <span className={statusClass}>{statusText}</span>
         </div>
-
-        {/* Meta */}
-        <p className="text-xs mb-5" style={{ color: '#888' }}>
+        <p className="kit-sub">
           {sportConfig.name} · {tournament.teams.length} teams · {tournamentTypeLabel}
         </p>
+      </header>
 
-        {/* Match progress segments */}
-        <div className="flex items-center gap-3 mb-5">
-          <div className="flex items-center gap-1">
-            {tournament.matches.map((m) => (
-              <div
-                key={m.id}
-                title={`Match: ${getTeamName(m.team1Id)} vs ${getTeamName(m.team2Id)}`}
-                style={{
-                  width: 18, height: 6,
-                  background: (m.status === 'completed' || m.status === 'in-progress') ? '#0066ff' : '#e5e5e5',
-                  opacity: m.status === 'in-progress' ? 0.4 : 1,
-                  transition: 'background 0.2s ease, opacity 0.2s ease',
-                }}
-              />
-            ))}
-          </div>
-          <span className="text-xs font-mono" style={{ color: '#888' }}>{completedMatches}/{totalMatches}</span>
-          {hasKnockouts && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
-            <>
-              <div style={{ width: 1, height: 10, background: '#ddd' }} />
-              <div className="flex items-center gap-1">
-                {tournament.knockoutMatches.map((m) => (
-                  <div
-                    key={m.id}
-                    title={m.label}
-                    style={{
-                      width: 18, height: 6,
-                      background: m.status === 'completed' ? '#0066ff' : m.status === 'in-progress' ? '#0066ff' : '#e5e5e5',
-                      opacity: m.status === 'completed' ? 1 : m.status === 'in-progress' ? 0.4 : 1,
-                      transition: 'background 0.2s ease, opacity 0.2s ease',
-                    }}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+      <TourProgress
+        matches={tournament.matches}
+        knockoutMatches={hasKnockouts && hasKnockoutMatches ? tournament.knockoutMatches : []}
+        completed={completedMatches}
+        total={totalMatches}
+      />
 
-        {/* Tabs */}
-        <div className="flex gap-0 mb-6" style={{ borderBottom: '1px solid #eee' }}>
-          {tabs.map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className="bg-transparent border-none cursor-pointer font-swiss px-4 py-3 text-sm"
-              style={{
-                color: tab === t ? '#0066ff' : '#888',
-                borderBottom: tab === t ? '2px solid #0066ff' : '2px solid transparent',
-                fontWeight: tab === t ? 500 : 400,
-              }}
-            >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
-          ))}
-        </div>
+      <TourTabs tabs={tabs} tab={tab} onChange={setTab} />
 
-        {/* Matches Tab */}
-        {tab === 'matches' && (
-          <div className="space-y-4">
+      {/* Matches Tab */}
+      {tab === 'matches' && (
+        <div className="kit-tour-panel">
+          <div className="kit-fx-list">
             {tournament.matches.map((match, idx) => {
-              const hasScore = isAbandoned(match) || (match.sets && match.sets.length > 0);
+              const abandoned = isAbandoned(match);
+              const hasScore = abandoned || (match.sets && match.sets.length > 0);
               let t1SetsWon = 0;
               let t2SetsWon = 0;
               if (hasScore) {
-                match.sets.forEach(set => {
+                (match.sets || []).forEach(set => {
                   if (!set.completed) return;
                   if (set.score1 > set.score2) t1SetsWon++;
                   else if (set.score2 > set.score1) t2SetsWon++;
                 });
               }
 
-              // Determine winner and colors
-              const isTeam1Winner = !isAbandoned(match) && hasScore && t1SetsWon > t2SetsWon;
-              const isTeam2Winner = !isAbandoned(match) && hasScore && t2SetsWon > t1SetsWon;
-              const team1Color = isAbandoned(match) || isTeam1Winner || !hasScore ? '#111' : '#888';
-              const team2Color = isAbandoned(match) || isTeam2Winner || !hasScore ? '#111' : '#888';
+              const isTeam1Winner = !abandoned && hasScore && t1SetsWon > t2SetsWon;
+              const isTeam2Winner = !abandoned && hasScore && t2SetsWon > t1SetsWon;
+              const matchWinner = abandoned ? null : t1SetsWon > t2SetsWon ? 'team1' : 'team2';
+
+              let chips = null;
+              if (hasScore && match.status === 'completed') {
+                chips = <span className={abandoned ? 'kit-chip is-warn' : 'kit-chip is-done'}>{abandoned ? ABANDONED_LABEL : 'Completed'}</span>;
+              } else if (hasScore) {
+                chips = <span className="kit-chip is-live">In Progress</span>;
+              }
+
+              let actionLabel = 'Enter Score';
+              if (match.status === 'in-progress') actionLabel = 'Resume Match';
+              else if (hasScore) actionLabel = 'Edit Score';
 
               return (
-                <div key={match.id} className="mono-card p-5">
-                  {/* Header with match number and status */}
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-mono uppercase tracking-wider" style={{ color: '#aaa' }}>
-                      Match {idx + 1}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {hasScore && match.status === 'completed' && (
-                        <span className="mono-badge mono-badge-final">
-                          {isAbandoned(match) ? ABANDONED_LABEL : 'Completed'}
-                        </span>
-                      )}
-                      {hasScore && match.status !== 'completed' && (
-                        <span className="mono-badge mono-badge-live">
-                          In Progress
-                        </span>
-                      )}
-                      {hasScore && (
-                        <button
-                          onClick={() => scoreClear.requestScoreClear(match)}
-                          className="text-xs opacity-50 hover:opacity-100 transition-opacity"
-                          style={{ color: '#dc2626' }}
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
+                <FixtureCard
+                  key={match.id}
+                  label={`Match ${idx + 1}`}
+                  chips={chips}
+                  live={match.status === 'in-progress'}
+                  end={hasScore && (
+                    <button type="button" onClick={() => scoreClear.requestScoreClear(match)} className="kit-quiet kit-fx-clear">
+                      Clear
+                    </button>
+                  )}
+                >
                   <TournamentMatchSyncStatus compact sport={sport} tournament={tournament} match={match} />
                   <TournamentScoreClearActions matchId={match.id} scoreClear={scoreClear} />
 
-                  {/* Teams and scores */}
-                  <div className="grid grid-cols-3 gap-6 items-center mb-5">
-                    <div className="text-right">
-                      <div className="text-base font-medium mb-1" style={{ color: team1Color }}>
-                        {getTeamName(match.team1Id)}
-                      </div>
-                      {hasScore && (
-                        <div className="text-3xl font-mono font-bold" style={{ color: team1Color }}>
-                          {t1SetsWon}
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xs font-medium" style={{ color: '#bbb' }}>vs</div>
-                    </div>
-                    <div className="text-left">
-                      <div className="text-base font-medium mb-1" style={{ color: team2Color }}>
-                        {getTeamName(match.team2Id)}
-                      </div>
-                      {hasScore && (
-                        <div className="text-3xl font-mono font-bold" style={{ color: team2Color }}>
-                          {t2SetsWon}
-                        </div>
-                      )}
-                    </div>
+                  <div className="kit-last-teams">
+                    <FixtureTeam
+                      name={getTeamName(match.team1Id)}
+                      score={hasScore ? t1SetsWon : undefined}
+                      winner={isTeam1Winner}
+                      loser={isTeam2Winner}
+                    />
+                    <FixtureTeam
+                      name={getTeamName(match.team2Id)}
+                      score={hasScore ? t2SetsWon : undefined}
+                      winner={isTeam2Winner}
+                      loser={isTeam1Winner}
+                    />
                   </div>
 
-                  {/* Set scores */}
                   {hasScore && (
-                    <div className="flex justify-center gap-2 flex-wrap mb-5 py-3" style={{ borderTop: '1px solid #f5f5f5', borderBottom: '1px solid #f5f5f5' }}>
-                      {match.sets.map((set, i) => {
-                        const setWinner = set.score1 > set.score2 ? 'team1' : 'team2';
-                        const matchWinner = isAbandoned(match) ? null : t1SetsWon > t2SetsWon ? 'team1' : 'team2';
-                        const isMatchWinnerSet = setWinner === matchWinner;
-                        return (
-                          <span
-                            key={`set-${set.score1}-${set.score2}-${i}`}
-                            className="px-3 py-1.5 rounded font-mono"
-                            style={{
-                              background: isAbandoned(match) ? 'var(--se-color-surface-warm)' : isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
-                              color: '#111',
-                              fontSize: '0.875rem'
-                            }}
-                          >
-                            <span style={{ fontWeight: !isAbandoned(match) && set.score1 > set.score2 ? '600' : 'normal' }}>{set.score1}</span>
-                            <span style={{ color: '#ccc', margin: '0 4px', fontWeight: '300' }}>-</span>
-                            <span style={{ fontWeight: !isAbandoned(match) && set.score2 > set.score1 ? '600' : 'normal' }}>{set.score2}</span>
-                          </span>
-                        );
-                      })}
-                    </div>
+                    <SetChips sets={match.sets || []} abandoned={abandoned} matchWinner={matchWinner} />
                   )}
 
-                  {/* Action button */}
                   <button
+                    type="button"
                     onClick={() => navigate(`/${sport}/tournament/${id}/match/${match.id}/score`)}
-                    className={match.status === 'in-progress' ? 'mono-btn-primary w-full' : 'mono-btn w-full'}
+                    className="se-ctl"
                   >
-                    {match.status === 'in-progress'
-                      ? '▶ Resume Match'
-                      : hasScore ? 'Edit Score' : 'Enter Score'}
+                    {actionLabel}
                   </button>
-                </div>
+                </FixtureCard>
               );
             })}
+          </div>
 
-            {/* Knockout matches in schedule */}
-            {hasKnockouts && tournament.knockoutMatches && tournament.knockoutMatches.length > 0 && (
-              <>
-                <hr className="mono-divider" style={{ margin: '24px 0' }} />
-                <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
-                  Knockout Stage
-                </p>
-                {tournament.knockoutMatches.map(match => (
-                  <KnockoutMatchCard
-                    key={match.id}
-                    match={match}
-                    tournament={tournament}
-                    sport={sport}
-                    id={id}
-                    navigate={navigate}
-                    getTeamName={getTeamName}
-                    engine="sets"
-                  />
-                ))}
-              </>
-            )}
+          {/* Knockout matches in schedule */}
+          {hasKnockouts && hasKnockoutMatches && (
+            <>
+              <KitSection title="Knockout stage" />
+              <div className="kit-fx-list">
+                {tournament.knockoutMatches.map(knockoutCard)}
+              </div>
+            </>
+          )}
 
-            {/* Show placeholder knockout schedule before group stage completes */}
-            {hasKnockouts && (!tournament.knockoutMatches || tournament.knockoutMatches.length === 0) && (
-              <>
-                <hr className="mono-divider" style={{ margin: '24px 0' }} />
-                <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
-                  Knockout Stage
-                </p>
+          {/* Show placeholder knockout schedule before group stage completes */}
+          {hasKnockouts && !hasKnockoutMatches && (
+            <>
+              <KitSection title="Knockout stage" />
+              <div className="kit-fx-list">
                 {tournament.knockoutConfig.teamsAdvancing === 4 && (
                   <>
-                    <div className="mono-card p-5 mb-3">
-                      <div className="text-xs font-mono uppercase tracking-wider mb-3" style={{ color: '#aaa' }}>Semi-final 1</div>
-                      <div className="grid grid-cols-3 gap-6 items-center">
-                        <div className="text-right text-base font-medium" style={{ color: '#ccc' }}>TBD</div>
-                        <div className="text-center text-xs" style={{ color: '#bbb' }}>vs</div>
-                        <div className="text-left text-base font-medium" style={{ color: '#ccc' }}>TBD</div>
-                      </div>
-                    </div>
-                    <div className="mono-card p-5 mb-3">
-                      <div className="text-xs font-mono uppercase tracking-wider mb-3" style={{ color: '#aaa' }}>Semi-final 2</div>
-                      <div className="grid grid-cols-3 gap-6 items-center">
-                        <div className="text-right text-base font-medium" style={{ color: '#ccc' }}>TBD</div>
-                        <div className="text-center text-xs" style={{ color: '#bbb' }}>vs</div>
-                        <div className="text-left text-base font-medium" style={{ color: '#ccc' }}>TBD</div>
-                      </div>
-                    </div>
+                    {placeholderCard('semi-1', 'Semi-final 1')}
+                    {placeholderCard('semi-2', 'Semi-final 2')}
                   </>
                 )}
-                <div className="mono-card p-5 mb-3">
-                  <div className="text-xs font-mono uppercase tracking-wider mb-3" style={{ color: '#aaa' }}>Final</div>
-                  <div className="grid grid-cols-3 gap-6 items-center">
-                    <div className="text-right text-base font-medium" style={{ color: '#ccc' }}>TBD</div>
-                    <div className="text-center text-xs" style={{ color: '#bbb' }}>vs</div>
-                    <div className="text-left text-base font-medium" style={{ color: '#ccc' }}>TBD</div>
-                  </div>
-                </div>
-                {tournament.knockoutConfig.thirdPlaceMatch && (
-                  <div className="mono-card p-5">
-                    <div className="text-xs font-mono uppercase tracking-wider mb-3" style={{ color: '#aaa' }}>3rd Place</div>
-                    <div className="grid grid-cols-3 gap-6 items-center">
-                      <div className="text-right text-base font-medium" style={{ color: '#ccc' }}>TBD</div>
-                      <div className="text-center text-xs" style={{ color: '#bbb' }}>vs</div>
-                      <div className="text-left text-base font-medium" style={{ color: '#ccc' }}>TBD</div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Standings Tab */}
-        {tab === 'standings' && (
-          <div className="mono-card p-4 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs" style={{ color: '#888' }}>
-                  <th className="text-left py-2">#</th>
-                  <th className="text-left py-2">Team</th>
-                  {sportConfig.standingsColumns.map(col => (
-                    <th key={col} className="text-center py-2">{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {standings.map((team, idx) => (
-                  <tr key={team.teamId} className="border-t" style={{ borderColor: '#eeeeee' }}>
-                    <td className="py-3 font-mono text-xs" style={{ color: '#888' }}>{idx + 1}</td>
-                    <td className="py-3 font-medium">{team.teamName}</td>
-                    <td className="py-3 text-center font-mono text-sm">{team.played}</td>
-                    <td className="py-3 text-center font-mono text-sm">{team.won}</td>
-                    <td className="py-3 text-center font-mono text-sm">{team.lost}</td>
-                    <td className="py-3 text-center font-mono text-sm">{team.setsWon}</td>
-                    <td className="py-3 text-center font-mono text-sm">{team.setsLost}</td>
-                    <td className="py-3 text-center font-mono text-sm">{team.pointsFor}</td>
-                    <td className="py-3 text-center font-mono text-sm">{team.pointsAgainst}</td>
-                    <td className="py-3 text-center font-mono text-sm font-bold"
-                        style={{ color: team.diff >= 0 ? '#059669' : '#dc2626' }}>
-                      {team.diff >= 0 ? '+' : ''}{team.diff}
-                    </td>
-                    <td className="py-3 text-center font-mono text-sm font-bold">{team.matchPoints}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Knockout Tab */}
-        {tab === 'knockout' && hasKnockouts && (
-          <div>
-            {tournament.phase === 'group' && (
-              <div className="mono-card p-5 mb-6 text-center">
-                <p className="text-sm" style={{ color: '#888' }}>
-                  Knockout stage begins after all group matches are completed
-                </p>
-                <p className="text-xs mt-2 font-mono" style={{ color: '#bbb' }}>
-                  {completedMatches}/{totalMatches} group matches done
-                </p>
+                {placeholderCard('final', 'Final')}
+                {tournament.knockoutConfig.thirdPlaceMatch && placeholderCard('third', '3rd Place')}
               </div>
-            )}
+            </>
+          )}
+        </div>
+      )}
 
-            {tournament.phase === 'knockout' && tournament.knockoutMatches && (
-              <div className="space-y-6">
-                {knockoutRoundGroups.map((group) => (
-                  <div key={group.label}>
-                    <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
-                      {group.label}
-                    </h3>
-                    <div className="space-y-3">
-                      {group.matches.map(match => (
-                          <KnockoutMatchCard
-                            key={match.id}
-                            match={match}
-                            tournament={tournament}
-                            sport={sport}
-                            id={id}
-                            navigate={navigate}
-                            getTeamName={getTeamName}
-                            engine="sets"
-                          />
-                        ))}
-                    </div>
-                  </div>
-                ))}
+      {/* Standings Tab */}
+      {tab === 'standings' && (
+        <div className="kit-tour-panel">
+          <StandingsTable label={`${tournament.name} standings`} columns={standingsColumns} rows={standingsRows} />
+        </div>
+      )}
 
-                {/* Final */}
-                <div>
-                  <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
-                    Final
-                  </h3>
-                  {tournament.knockoutMatches
-                    .filter(m => m.round === 'final')
-                    .map(match => (
-                      <KnockoutMatchCard
-                        key={match.id}
-                        match={match}
-                        tournament={tournament}
-                        sport={sport}
-                        id={id}
-                        navigate={navigate}
-                        getTeamName={getTeamName}
-                        engine="sets"
-                      />
-                    ))}
+      {/* Knockout Tab */}
+      {tab === 'knockout' && hasKnockouts && (
+        <div className="kit-tour-panel">
+          {tournament.phase === 'group' && (
+            <section className="kit-card kit-empty kit-tour-note" aria-label="Knockout stage">
+              <p>Knockout stage begins after all group matches are completed</p>
+              <p className="kit-fx-wait">{completedMatches}/{totalMatches} group matches done</p>
+            </section>
+          )}
+
+          {tournament.phase === 'knockout' && tournament.knockoutMatches && (
+            <>
+              {knockoutRoundGroups.map((group) => (
+                <section key={group.label} aria-label={group.label}>
+                  <KitSection title={group.label} />
+                  <div className="kit-fx-list">{group.matches.map(knockoutCard)}</div>
+                </section>
+              ))}
+
+              <section aria-label="Final">
+                <KitSection title="Final" />
+                <div className="kit-fx-list">
+                  {tournament.knockoutMatches.filter(m => m.round === 'final').map(knockoutCard)}
                 </div>
+              </section>
 
-                {/* 3rd Place */}
-                {tournament.knockoutConfig.thirdPlaceMatch && (
-                  <div>
-                    <h3 className="text-xs uppercase tracking-widest font-normal mb-3" style={{ color: '#888' }}>
-                      3rd Place
-                    </h3>
-                    {tournament.knockoutMatches
-                      .filter(m => m.round === 'third-place')
-                      .map(match => (
-                        <KnockoutMatchCard
-                          key={match.id}
-                          match={match}
-                          tournament={tournament}
-                          sport={sport}
-                          id={id}
-                          navigate={navigate}
-                          getTeamName={getTeamName}
-                          engine="sets"
-                        />
-                      ))}
+              {tournament.knockoutConfig.thirdPlaceMatch && (
+                <section aria-label="3rd Place">
+                  <KitSection title="3rd Place" />
+                  <div className="kit-fx-list">
+                    {tournament.knockoutMatches.filter(m => m.round === 'third-place').map(knockoutCard)}
                   </div>
-                )}
+                </section>
+              )}
 
-                {/* Winner Banner */}
-                {tournamentDone && winner && (
-                  <div className="mono-card p-6 text-center" style={{ borderColor: '#0066ff' }}>
-                    <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
-                      Champion
-                    </p>
-                    <p className="text-xl font-bold" style={{ color: '#111' }}>
-                      {winner.name}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+              {tournamentDone && winner && <ChampionCard name={winner.name} />}
+            </>
+          )}
+        </div>
+      )}
 
-        {/* Teams Tab */}
-        {tab === 'teams' && (
-          <div className="space-y-3">
+      {/* Teams Tab */}
+      {tab === 'teams' && (
+        <div className="kit-tour-panel">
+          <div className="kit-list kit-tour-list">
             {tournament.teams.map((team, idx) => (
-              <div key={team.id} className="mono-card p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold"
-                       style={{ background: '#f5f5f5' }}>
-                    {idx + 1}
-                  </div>
-                  <div className="font-medium">{team.name}</div>
-                </div>
-
-                {/* Show roster if exists */}
-                {team.members && team.members.length > 0 && (
-                  <div className="mt-3 pt-3 border-t" style={{ borderColor: '#eee' }}>
-                    <div className="text-xs uppercase tracking-widest mb-2" style={{ color: '#888' }}>
-                      Roster
-                    </div>
-                    <div className="flex flex-wrap gap-2">
+              <div key={team.id} className="kit-row">
+                <span className="kit-step-num" aria-hidden="true">{idx + 1}</span>
+                <span className="kit-row-text">
+                  <span className="kit-row-title">{team.name}</span>
+                  {team.members && team.members.length > 0 && (
+                    <ul className="kit-roster" aria-label={`${team.name} roster`}>
                       {team.members.filter(m => m.trim()).map((member, mIdx) => (
-                        <span
-                          key={mIdx}
-                          className="text-xs px-2 py-1 rounded"
-                          style={{ background: '#f5f5f5', color: '#888' }}
-                        >
-                          {member}
-                        </span>
+                        <li key={mIdx}>{member}</li>
                       ))}
-                    </div>
-                  </div>
-                )}
+                    </ul>
+                  )}
+                </span>
               </div>
             ))}
           </div>
-        )}
-      </div>
-
+        </div>
+      )}
     </div>
   );
 }

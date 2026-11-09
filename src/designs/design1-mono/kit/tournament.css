@@ -1,0 +1,505 @@
+/* Kit tournaments (list + hub). Same language as History and Stats: compact cards on the canvas,
+   hairline-divided rows, display numerals, the sport's gradient from the engine. Colour comes only
+   from --se-color-* tokens and --sport-* engine vars, so dark mode is a token swap. Built on
+   kit.css / history.css / stats.css (kit-card, kit-sec, kit-list, kit-row, kit-chip, kit-seg,
+   kit-last-*, kit-brow-track, kit-team-*, kit-empty, kit-toast, kit-quiet); nothing here restyles
+   them. Shared by the tournament list and the sets hub now, and by the goals, cricket and setup
+   screens in the follow-up PRs. */
+
+/* ---- screen frame ---- */
+.kit-tour .kit-back,
+.kit-screen .kit-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 48px;
+  margin: 4px 0 0 -8px;
+  padding: 0 10px 0 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--se-color-ink-soft);
+  font: 650 0.95rem var(--se-font-sans);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-tour-titlerow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 0 6px;
+}
+
+.kit-tour-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: 800 1.85rem/1.05 var(--se-font-display);
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.kit-tour-head {
+  margin: 2px 0 0;
+}
+
+.kit-tour-head .kit-tour-titlerow {
+  align-items: flex-start;
+  margin-top: 0;
+}
+
+.kit-tour-head .kit-chip {
+  margin-top: 4px;
+}
+
+.kit-tour-head .kit-sub {
+  font-size: 0.9rem;
+}
+
+/* Extra chip states. Words always carry the meaning; colour only reinforces it. */
+.kit-chip.is-done {
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+}
+
+.kit-chip.is-warn {
+  background: var(--se-color-warning-soft);
+  color: var(--se-color-warning);
+}
+
+/* ---- progress: one pill per match, then the count ---- */
+.kit-tour-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 16px;
+}
+
+.kit-tour-steps {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-tour-steps li {
+  flex: 0 1 22px;
+  min-width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+}
+
+.kit-tour-steps li.is-done {
+  background: linear-gradient(90deg, var(--sport-hi, var(--se-color-ink)), var(--sport-core, var(--se-color-ink)));
+  box-shadow: none;
+}
+
+.kit-tour-steps li.is-live {
+  background: repeating-linear-gradient(135deg, var(--sport-core, var(--se-color-ink)) 0 3px, var(--se-color-surface-warm) 3px 6px);
+  box-shadow: none;
+}
+
+.kit-tour-steps li.is-gap {
+  flex: none;
+  min-width: 0;
+  width: 1px;
+  height: 12px;
+  margin: 0 4px;
+  border-radius: 0;
+  background: var(--se-color-line-soft);
+  box-shadow: none;
+}
+
+.kit-tour-count {
+  flex: none;
+  color: var(--se-color-ink-soft);
+  font: 700 1rem var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-tour-count b {
+  color: var(--se-color-ink);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+/* Four tabs across 360 px: the label steps down so "Standings" stays whole. */
+.kit-tour-seg button {
+  padding: 4px 2px;
+  font-size: 0.86rem;
+}
+
+.kit-tour-panel {
+  margin-top: 16px;
+}
+
+/* ---- list: one card per tournament ---- */
+.kit-tcards {
+  display: grid;
+  gap: 12px;
+}
+
+.kit-tcard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.kit-tcard-open {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 14px 16px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-tcard-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.kit-tcard-name {
+  min-width: 0;
+  font: 800 1.2rem/1.15 var(--se-font-display);
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+}
+
+.kit-tcard-tags {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.kit-tcard-meta {
+  display: block;
+  margin-top: 4px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.84rem;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.kit-tcard .kit-brow-track {
+  margin: 12px 0 8px;
+}
+
+.kit-tcard-next {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.kit-tcard-next.is-waiting {
+  color: var(--se-color-warning);
+}
+
+.kit-tcard-next.is-done {
+  color: var(--se-color-live);
+}
+
+.kit-tcard-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 12px 16px;
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-tcard-actions .se-ctl {
+  flex: 1;
+  min-width: 0;
+  padding: 0 12px;
+  text-align: center;
+}
+
+.kit-tcard-confirm {
+  padding: 0 16px 14px;
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+/* ---- fixtures: one card per match, the same team rows as Home's last match ---- */
+.kit-fx-list {
+  display: grid;
+  gap: 12px;
+}
+
+.kit-fx {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The match being played: Kit's selected treatment, an ink ring (never a new colour). */
+.kit-fx.is-live {
+  box-shadow: inset 0 0 0 2px var(--se-color-ink), var(--se-lift);
+}
+
+.kit-fx-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.kit-fx-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.kit-fx-end {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A 48px target that does not grow the meta row. */
+.kit-fx-clear {
+  min-height: 48px;
+  margin: -10px -6px -10px 0;
+  padding: 0 8px;
+  font-size: 0.88rem;
+}
+
+.kit-fx .kit-last-team {
+  min-height: 40px;
+}
+
+.kit-fx .kit-last-name {
+  font-size: 1.08rem;
+}
+
+.kit-fx .kit-last-team.is-loser .kit-last-name,
+.kit-fx .kit-last-team.is-loser .kit-last-score {
+  color: var(--se-color-ink-soft);
+}
+
+.kit-fx .kit-last-team.is-tbd .kit-last-name {
+  color: var(--se-color-ink-soft);
+  font-weight: 600;
+}
+
+/* Set scores: one pill per set. A set the match winner took reads live, one they lost reads danger;
+   the higher number is always bold, so the colour never carries the meaning alone. */
+.kit-fx-sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 0 2px;
+  border-top: 1px solid var(--se-color-line-soft);
+  list-style: none;
+}
+
+.kit-fx-set {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  box-sizing: border-box;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font: 500 1.05rem var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-fx-set.is-won {
+  background: var(--se-color-live-soft);
+}
+
+.kit-fx-set.is-lost {
+  background: var(--se-color-danger-soft);
+}
+
+.kit-fx-set b {
+  font-weight: 800;
+}
+
+.kit-fx-set > span:not(.kit-fx-dash) {
+  color: var(--se-color-ink-soft);
+}
+
+.kit-fx-set .kit-fx-dash {
+  color: var(--se-color-ink-soft);
+  font-weight: 500;
+}
+
+.kit-fx-wait {
+  margin: 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.kit-fx > .se-ctl {
+  width: 100%;
+}
+
+.kit-fx .kit-sync-status {
+  padding: 0;
+}
+
+.kit-fx .kit-sync-status.is-compact {
+  background: transparent;
+}
+
+.kit-fx-undo {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.kit-fx .kit-fx-undo {
+  margin-bottom: 0;
+}
+
+/* ---- standings: the Stats team rows with a rank and the points beside the name ---- */
+.kit-st-rank {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font: 800 0.85rem var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+  vertical-align: 1px;
+}
+
+.kit-st-row.is-lead .kit-st-rank {
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+}
+
+.kit-team-table .kit-st-row {
+  align-items: start;
+}
+
+.kit-team-table .kit-st-row .kit-team-cell {
+  margin-top: 10px;
+}
+
+/* ---- knockout ---- */
+.kit-champ {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 18px 16px;
+  text-align: center;
+  box-shadow: inset 0 0 0 2px var(--se-color-ink), var(--se-lift);
+}
+
+.kit-champ span {
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.kit-champ b {
+  font: 800 1.8rem/1.1 var(--se-font-display);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.kit-tour-note {
+  margin-top: 0;
+}
+
+.kit-tour-note .kit-fx-wait {
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- teams ---- */
+.kit-roster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-roster li {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font-size: 0.84rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.kit-tour-list .kit-row {
+  padding-block: 12px;
+}
+
+/* ---- not found / empty ---- */
+.kit-tour-lost {
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.kit-tour-lost .kit-btnrow .se-ctl,
+.kit-tour-lost .kit-btnrow .se-go {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.kit-tour-steps-list {
+  width: 100%;
+  margin: 0 0 16px;
+  text-align: left;
+}
+
+.kit-tour-steps-list .kit-row {
+  min-height: 56px;
+}
+
+.kit-tour-empty .kit-btnstack {
+  margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-tcard-open {
+    transition: none;
+  }
+}

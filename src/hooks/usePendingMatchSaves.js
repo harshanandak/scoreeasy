@@ -3,7 +3,7 @@ import { useConvex, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useAuth } from './useAuth';
 import { addAppStateChangeListener } from '../mobile/lifecycle';
-import { attemptMatchSave, hydratePendingMatchSaves, isSaveInFlight, pendingMatchSaves, pruneSyncedMatchSaves, PENDING_SAVES_CHANGED, RETRY_PENDING_SAVE } from '../utils/pendingMatchSaves';
+import { attemptMatchSave, hydratePendingMatchSaves, isSaveInFlight, pendingMatchSaves, pruneSyncedMatchSaves, resumeOwnerMatchSaves, PENDING_SAVES_CHANGED, RETRY_PENDING_SAVE } from '../utils/pendingMatchSaves';
 
 export function matchSaveOwner({ isAuthenticated, clerkUser, user }) {
   return isAuthenticated ? (clerkUser?.id || user?._id || null) : null;
@@ -45,26 +45,31 @@ export function usePendingMatchSaves(authOverride) {
     await hydratePendingMatchSaves(ownerId);
     const record = pendingMatchSaves(ownerId).find((entry) => entry.payload.clientMatchId === clientMatchId);
     if (!record) return Promise.resolve({ status: 'idle', clientMatchId });
-    return attemptMatchSave(record, save, () => active.current.ownerId === ownerId && active.current.ready, manual);
+    return attemptMatchSave(record, save, () => active.current.ownerId === ownerId && active.current.ready, manual,
+      () => active.current.ownerId === ownerId && active.current.ready);
   };
   useEffect(() => {
     let timer;
     let disposed = false;
     let hydrated = !globalThis.indexedDB;
     let hydration;
+    let resumeAfterHydration = true;
+    if (ready) resumeOwnerMatchSaves(ownerId);
     const run = () => {
       if (disposed) return;
       clearTimeout(timer);
       pruneSyncedMatchSaves(ownerId);
       refresh((value) => value + 1);
       if (!hydrated || !ready || navigator.onLine === false) return;
-      const records = pendingMatchSaves(ownerId).filter((entry) => !entry.terminal && !isSaveInFlight(entry));
+      const records = pendingMatchSaves(ownerId).filter((entry) => !entry.terminal && !entry.ownerMismatch && !isSaveInFlight(entry));
       for (const record of records) {
         if (record.nextAttemptAt <= Date.now()) {
-          void attemptMatchSave(record, active.current.save, () => !disposed && active.current.ownerId === ownerId && active.current.ready);
+          // A late rejection can settle after this effect was replaced by an A-B-A switch.
+          void attemptMatchSave(record, active.current.save, () => !disposed && active.current.ownerId === ownerId && active.current.ready, false,
+            () => active.current.ownerId === ownerId && active.current.ready);
         }
       }
-      const upcoming = pendingMatchSaves(ownerId).filter((entry) => !entry.terminal && !isSaveInFlight(entry));
+      const upcoming = pendingMatchSaves(ownerId).filter((entry) => !entry.terminal && !entry.ownerMismatch && !isSaveInFlight(entry));
       if (upcoming.length) timer = setTimeout(() => run(), Math.max(1000, Math.min(...upcoming.map((entry) => entry.nextAttemptAt)) - Date.now()));
     };
     const recover = () => {
@@ -75,6 +80,10 @@ export function usePendingMatchSaves(authOverride) {
       hydration = hydratePendingMatchSaves(ownerId).then(() => {
         hydration = null;
         hydrated = true;
+        if (resumeAfterHydration && !disposed && ready) {
+          resumeAfterHydration = false;
+          resumeOwnerMatchSaves(ownerId);
+        }
         run();
       });
     };

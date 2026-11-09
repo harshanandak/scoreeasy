@@ -17,7 +17,7 @@ export function enqueueQuickMatchSave({ sport, isAuthenticated, user, clerkUser,
     team1Players: tagged(team1Players), team2Players: tagged(team2Players),
     matchRole: isRefereeing ? 'refereeing' : 'playing',
   };
-  enqueueMatchSave(ownerId, payload, match.id);
+  enqueueMatchSave(ownerId, payload, match.id, undefined, match);
   return { status: 'pending', clientMatchId: id };
 }
 

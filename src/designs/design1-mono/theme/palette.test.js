@@ -227,7 +227,10 @@ describe('documented contrast pairs', () => {
 // fallbacks for Kit parts and tokens (-3); the new landing, demo and auth styles add 0.
 // Stats in Kit (PR #231), 590 -> 576: MonoStatistics drops its #111, #eee and #f5f5f5 inks and
 // borders (-14); the new stats.css and the Stats JSX use tokens and sportIdentity output only (+0).
-const BASELINE = 576;
+// Tournaments in Kit, PR 1 (list + sets hub), 576 -> 464: MonoTournamentList, GenericSetsTournament,
+// KnockoutMatchCard and the not-found actions drop their inline #111/#888/#eee/#fee2e2/#dcfce7 greys,
+// reds and greens (-112) for tokens; kit/tournament.css and TournamentParts use tokens only (+0).
+const BASELINE = 464;
 
 const EXCLUDED_FILES = new Set([
   // Token definitions
