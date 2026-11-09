@@ -48,6 +48,38 @@ describe("worker fetch handler", () => {
     expect(res.headers.get("cache-control")).toBe("public, max-age=0");
   });
 
+  it("redirects https www to the apex with 301, keeping path and query", async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(new Request("https://www.scoreeasy.app/history?x=1"), env);
+    expect(res.status).toBe(301);
+    expect(res.headers.get("location")).toBe("https://scoreeasy.app/history?x=1");
+    expect(env.ASSETS.fetch).not.toHaveBeenCalled();
+  });
+
+  it("redirects http www straight to the https apex in one hop", async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(new Request("http://www.scoreeasy.app/x?y=1"), env);
+    expect(res.status).toBe(301);
+    expect(res.headers.get("location")).toBe("https://scoreeasy.app/x?y=1");
+    expect(env.ASSETS.fetch).not.toHaveBeenCalled();
+  });
+
+  it("matches the www hostname case-insensitively", async () => {
+    const env = makeEnv();
+    const res = await worker.fetch(new Request("https://WWW.ScoreEasy.app/live/abc?z=2"), env);
+    expect(res.status).toBe(301);
+    expect(res.headers.get("location")).toBe("https://scoreeasy.app/live/abc?z=2");
+  });
+
+  it("leaves a workers.dev host alone over https", async () => {
+    const env = makeEnv();
+    const req = new Request("https://scoreeasy.example.workers.dev/history");
+    const res = await worker.fetch(req, env);
+    expect(res.status).toBe(200);
+    expect(env.ASSETS.fetch).toHaveBeenCalledWith(req);
+    expect(res.headers.get("strict-transport-security")).toBe("max-age=31536000");
+  });
+
   it.each([
     "http://localhost:8787/",
     "http://127.0.0.1:8787/x",
