@@ -51,7 +51,7 @@ describe('TeamSetsBoard', () => {
     expect(screen.getByText('Live')).toBeInTheDocument();
   });
 
-  it('puts the ball mark on the serving key only, and moves it with the serve', () => {
+  it('puts the sport icon on the serving key only, and moves it with the serve', () => {
     const { rerender, props } = renderBoard();
     expect(key('Royals').querySelector('.tsb-mark svg')).not.toBeNull();
     expect(key('Strikers').querySelector('.tsb-mark')).toBeNull();

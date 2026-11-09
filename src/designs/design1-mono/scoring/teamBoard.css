@@ -134,12 +134,12 @@
 
 .tsb-key-a .tsb-mark {
   color: var(--team-a-motif-ink);
-  opacity: var(--team-a-motif-a);
+  opacity: var(--team-a-motif-alpha);
 }
 
 .tsb-key-b .tsb-mark {
   color: var(--team-b-motif-ink);
-  opacity: var(--team-b-motif-a);
+  opacity: var(--team-b-motif-alpha);
 }
 
 /* serving tag: inverted (on-colour fill, team-colour text), the same gated pair as the labels */

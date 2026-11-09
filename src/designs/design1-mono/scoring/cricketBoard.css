@@ -6,7 +6,7 @@
   --cricket-on: var(--team-a-on);
   --cricket-motif: var(--team-a-motif);
   --cricket-motif-ink: var(--team-a-motif-ink);
-  --cricket-motif-a: var(--team-a-motif-a);
+  --cricket-motif-alpha: var(--team-a-motif-alpha);
   --cricket-scrim: var(--team-a-scrim);
   background: var(--se-color-canvas);
   color: var(--se-color-ink);
@@ -19,7 +19,7 @@
   --cricket-on: var(--team-b-on);
   --cricket-motif: var(--team-b-motif);
   --cricket-motif-ink: var(--team-b-motif-ink);
-  --cricket-motif-a: var(--team-b-motif-a);
+  --cricket-motif-alpha: var(--team-b-motif-alpha);
   --cricket-scrim: var(--team-b-scrim);
 }
 .cricket-board .crb { max-width: 520px; min-height: calc(100dvh - var(--se-safe-top)); gap: 8px; padding: 0 0 calc(10px + var(--se-safe-bottom)); }
@@ -32,7 +32,7 @@
   background: linear-gradient(168deg, var(--cricket-hi), var(--cricket-core) 52%, var(--cricket-lo));
   color: var(--cricket-on); box-shadow: var(--se-lift); text-align: left;
 }
-.cricket-mark { position: absolute; z-index: -1; right: -6%; bottom: -26%; width: 50%; aspect-ratio: 1; color: var(--cricket-motif-ink); opacity: var(--cricket-motif-a); }
+.cricket-mark { position: absolute; z-index: -1; right: -6%; bottom: -26%; width: 50%; aspect-ratio: 1; color: var(--cricket-motif-ink); opacity: var(--cricket-motif-alpha); }
 .cricket-who { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 5px; font-size: 0.94rem; font-weight: 750; }
 .cricket-board .ck-hero-score { font-family: var(--se-font-num); font-size: 3.7rem; letter-spacing: -0.025em; padding: 0 4px; border-radius: 8px; background: var(--cricket-scrim); }
 .cricket-board .ck-hero-score .wk { font-size: 0.6em; color: inherit; }

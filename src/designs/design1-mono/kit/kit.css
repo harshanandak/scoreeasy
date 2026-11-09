@@ -223,7 +223,7 @@
   width: 66%;
   aspect-ratio: 1;
   color: var(--sport-motif-ink);
-  opacity: var(--sport-motif-a);
+  opacity: var(--sport-motif-alpha);
   pointer-events: none;
 }
 

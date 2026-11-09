@@ -21,7 +21,7 @@ export function sportIdentity(sportId) {
 }
 
 /**
- * CSS custom properties for a sport surface: --sport-{hi,core,lo,on,scrim,tint,line,motif,motif-ink,motif-a}.
+ * CSS custom properties for a sport surface: --sport-{hi,core,lo,on,scrim,tint,line,motif,motif-ink,motif-alpha}.
  * The sport's icon is a component (kit/SportMark), not a variable.
  * @param {string | undefined} sportId registry id
  * @returns {Record<string, string>} empty for unknown sports

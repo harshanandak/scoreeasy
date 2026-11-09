@@ -197,7 +197,9 @@ describe('DashboardLanding (Kit Home)', () => {
       expect(badge.querySelector('svg')).toHaveAttribute('viewBox', '0 0 24 24');
       expect(badge.style.getPropertyValue('--sport-core')).not.toBe('');
       expect(container.querySelectorAll('.kit-tile .kit-badge')).toHaveLength(0);
-      for (const mark of container.querySelectorAll('.kit-tile-mark')) {
+      const marks = container.querySelectorAll('.kit-tile-mark');
+      expect(marks.length).toBeGreaterThan(0);
+      for (const mark of marks) {
         expect(mark.querySelector('svg')).toHaveAttribute('viewBox', '0 0 24 24');
       }
     });

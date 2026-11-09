@@ -46,7 +46,7 @@ describe('sport identities', () => {
     expect(vars['--sport-on']).toBe('#ffffff');
     expect(vars['--sport-motif']).toMatch(/^rgba\(/);
     expect(vars['--sport-motif-ink']).toMatch(/^#[0-9a-f]{6}$/);
-    expect(vars['--sport-motif-a']).toMatch(/^0\.\d+$/);
+    expect(vars['--sport-motif-alpha']).toMatch(/^0\.\d+$/);
     expect(vars).not.toHaveProperty('--sport-mark');
     expect(sportIdentityVars('not-a-sport')).toEqual({});
     expect(sportIdentityVars('toString')).toEqual({});
