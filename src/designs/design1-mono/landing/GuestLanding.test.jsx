@@ -58,7 +58,7 @@ describe('GuestLanding', () => {
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score any game on your phone.');
     expect(screen.getByText(/start in seconds with no account/i)).toHaveTextContent(/works offline/i);
-    expect(screen.getByText(/follow you when you sign in/i)).toBeInTheDocument();
+    expect(screen.getByText(/once you sign in, the matches you score are saved to your account/i)).toBeInTheDocument();
     expect(startLinks(/^Start /)[0]).toHaveAttribute('href', '/play?sport=cricket');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
   });
@@ -137,10 +137,12 @@ describe('GuestLanding', () => {
     expect(stats.getByText('You never have to sign in to score.')).toBeInTheDocument();
 
     const features = within(screen.getByRole('heading', { level: 2, name: 'Everything you need.' }).closest('section'));
-    for (const title of ['No sign-up to start', 'Your history, any phone', 'Live share link', 'Undo that follows', 'Real rules, every sport', 'Tournaments']) {
+    for (const title of ['No sign-up to start', 'Save to your account', 'Live share link', 'Undo that follows', 'Real rules, every sport', 'Tournaments']) {
       expect(features.getByRole('heading', { level: 3, name: title })).toBeInTheDocument();
     }
     expect(features.getByText(/weak signal never costs one/i)).toBeInTheDocument();
+    expect(features.getByText(/every match you finish is saved to your account\. without one, matches stay on this phone/i)).toBeInTheDocument();
+    expect(features.queryByText(/every phone|any phone|follow you/i)).not.toBeInTheDocument();
     expect(features.getByText(/stays private until you share it/i)).toBeInTheDocument();
   });
 

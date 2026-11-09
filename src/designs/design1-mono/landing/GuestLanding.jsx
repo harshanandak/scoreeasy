@@ -17,7 +17,7 @@ import useIsMobile from './useIsMobile';
    marketing page (01 / APP EXPERIENCE ... 04 / HOW IT WORKS). The sport the scorer picks is held
    once, so the chip, the example card and the Start buttons always name the same game. Every claim
    below the fold is true of the shipped app: guest scoring and tournaments are open to guests,
-   scoring is saved on the device first, sync and the live link need a sign in. */
+   scoring is saved on the device first; saving to an account and the live link need a sign in. */
 
 const PRODUCTION_SIGNUP_URL = 'https://scoreeasy.app/signup';
 const sports = getSportsList();
@@ -40,7 +40,7 @@ const EXPERIENCE_NOTES = [
 
 const FEATURES = [
   { tag: 'Start', title: 'No sign-up to start', desc: 'Start a match from your browser or the app without an account. Every point is saved on your phone first, so a weak signal never costs one.' },
-  { tag: 'Account', title: 'Your history, any phone', desc: 'Sign in when you want your matches on every phone. Until then, they stay on this one.' },
+  { tag: 'Account', title: 'Save to your account', desc: 'Sign in and every match you finish is saved to your account. Without one, matches stay on this phone.' },
   { tag: 'Share', title: 'Live share link', desc: 'Signed in, you can go live and send a link so friends follow the score. A match stays private until you share it.' },
   { tag: 'Undo', title: 'Undo that follows', desc: 'Mis-tapped? Undo takes the point back, and the score, serve and set go back with it.' },
   { tag: 'Rules', title: 'Real rules, every sport', desc: 'Deuce, sets, overs and raids are scored by each sport’s own rules, so the board never disagrees with the game.' },
@@ -140,7 +140,7 @@ export default function GuestLanding() {
             Score any game <HandUnderline>on your phone</HandUnderline>.
           </h1>
           <p className="kit-sub">
-            Start in seconds with no account. It works offline, and your matches follow you when you sign in.
+            Start in seconds with no account. It works offline, and once you sign in, the matches you score are saved to your account.
           </p>
           <div className="kit-landing-actions">
             <Link className="se-go" to={startPath}>
