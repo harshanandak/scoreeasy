@@ -1,58 +1,74 @@
 /* Kit form controls (switch row, number stepper, choice grid). Tokens only: dark mode is a token
    swap. Every target is 48px. The sticky Start bar is cleared by setup.css scroll-padding. */
 
-/* ---- switch row ---- */
-.kit-toggle {
+/* ---- compact setting rows: label on the left, the control on the right ---- */
+.kit-togglewrap {
+  display: grid;
+}
+
+.kit-toggle,
+.kit-numrow {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 10px;
   box-sizing: border-box;
   width: 100%;
-  min-height: 56px;
-  padding: 8px 14px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--se-color-surface);
-  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+  min-height: 52px;
+  padding: 4px 0;
   color: var(--se-color-ink);
-  text-align: left;
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.kit-toggle[aria-checked='true'] {
-  box-shadow: inset 0 0 0 2px var(--se-color-ink);
-}
-
-.kit-toggle:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .kit-toggle-text,
 .kit-numrow-text {
   display: grid;
+  flex: 1;
   gap: 2px;
   min-width: 0;
 }
 
 .kit-toggle-label {
-  font: 700 0.95rem/1.2 var(--se-font-sans);
+  font: 650 0.92rem/1.25 var(--se-font-sans);
 }
 
 .kit-toggle-hint {
   color: var(--se-color-ink-soft);
-  font: 500 0.82rem/1.3 var(--se-font-sans);
+  font: 500 0.8rem/1.3 var(--se-font-sans);
+}
+
+/* The switch button stretches over the whole row so the row is the tap target. */
+.kit-toggle-switch {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-toggle-switch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.kit-toggle-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .kit-toggle-track {
   position: relative;
   flex: none;
-  width: 52px;
-  height: 32px;
-  border-radius: 16px;
+  width: 46px;
+  height: 28px;
+  border-radius: 14px;
   background: var(--se-color-surface-warm);
   box-shadow: inset 0 0 0 2px var(--se-color-ink-soft);
   transition: background 120ms ease;
@@ -62,58 +78,100 @@
   position: absolute;
   top: 4px;
   left: 4px;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--se-color-ink-soft);
   transition: transform 120ms ease, background 120ms ease;
 }
 
-.kit-toggle[aria-checked='true'] .kit-toggle-track {
+.kit-toggle-switch[aria-checked='true'] .kit-toggle-track {
   background: var(--se-color-ink);
   box-shadow: none;
 }
 
-.kit-toggle[aria-checked='true'] .kit-toggle-knob {
+.kit-toggle-switch[aria-checked='true'] .kit-toggle-knob {
   background: var(--se-color-canvas);
-  transform: translateX(20px);
+  transform: translateX(18px);
 }
 
-/* ---- number stepper ---- */
-.kit-numrow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 14px;
-  border-radius: 14px;
-  background: var(--se-color-surface);
-  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+.kit-toggle-switch:focus-visible .kit-toggle-track {
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: 3px;
 }
 
+/* The small (i): 44px to tap, a 20px mark to look at. Sits above the stretched switch. */
+.kit-info-btn {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 -6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink-soft);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-info-btn span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  font: 800 0.72rem/1 var(--se-font-sans);
+}
+
+.kit-info-btn[aria-expanded='true'] {
+  color: var(--se-color-ink);
+}
+
+.kit-info {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink-soft);
+  font: 500 0.82rem/1.4 var(--se-font-sans);
+}
+
+/* ---- number stepper: smaller, 44px buttons ---- */
 .kit-numstep {
   flex: none;
-  gap: 8px;
+  gap: 6px;
+}
+
+.kit-numstep .se-ctl {
+  min-height: 44px;
+  width: 44px;
+  font-size: 1.15rem;
 }
 
 .kit-numstep-input {
   box-sizing: border-box;
-  width: 64px;
-  min-height: 48px;
-  padding: 0 4px;
+  width: 52px;
+  min-height: 44px;
+  padding: 0 2px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--se-color-surface-warm);
   color: var(--se-color-ink);
-  font: 800 1.35rem/1 var(--se-font-num);
+  font: 800 1.1rem/1 var(--se-font-num);
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
 
 .kit-numstep-unit {
-  margin-left: -4px;
+  margin-left: -2px;
   color: var(--se-color-ink-soft);
-  font: 650 0.8rem var(--se-font-sans);
+  font: 650 0.78rem var(--se-font-sans);
 }
 
 /* ---- choice grid ---- */
@@ -158,23 +216,74 @@
   opacity: 0.5;
 }
 
-/* ---- kabaddi rules panel ---- */
+/* ---- kabaddi rules panel: one quiet card of compact rows ---- */
 .kit-rules-panel {
   display: grid;
-  gap: 10px;
-  margin-top: 14px;
+  margin-top: 10px;
+  padding: 2px 14px;
+  border-radius: 16px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+}
+
+.kit-rules-panel > * + *,
+.kit-rules-more-body > * + * {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-rules-block {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
 }
 
 .kit-rules-block .kit-setup-label {
-  margin-bottom: 6px;
+  margin: 0;
+  font-size: 0.78rem;
 }
 
 .kit-rules-sub {
   display: grid;
-  gap: 10px;
-  margin-left: 12px;
-  padding-left: 12px;
+  margin-left: 10px;
+  padding-left: 10px;
   border-left: 2px solid var(--se-color-line-soft);
+}
+
+.kit-rules-sub > * + * {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+/* "More rules": one collapsed row; the less common rules sit inside it. */
+.kit-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: 700 0.92rem var(--se-font-sans);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-more svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kit-rules-more-body {
+  display: grid;
 }
 
 .kit-rules-more summary {
@@ -182,26 +291,33 @@
   align-items: center;
   min-height: 48px;
   color: var(--se-color-ink);
-  font: 750 0.9rem var(--se-font-sans);
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
+  font: 650 0.88rem var(--se-font-sans);
   cursor: pointer;
 }
 
-/* Cards: options that carry a one-line description sit one per row. */
+/* Cards: options that carry a one-line description sit one per row. Calm: unselected rows are
+   flat with a hairline, the chosen row is tinted and ticked (no heavy outline or offset shadow). */
 .kit-choice.is-cards {
   grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
 }
 
 .kit-choice.is-cards button {
   position: relative;
   display: grid;
-  gap: 3px;
-  min-height: 64px;
-  padding: 12px 52px 12px 16px;
-  border-radius: 16px;
+  gap: 1px;
+  min-height: 54px;
+  padding: 9px 46px 9px 14px;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+  font-weight: 600;
   text-align: left;
+}
+
+.kit-choice.is-cards button[aria-checked='true'] {
+  background: var(--se-color-surface-warm);
+  box-shadow: none;
 }
 
 .kit-choice.is-cards button::before {
@@ -212,11 +328,11 @@
   content: '';
   position: absolute;
   top: 50%;
-  right: 16px;
-  width: 22px;
-  height: 22px;
+  right: 14px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 2px var(--se-color-ink-soft);
+  box-shadow: inset 0 0 0 1.5px var(--se-color-line-soft);
   transform: translateY(-50%);
 }
 
@@ -230,22 +346,22 @@
   content: '';
   position: absolute;
   z-index: 1;
-  top: calc(50% - 6px);
-  right: 25px;
-  width: 6px;
-  height: 11px;
+  top: calc(50% - 5px);
+  right: 22.5px;
+  width: 5px;
+  height: 9px;
   border: solid var(--se-color-canvas);
-  border-width: 0 2.5px 2.5px 0;
+  border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
 .kit-choice-label {
-  font: 800 1rem/1.2 var(--se-font-sans);
+  font: 700 0.95rem/1.2 var(--se-font-sans);
 }
 
 .kit-choice-hint {
   color: var(--se-color-ink-soft);
-  font: 500 0.85rem/1.3 var(--se-font-sans);
+  font: 500 0.8rem/1.3 var(--se-font-sans);
 }
 
 @media (prefers-reduced-motion: reduce) {

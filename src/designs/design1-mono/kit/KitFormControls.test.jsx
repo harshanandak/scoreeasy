@@ -144,3 +144,22 @@ describe('KitChoiceGrid cards', () => {
     expect(screen.getByRole('radiogroup', { name: 'Format' })).toHaveClass('is-cards');
   });
 });
+
+describe('KitToggleRow info', () => {
+  it('hides a long explanation behind a small (i) that reveals it', () => {
+    render(<KitToggleRow label="Bonus point" info="An extra point." checked={false} onChange={() => {}} />);
+    expect(screen.queryByText('An extra point.')).toBeNull();
+    const info = screen.getByRole('button', { name: 'About Bonus point' });
+    expect(info).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(info);
+    expect(info).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('An extra point.')).toBeInTheDocument();
+  });
+
+  it('does not toggle the switch when the (i) is tapped', () => {
+    const onChange = vi.fn();
+    render(<KitToggleRow label="Bonus point" info="An extra point." checked={false} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'About Bonus point' }));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});

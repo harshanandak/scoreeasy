@@ -18,7 +18,8 @@ function Host({ initial = { kabaddiRules: resolveKabaddiRules('quick') } }) {
     </>
   );
 }
-const openRules = () => {};
+// The common rules show at once; the rest sit under one collapsed "More rules" row.
+const openRules = () => fireEvent.click(screen.getByRole('button', { name: 'More rules' }));
 // What the saved match settings were before the redesign for a custom edit.
 const custom = (base, patch) => resolveKabaddiRules('custom', { ...base, ...patch });
 
@@ -66,22 +67,19 @@ describe('KabaddiGameStep cards', () => {
 });
 
 describe('KabaddiRulesStep summary, changes and reset', () => {
-  it('names the preset and says that any change makes the match Custom', () => {
+  it('is one summary line, with Reset only after a change', () => {
     render(<Host />);
-    expect(screen.getByRole('heading', { level: 2, name: 'Quick casual' })).toBeInTheDocument();
-    expect(screen.getByText('Change any rule below and this match becomes Custom.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /^Quick casual · 5 a side/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
   });
 
-  it('lists what changed from the preset and resets in one tap', () => {
+  it('counts what changed from the preset and resets in one tap', () => {
     render(<Host />);
     fireEvent.click(screen.getByRole('switch', { name: 'Raid clock' }));
-    expect(screen.getByRole('heading', { level: 2, name: 'Custom, based on Quick casual' })).toBeInTheDocument();
-    const changes = screen.getByRole('list', { name: 'Changed from Quick casual' });
-    expect(within(changes).getByText('Raid clock: 30 s')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Custom, based on Quick casual · 1 change' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reset to Quick casual' }));
     expect(latest.kabaddiRules).toEqual(resolveKabaddiRules('quick'));
-    expect(screen.queryByRole('list', { name: /^Changed from/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
   });
 
   it('works out the base preset of an edited copy and diffs against it', () => {
@@ -100,12 +98,29 @@ describe('KabaddiRulesStep rules panel saves what the old panel saved', () => {
   const quick = resolveKabaddiRules('quick');
   const standard = resolveKabaddiRules('standard');
 
-  it('shows the rules panel with plain group headings', () => {
+  it('shows the common rules at once and keeps the rest under one More rules row', () => {
     render(<Host />);
     expect(screen.getByTestId('kabaddi-rules-panel')).toBeInTheDocument();
-    for (const name of ['Match', 'Players out', 'Raiding']) {
-      expect(screen.getByRole('heading', { level: 3, name })).toBeInTheDocument();
+    for (const name of ['Players a side', 'Target points']) expect(screen.getByRole('spinbutton', { name })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Raid clock' })).toBeInTheDocument();
+    for (const name of ['Bonus point', 'Do-or-die after empty raids', 'Players go out and revive in order']) {
+      expect(screen.queryByRole('switch', { name })).toBeNull();
     }
+    expect(screen.getByRole('button', { name: 'More rules' })).toHaveAttribute('aria-expanded', 'false');
+    openRules();
+    expect(screen.getByRole('button', { name: 'More rules' })).toHaveAttribute('aria-expanded', 'true');
+    for (const name of ['Bonus point', 'Do-or-die after empty raids', 'Players go out and revive in order']) {
+      expect(screen.getByRole('switch', { name })).toBeInTheDocument();
+    }
+    expect(screen.getByText('How scoring ends')).toBeInTheDocument();
+  });
+
+  it('keeps the explanation behind a small (i) instead of a line under every row', () => {
+    render(<Host />); openRules();
+    expect(screen.queryByText(/A raider can win an extra point/)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'About Bonus point' }));
+    expect(screen.getByText(/A raider can win an extra point/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'About Raid clock' })).toBeNull();
   });
 
   it('players a side, with bonus and super tackle capped', () => {

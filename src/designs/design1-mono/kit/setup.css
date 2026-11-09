@@ -239,29 +239,25 @@
   font-weight: 700;
 }
 
-/* ---- the one Go: sticky at the bottom, above the dock when the dock shows ---- */
+/* ---- the one Go: pinned to the bottom safe area ----
+   Setup is a sub-screen with its own Back, so the dock never shows here. The bar is solid (not a
+   fade), so a row scrolling under it is cut cleanly instead of showing half-hidden behind the
+   button. It is the last thing in the screen and the screen has no bottom padding, so at the end
+   of the scroll the last row sits fully above it. */
 .kit-screen > .kit-setup-cta {
   position: sticky;
   z-index: 5;
   bottom: 0;
   margin-top: 18px;
-  padding: 14px 0 16px;
-  background: linear-gradient(180deg, transparent, var(--se-color-canvas) 30%);
+  padding: 14px 0 calc(16px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
+  background: var(--se-color-canvas);
+  box-shadow: 0 -1px 0 var(--se-color-line-soft);
 }
 
-body.has-mobile-bottom-nav .kit-screen > .kit-setup-cta {
-  bottom: calc(78px + var(--se-safe-bottom));
-}
-
-/* Anything focused or scrolled into view stops above the sticky Start bar (about 86 px) and, when
-   the dock shows, above the dock as well, so a Format or Match length control is never left
-   underneath them. */
+/* Anything focused or scrolled into view stops above the sticky Start bar (about 90 px plus the
+   safe area), so a Format or Match length control is never left underneath it. */
 html:has(.kit-setup) {
-  scroll-padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
-}
-
-html:has(body.has-mobile-bottom-nav .kit-setup) {
-  scroll-padding-bottom: calc(182px + env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Missing a name: still focusable and announced (aria-disabled + the hint), but it no longer

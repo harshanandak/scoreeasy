@@ -60,7 +60,7 @@ import { KitSegmented, KitStepper } from './kit/KitSetupParts';
 import { KitChoiceGrid } from './kit/KitFormControls';
 import TeamCards from './kit/TeamCards';
 import RulesRow from './kit/RulesRow';
-import { NextStepButton, SetupStepper } from './kit/SetupSteps';
+import { SetupStepper } from './kit/SetupSteps';
 import { clearSetupPrefs, loadSetupPrefs, saveSetupPrefs } from '../../utils/setupPrefs';
 import {
   applyFormatChoice,
@@ -2244,6 +2244,9 @@ export default function MonoQuickMatch() {
     const stepIndex = Math.min(setupStep, setupSteps.length - 1);
     const stepId = setupSteps[stepIndex].id;
     const formatCards = describeFormatChoices(sportConfig, format);
+    // The cards already say the rules (a sets sport's card ends with them), so a separate Rules row
+    // would only repeat the chosen card; keep just the Edit rules action there.
+    const rulesRepeatPreset = Boolean(rulesLine) && Boolean(formatCards.find(c => c.id === selectedFormat)?.hint?.includes(rulesLine));
     return (
       <div className="kit-screen kit-setup" data-screen="setup" style={sportVars}>
         <KitWash from={sportTint} to={sportTint} />
@@ -2290,7 +2293,9 @@ export default function MonoQuickMatch() {
                     />
                   </div>
                 )}
-                <RulesRow label="Rules" summary={rulesLine} actionLabel="Edit rules" onClick={hasRulesEditor ? () => setRulesOpen(true) : undefined} />
+                {rulesRepeatPreset
+                  ? hasRulesEditor && <button type="button" className="kit-linkbtn" onClick={() => setRulesOpen(true)}>Edit rules</button>
+                  : <RulesRow label="Rules" summary={rulesLine} actionLabel="Edit rules" onClick={hasRulesEditor ? () => setRulesOpen(true) : undefined} />}
               </section>
             )}
           </>
@@ -2364,10 +2369,6 @@ export default function MonoQuickMatch() {
         )}
 
         {stepId === 'rules' && <KabaddiRulesStep format={format} onChange={setFormat} />}
-
-        {stepIndex < setupSteps.length - 1 && (
-          <NextStepButton label={setupSteps[stepIndex + 1].label} onClick={() => goToStep(stepIndex + 1)} />
-        )}
 
         <div className="kit-setup-cta">
           <button

@@ -319,6 +319,10 @@ const APP_SHELL_PREFIXES = [
   '/profile',
   '/users/search',
 ];
+// The bottom nav belongs to the five top-level tab screens only. Every sub-screen (quick and
+// tournament setup, a match, a result, a profile page) has its own Back, so the nav would only
+// cost it screen space.
+const BOTTOM_NAV_SCREEN_PATHS = new Set([APP_ENTRY_PATH, '/play', '/live', '/history', '/profile']);
 const PUBLIC_SHELL_PREFIXES = [
   PUBLIC_MARKETING_PATH,
   '/privacy',
@@ -673,7 +677,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) 
   const mobileMenuRef = useRef(null);
   const pathname = location.pathname;
   const homePath = pathname === PUBLIC_MARKETING_PATH ? '/' : APP_ENTRY_PATH;
-  const showBottomNav = isAppShellPath(pathname) && !boardVisible;
+  const showBottomNav = isAppShellPath(pathname) && BOTTOM_NAV_SCREEN_PATHS.has(normalizePathname(pathname)) && !boardVisible;
 
   useEffect(() => {
     setOpen(false);

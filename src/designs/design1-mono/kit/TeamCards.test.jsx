@@ -23,6 +23,8 @@ describe('TeamCards', () => {
     expect(screen.getByRole('button', { name: 'Edit Team B: Strikers, Blue' })).toBeInTheDocument();
     expect(screen.getByTestId('matchup-preview')).toHaveClass('is-team');
     expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.queryByText(/Edit name and colour/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Edit Team A: Royals, Red' }).querySelector('.kit-tcard-pencil')).not.toBeNull();
   });
 
   it('opens one sheet with the name and the colours together, and the name edits live', () => {

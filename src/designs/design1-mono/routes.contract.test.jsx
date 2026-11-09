@@ -144,7 +144,7 @@ function expectBoardDock(hidden) {
 }
 
 describe('board dock visibility', () => {
-  it('keeps guided cricket lineup setup in the app shell', async () => {
+  it('hides the dock on guided cricket lineup setup, a sub-screen with its own Back', async () => {
     const entries = cricketFinishSeed('guided');
     const match = entries.se_cricket[0].matches[0];
     match.team1Score = { runs: 0, balls: 0, wickets: 0, allOut: false };
@@ -152,15 +152,27 @@ describe('board dock visibility', () => {
     Object.entries(entries).forEach(([key, value]) => seed(key, value));
     renderApp(['/cricket/tournament/100/match/m1/score']);
     await settleRoute();
-    expectBoardDock(false);
+    expectBoardDock(true);
     expect(nativeBack.install).not.toHaveBeenCalled();
+  });
+
+  it.each(['/app', '/play', '/history'])('shows the dock on the top-level tab screen %s', async path => {
+    renderApp([path]);
+    await settleRoute();
+    expectBoardDock(false);
+  });
+
+  it.each(['/volleyball/quick', '/kabaddi/quick', '/basketball/quick', '/tennis/tournament'])('hides the dock on the sub-screen %s', async path => {
+    renderApp([path]);
+    await settleRoute();
+    expectBoardDock(true);
   });
 
   it.each(['volleyball', 'cricket', 'kabaddi'])('%s hides the dock from Start through an unscored refresh and Back', async sport => {
     const path = `/${sport}/quick`;
     let view = renderApp(['/history', path]);
     await settleRoute();
-    expectBoardDock(false);
+    expectBoardDock(true);
     fireEvent.change(teamNameInput('A'), { target: { value: 'Red' } });
     fireEvent.change(teamNameInput('B'), { target: { value: 'Blue' } });
     fireEvent.click(screen.getByRole('button', { name: /^Start/ }));

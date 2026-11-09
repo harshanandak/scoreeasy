@@ -8,34 +8,53 @@ import './kit.css';
 import './setup.css';
 import './formControls.css';
 
-/**
- * A setting row: label, an optional one-line hint and a switch. The whole row is the button, so the
- * thumb never has to find a small target. role="switch" + aria-checked carry the state.
- */
-export function KitToggleRow({ label, hint, checked, onChange, disabled = false }) {
-  const uid = useId();
+/** A small (i) that reveals a longer explanation under its row; 44px to tap, a 20px mark to see. */
+function InfoButton({ label, open, onToggle, controls }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      className="kit-toggle"
-      aria-checked={checked ? 'true' : 'false'}
-      aria-labelledby={`${uid}-l`}
-      aria-describedby={hint ? `${uid}-h` : undefined}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-    >
-      <span className="kit-toggle-text">
-        <span id={`${uid}-l`} className="kit-toggle-label">{label}</span>
-        {hint && <span id={`${uid}-h`} className="kit-toggle-hint">{hint}</span>}
-      </span>
-      <span className="kit-toggle-track" aria-hidden="true"><span className="kit-toggle-knob" /></span>
+    <button type="button" className="kit-info-btn" aria-label={`About ${label}`} aria-expanded={open ? 'true' : 'false'} aria-controls={controls} onClick={onToggle}>
+      <span aria-hidden="true">i</span>
     </button>
+  );
+}
+InfoButton.propTypes = { label: PropTypes.string.isRequired, open: PropTypes.bool, onToggle: PropTypes.func.isRequired, controls: PropTypes.string };
+
+/**
+ * A setting row: the label on the left, the switch on the right. `hint` is an always-visible line;
+ * `info` hides a longer explanation behind a small (i). The whole row taps the switch (its button
+ * stretches over the row; the (i) sits above it). role="switch" + aria-checked carry the state.
+ */
+export function KitToggleRow({ label, hint, info, checked, onChange, disabled = false }) {
+  const uid = useId();
+  const [showInfo, setShowInfo] = useState(false);
+  return (
+    <div className="kit-togglewrap">
+      <div className="kit-toggle">
+        <span className="kit-toggle-text">
+          <span id={`${uid}-l`} className="kit-toggle-label">{label}</span>
+          {hint && <span id={`${uid}-h`} className="kit-toggle-hint">{hint}</span>}
+        </span>
+        {info && <InfoButton label={typeof label === 'string' ? label : 'this rule'} open={showInfo} onToggle={() => setShowInfo((v) => !v)} controls={`${uid}-i`} />}
+        <button
+          type="button"
+          role="switch"
+          className="kit-toggle-switch"
+          aria-checked={checked ? 'true' : 'false'}
+          aria-labelledby={`${uid}-l`}
+          aria-describedby={hint ? `${uid}-h` : undefined}
+          disabled={disabled}
+          onClick={() => onChange(!checked)}
+        >
+          <span className="kit-toggle-track" aria-hidden="true"><span className="kit-toggle-knob" /></span>
+        </button>
+      </div>
+      {info && showInfo && <p id={`${uid}-i`} className="kit-info">{info}</p>}
+    </div>
   );
 }
 KitToggleRow.propTypes = {
   label: PropTypes.node.isRequired,
   hint: PropTypes.node,
+  info: PropTypes.node,
   checked: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired,
   disabled: PropTypes.bool,
@@ -49,8 +68,9 @@ const isInt = (n) => Number.isSafeInteger(n);
  * bounds; anything else is ignored and the field snaps back to the last good value on blur.
  * Arrow Up/Down step too.
  */
-export function KitNumberStepper({ label, hint, value, min, max, step = 1, unit, onChange }) {
+export function KitNumberStepper({ label, hint, info, value, min, max, step = 1, unit, onChange }) {
   const uid = useId();
+  const [showInfo, setShowInfo] = useState(false);
   const [draft, setDraft] = useState(null);
   const typing = useRef(false);
   useEffect(() => { if (!typing.current) setDraft(null); }, [value]);
@@ -58,11 +78,13 @@ export function KitNumberStepper({ label, hint, value, min, max, step = 1, unit,
   const commit = (n) => { if (isInt(n) && n >= min && n <= max && n !== value) onChange(n); };
   const bump = (dir) => { typing.current = false; setDraft(null); commit(clamp(value + dir * step)); };
   return (
+    <div className="kit-togglewrap">
     <div className="kit-numrow">
       <div className="kit-numrow-text">
         <span id={`${uid}-l`} className="kit-toggle-label">{label}</span>
         {hint && <span id={`${uid}-h`} className="kit-toggle-hint">{hint}</span>}
       </div>
+      {info && <InfoButton label={label} open={showInfo} onToggle={() => setShowInfo((v) => !v)} controls={`${uid}-i`} />}
       <div className="kit-stepper kit-numstep" role="group" aria-labelledby={`${uid}-l`}>
         <button type="button" className="se-ctl" aria-label={`Fewer: ${label}`} disabled={value <= min} onClick={() => bump(-1)}>&minus;</button>
         <input
@@ -97,11 +119,14 @@ export function KitNumberStepper({ label, hint, value, min, max, step = 1, unit,
         <button type="button" className="se-ctl" aria-label={`More: ${label}`} disabled={value >= max} onClick={() => bump(1)}>+</button>
       </div>
     </div>
+    {info && showInfo && <p id={`${uid}-i`} className="kit-info">{info}</p>}
+    </div>
   );
 }
 KitNumberStepper.propTypes = {
   label: PropTypes.string.isRequired,
   hint: PropTypes.node,
+  info: PropTypes.node,
   value: PropTypes.number.isRequired,
   min: PropTypes.number.isRequired,
   max: PropTypes.number.isRequired,

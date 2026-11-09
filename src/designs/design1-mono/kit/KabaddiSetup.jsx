@@ -66,21 +66,21 @@ export function KabaddiFirstRaid({ format, onChange, names = ['Team A', 'Team B'
   </div>;
 }
 
-/** Step "Rules": a summary on top, what changed from the preset with one-tap reset, then the groups. */
+/** Step "Rules": one summary line (with Reset only when something changed), then the compact rows. */
 export function KabaddiRulesStep({ format, onChange }) {
   const r = format.kabaddiRules || resolveKabaddiRules('quick');
   const baseId = basePresetOf(r);
   const baseLabel = NAMED.find(p => p.id === baseId).label;
-  const changes = r.presetId === 'custom' ? kabaddiChanges(resolveKabaddiRules(baseId), r) : [];
+  const isCustom = r.presetId === 'custom';
+  const count = isCustom ? kabaddiChanges(resolveKabaddiRules(baseId), r).length : 0;
   const setRules = kabaddiRules => onChange({ ...format, kabaddiRules });
   return <section className="kit-setup-field" aria-labelledby="kabaddi-rules-summary">
-    <div className="kit-rules-summary">
-      <h2 id="kabaddi-rules-summary">{r.presetId === 'custom' ? `Custom, based on ${baseLabel}` : baseLabel}</h2>
-      <p>{kabaddiRulesLine(r)}</p>
-      {changes.length > 0
-        ? <ul className="kit-rules-changes" aria-label={`Changed from ${baseLabel}`}>{changes.map(c => <li key={c}>{c}</li>)}</ul>
-        : <p className="kit-setup-rules" style={{ margin: 0 }}>Change any rule below and this match becomes Custom.</p>}
-      {changes.length > 0 && <button type="button" className="se-ctl" onClick={() => setRules(resolveKabaddiRules(baseId))}>Reset to {baseLabel}</button>}
+    <div className="kit-rules-line">
+      <h2 id="kabaddi-rules-summary">
+        <b>{isCustom ? `Custom, based on ${baseLabel}` : baseLabel}</b>
+        <span>{isCustom && count > 0 ? ` · ${count} ${count === 1 ? 'change' : 'changes'}` : ` · ${kabaddiBlurb(r)}`}</span>
+      </h2>
+      {isCustom && <button type="button" className="kit-linkbtn" onClick={() => setRules(resolveKabaddiRules(baseId))}>Reset to {baseLabel}</button>}
     </div>
     <KabaddiRulesPanel rules={r} onChange={setRules} />
   </section>;

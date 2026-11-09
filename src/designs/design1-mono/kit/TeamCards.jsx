@@ -90,9 +90,9 @@ export default function TeamCards({ teams, coloured, colourStyle }) {
             aria-label={`Edit Team ${t.letter}: ${t.name.trim() || `Team ${t.letter}`}${coloured ? `, ${colourNameOf(t.colour)}` : ''}`}
             onClick={() => setOpenTeam(t.n)}
           >
+            <Pencil />
             <span className="kit-tcard-tag">Team {t.letter}</span>
             <span className="kit-tcard-name">{t.name.trim() || `Team ${t.letter}`}</span>
-            <span className="kit-tcard-edit"><Pencil />Edit name and colour</span>
           </button>
         ))}
       </div>

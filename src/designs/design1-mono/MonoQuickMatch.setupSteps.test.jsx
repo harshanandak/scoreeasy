@@ -34,18 +34,18 @@ beforeEach(() => {
 });
 
 describe('quick setup steps', () => {
-  it('tennis: Game and Teams steps, Start on both, no Rules step, Next and Back move between them', async () => {
+  it('tennis: Game and Teams steps, Start on both, no Rules step, the tabs and Back move between them', async () => {
     renderQuick('/tennis/quick');
     expect(await screen.findByRole('button', { name: 'Game', current: 'step' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Rules' })).toBeNull();
     expect(screen.getByRole('heading', { level: 2, name: 'What are you playing?' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start tennis' })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /^Next: Teams/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Teams' }));
     expect(screen.getByRole('button', { name: 'Teams', current: 'step' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Edit Team A:/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start tennis' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Next:/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Next/ })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to Game' }));
     expect(screen.getByRole('button', { name: 'Game', current: 'step' })).toBeInTheDocument();
@@ -62,13 +62,16 @@ describe('quick setup steps', () => {
     expect(screen.queryByRole('radio', { name: 'Quick casual' })).toBeNull();
 
     goToSetupStep('Rules');
-    expect(screen.getByRole('heading', { level: 2, name: 'Quick casual' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /^Quick casual/ })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Raid clock' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Start/ })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Next:/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Next/ })).toBeNull();
+    expect(screen.queryByRole('switch', { name: 'Bonus point' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'More rules' }));
+    expect(screen.getByRole('switch', { name: 'Bonus point' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('switch', { name: 'Raid clock' }));
-    expect(screen.getByRole('heading', { level: 2, name: 'Custom, based on Quick casual' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /^Custom, based on Quick casual/ })).toBeInTheDocument();
     goToSetupStep('Game');
     expect(screen.getByRole('radio', { name: 'Custom' })).toHaveAttribute('aria-checked', 'true');
   });

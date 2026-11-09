@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { NextStepButton, SetupStepper } from './SetupSteps';
+import { SetupStepper } from './SetupSteps';
 
 const steps = [{ id: 'game', label: 'Game' }, { id: 'teams', label: 'Teams' }, { id: 'rules', label: 'Rules' }];
 
@@ -18,14 +18,5 @@ describe('SetupStepper', () => {
     render(<SetupStepper steps={steps} current={0} onSelect={onSelect} />);
     fireEvent.click(screen.getByRole('button', { name: 'Rules' }));
     expect(onSelect).toHaveBeenCalledWith(2);
-  });
-});
-
-describe('NextStepButton', () => {
-  it('names the next step and calls back', () => {
-    const onClick = vi.fn();
-    render(<NextStepButton label="Teams" onClick={onClick} />);
-    fireEvent.click(screen.getByRole('button', { name: /^Next: Teams/ }));
-    expect(onClick).toHaveBeenCalledTimes(1);
   });
 });

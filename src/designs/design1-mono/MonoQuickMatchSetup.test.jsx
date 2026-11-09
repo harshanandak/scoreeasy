@@ -180,7 +180,7 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Switch to volleyball' }));
 
     expect(await screen.findByRole('button', { name: 'Start volleyball' })).toBeEnabled();
-    expect(screen.getByText('25 points a set · win by 2 · decider to 15 · cap 27')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Best of 3' })).toHaveAccessibleDescription(/25 points a set · win by 2 · decider to 15 · cap 27/);
     expect(screen.queryByRole('radio', { name: 'Gully' })).not.toBeInTheDocument();
   });
 
@@ -284,7 +284,7 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.click(await screen.findByRole('radio', { name: 'Single set' }));
     expect(screen.getByRole('radio', { name: 'Single set' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByRole('radio', { name: 'Best of 3' })).toHaveAttribute('aria-checked', 'false');
-    expect(screen.getByText('First to 25 · win by 2 · cap 27')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Single set' })).toHaveAccessibleDescription(/First to 25 · win by 2 · cap 27/);
   });
 
   it('gives goals sports a clock or a target under the format', async () => {
@@ -316,7 +316,7 @@ describe('MonoQuickMatch setup clarity', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Edit rules' }));
     fireEvent.click(screen.getByRole('button', { name: '21' }));
     fireEvent.click(screen.getByRole('button', { name: 'Return to match setup' }));
-    expect(await screen.findByText('21 points a set · win by 2 · decider to 15 · cap 27')).toBeInTheDocument();
+    expect(await screen.findByRole('radio', { name: 'Best of 3' })).toHaveAccessibleDescription(/21 points a set · win by 2 · decider to 15 · cap 27/);
   });
 
   it.each([['volleyball', 'Edit rules'], ['kabaddi', null], ['tennis', null], ['cricket', null], ['football', null]])(
