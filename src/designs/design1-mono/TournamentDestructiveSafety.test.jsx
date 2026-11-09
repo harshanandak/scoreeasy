@@ -236,7 +236,8 @@ describe('tournament destructive safety', () => {
     renderRouteWithLocation('/volleyball/tournament', '/:sport/tournament', <MonoTournamentList />);
 
     const waitingLabel = await screen.findByText('Bracket waiting for teams');
-    expect(waitingLabel).toHaveStyle({ color: '#92400e' });
+    expect(waitingLabel).toHaveStyle({ color: 'var(--se-color-warning)' });
+    expect(waitingLabel).not.toHaveClass('is-done');
     expect(screen.getByRole('button', { name: 'View bracket - League Night' })).toBeInTheDocument();
   });
 

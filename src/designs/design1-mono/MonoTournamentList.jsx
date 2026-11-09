@@ -7,6 +7,9 @@ import { migrateCricketFormat } from '../../utils/formatMigration';
 import { isTournamentMatchCompleted } from '../../utils/tournamentSync';
 import BackArrow from './components/BackArrow';
 import ConfirmActionPanel from './components/ConfirmActionPanel';
+import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
+import { EmptyHistoryArt, GoArrow, KitWash, SportBadge } from './kit/KitParts';
+import './kit/tournament.css';
 
 function getTeamName(tournament, teamId) {
   return tournament.teams?.find((team) => team.id === teamId)?.name || 'Team';
@@ -42,7 +45,6 @@ export default function MonoTournamentList() {
   const { sport } = useParams();
   const sportConfig = getSportById(sport);
   const [tournaments, setTournaments] = useState([]);
-  const [visible, setVisible] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [deletedTournament, setDeletedTournament] = useState(null);
 
@@ -51,7 +53,6 @@ export default function MonoTournamentList() {
     const loaded = loadSportTournaments(sportConfig.storageKey);
     setTournaments(loaded.filter(t => t.mode === 'tournament' || !t.mode));
     setDeletedTournament(null);
-    requestAnimationFrame(() => setVisible(true));
   }, [sport, sportConfig]);
 
   const openTournament = (id) => {
@@ -83,230 +84,189 @@ export default function MonoTournamentList() {
 
   if (!sportConfig) {
     return (
-      <div className="min-h-screen px-6 py-10 flex items-center justify-center">
-        <p style={{ color: '#888' }}>Sport not found</p>
+      <div className="kit-screen">
+        <section className="kit-card kit-empty" aria-labelledby="tournament-sport-missing">
+          <h2 id="tournament-sport-missing">Sport not found</h2>
+        </section>
       </div>
     );
   }
 
   const sportLabel = sportConfig.name;
-  const sportIcon = sportConfig.icon;
+  const createTournament = () => navigate(`/${sport}/tournament/new`);
 
   return (
-    <div className={`min-h-screen px-6 py-10 mono-transition ${visible ? 'mono-visible' : 'mono-hidden'}`}>
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <nav className="flex items-center gap-2 mb-2" aria-label="Breadcrumb">
-          <button
-            onClick={() => navigate('/app')}
-            className="text-sm bg-transparent border-none cursor-pointer font-swiss flex items-center gap-1 mono-hit"
-            style={{ color: '#888' }}
-            aria-label="Go back to home"
-          >
-            <BackArrow /> Home
-          </button>
-        </nav>
+    <div className="kit-screen kit-tour" data-screen="tournaments" style={sportIdentityVars(sport)}>
+      <KitWash from={sportIdentity(sport)?.tint} />
 
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-xl font-semibold tracking-tight" style={{ color: '#111' }}>
-            <span aria-hidden="true">{sportIcon} </span>{sportLabel} Tournaments
-          </h1>
-        </div>
-
-        {/* Create button */}
+      {/* Header */}
+      <nav aria-label="Breadcrumb">
         <button
-          onClick={() => navigate(`/${sport}/tournament/new`)}
-          className="mono-btn-primary w-full mb-8"
-          style={{ padding: '12px', fontSize: '0.9375rem' }}
+          onClick={() => navigate('/app')}
+          className="kit-back mono-hit"
+          aria-label="Go back to home"
         >
-          New {sportLabel} Tournament
+          <BackArrow /> Home
         </button>
+      </nav>
 
-        {deletedTournament && (
-          <div
-            className="mono-alert mono-alert-info mb-4"
-            role="status"
-            aria-live="polite"
-            style={{ padding: '12px 14px' }}
-          >
-            <p className="text-sm font-semibold mb-2" style={{ color: '#111' }}>
-              Deleted {deletedTournament.tournament.name}.
-            </p>
+      <div className="kit-tour-titlerow">
+        <SportBadge sportId={sport} />
+        <h1 className="kit-tour-title">{sportLabel} Tournaments</h1>
+      </div>
+
+      {tournaments.length > 0 && (
+        <div className="kit-btnstack" style={{ marginTop: 16 }}>
+          <button type="button" onClick={createTournament} className="se-go">
+            New {sportLabel} Tournament <GoArrow />
+          </button>
+        </div>
+      )}
+
+      {/* List */}
+      {tournaments.length === 0 ? (
+        <section className="kit-card kit-empty kit-tour-empty" aria-labelledby="tournaments-empty-title" style={{ marginTop: 18 }}>
+          <EmptyHistoryArt />
+          <h2 id="tournaments-empty-title">No tournaments yet</h2>
+          <p>Build a match list, track standings, and resume the next game from one place.</p>
+          <ol className="kit-list kit-steps kit-tour-steps-list">
+            {['Name teams', 'Schedule is generated', 'Continue from this list'].map((label, index) => (
+              <li key={label} className="kit-row">
+                <span className="kit-step-num" aria-hidden="true">{index + 1}</span>
+                <span className="kit-row-text"><span className="kit-row-title">{label}</span></span>
+              </li>
+            ))}
+          </ol>
+          <div className="kit-btnstack">
+            <button type="button" onClick={createTournament} className="se-go">
+              Create {sportLabel} Tournament <GoArrow />
+            </button>
             <button
               type="button"
-              className="mono-btn w-full"
-              style={{ minHeight: 44, padding: '10px' }}
-              onClick={undoDeleteTournament}
-            >
-              Undo delete
-            </button>
-          </div>
-        )}
-
-        {/* List */}
-        {tournaments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center" style={{ minHeight: '34vh' }}>
-            <span className="text-4xl mb-4">{sportIcon}</span>
-            <h2 className="text-base font-semibold mb-2" style={{ color: '#111' }}>No tournaments yet</h2>
-            <p className="text-sm mb-5" style={{ color: '#666', maxWidth: 320 }}>
-              Build a match list, track standings, and resume the next game from one place.
-            </p>
-            <div className="mono-soft-panel w-full mb-4 text-left" style={{ padding: '14px 16px' }}>
-              {['Name teams', 'Schedule is generated', 'Continue from this list'].map((label, index) => (
-                <div key={label} className="flex items-center gap-3 mb-2 last:mb-0">
-                  <span
-                    className="font-mono text-xs"
-                    style={{
-                      width: 24,
-                      height: 24,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: index === 0 ? '#0066ff' : '#fff',
-                      color: index === 0 ? '#fff' : '#666',
-                      border: '1px solid #dbeafe',
-                    }}
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="text-sm" style={{ color: '#333' }}>{label}</span>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => navigate(`/${sport}/tournament/new`)}
-              className="mono-btn-primary w-full mb-2"
-              style={{ minHeight: 48, padding: '12px', fontSize: '0.9375rem' }}
-            >
-              Create {sportLabel} Tournament
-            </button>
-            <button
               onClick={() => navigate(`/${sport}/quick`, { state: { newMatch: true } })}
-              className="mono-btn w-full"
-              style={{ minHeight: 48, padding: '12px', fontSize: '0.9375rem' }}
+              className="se-ctl"
             >
               Score one quick match
             </button>
           </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {tournaments.map(t => {
-              const allMatches = [...(t.matches || []), ...(t.knockoutMatches || [])];
-              const matchCount = allMatches.length;
-              const completedCount = allMatches.filter((m) =>
-                isTournamentMatchCompleted(m, sportConfig.engine, m.format || t.format)
-              ).length;
-              const progress = matchCount > 0 ? Math.round((completedCount / matchCount) * 100) : 0;
-              const openMatches = getOpenMatches(t, sportConfig);
-              const nextMatch = getNextScorableMatch(t, sportConfig);
-              let nextMatchLabel = 'All matches complete';
-              if (nextMatch) {
-                nextMatchLabel = `${getMatchTeamName(t, nextMatch.team1Id ?? nextMatch.team1)} vs ${getMatchTeamName(t, nextMatch.team2Id ?? nextMatch.team2)}`;
-              } else if (openMatches.length > 0) {
-                nextMatchLabel = 'Bracket waiting for teams';
-              }
-              let continueLabel = 'View results';
-              if (nextMatch) {
-                continueLabel = 'Score next match';
-              } else if (openMatches.length > 0) {
-                continueLabel = 'View bracket';
-              }
-              const isWaitingForTeams = !nextMatch && openMatches.length > 0;
-              const statusColor = nextMatch ? '#111' : isWaitingForTeams ? '#92400e' : '#15803d';
+        </section>
+      ) : (
+        <div className="kit-tcards" style={{ marginTop: 18 }}>
+          {tournaments.map(t => {
+            const allMatches = [...(t.matches || []), ...(t.knockoutMatches || [])];
+            const matchCount = allMatches.length;
+            const completedCount = allMatches.filter((m) =>
+              isTournamentMatchCompleted(m, sportConfig.engine, m.format || t.format)
+            ).length;
+            const progress = matchCount > 0 ? Math.round((completedCount / matchCount) * 100) : 0;
+            const openMatches = getOpenMatches(t, sportConfig);
+            const nextMatch = getNextScorableMatch(t, sportConfig);
+            let nextMatchLabel = 'All matches complete';
+            if (nextMatch) {
+              nextMatchLabel = `${getMatchTeamName(t, nextMatch.team1Id ?? nextMatch.team1)} vs ${getMatchTeamName(t, nextMatch.team2Id ?? nextMatch.team2)}`;
+            } else if (openMatches.length > 0) {
+              nextMatchLabel = 'Bracket waiting for teams';
+            }
+            let continueLabel = 'View results';
+            if (nextMatch) {
+              continueLabel = 'Score next match';
+            } else if (openMatches.length > 0) {
+              continueLabel = 'View bracket';
+            }
+            const isWaitingForTeams = !nextMatch && openMatches.length > 0;
+            let nextState = 'is-done';
+            if (nextMatch) nextState = '';
+            else if (isWaitingForTeams) nextState = 'is-waiting';
 
-              return (
-                <div key={t.id} className="mono-row-panel" style={{ padding: 0 }}>
-                  <button
-                    className="cursor-pointer w-full text-left bg-transparent border-none"
-                    style={{ padding: '16px 20px', display: 'block' }}
-                    onClick={() => openTournament(t.id)}
-                    aria-label={`Open ${t.name} tournament, ${completedCount} of ${matchCount} matches completed`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-sm font-medium" style={{ color: '#111' }}>{t.name}</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="mono-badge mono-badge-live" role="status" aria-label={`${completedCount} of ${matchCount} matches completed`}>
-                          {completedCount}/{matchCount}
-                        </span>
-                        {t.teams?.length === 2 && (
-                          <span className="text-xs px-2 py-1 rounded" style={{ background: '#f0f6ff', color: '#0066ff' }}>
-                            Head-to-head
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-xs" style={{ color: '#888' }}>
-                      {t.teams?.length || 0} teams &middot;{' '}
-                      {t.teams?.length === 2 && `${matchCount}-match series`}
-                      {t.teams?.length >= 3 && `${matchCount} matches \u00b7 Round-robin`}
-                      {(() => {
-                        // Cricket: show format preset name instead of raw overs
-                        if (sportConfig.engine === 'custom-cricket' && t.format) {
-                          const migrated = migrateCricketFormat(t.format);
-                          const preset = getCricketFormat(migrated.preset);
-                          if (preset) return ` \u00b7 ${preset.name}`;
-                          if (migrated.overs) return ` \u00b7 ${migrated.overs} overs`;
-                          return ' \u00b7 Custom';
+            return (
+              <article key={t.id} className="kit-card kit-tcard">
+                <button
+                  type="button"
+                  className="kit-tcard-open"
+                  onClick={() => openTournament(t.id)}
+                  aria-label={`Open ${t.name} tournament, ${completedCount} of ${matchCount} matches completed`}
+                >
+                  <span className="kit-tcard-head">
+                    <span className="kit-tcard-name">{t.name}</span>
+                    <span className="kit-tcard-tags">
+                      <span className="kit-chip is-live" role="status" aria-label={`${completedCount} of ${matchCount} matches completed`}>
+                        {completedCount}/{matchCount}
+                      </span>
+                      {t.teams?.length === 2 && <span className="kit-chip">Head-to-head</span>}
+                    </span>
+                  </span>
+                  <span className="kit-tcard-meta">
+                    {t.teams?.length || 0} teams &middot;{' '}
+                    {t.teams?.length === 2 && `${matchCount}-match series`}
+                    {t.teams?.length >= 3 && `${matchCount} matches · Round-robin`}
+                    {(() => {
+                      // Cricket: show format preset name instead of raw overs
+                      if (sportConfig.engine === 'custom-cricket' && t.format) {
+                        const migrated = migrateCricketFormat(t.format);
+                        const preset = getCricketFormat(migrated.preset);
+                        if (preset) return ` · ${preset.name}`;
+                        if (migrated.overs) return ` · ${migrated.overs} overs`;
+                        return ' · Custom';
+                      }
+                      // Non-cricket: existing logic
+                      if (t.format?.overs) return ` · ${t.format.overs} overs`;
+                      if (t.format?.sets) return ` · Best of ${t.format.sets}`;
+                      return '';
+                    })()}
+                  </span>
+                  <span className="kit-brow-track" aria-hidden="true" style={{ display: 'block', '--kit-p': `${progress}%` }}><i /></span>
+                  <span className={`kit-tcard-next ${nextState}`}>
+                    {nextMatch ? `Next: ${nextMatchLabel}` : nextMatchLabel}
+                  </span>
+                </button>
+                {pendingDeleteId === t.id ? (
+                  <div className="kit-tcard-confirm">
+                    <ConfirmActionPanel
+                      message="Delete this tournament and its saved matches?"
+                      confirmLabel="Delete"
+                      confirmAriaLabel={`Confirm delete ${t.name} tournament`}
+                      onConfirm={(e) => { e.stopPropagation(); deleteTournament(t.id); }}
+                      onCancel={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
+                    />
+                  </div>
+                ) : (
+                  <div className="kit-tcard-actions">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (nextMatch) {
+                          scoreTournamentMatch(t.id, nextMatch.id);
+                          return;
                         }
-                        // Non-cricket: existing logic
-                        if (t.format?.overs) return ` \u00b7 ${t.format.overs} overs`;
-                        if (t.format?.sets) return ` \u00b7 Best of ${t.format.sets}`;
-                        return '';
-                      })()}
-                    </p>
-                    <div className="mt-3" aria-hidden="true" style={{ height: 6, background: '#f1f5f9' }}>
-                      <div style={{ width: `${progress}%`, height: '100%', background: '#0066ff' }} />
-                    </div>
-                    <p className="text-xs mt-2" style={{ color: statusColor }}>
-                      {nextMatch ? `Next: ${nextMatchLabel}` : nextMatchLabel}
-                    </p>
-                  </button>
-                  {pendingDeleteId === t.id ? (
-                    <div
-                      className="flex flex-col"
-                      style={{ borderTop: '1px solid #fee2e2', padding: '12px 20px', background: '#fef2f2' }}
+                        openTournament(t.id);
+                      }}
+                      className="se-ctl"
+                      aria-label={`${continueLabel} - ${t.name}`}
                     >
-                      <ConfirmActionPanel
-                        message="Delete this tournament and its saved matches?"
-                        confirmLabel="Delete"
-                        confirmAriaLabel={`Confirm delete ${t.name} tournament`}
-                        onConfirm={(e) => { e.stopPropagation(); deleteTournament(t.id); }}
-                        onCancel={(e) => { e.stopPropagation(); setPendingDeleteId(null); }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex gap-2" style={{ borderTop: '1px solid #eee', padding: '10px 20px' }}>
-                      <button
-                        onClick={() => {
-                          if (nextMatch) {
-                            scoreTournamentMatch(t.id, nextMatch.id);
-                            return;
-                          }
-                          openTournament(t.id);
-                        }}
-                        className="mono-btn-primary flex-1"
-                        style={{ minHeight: 44, padding: '10px 12px', fontSize: '0.875rem' }}
-                        aria-label={`${continueLabel} - ${t.name}`}
-                      >
-                        {continueLabel}
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setPendingDeleteId(t.id); }}
-                        className="mono-btn"
-                        style={{ minHeight: 44, padding: '10px 12px', color: '#dc2626', borderColor: '#fecaca' }}
-                        aria-label={`Delete ${t.name} tournament`}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                      {continueLabel}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setPendingDeleteId(t.id); }}
+                      className="kit-quiet"
+                      aria-label={`Delete ${t.name} tournament`}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      {deletedTournament && (
+        <div className="kit-toast">
+          <span role="status" aria-live="polite">Deleted {deletedTournament.tournament.name}.</span>
+          <button type="button" onClick={undoDeleteTournament}>Undo delete</button>
+        </div>
+      )}
     </div>
   );
 }
-

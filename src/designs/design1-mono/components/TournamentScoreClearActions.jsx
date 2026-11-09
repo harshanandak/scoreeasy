@@ -1,5 +1,7 @@
 import PropTypes from 'prop-types';
 import ConfirmActionPanel from './ConfirmActionPanel';
+import '../kit/kit.css';
+import '../kit/tournament.css';
 
 export default function TournamentScoreClearActions({ matchId, scoreClear }) {
   const pendingScoreClear = scoreClear.pendingScoreClear?.matchId === matchId
@@ -22,8 +24,7 @@ export default function TournamentScoreClearActions({ matchId, scoreClear }) {
       {canUndoClear && (
         <button
           type="button"
-          className="mono-btn mb-4 w-full"
-          style={{ minHeight: 44, padding: '10px' }}
+          className="se-ctl kit-fx-undo"
           onClick={scoreClear.undoScoreClear}
         >
           Undo clear score

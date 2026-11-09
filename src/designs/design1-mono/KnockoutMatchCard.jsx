@@ -1,6 +1,7 @@
 import TournamentMatchSyncStatus from './components/TournamentMatchSyncStatus';
 import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import PropTypes from 'prop-types';
+import { FixtureCard, FixtureTeam, SetChips } from './kit/TournamentParts';
 
 function getScoreInfo(match, engine) {
   let hasScore = false;
@@ -25,15 +26,26 @@ function getScoreInfo(match, engine) {
   return { hasScore, t1SetsWon, t2SetsWon };
 }
 
-function getTeamColor(isReady, isWinner, hasScore) {
-  if (!isReady) return '#ccc';
-  return (isWinner || !hasScore) ? '#111' : '#888';
-}
-
 function getButtonLabel(matchStatus, hasScore) {
   if (matchStatus === 'in-progress') return 'Resume Match';
   if (hasScore) return 'Edit Score';
   return 'Enter Score';
+}
+
+function getTeamScore(engine, hasScore, setsWon, goals) {
+  if (!hasScore) return undefined;
+  if (engine === 'sets') return setsWon;
+  if (engine === 'goals') return goals;
+  return undefined;
+}
+
+function getStatusChip(match) {
+  if (match.status === 'completed') {
+    const abandoned = isAbandoned(match);
+    return <span className={abandoned ? 'kit-chip is-warn' : 'kit-chip is-done'}>{abandoned ? ABANDONED_LABEL : 'Completed'}</span>;
+  }
+  if (match.status === 'in-progress') return <span className="kit-chip is-live">In Progress</span>;
+  return null;
 }
 
 export default function KnockoutMatchCard({ match, tournament, sport, id, navigate, getTeamName, engine }) {
@@ -43,109 +55,51 @@ export default function KnockoutMatchCard({ match, tournament, sport, id, naviga
 
   const { hasScore, t1SetsWon, t2SetsWon } = getScoreInfo(match, engine);
 
-  const isTeam1Winner = !isAbandoned(match) && match.status === 'completed' && match.winner === match.team1Id;
-  const isTeam2Winner = !isAbandoned(match) && match.status === 'completed' && match.winner === match.team2Id;
+  const abandoned = isAbandoned(match);
+  const decided = match.status === 'completed' && !abandoned;
+  const isTeam1Winner = decided && match.winner === match.team1Id;
+  const isTeam2Winner = decided && match.winner === match.team2Id;
+  const isTeam1Loser = decided && team1Ready && !isTeam1Winner;
+  const isTeam2Loser = decided && team2Ready && !isTeam2Winner;
 
-  const team1Color = getTeamColor(team1Ready, isTeam1Winner, hasScore);
-  const team2Color = getTeamColor(team2Ready, isTeam2Winner, hasScore);
+  let matchWinner = null;
+  if (!abandoned) matchWinner = t1SetsWon > t2SetsWon ? 'team1' : 'team2';
 
   return (
-    <div className="mono-card p-5">
+    <FixtureCard label={match.label} chips={getStatusChip(match)} live={match.status === 'in-progress'}>
       <TournamentMatchSyncStatus compact sport={sport} tournament={tournament} match={match} />
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-xs font-mono uppercase tracking-wider" style={{ color: '#aaa' }}>
-          {match.label}
-        </span>
-        <div className="flex items-center gap-2">
-          {match.status === 'completed' && (
-            <span className="mono-badge mono-badge-final">{isAbandoned(match) ? ABANDONED_LABEL : 'Completed'}</span>
-          )}
-          {match.status === 'in-progress' && (
-            <span className="mono-badge mono-badge-live">In Progress</span>
-          )}
-        </div>
+
+      <div className="kit-last-teams">
+        <FixtureTeam
+          name={team1Ready ? getTeamName(match.team1Id) : 'TBD'}
+          score={getTeamScore(engine, hasScore, t1SetsWon, match.score1)}
+          winner={isTeam1Winner}
+          loser={isTeam1Loser}
+          tbd={!team1Ready}
+        />
+        <FixtureTeam
+          name={team2Ready ? getTeamName(match.team2Id) : 'TBD'}
+          score={getTeamScore(engine, hasScore, t2SetsWon, match.score2)}
+          winner={isTeam2Winner}
+          loser={isTeam2Loser}
+          tbd={!team2Ready}
+        />
       </div>
 
-      {/* Teams and scores */}
-      <div className="grid grid-cols-3 gap-6 items-center mb-5">
-        <div className="text-right">
-          <div className="text-base font-medium mb-1" style={{ color: team1Color }}>
-            {team1Ready ? getTeamName(match.team1Id) : 'TBD'}
-          </div>
-          {hasScore && engine === 'sets' && (
-            <div className="text-3xl font-mono font-bold" style={{ color: isTeam1Winner ? '#111' : '#888' }}>
-              {t1SetsWon}
-            </div>
-          )}
-          {hasScore && engine === 'goals' && (
-            <div className="text-3xl font-mono font-bold" style={{ color: isTeam1Winner ? '#111' : '#888' }}>
-              {match.score1}
-            </div>
-          )}
-        </div>
-        <div className="text-center">
-          <div className="text-xs font-medium" style={{ color: '#bbb' }}>vs</div>
-        </div>
-        <div className="text-left">
-          <div className="text-base font-medium mb-1" style={{ color: team2Color }}>
-            {team2Ready ? getTeamName(match.team2Id) : 'TBD'}
-          </div>
-          {hasScore && engine === 'sets' && (
-            <div className="text-3xl font-mono font-bold" style={{ color: isTeam2Winner ? '#111' : '#888' }}>
-              {t2SetsWon}
-            </div>
-          )}
-          {hasScore && engine === 'goals' && (
-            <div className="text-3xl font-mono font-bold" style={{ color: isTeam2Winner ? '#111' : '#888' }}>
-              {match.score2}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Set scores detail */}
       {hasScore && engine === 'sets' && match.sets.length > 0 && (
-        <div className="flex justify-center gap-2 flex-wrap mb-5 py-3" style={{ borderTop: '1px solid #f5f5f5', borderBottom: '1px solid #f5f5f5' }}>
-          {match.sets.map((set, i) => {
-            const setWinner = set.score1 > set.score2 ? 'team1' : 'team2';
-            const matchWinner = isAbandoned(match) ? null : t1SetsWon > t2SetsWon ? 'team1' : 'team2';
-            const isMatchWinnerSet = setWinner === matchWinner;
-            return (
-              <span
-                key={`set-${set.score1}-${set.score2}-${i}`}
-                className="px-3 py-1.5 rounded font-mono"
-                style={{
-                  background: isAbandoned(match) ? 'var(--se-color-surface-warm)' : isMatchWinnerSet ? '#dcfce7' : '#fee2e2',
-                  color: '#111',
-                  fontSize: '0.875rem'
-                }}
-              >
-                <span style={{ fontWeight: !isAbandoned(match) && set.score1 > set.score2 ? '600' : 'normal' }}>{set.score1}</span>
-                <span style={{ color: '#ccc', margin: '0 4px', fontWeight: '300' }}>-</span>
-                <span style={{ fontWeight: !isAbandoned(match) && set.score2 > set.score1 ? '600' : 'normal' }}>{set.score2}</span>
-              </span>
-            );
-          })}
-        </div>
+        <SetChips sets={match.sets} abandoned={abandoned} matchWinner={matchWinner} />
       )}
 
-      {/* Action button */}
       {bothReady && (
-        <button
-          onClick={() => navigate(`/${sport}/tournament/${id}/match/${match.id}/score`)}
-          className={match.status === 'in-progress' ? 'mono-btn-primary w-full' : 'mono-btn w-full'}
-        >
+        <button type="button" onClick={() => navigate(`/${sport}/tournament/${id}/match/${match.id}/score`)} className="se-ctl">
           {getButtonLabel(match.status, hasScore)}
         </button>
       )}
 
       {!bothReady && (
-        <p className="text-xs text-center py-2" style={{ color: '#bbb' }}>
-          Waiting for semi-final results
-        </p>
+        <p className="kit-fx-wait">Waiting for semi-final results</p>
       )}
-    </div>
+    </FixtureCard>
   );
 }
 
