@@ -7,6 +7,7 @@ import {
   clockText, halfStory, liveNow, playerLabel, raidStory,
 } from '../../../utils/kabaddiLiveModel';
 import { HandUnderline, SportBadge } from '../kit/KitParts';
+import SportMark from '../kit/SportMark';
 import KabaddiCourt, { useCourtStage } from './KabaddiCourt';
 import KabaddiProgress from './KabaddiProgress';
 import KabaddiRaids from './KabaddiRaids';
@@ -83,7 +84,7 @@ function RaidRing({ live }) {
         <circle className="kw-ring-track" cx="24" cy="24" r="21" />
         <circle className="kw-ring-arc" cx="24" cy="24" r="21" pathLength="100" strokeDasharray={`${Math.max(0, Math.min(1, fill)) * 100} 100`} />
       </svg>
-      <i className="kw-mark" />
+      <SportMark sportId="kabaddi" className="kw-mark" />
     </span>
   );
 }

@@ -43,14 +43,13 @@ describe('Basketball on the shared goals board', () => {
     const colours = deriveTeamColours('#111111', '#facc15');
     expect(board().style.getPropertyValue('--team-a-core')).toBe(colours.A.core);
     expect(board().style.getPropertyValue('--team-b-core')).toBe(colours.B.core);
-    expect(board().style.getPropertyValue('--sport-mark')).toContain('data:image/svg+xml');
     expect(screen.getByText('40 min match · No draws')).toBeInTheDocument();
     for (const name of ['Hoops', 'Dunkers']) {
       const team = screen.getByRole('group', { name: `Score for ${name}` });
       expect(within(team).getAllByRole('button')).toHaveLength(3);
       expect(team.querySelector('.tgb-sport-mark')).toBeNull();
     }
-    expect(board().querySelector('.tgb-sport .tgb-sport-mark')).toBeInTheDocument();
+    expect(board().querySelector('.tgb-sport .tgb-sport-mark svg')).toBeInTheDocument();
     expect(screen.getByLabelText('Time remaining')).toHaveTextContent('39:48');
     act(() => vi.advanceTimersByTime(1000));
     expect(screen.getByLabelText('Time remaining')).toHaveTextContent('39:47');

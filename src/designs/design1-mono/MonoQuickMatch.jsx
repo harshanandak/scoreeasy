@@ -56,6 +56,7 @@ import KitFinish from './kit/KitFinish';
 import { finishFromQuickResult, formatDuration } from './kit/finishModel';
 import { getSetupStartLabel } from '../../utils/startActions';
 import { KitWash, GoArrow } from './kit/KitParts';
+import SportMark from './kit/SportMark';
 import { KitSegmented, KitStepper, MatchupPreview } from './kit/KitSetupParts';
 import {
   applyFormatChoice,
@@ -1978,7 +1979,7 @@ export default function MonoQuickMatch() {
       <button type="button" className="se-ctl kit-setup-back" onClick={handleSetupBack} aria-label={backLabel}>
         <BackArrow size={20} />
       </button>
-      <span className="kit-setup-badge" aria-hidden="true" />
+      <span className="kit-setup-badge" aria-hidden="true"><SportMark sportId={sport} /></span>
       <div className="kit-setup-title">
         <h1>{title}</h1>
         {subtitle && <p>{subtitle}</p>}
@@ -2483,7 +2484,7 @@ export default function MonoQuickMatch() {
 
             {/* Batting team — hero */}
             <div className="mono-scorer-main-score cricket-hero cricket-aggregate-hero">
-              <span className="cricket-mark" aria-hidden="true" />
+              <SportMark sportId="cricket" className="cricket-mark" />
               <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
                 {currentName} batting
               </p>
@@ -2843,6 +2844,7 @@ export default function MonoQuickMatch() {
             subtitle={`${sportConfig?.name || 'Match'} \u00b7 ${setsRule}`}
             setUnit={setUnit}
             sportColour={sportConfig?.config?.setLabel ? sportIdentity(sport)?.core : undefined}
+            sportId={sport}
             isLive={Boolean(live?.isLive)}
             colourStyle={teamColourStyle}
             halves={boardHalves}

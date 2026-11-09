@@ -71,8 +71,7 @@
 .kw-ring-arc { fill: none; stroke: var(--kw-core); stroke-width: 3.2; stroke-linecap: round; opacity: 0.4; transition: stroke-dasharray 1s linear; }
 .kw-ring.is-raid .kw-ring-arc { opacity: 1; }
 .kw-mark {
-  display: block; width: 24px; height: 19px; background: var(--kw-core);
-  -webkit-mask: var(--sport-mark) center / contain no-repeat; mask: var(--sport-mark) center / contain no-repeat;
+  display: block; width: 24px; height: 24px; color: var(--kw-core);
 }
 
 /* under each card: who comes back first, or the named "off the court" moment */
