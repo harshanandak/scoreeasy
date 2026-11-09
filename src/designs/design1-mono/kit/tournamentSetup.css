@@ -358,8 +358,21 @@
   font-weight: 550;
 }
 
+/* Buttons and the captain mark keep their size; a long name shrinks and wraps
+   so the chip never grows past the roster width and its remove button stays on screen. */
+.kit-pl li {
+  max-width: 100%;
+  min-width: 0;
+}
+
 .kit-pl li > * {
   flex: none;
+}
+
+.kit-pl li > .kit-pl-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .kit-pl-name {
