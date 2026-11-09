@@ -10,9 +10,8 @@ export const PUBLICATION_RESOLUTION_WINDOW_MS = 2 * 60 * 1000;
 // A live request owns resolution; after reload only the owned-session query can.
 export function beginLivePublication(clientMatchId) {
   publications.add(clientMatchId);
-  return (sharedSession = null, { ownerMismatch = false } = {}) => {
+  return (sharedSession = null) => {
     publications.delete(clientMatchId);
-    if (ownerMismatch) return;
     resolvePendingLiveFinish(clientMatchId, sharedSession, { publicationComplete: true });
   };
 }
@@ -49,16 +48,13 @@ export function flushLiveSession(clientMatchId, mutations) {
   const task = Promise.resolve().then(async () => {
     let session = loadSession(clientMatchId);
     if (!session || session.broadcastError || (session.finalizeIntent && session.finalizeIntent.shared !== true)) return null;
-    const ownsSession = () => !session.ownerId || session.ownerId === (mutations.getOwnerId ? mutations.getOwnerId() : mutations.ownerId);
-    if (!ownsSession()) return null;
     const current = () => {
       const latest = loadSession(clientMatchId);
       return Boolean(latest && latest.matchId === session.matchId);
     };
     const send = async (item) => {
       if (!current()) return;
-      if (!ownsSession()) throw Object.assign(new Error('Queued action belongs to another account'), { data: { code: 'owner_mismatch' } });
-      const common = { matchId: session.matchId, ...(session.ownerId ? { expectedOwnerId: session.ownerId } : {}), clientEventId: item.clientEventId, at: item.at, snapshot: item.snapshot };
+      const common = { matchId: session.matchId, clientEventId: item.clientEventId, at: item.at, snapshot: item.snapshot };
       if (item.kind === 'undo') return mutations.undo(common);
       return mutations.scorePoint({ ...common, team: item.team, value: item.value, type: item.type, ...(item.kabaddi ? { kabaddi: item.kabaddi } : {}) });
     };
@@ -72,29 +68,10 @@ export function flushLiveSession(clientMatchId, mutations) {
         saveSession(clientMatchId, updated);
       }
     };
-    if (session.visibilityIntent && !publications.has(clientMatchId)) {
-      if (!mutations.setVisibility || !session.matchId) return null;
-      try {
-        await mutations.setVisibility({ matchId: session.matchId, ...(session.ownerId ? { expectedOwnerId: session.ownerId } : {}), ...session.visibilityIntent });
-        if (!current()) return null;
-        const updated = loadSession(clientMatchId);
-        if (JSON.stringify(updated.visibilityIntent) === JSON.stringify(session.visibilityIntent)) {
-          delete updated.visibilityIntent;
-          updated.isShared = session.visibilityIntent.visibility !== 'private';
-          saveSession(clientMatchId, updated);
-        }
-        session = loadSession(clientMatchId);
-        if (!ownsSession()) return null;
-      } catch (error) {
-        if (permanentSessionError(error)) rejectSession(error);
-        return { error };
-      }
-    }
     if (session.pendingFinish && !publications.has(clientMatchId)) {
       if (!mutations.getOwnedSession) return null;
       try {
-        const restored = await mutations.getOwnedSession(clientMatchId, session.ownerId);
-        if (!ownsSession()) return null;
+        const restored = await mutations.getOwnedSession(clientMatchId);
         const latest = loadSession(clientMatchId);
         if (publications.has(clientMatchId)) return null;
         if (latest?.pendingFinish) {
@@ -109,8 +86,7 @@ export function flushLiveSession(clientMatchId, mutations) {
     }
     if (!session.matchId && session.finalizeIntent && mutations.getOwnedSession) {
       try {
-        const restored = await mutations.getOwnedSession(clientMatchId, session.ownerId);
-        if (!ownsSession()) return null;
+        const restored = await mutations.getOwnedSession(clientMatchId);
         const latest = loadSession(clientMatchId);
         if (!latest?.finalizeIntent || latest.broadcastError) return null;
         if (!latest.matchId && !restored) {
@@ -141,9 +117,9 @@ export function flushLiveSession(clientMatchId, mutations) {
     const latest = current() && loadSession(clientMatchId);
     // Stop changes current visibility, not permission for an already-queued finish.
     const intent = latest?.finalizeIntent?.shared === true && latest.finalizeIntent;
-    if (!intent || !ownsSession()) return result;
+    if (!intent) return result;
     try {
-      const finalized = await mutations.finalize({ matchId: session.matchId, ...(session.ownerId ? { expectedOwnerId: session.ownerId } : {}), ...(intent.resultType ? { resultType: intent.resultType } : {}) });
+      const finalized = await mutations.finalize({ matchId: session.matchId, ...(intent.resultType ? { resultType: intent.resultType } : {}) });
       if (current()) {
         const updated = loadSession(clientMatchId);
         delete updated.finalizeIntent;

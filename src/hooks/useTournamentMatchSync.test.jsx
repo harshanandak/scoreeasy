@@ -23,7 +23,9 @@ afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 it('persists the fixture result before submitting it to the server', async () => {
   save.mockImplementation(async payload => {
-    expect(pendingMatchSaves(auth.user._id)[0]).toMatchObject({ payload, tournamentMatch: { storageKey: 'se_football', tournamentId: 100, matchId: 1 } });
+    const { expectedOwnerId, ...resultPayload } = payload;
+    expect(expectedOwnerId).toBe(auth.user._id);
+    expect(pendingMatchSaves(auth.user._id)[0]).toMatchObject({ payload: resultPayload, tournamentMatch: { storageKey: 'se_football', tournamentId: 100, matchId: 1 } });
     return 'server-id';
   });
   const { result } = renderHook(() => useTournamentMatchSync({ sport: 'football', matchId: '1' }), { wrapper });

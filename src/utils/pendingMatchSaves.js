@@ -198,7 +198,7 @@ export function resumeOwnerMatchSaves(ownerId) {
   }
 }
 
-export function attemptMatchSave(record, save, canSend = () => true, manual = false) {
+export function attemptMatchSave(record, save, canSend = () => true, manual = false, isOwnerActive = canSend) {
   const key = keyFor(record.ownerId, record.payload.clientMatchId);
   if (isMatchSaveConfirmed(record.ownerId, record.payload.clientMatchId, record.completionId) || localSaveConfirmed(record)) return Promise.resolve({ status: 'synced', clientMatchId: record.payload.clientMatchId });
   if (inFlight.has(key)) return inFlight.get(key);
@@ -257,14 +257,17 @@ export function attemptMatchSave(record, save, canSend = () => true, manual = fa
         try { localStorage.removeItem(key); } catch { /* The confirmation suppresses this stale record. */ }
         return { status: 'synced', clientMatchId: record.payload.clientMatchId };
       }
+      const attempts = record.attempts + 1;
+      const nextAttemptAt = Date.now() + Math.min(300000, 5000 * 2 ** Math.min(attempts - 1, 6));
       if (error?.data?.code === 'owner_mismatch') {
-        write({ ...record, state: 'pending', terminal: false, ownerMismatch: true, nextAttemptAt: 0 });
+        const ownerActive = isOwnerActive();
+        write({ ...record, state: 'pending', terminal: false, ownerMismatch: !ownerActive,
+          attempts, nextAttemptAt: ownerActive ? nextAttemptAt : 0 });
         updateLocalMatch(record, 'pending');
         if (pendingWrites.has(key)) await pendingWrites.get(key);
         return { status: 'pending', clientMatchId: record.payload.clientMatchId };
       }
-      const attempts = record.attempts + 1;
-      write({ ...record, state: 'failed', terminal: !isTransportFailure(error), attempts, nextAttemptAt: Date.now() + Math.min(300000, 5000 * 2 ** Math.min(attempts - 1, 6)) });
+      write({ ...record, state: 'failed', terminal: !isTransportFailure(error), attempts, nextAttemptAt });
       updateLocalMatch(record, 'failed');
       if (pendingWrites.has(key)) await pendingWrites.get(key);
       return { status: 'failed', error: "Couldn't save", clientMatchId: record.payload.clientMatchId };

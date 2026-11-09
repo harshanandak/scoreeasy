@@ -19,7 +19,6 @@ import { api } from '../../convex/_generated/api';
 import { enqueue, size } from '../lib/live/outbox';
 import { beginLivePublication, flushLiveSession, PUBLICATION_RESOLUTION_WINDOW_MS, resolvePendingLiveFinish } from '../lib/live/recovery';
 import { loadSession, saveSession, liveClientMatchId } from '../lib/live/liveSession';
-import { useAuth } from './useAuth';
 
 /**
  * @param {object} [options]
@@ -39,13 +38,6 @@ import { useAuth } from './useAuth';
  * }}
  */
 export function useLiveBroadcast({ enabled = true } = {}) {
-  const auth = useAuth();
-  const { isAuthenticated, clerkUser } = auth;
-  const ownerId = isAuthenticated ? clerkUser?.id : null;
-  const accountReady = auth.authMode !== 'cloud' || Boolean(ownerId && auth.user);
-  const activeOwner = useRef(ownerId);
-  activeOwner.current = ownerId;
-  const ownsSession = useCallback(session => !session?.ownerId || session.ownerId === activeOwner.current, []);
   const convex = useConvex();
   const createM = useMutation(api.live.create);
   const scorePointM = useMutation(api.live.scorePoint);
@@ -70,16 +62,15 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   }, []);
 
   const flush = useCallback(async (clientMatchId = clientMatchIdRef.current) => {
-    const result = await flushLiveSession(clientMatchId, { scorePoint: scorePointM, undo: undoM, finalize: finalizeM, setVisibility: setVisibilityM,
-      getOwnerId: () => activeOwner.current,
-      getOwnedSession: (clientMatchId, expectedOwnerId) => convex.query(api.live.getOwnedSession, { clientMatchId, ...(expectedOwnerId ? { expectedOwnerId } : {}) }) });
+    const result = await flushLiveSession(clientMatchId, { scorePoint: scorePointM, undo: undoM, finalize: finalizeM,
+      getOwnedSession: clientMatchId => convex.query(api.live.getOwnedSession, { clientMatchId }) });
     if (clientMatchId === clientMatchIdRef.current) {
       setFailure(current => result?.error
         ? { error: result.error, source: 'drain' }
         : current?.source === 'drain' ? null : current);
     }
     return result;
-  }, [convex, scorePointM, undoM, finalizeM, setVisibilityM]);
+  }, [convex, scorePointM, undoM, finalizeM]);
 
   const persistSeq = useCallback((seq, sharing = {}) => {
     const cmid = clientMatchIdRef.current;
@@ -89,7 +80,6 @@ export function useLiveBroadcast({ enabled = true } = {}) {
   }, []);
 
   const restore = useCallback(async ({ clientMatchId: baseId }) => {
-    if (!accountReady) return null;
     const clientMatchId = liveClientMatchId(baseId);
     const generation = ++generationRef.current;
     clientMatchIdRef.current = clientMatchId;
@@ -99,7 +89,6 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     setIsLive(false);
     setIsShared(false);
     const pending = loadSession(clientMatchId);
-    if (!ownsSession(pending)) return null;
     seqRef.current = pending?.seq ?? 0;
     if (pending?.broadcastError) {
       setError(new Error(pending.broadcastError.message));
@@ -113,9 +102,8 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       setToken(pending.token ?? null);
     }
     try {
-      const expectedOwnerId = pending?.ownerId ?? ownerId;
-      const session = await convex.query(api.live.getOwnedSession, { clientMatchId, ...(expectedOwnerId ? { expectedOwnerId } : {}) });
-      if (generation !== generationRef.current || !ownsSession(loadSession(clientMatchId))) return null;
+      const session = await convex.query(api.live.getOwnedSession, { clientMatchId });
+      if (generation !== generationRef.current) return null;
       const prior = loadSession(clientMatchId);
       clientMatchIdRef.current = clientMatchId;
       matchIdRef.current = session?.matchId ?? (prior?.finalizeIntent ? prior.matchId : null);
@@ -124,18 +112,18 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       setToken(tokenRef.current);
       setIsLive(Boolean(session?.isShared));
       setIsShared(Boolean(session?.isShared));
-      if (session) persistSeq(seqRef.current, { isShared: session.isShared === true, ...(expectedOwnerId ? { ownerId: expectedOwnerId } : {}) });
+      if (session) persistSeq(seqRef.current, { isShared: session.isShared === true });
       if (resolvePendingLiveFinish(clientMatchId, session)) await flush();
       return session;
     } catch (e) {
       if (generation === generationRef.current) setError(e instanceof Error ? e : new Error(String(e)));
       return null;
     }
-  }, [convex, persistSeq, flush, ownsSession, accountReady, ownerId]);
+  }, [convex, persistSeq, flush]);
 
   const goLive = useCallback(
     async (opts) => {
-      if (!enabled || !accountReady || !opts?.clientMatchId || publishingRef.current) return null;
+      if (!enabled || !opts?.clientMatchId || publishingRef.current) return null;
       const clientMatchId = liveClientMatchId(opts.clientMatchId);
       const generation = ++generationRef.current;
       publishingRef.current = true;
@@ -144,10 +132,6 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       // Re-attach to a prior session (reload mid-match) so the seq continues and
       // we never fork a second live match.
       const prior = loadSession(clientMatchId);
-      if (!ownsSession(prior)) {
-        publishingRef.current = false;
-        return null;
-      }
       if (prior?.broadcastError) {
         setError(new Error(prior.broadcastError.message));
         publishingRef.current = false;
@@ -166,15 +150,8 @@ export function useLiveBroadcast({ enabled = true } = {}) {
 
       const completePublication = beginLivePublication(clientMatchId);
       let publishedSession = null;
-      let ownerMismatch = false;
-      let visibilityIntent;
-      // Capture the Clerk subject before the transport can outlive this sign-in.
-      const requestOwner = prior?.ownerId ?? ownerId;
-      const binding = requestOwner ? { expectedOwnerId: requestOwner } : {};
-      if (requestOwner) saveSession(clientMatchId, { ...prior, ownerId: requestOwner });
       try {
         const res = await createM({
-          ...binding,
           clientMatchId,
           sport: opts.sport,
           scorecardKind: opts.scorecardKind,
@@ -184,7 +161,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
           visibility: 'private',
           isYouthMatch: opts.isYouthMatch ?? false,
         });
-        if (generation !== generationRef.current || !ownsSession(loadSession(clientMatchId))) return null;
+        if (generation !== generationRef.current) return null;
         matchIdRef.current = res.matchId;
         tokenRef.current = res.token;
         setToken(res.token);
@@ -195,38 +172,35 @@ export function useLiveBroadcast({ enabled = true } = {}) {
         const snapshot = opts.getSnapshot ? opts.getSnapshot() : opts.snapshot;
         if (!snapshot) throw new Error('Sharing requires the current score snapshot');
         if (generation !== generationRef.current) return null;
-        visibilityIntent = { visibility: opts.visibility ?? 'public', snapshot, ...(snapshot.kabaddi ? { kabaddiHistory: opts.getKabaddiHistory ? opts.getKabaddiHistory() : opts.kabaddiHistory ?? [] } : {}) };
-        await setVisibilityM({ ...binding, matchId: res.matchId, ...visibilityIntent });
+        await setVisibilityM({ matchId: res.matchId, visibility: opts.visibility ?? 'public', snapshot, ...(snapshot.kabaddi ? { kabaddiHistory: opts.getKabaddiHistory ? opts.getKabaddiHistory() : opts.kabaddiHistory ?? [] } : {}) });
         publishedSession = { matchId: res.matchId, token: res.token, isShared: opts.visibility !== 'private' };
         const originalSession = loadSession(clientMatchId);
         if (originalSession) saveSession(clientMatchId, { ...originalSession, ...publishedSession });
-        if (generation !== generationRef.current || !ownsSession(loadSession(clientMatchId))) return null;
+        if (generation !== generationRef.current) return null;
         setIsLive(opts.visibility !== 'private');
         setIsShared(opts.visibility !== 'private');
         setError(null);
         return res;
       } catch (e) {
-        ownerMismatch = e?.data?.code === 'owner_mismatch';
-        if (ownerMismatch && visibilityIntent) saveSession(clientMatchId, { ...loadSession(clientMatchId), visibilityIntent });
         // Additive: a failed go-live must never break local scoring.
         setError(e instanceof Error ? e : new Error(String(e)));
         return null;
       } finally {
         publishingRef.current = false;
         try {
-          completePublication(publishedSession, { ownerMismatch: ownerMismatch || !ownsSession(loadSession(clientMatchId)) });
+          completePublication(publishedSession);
           await flush(clientMatchId);
         } catch (e) {
           if (clientMatchId === clientMatchIdRef.current) setError(e instanceof Error ? e : new Error(String(e)));
         }
       }
     },
-    [enabled, accountReady, createM, setVisibilityM, flush, persistSeq, ownerId, ownsSession],
+    [enabled, createM, setVisibilityM, flush, persistSeq],
   );
 
   const point = useCallback(
     ({ team, value = 1, at, snapshot, type = 'point', kabaddi }) => {
-      if (!enabled || !clientMatchIdRef.current || !ownsSession(loadSession(clientMatchIdRef.current)) || loadSession(clientMatchIdRef.current)?.broadcastError) return Promise.resolve(null);
+      if (!enabled || !clientMatchIdRef.current || loadSession(clientMatchIdRef.current)?.broadcastError) return Promise.resolve(null);
       seqRef.current += 1;
       const clientMatchId = clientMatchIdRef.current;
       const clientEventId = type === 'kabaddi_raid' && kabaddi?.kind === 'raid' ? `kabaddi-raid:${kabaddi.raid.id}` : `${clientMatchId}:${seqRef.current}`;
@@ -239,12 +213,12 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       persistSeq(seqRef.current);
       return publishingRef.current ? Promise.resolve(null) : flush();
     },
-    [enabled, flush, persistSeq, ownsSession],
+    [enabled, flush, persistSeq],
   );
 
   const undo = useCallback(
     ({ at, snapshot }) => {
-      if (!enabled || !clientMatchIdRef.current || !ownsSession(loadSession(clientMatchIdRef.current)) || loadSession(clientMatchIdRef.current)?.broadcastError) return Promise.resolve(null);
+      if (!enabled || !clientMatchIdRef.current || loadSession(clientMatchIdRef.current)?.broadcastError) return Promise.resolve(null);
       seqRef.current += 1;
       const clientMatchId = clientMatchIdRef.current;
       const clientEventId = `${clientMatchId}:${seqRef.current}`;
@@ -252,13 +226,12 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       persistSeq(seqRef.current);
       return publishingRef.current ? Promise.resolve(null) : flush();
     },
-    [enabled, flush, persistSeq, ownsSession],
+    [enabled, flush, persistSeq],
   );
 
   const finalize = useCallback(async ({ resultType, snapshot } = {}) => {
     const clientMatchId = clientMatchIdRef.current;
     const prior = loadSession(clientMatchId);
-    if (!ownsSession(prior)) return null;
     if (clientMatchId && publishingRef.current && !prior?.broadcastError) {
       if (snapshot && !prior?.pendingFinish && !prior?.finalizeIntent) {
         const at = Date.now();
@@ -290,7 +263,7 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     if (!matchIdRef.current) return null;
     const result = await flush();
     return result?.finalized ?? null;
-  }, [flush, ownsSession]);
+  }, [flush]);
 
   const setVisibility = useCallback(
     async (visibility, opts) => {
@@ -300,31 +273,23 @@ export function useLiveBroadcast({ enabled = true } = {}) {
       // match live-but-private while the UI says "LIVE · public". The matchId
       // guard already prevents acting before a match is created.
       const matchId = matchIdRef.current;
-      const clientMatchId = clientMatchIdRef.current;
-      const session = loadSession(clientMatchId);
-      if (!matchId || !ownsSession(session)) return null;
+      if (!matchId) return null;
       ++generationRef.current;
-      let visibilityIntent;
       try {
         const snapshot = opts?.getSnapshot ? opts.getSnapshot() : opts?.snapshot;
-        visibilityIntent = { visibility, ...(snapshot ? { snapshot } : {}), ...(visibility !== 'private' && snapshot?.kabaddi ? { kabaddiHistory: opts?.getKabaddiHistory ? opts.getKabaddiHistory() : opts?.kabaddiHistory ?? [] } : {}) };
-        const result = await setVisibilityM({ matchId, ...(session?.ownerId ? { expectedOwnerId: session.ownerId } : {}), ...visibilityIntent });
-        const latest = loadSession(clientMatchId);
-        if (latest?.matchId === matchId) saveSession(clientMatchId, { ...latest, isShared: visibility !== 'private' });
-        if (clientMatchIdRef.current !== clientMatchId || !ownsSession(session)) return result;
+        const result = await setVisibilityM({ matchId, visibility, ...(snapshot ? { snapshot } : {}), ...(visibility !== 'private' && snapshot?.kabaddi ? { kabaddiHistory: opts?.getKabaddiHistory ? opts.getKabaddiHistory() : opts?.kabaddiHistory ?? [] } : {}) });
         setIsShared(visibility !== 'private');
         setIsLive(visibility !== 'private');
+        const clientMatchId = clientMatchIdRef.current;
+        saveSession(clientMatchId, { ...loadSession(clientMatchId), isShared: visibility !== 'private' });
         setError(null);
         return result;
       } catch (e) {
-        if (e?.data?.code === 'owner_mismatch' && loadSession(clientMatchId)?.matchId === matchId) {
-          saveSession(clientMatchId, { ...loadSession(clientMatchId), visibilityIntent });
-        }
         setError(e instanceof Error ? e : new Error(String(e)));
         return null;
       }
     },
-    [setVisibilityM, ownsSession],
+    [setVisibilityM],
   );
 
   // Drop the current live session so the NEXT goLive starts clean. Needed when one
@@ -343,8 +308,5 @@ export function useLiveBroadcast({ enabled = true } = {}) {
     setError(null);
   }, []);
 
-  const currentSession = loadSession(clientMatchIdRef.current);
-  const visible = ownsSession(currentSession);
-  const shared = currentSession?.ownerId ? currentSession.isShared === true : isShared;
-  return { isLive: visible && (currentSession?.ownerId ? shared : isLive), isShared: visible && shared, token: visible ? token : null, error: visible ? error : null, restore, goLive, point, undo, finalize, setVisibility, reset };
+  return { isLive, isShared, token, error, restore, goLive, point, undo, finalize, setVisibility, reset };
 }
