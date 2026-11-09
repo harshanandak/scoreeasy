@@ -10,11 +10,12 @@ import { GoalsGameStep, GoalsRulesStep } from './GoalsSetup';
 let latest;
 function Host({ sport = 'football' }) {
   const [format, setFormat] = useState(() => periodPreset(sport));
+  const [source, setSource] = useState(null);
   latest = format;
   return (
     <>
-      <GoalsGameStep sport={sport} format={format} onChange={setFormat} />
-      <GoalsRulesStep sport={sport} sportConfig={getSportById(sport)} format={format} onChange={setFormat} />
+      <GoalsGameStep onSourceChange={setSource} sport={sport} format={format} onChange={setFormat} />
+      <GoalsRulesStep source={source} onSourceChange={setSource} sport={sport} sportConfig={getSportById(sport)} format={format} onChange={setFormat} />
     </>
   );
 }
@@ -57,8 +58,8 @@ describe('GoalsRulesStep', () => {
     render(<Host />);
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Minutes per period' }), { target: { value: '30' } });
     expect(latest.periodPreset).toBe('custom');
-    expect(latest.periods.durations).toEqual([1800, 1800]);
-    expect(screen.getByRole('heading', { level: 2, name: /^Custom school\/event · 2 × 30 min/ })).toBeInTheDocument();
+    expect(latest).toEqual(periodPreset('football', 'custom', 2, 30));
+    expect(screen.getByRole('heading', { level: 2, name: /^Customised.*from IFAB 2026\/27 · 2 × 30 min/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reset to IFAB 2026/27' }));
     expect(latest).toEqual(periodPreset('football', 'official'));
   });
@@ -68,7 +69,8 @@ describe('GoalsRulesStep', () => {
     expect(screen.queryByRole('switch')).toBeNull();
     openMore();
     fireEvent.click(screen.getByRole('switch', { name: 'Two 15-minute extra-time halves if tied' }));
-    expect(latest.periods.extraDurations).toEqual([900, 900]);
+    expect(latest).toEqual({ ...periodPreset('football', 'custom'), periods: { ...periodPreset('football', 'custom').periods, extraDurations: [900, 900] } });
+    expect(screen.getByRole('heading', { name: /^Customised/ })).toBeInTheDocument();
     expect(screen.getByText(/Scorer controls every period end/)).toBeInTheDocument();
   });
 
@@ -89,7 +91,7 @@ describe('GoalsRulesStep', () => {
     expect(latest.mode).toBe('points');
     fireEvent.click(screen.getByRole('button', { name: '5 goals' }));
     expect(latest.target).toBe(5);
-    expect(screen.getByRole('heading', { level: 2, name: /^Quick casual · First to 5 goals wins/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /^Customised.*from Quick casual.*First to 5 goals wins/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Timed' }));
     expect(latest.mode).toBe('timed');
     expect(screen.getByRole('group', { name: 'Match length' })).toBeInTheDocument();
