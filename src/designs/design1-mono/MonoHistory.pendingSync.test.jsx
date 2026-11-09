@@ -7,7 +7,7 @@ import MonoHistory from './MonoHistory';
 import MatchSyncStatus from './components/MatchSyncStatus';
 
 const { save } = vi.hoisted(() => ({ save: vi.fn() }));
-vi.mock('convex/react', () => ({ useConvex: () => ({}), useMutation: () => save, useQuery: () => [] }));
+vi.mock('convex/react', () => ({ useConvex: () => ({}), useMutation: () => save, useQuery: () => [], usePaginatedQuery: () => ({ results: [], status: "Exhausted", loadMore: () => {} }) }));
 vi.mock('../../mobile/share', () => ({ shareText: vi.fn() }));
 const auth = { isAuthenticated: true, user: { _id: 'owner' } };
 const match = { id: 'm1', sport: 'football', team1: 'North', team2: 'South', score1: 2, score2: 1, winner: 'North', status: 'completed', completedAt: '2026-11-01T12:00:00Z' };

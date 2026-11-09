@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { preloadAppRoutes } from '../../test/preloadAppRoutes';
+import { CHUNK_RELOAD_KEY } from '../../utils/chunkReload';
 import Design1Mono from './index';
 
 // This file renders the real Design1Mono app, which code-splits its routes via
@@ -79,6 +80,16 @@ describe('app route recovery', () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+  });
+
+  it('clears a recorded chunk-reload attempt once the app shell and its route have rendered', async () => {
+    globalThis.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+
+    renderApp('/play');
+
+    await waitFor(() => {
+      expect(globalThis.sessionStorage.getItem(CHUNK_RELOAD_KEY)).toBeNull();
+    });
   });
 
   it('shows a useful recovery screen for invalid sport quick routes', async () => {

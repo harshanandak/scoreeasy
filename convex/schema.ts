@@ -1,3 +1,4 @@
+import { matchFields } from './lib/matchFields';
 import { kabaddiSnapshotValidator, kabaddiUpdateValidator } from './lib/kabaddiValidators';
 import { periodClockValidator } from "./lib/periodClock";
 import { defineSchema, defineTable } from "convex/server";
@@ -24,29 +25,9 @@ export default defineSchema({
     .index("by_username", ["username"])
     .searchIndex("search_username", { searchField: "username" }),
 
-  matches: defineTable({
-    sport: v.string(),
-    team1: v.string(),
-    team2: v.string(),
-    score1: v.number(),
-    score2: v.number(),
-    detail: v.optional(v.any()),
-    winner: v.optional(v.string()),
-    resultType: v.optional(v.union(v.literal("decided"), v.literal("abandoned"))),
-    format: v.optional(v.any()),
-    operatedBy: v.id("users"),
-    date: v.number(),
-    duration: v.optional(v.number()),
-    team1Id: v.optional(v.id("teams")),
-    team2Id: v.optional(v.id("teams")),
-    matchRole: v.optional(v.string()),
-    clientMatchId: v.optional(v.string()),
-    token: v.optional(v.string()),
-    eventBlobId: v.optional(v.id("_storage")),
-    eventCount: v.optional(v.number()),
-    finalizedReason: v.optional(v.string()),
-  })
+  matches: defineTable(matchFields)
     .index("by_operator", ["operatedBy"])
+    .index("by_operator_date", ["operatedBy", "date"])
     .index("by_operator_client_match", ["operatedBy", "clientMatchId"])
     .index("by_date", ["date"])
     .index("by_token", ["token"]),
