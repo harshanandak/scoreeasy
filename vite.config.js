@@ -122,6 +122,8 @@ export default defineConfig({
         clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
         navigateFallback: '/index.html',
+        // Crawler files are real static files; never answer them with the app shell.
+        navigateFallbackDenylist: [/^\/(robots\.txt|sitemap\.xml|llms\.txt)$/],
         runtimeCaching: [
           {
             urlPattern: /https:\/\/.*\.convex\.cloud\/.*/i,

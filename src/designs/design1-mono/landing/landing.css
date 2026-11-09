@@ -1,6 +1,8 @@
 /* Guest landing (/marketing), Kit. Everything here composes Kit parts (kit.css, history.css chips);
    only layout and the few landing-only rules live in this file. Colour comes from --se-color-*
-   tokens and the engine vars, so a dark theme is a token swap. */
+   tokens and the engine vars (--sport-*, --team-a-*, --team-b-*), so a dark theme is a token swap.
+   Hierarchy, top to bottom: the scorecard leads the fold, then a compact feature list (01), the numbered
+   steps (02) and the FAQ (03). */
 
 .kit-landing {
   padding-bottom: 40px;
@@ -51,131 +53,322 @@
 }
 
 .kit-landing-head {
-  margin: 40px 2px 14px;
+  margin: 48px 2px 16px;
+}
+
+/* A short bar in the picked sport's colour leads every section eyebrow. */
+.kit-landing-head .kit-landing-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 22px;
+  height: 4px;
+  margin-right: 8px;
+  border-radius: 2px;
+  background: var(--sport-core, var(--se-color-ink));
+  vertical-align: middle;
 }
 
 .kit-landing-head h2 {
-  margin: 8px 0 0;
-  font: 800 clamp(1.75rem, 8vw, 2.3rem)/1 var(--se-font-display);
-  letter-spacing: -0.02em;
+  margin: 10px 0 0;
+  font: 800 clamp(1.9rem, 9vw, 2.5rem)/0.98 var(--se-font-display);
+  letter-spacing: -0.025em;
   text-transform: uppercase;
   overflow-wrap: anywhere;
 }
 
-/* ---- 01 stat cards and notes ---- */
-.kit-landing-stats,
-.kit-landing-features {
+/* ---- the sport picker: a 3 x 3 grid of real sport tiles, nothing scrolls ---- */
+.kit-landing-picker {
   display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 14px;
 }
 
-.kit-landing-stats li {
+.kit-pick {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 92px;
+  padding: 10px 6px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+  color: var(--se-color-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.kit-pick:active {
+  transform: scale(0.97);
+}
+
+.kit-pick-name {
+  font: 750 0.84rem/1.1 var(--se-font-sans);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Selected is an ink fill with a ring round the badge: Kit's chip treatment, so it never rests on
+   colour alone and reads in sunlight. */
+.kit-pick.is-selected {
+  background: var(--se-color-ink);
+  box-shadow: none;
+  color: var(--se-color-on-ink);
+}
+
+.kit-pick.is-selected .kit-pick-name {
+  font-weight: 850;
+}
+
+.kit-pick.is-selected .kit-badge {
+  box-shadow: 0 0 0 2px var(--se-color-on-ink);
+}
+
+/* ---- the example scorecard: the "split board" (ported from the landing scorecard board, option C,
+   with the old card's LIVE dot, sport tile and hard shadow). Each team owns a half in its own colour,
+   a VS badge sits on the seam, one context line closes the card. The colour engine gates --team-*-on on
+   every stop, so the numerals clear contrast whatever colours were picked. ---- */
+.kit-score {
+  border: 2px solid var(--se-color-ink);
+  background: var(--se-color-surface);
+  box-shadow: 4px 4px 0 var(--sport-core, var(--se-color-ink));
+}
+
+.kit-score-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  font-family: var(--se-font-mono);
+}
+
+.kit-score-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--se-color-live);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.kit-score-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--se-color-live);
+  animation: kit-score-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes kit-score-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-score-dot {
+    animation: none;
+  }
+}
+
+.kit-score-sport {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.kit-score-glyph {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  background: var(--sport-core, var(--se-color-surface-warm));
+  color: var(--sport-on, var(--se-color-ink));
+}
+
+.kit-score-fields {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 2px solid var(--se-color-ink);
+}
+
+.kit-score-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 6px;
+  min-width: 0;
+  padding: 16px 8px 34px;
+  background: linear-gradient(168deg, var(--team-a-hi), var(--team-a-core) 55%, var(--team-a-lo));
+  color: var(--team-a-on);
 }
 
-.kit-landing-stats b {
-  font: 800 2.4rem/1 var(--se-font-num);
+.kit-score-field-b {
+  border-left: 2px solid var(--se-color-ink);
+  background: linear-gradient(168deg, var(--team-b-hi), var(--team-b-core) 55%, var(--team-b-lo));
+  color: var(--team-b-on);
+}
+
+.kit-score-name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
+  font: 800 0.75rem/1 var(--se-font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.kit-score-num {
+  font-family: var(--se-font-num);
+  font-size: 6.4rem;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-}
-
-.kit-landing-stats p,
-.kit-landing-features p {
-  margin: 0;
-  color: var(--se-color-ink-soft);
-  font-size: 0.88rem;
-  font-weight: 500;
-  line-height: 1.45;
-}
-
-.kit-landing-notes {
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.kit-landing-notes .kit-row-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px 0;
-}
-
-/* ---- 02 feature cards ---- */
-.kit-landing-features li {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.kit-landing-features h3 {
-  margin: 0;
-  font: 800 1.1rem/1.15 var(--se-font-display);
   letter-spacing: -0.01em;
+  line-height: 0.95;
+  white-space: nowrap;
 }
 
-/* ---- sport chips: one scrolling row, thumb-sized ---- */
-.kit-landing-chips {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  margin: 0 -16px 12px;
-  padding: 2px 16px 6px;
-  scrollbar-width: none;
+.kit-score.has-suffix .kit-score-num {
+  font-size: 4.3rem;
 }
 
-.kit-landing-chips::-webkit-scrollbar {
-  display: none;
+.kit-score-num small {
+  margin-left: 1px;
+  font-size: 0.5em;
+  font-weight: 800;
+  opacity: 0.82;
 }
 
-/* ---- the example card: the Kit last-match card, a little larger ---- */
-.kit-landing-card {
-  gap: 10px;
-  padding: 16px;
+.kit-score-vs {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--se-color-ink);
+  box-shadow: 0 0 0 3px var(--se-color-surface);
+  color: var(--se-color-on-ink);
+  font: 800 0.8rem/1 var(--se-font-mono);
+  letter-spacing: 0.04em;
+  transform: translate(-50%, 50%);
 }
 
-.kit-landing-card .kit-last-team {
-  min-height: 52px;
-}
-
-.kit-landing-card .kit-last-bar {
-  height: 38px;
-}
-
-.kit-landing-card .kit-last-score {
-  font-size: 2.5rem;
-}
-
-.kit-landing-meta {
-  display: block;
-  margin-top: 2px;
-  color: var(--se-color-ink-soft);
-  font-size: 0.78rem;
-  font-weight: 600;
+.kit-score-context {
+  margin: 0;
+  padding: 32px 14px 14px;
+  color: var(--se-color-ink);
+  font: 800 0.95rem/1.3 var(--se-font-display);
   font-variant-numeric: tabular-nums;
+  text-align: center;
+  text-wrap: balance;
+}
+
+@media (max-width: 420px) {
+  .kit-score-num {
+    font-size: 5.2rem;
+  }
+
+  .kit-score.has-suffix .kit-score-num {
+    font-size: 3.5rem;
+  }
 }
 
 .kit-landing-note {
-  margin: 10px 2px 0;
+  margin: 12px 2px 0;
   color: var(--se-color-ink-soft);
   font-size: 0.85rem;
   font-weight: 500;
   line-height: 1.4;
 }
 
-/* ---- steps ---- */
+/* ---- 01: a plain, compact list; small icon badges, one short line each ---- */
+.kit-landing-featlist .kit-row,
+.kit-landing-faq .kit-row {
+  align-items: flex-start;
+  min-height: 0;
+}
+
+.kit-landing-featlist .kit-row {
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.kit-landing-featlist .kit-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+}
+
+.kit-landing-featlist .kit-badge svg {
+  width: 20px;
+  height: 20px;
+}
+
+.kit-landing-featlist h3,
+.kit-landing-faq h3 {
+  margin: 0;
+  font: 800 1.02rem/1.25 var(--se-font-display);
+  letter-spacing: -0.01em;
+}
+
+.kit-landing-featlist .kit-row-sub,
+.kit-landing-faq .kit-row-sub {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* ---- 03: FAQ answers are plain visible text, one row per question ---- */
+.kit-landing-faq .kit-row {
+  padding: 16px 14px;
+}
+
+/* ---- 02: steps lead with solid ink numerals ---- */
 .kit-landing-steps .kit-row {
-  min-height: 72px;
+  min-height: 84px;
+  gap: 14px;
+}
+
+.kit-landing-steps .kit-step-num {
+  width: 46px;
+  height: 46px;
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  font-size: 1.3rem;
+}
+
+.kit-landing-steps .kit-row-title {
+  font: 800 1.15rem/1.15 var(--se-font-display);
+  letter-spacing: -0.01em;
 }
 
 /* ---- closing card ---- */
 .kit-landing-ready {
-  margin-top: 26px;
+  margin-top: 32px;
 }
 
 .kit-landing-ready .kit-hero-intro p {
@@ -223,7 +416,7 @@
   text-decoration: underline;
 }
 
-/* ---- desktop: hero left, example right, wide tiles, steps in a row ---- */
+/* ---- desktop: hero left, example right, steps in a row, list and FAQ in a readable column ---- */
 @media (min-width: 900px) {
   .kit-landing {
     max-width: 1080px;
@@ -250,7 +443,7 @@
   }
 
   .kit-landing-hero .kit-sub {
-    max-width: 30ch;
+    max-width: 40ch;
     font-size: 1.12rem;
   }
 
@@ -262,39 +455,17 @@
     margin-top: 0;
   }
 
-  .kit-landing-chips {
-    flex-wrap: wrap;
-    overflow: visible;
-    margin: 0 0 14px;
-    padding: 2px 0;
-  }
-
-  .kit-landing-tiles {
-    gap: 14px;
-  }
-
   .kit-landing-head {
-    margin-top: 56px;
+    margin-top: 72px;
   }
 
   .kit-landing-head h2 {
-    font-size: 2.8rem;
+    font-size: 3rem;
   }
 
-  .kit-landing-stats,
-  .kit-landing-features {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .kit-landing-notes {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .kit-landing-notes .kit-row + .kit-row {
-    border-top: 0;
-    border-left: 1px solid var(--se-color-line-soft);
+  .kit-landing-featlist,
+  .kit-landing-faq {
+    max-width: 760px;
   }
 
   .kit-landing-steps {
