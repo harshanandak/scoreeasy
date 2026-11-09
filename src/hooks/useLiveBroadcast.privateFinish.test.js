@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { useLiveBroadcast } from './useLiveBroadcast';
+import { usePendingLiveFinalizations } from './usePendingLiveFinalizations';
 import { loadSession, saveSession } from '../lib/live/liveSession';
 import { flushLiveSession } from '../lib/live/recovery';
 import { load } from '../lib/live/outbox';
@@ -11,6 +12,8 @@ vi.mock('../../convex/_generated/api', () => ({ api: { live: {
   create: 'create', scorePoint: 'scorePoint', undo: 'undo', finalize: 'finalize',
   setVisibility: 'setVisibility', getOwnedSession: 'getOwnedSession',
 } } }));
+vi.mock('./useAuth', () => ({ useAuth: () => ({ isAuthenticated: true, user: { _id: 'owner' } }) }));
+vi.mock('../mobile/lifecycle', () => ({ addAppStateChangeListener: async () => () => {} }));
 const clientMatchId = 'private-finish';
 const snapshot = { pointsA: 5, pointsB: 3, setsA: 0, setsB: 0, setScores: [], currentUnit: 1 };
 beforeEach(() => { localStorage.clear(); vi.resetAllMocks(); });
@@ -33,9 +36,16 @@ it('persists explicit private evidence after create succeeds and publication fai
   hook.unmount();
 });
 
-it.each([false, undefined])('stored recovery requires positive sharing evidence before finalizing (isShared: %s)', async isShared => {
+it.each([false, undefined])('root recovery requires positive sharing evidence before finalizing (isShared: %s)', async isShared => {
   saveSession(clientMatchId, { matchId: 'private-server', seq: 1, ...(isShared === undefined ? {} : { isShared }),
     finalizeIntent: { resultType: 'abandoned' } });
-  await flushLiveSession(clientMatchId, h);
+  const root = renderHook(() => usePendingLiveFinalizations());
+  await act(async () => { await flushLiveSession(clientMatchId, h); });
+  await act(async () => {
+    globalThis.dispatchEvent(new Event('online'));
+    globalThis.dispatchEvent(new Event('focus'));
+    await flushLiveSession(clientMatchId, h);
+  });
   Object.values(h).forEach(mock => expect(mock).not.toHaveBeenCalled());
+  root.unmount();
 });

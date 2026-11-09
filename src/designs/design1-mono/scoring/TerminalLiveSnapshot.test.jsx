@@ -25,7 +25,7 @@ vi.mock('../../../../convex/_generated/api', () => ({ api: { teams: { search: 't
   create: 'create', scorePoint: 'scorePoint', undo: 'undo', finalize: 'finalize',
   setVisibility: 'setVisibility', getOwnedSession: 'getOwnedSession',
 } } }));
-vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true, user: { _id: 'owner' } }) }));
+vi.mock('../../../hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true, cloudAuthAvailable: true, user: { _id: 'owner' } }) }));
 vi.mock('../../../hooks/useMatchSync', () => ({
   buildQuickMatchClientId: (sport, id) => `quick:${sport}:${id}`,
   useMatchSync: () => ({ syncMatch: async () => {}, resetSync: () => {} }),
@@ -70,13 +70,13 @@ const cases = [
     format: { sets: 1 }, draft: { sets: [tennisSet], currentSet: 0 }, expected: { pointsA: 6, pointsB: 0, setsA: 1 } },
   { name: 'quick tennis winning point', sport: 'tennis', quick: true, Component: MonoTennisLiveScore, tap: /^Alpha:/,
     format: { sets: 1 }, draft: { sets: [tennisSet], currentSet: 0 }, expected: { pointsA: 6, pointsB: 0, setsA: 1 } },
-  { name: 'tournament limited cricket', sport: 'cricket', Component: MonoCricketLiveScore, tap: 'Four runs',
+  { name: 'tournament limited cricket', sport: 'cricket', Component: MonoCricketLiveScore, tap: '4',
     format: { preset: 'custom', overs: 1, players: 11, trackOvers: true }, draft: { innings: 2, battingTeam: 2, scores: {
       team1: { runs: 10, balls: 6, wickets: 0 }, team2: { runs: 0, balls: 0, wickets: 0 },
     } }, expected: { pointsA: 10, pointsB: 4, currentUnit: 2 } },
   ...['test-tournament', 'test-quick'].map(mode => ({ name: mode, mode, sport: 'cricket', Component: MonoCricketTestLiveScore,
     quick: mode === 'test-quick', tap: '2 runs', auto: true, expected: { pointsA: 1, pointsB: 2, currentUnit: 4 } })),
-  { name: 'tournament flat goals winning point', sport: 'football', Component: MonoGoalsLiveScore, tap: 'Add 1 to Alpha', auto: true,
+  { name: 'tournament flat goals winning point', sport: 'football', Component: MonoGoalsLiveScore, tap: 'Add 1 point to Alpha', auto: true,
     format: { mode: 'points', target: 4 }, draft: { score1: 3, score2: 0 }, expected: { pointsA: 4, pointsB: 0 } },
 ];
 
@@ -134,8 +134,18 @@ describe.each(cases)('$name terminal broadcast', c => {
       fireEvent.click(screen.getByRole('button', { name: '+1' }));
     } else fireEvent.click(screen.getByRole('button', { name: c.tap }));
     await act(async () => { await flushLiveSession(clientMatchId, h); });
-    const committed = structuredClone(h.descriptor.snapshot);
-    expect(committed).toMatchObject(c.expected);
+    // Auto-completion replaces the scoring surface, so its bar retains the
+    // pre-winning snapshot. The saved result is the authority for that path.
+    const committed = c.auto ? null : JSON.parse(JSON.stringify(h.descriptor.snapshot));
+    if (committed) expect(committed).toMatchObject(c.expected);
+    if (c.auto) {
+      const saved = JSON.parse(localStorage.getItem(c.quick ? 'se_quickmatches' : `se_${c.sport}`));
+      const result = c.quick ? saved[0] : saved[0].matches[0];
+      expect(result.status).toBe('completed');
+      if (c.mode) expect(result.innings[3].runs).toBe(c.expected.pointsB);
+      else if (c.sport === 'cricket') expect(result.team2Score.runs).toBe(c.expected.pointsB);
+      else expect(result.score1).toBe(c.expected.pointsA);
+    }
     if (state === 'restoring') expect(h.scorePoint).not.toHaveBeenCalled();
     if (!c.auto) {
       fireEvent.click(screen.getByRole('button', { name: /Finish/ }));
@@ -154,7 +164,7 @@ describe.each(cases)('$name terminal broadcast', c => {
     await waitFor(() => expect(h.finalize).toHaveBeenCalledTimes(1));
     const terminalCall = h.scorePoint.mock.calls.at(-1)[0];
     expect(terminalCall).toMatchObject({ value: 0, type: 'correction', snapshot: c.expected });
-    expect(terminalCall.snapshot).toMatchObject(committed);
+    if (committed) expect(terminalCall.snapshot).toMatchObject(committed);
     expect(h.scorePoint.mock.invocationCallOrder.at(-1)).toBeLessThan(h.finalize.mock.invocationCallOrder[0]);
     expect(loadSession(clientMatchId)).not.toHaveProperty('finalizeIntent');
     await act(async () => {

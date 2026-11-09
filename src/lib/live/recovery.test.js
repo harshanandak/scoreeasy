@@ -7,7 +7,7 @@ beforeEach(() => localStorage.clear());
 const mutations = () => ({ scorePoint: vi.fn().mockResolvedValue({}), undo: vi.fn().mockResolvedValue({}), finalize: vi.fn().mockResolvedValue({}) });
 function seed(id) {
   enqueue({ kind: 'point', team: 'A', value: 1, at: 1, clientMatchId: id, clientEventId: `${id}:1` });
-  saveSession(id, { matchId: `live-${id}`, seq: 1, finalizeIntent: { resultType: 'abandoned' } });
+  saveSession(id, { matchId: `live-${id}`, seq: 1, isShared: true, finalizeIntent: { resultType: 'abandoned' } });
 }
 
 it('recovers each session under its stored live id without consuming another session\'s failed tail', async () => {
