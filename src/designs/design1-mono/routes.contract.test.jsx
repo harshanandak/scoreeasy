@@ -8,6 +8,7 @@ import Design1Mono from './index';
 import { getGoalsSports } from '../../models/sportRegistry';
 import { cricketFinishSeed } from '../../test/cricketFinishFixtures';
 import { loadInProgressMatches } from '../../utils/appEntry';
+import { teamNameInput } from '../../test/teamColour';
 
 // Route contracts for the routing audit (docs/plans/2026-10-21-routing-audit.md).
 //
@@ -160,8 +161,8 @@ describe('board dock visibility', () => {
     let view = renderApp(['/history', path]);
     await settleRoute();
     expectBoardDock(false);
-    fireEvent.change(screen.getByLabelText('Team A name'), { target: { value: 'Red' } });
-    fireEvent.change(screen.getByLabelText('Team B name'), { target: { value: 'Blue' } });
+    fireEvent.change(teamNameInput('A'), { target: { value: 'Red' } });
+    fireEvent.change(teamNameInput('B'), { target: { value: 'Blue' } });
     fireEvent.click(screen.getByRole('button', { name: /^Start/ }));
     await settleRoute();
     expectBoardDock(true);
@@ -597,7 +598,7 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
     renderApp(['/cricket/quick?result=300']);
     fireEvent.click(await screen.findByRole('button', { name: 'New Match' }));
     expect(currentRoute()).toBe('/cricket/quick');
-    expect(screen.getByRole('button', { name: 'Test' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: 'Test' })).toHaveAttribute('aria-checked', 'true');
     fireEvent.click(screen.getByRole('button', { name: 'Start cricket' }));
     await waitFor(() => expect(currentRoute()).toMatch(/^\/cricket\/quick\/test-match\//));
   });

@@ -5,7 +5,7 @@ import { contrastReport, deriveTeamColours } from '../../lib/teamColour';
 import { sportIdentity } from '../../lib/sportIdentity';
 import { sportMarkMaskUrl } from '../../lib/sportMarks';
 import { getGoalsSports, isTeamColourSport } from '../../models/sportRegistry';
-import { teamColourGroup } from '../../test/teamColour';
+import { teamColourGroup, teamNameInput } from '../../test/teamColour';
 
 const ctx = vi.hoisted(() => ({ sport: 'hockey', draft: null }));
 const storage = vi.hoisted(() => ({ saveData: vi.fn(() => true), saveQuickMatch: vi.fn(() => true) }));
@@ -145,8 +145,8 @@ describe('Hockey shared goals board', () => {
     ctx.draft=null; render(<MonoQuickMatch />);
     fireEvent.click(within(teamColourGroup('A')).getByRole('button', {name:'Yellow'}));
     fireEvent.click(within(teamColourGroup('B')).getByRole('button', {name:'Blue'}));
-    fireEvent.change(screen.getByLabelText('Team A name'), {target:{value:'Strikers'}});
-    fireEvent.change(screen.getByLabelText('Team B name'), {target:{value:'United'}});
+    fireEvent.change(teamNameInput('A'), {target:{value:'Strikers'}});
+    fireEvent.change(teamNameInput('B'), {target:{value:'United'}});
     fireEvent.click(screen.getByRole('button', {name:'Start hockey'}));
     const saved = storage.saveData.mock.calls.at(-1)[1];
     const colours = deriveTeamColours(saved.team1Color, saved.team2Color);

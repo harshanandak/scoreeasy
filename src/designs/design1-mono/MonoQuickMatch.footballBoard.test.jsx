@@ -3,7 +3,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { contrastReport, deriveTeamColours } from '../../lib/teamColour';
 import { sportIdentity } from '../../lib/sportIdentity';
-import { teamColourGroup } from '../../test/teamColour';
+import { teamColourGroup, teamNameInput } from '../../test/teamColour';
 
 const ctx = vi.hoisted(() => ({ sport: 'football', draft: null }));
 const storage = vi.hoisted(() => ({ saveData: vi.fn(() => true), saveQuickMatch: vi.fn(() => true) }));
@@ -136,8 +136,8 @@ describe('Football shared goals board', () => {
     ctx.draft=null; render(<MonoQuickMatch />);
     fireEvent.click(within(teamColourGroup('A')).getByRole('button', {name:'Yellow'}));
     fireEvent.click(within(teamColourGroup('B')).getByRole('button', {name:'Blue'}));
-    fireEvent.change(screen.getByLabelText('Team A name'), {target:{value:'Rovers'}});
-    fireEvent.change(screen.getByLabelText('Team B name'), {target:{value:'City'}});
+    fireEvent.change(teamNameInput('A'), {target:{value:'Rovers'}});
+    fireEvent.change(teamNameInput('B'), {target:{value:'City'}});
     fireEvent.click(screen.getByRole('button', {name:'Start football'}));
     const saved = storage.saveData.mock.calls.at(-1)[1];
     const colours = deriveTeamColours(saved.team1Color, saved.team2Color);

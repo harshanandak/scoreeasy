@@ -2,20 +2,27 @@ import { useState } from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { KABADDI_PRESETS, resolveKabaddiRules } from '../../../utils/kabaddiRules';
-import KabaddiSetup from './KabaddiSetup';
+import { basePresetOf, kabaddiBlurb, kabaddiChanges, KabaddiFirstRaid, KabaddiGameStep, KabaddiRulesStep } from './KabaddiSetup';
 
-// Mirrors how MonoQuickMatch holds `format` and passes it to KabaddiSetup.
+// Mirrors how MonoQuickMatch holds `format`. The app shows these on three different steps (game,
+// teams, rules); the host shows them together so one test can drive all of them.
 let latest;
 function Host({ initial = { kabaddiRules: resolveKabaddiRules('quick') } }) {
   const [format, setFormat] = useState(initial);
   latest = format;
-  return <KabaddiSetup format={format} onChange={setFormat} names={['Royals', 'Strikers']} />;
+  return (
+    <>
+      <KabaddiGameStep format={format} onChange={setFormat} />
+      <KabaddiFirstRaid format={format} onChange={setFormat} names={['Royals', 'Strikers']} />
+      <KabaddiRulesStep format={format} onChange={setFormat} />
+    </>
+  );
 }
-const openRules = () => fireEvent.click(screen.getByRole('button', { name: 'Change rules' }));
+const openRules = () => {};
 // What the saved match settings were before the redesign for a custom edit.
 const custom = (base, patch) => resolveKabaddiRules('custom', { ...base, ...patch });
 
-describe('KabaddiSetup presets', () => {
+describe('KabaddiGameStep presets', () => {
   it.each(KABADDI_PRESETS.filter(p => p.id !== 'custom'))('choosing $label saves the same rules as before', ({ id, label }) => {
     render(<Host initial={{ kabaddiRules: resolveKabaddiRules(id === 'quick' ? 'standard' : 'quick') }} />);
     fireEvent.click(screen.getByRole('radio', { name: label }));
@@ -25,8 +32,10 @@ describe('KabaddiSetup presets', () => {
 
   it('offers four presets, and Custom only once rules are edited', () => {
     render(<Host />);
-    expect(screen.getAllByRole('radio').map(el => el.textContent.replace(/✓/g, '').trim())).toEqual(
-      ['Quick casual', 'Standard', 'Standard women / younger', 'Pro Kabaddi style']);
+    for (const label of ['Quick casual', 'Standard', 'Standard women / younger', 'Pro Kabaddi style']) {
+      expect(screen.getByRole('radio', { name: label })).toBeInTheDocument();
+    }
+    expect(screen.getAllByRole('radio')).toHaveLength(4);
     openRules();
     fireEvent.click(screen.getByRole('switch', { name: 'Raid clock' }));
     const chip = screen.getByRole('radio', { name: 'Custom' });
@@ -46,16 +55,57 @@ describe('KabaddiSetup presets', () => {
   });
 });
 
-describe('KabaddiSetup rules panel saves what the old panel saved', () => {
+describe('KabaddiGameStep cards', () => {
+  it('gives every preset card a one-line plain description that is not part of its name', () => {
+    render(<Host />);
+    for (const p of KABADDI_PRESETS.filter(x => x.id !== 'custom')) {
+      const card = screen.getByRole('radio', { name: p.label });
+      expect(card).toHaveAccessibleDescription(kabaddiBlurb(resolveKabaddiRules(p.id)));
+    }
+  });
+});
+
+describe('KabaddiRulesStep summary, changes and reset', () => {
+  it('names the preset and says that any change makes the match Custom', () => {
+    render(<Host />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Quick casual' })).toBeInTheDocument();
+    expect(screen.getByText('Change any rule below and this match becomes Custom.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
+  });
+
+  it('lists what changed from the preset and resets in one tap', () => {
+    render(<Host />);
+    fireEvent.click(screen.getByRole('switch', { name: 'Raid clock' }));
+    expect(screen.getByRole('heading', { level: 2, name: 'Custom, based on Quick casual' })).toBeInTheDocument();
+    const changes = screen.getByRole('list', { name: 'Changed from Quick casual' });
+    expect(within(changes).getByText('Raid clock: 30 s')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset to Quick casual' }));
+    expect(latest.kabaddiRules).toEqual(resolveKabaddiRules('quick'));
+    expect(screen.queryByRole('list', { name: /^Changed from/ })).toBeNull();
+  });
+
+  it('works out the base preset of an edited copy and diffs against it', () => {
+    const standard = resolveKabaddiRules('standard');
+    const edited = custom(standard, { initialPlayers: 6 });
+    expect(basePresetOf(edited)).toBe('standard');
+    expect(kabaddiChanges(standard, edited)).toContain('Players a side: 6');
+    expect(kabaddiChanges(standard, standard)).toEqual([]);
+    for (const id of ['quick', 'standard', 'women', 'pro']) {
+      expect(basePresetOf(custom(resolveKabaddiRules(id), {}))).toBe(id);
+    }
+  });
+});
+
+describe('KabaddiRulesStep rules panel saves what the old panel saved', () => {
   const quick = resolveKabaddiRules('quick');
   const standard = resolveKabaddiRules('standard');
 
-  it('is closed until Change rules is pressed', () => {
+  it('shows the rules panel with plain group headings', () => {
     render(<Host />);
-    expect(screen.queryByTestId('kabaddi-rules-panel')).toBeNull();
-    openRules();
-    expect(screen.getByRole('button', { name: 'Change rules' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByTestId('kabaddi-rules-panel')).toBeInTheDocument();
+    for (const name of ['Match', 'Players out', 'Raiding']) {
+      expect(screen.getByRole('heading', { level: 3, name })).toBeInTheDocument();
+    }
   });
 
   it('players a side, with bonus and super tackle capped', () => {

@@ -1,11 +1,9 @@
-import { useId, useState } from 'react';
 import PropTypes from 'prop-types';
 import { deriveIdentityColour, normaliseHex } from '../../lib/teamColour';
-import './kit/setup.css';
+import './kit/teamSheet.css';
 
 // Kit colours a scorer is likely to need, plus a native custom picker. Any colour is safe: the
-// colour engine normalises it for contrast before it reaches the board. The first QUICK_COUNT are
-// the quick row; the rest and the custom colour sit behind "More colours".
+// colour engine normalises it for contrast before it reaches the board.
 export const TEAM_SWATCHES = Object.freeze([
   { name: 'Red', hex: '#d62828' },
   { name: 'Blue', hex: '#1d4ed8' },
@@ -20,7 +18,11 @@ export const TEAM_SWATCHES = Object.freeze([
   { name: 'Maroon', hex: '#7a1020' },
 ]);
 
-export const QUICK_COUNT = 5;
+/** The kit name of a hex, or "Custom" for anything else. */
+export function colourNameOf(hex) {
+  const h = normaliseHex(hex);
+  return TEAM_SWATCHES.find((s) => s.hex === h)?.name ?? 'Custom';
+}
 
 // A swatch shows what the board will paint: the engine's core for that kit colour, with the
 // engine's on-colour for the check (gated >= 4.6:1 on deep fills, 6.5:1 on bright ones).
@@ -43,102 +45,63 @@ function Check() {
   );
 }
 
-function Plus({ open }) {
+function Slash() {
   return (
-    <svg className="kit-sw-plus" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      {open ? <path d="M6 15l6-6 6 6" /> : <path d="M12 5v14M5 12h14" />}
+    <svg className="kit-sw-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M5 19L19 5" />
     </svg>
   );
 }
-Plus.propTypes = { open: PropTypes.bool };
 
 /**
- * Team colour choice: a group of toggle swatches (48px; the selected one carries a check, an ink
- * ring and aria-pressed, so colour is never the only signal). Selection is styled apart from focus:
- * every swatch is a plain button in the tab order and takes the app's global ink focus ring.
- * Only plain hex values ever reach onChange.
+ * Team colour choice: every kit colour as a large (56px) named swatch in one grid, then a custom
+ * colour. The chosen swatch carries a check, an ink ring and aria-pressed, so colour is never the
+ * only signal. The other team's colour is blocked (disabled, slashed and named), so two teams can
+ * never be given the same colour. Only plain hex values ever reach onChange.
  */
-export default function TeamColourPicker({ label, value, onChange }) {
+export default function TeamColourPicker({ label, value, onChange, blockedHex, blockedLabel }) {
   const current = normaliseHex(value);
-  const checkedIndex = TEAM_SWATCHES.findIndex((s) => s.hex === current);
-  const isCustom = checkedIndex === -1 && Boolean(current);
-  const selectionInMore = checkedIndex >= QUICK_COUNT || isCustom;
-  const [open, setOpen] = useState(selectionInMore);
-  // The native colour input is invisible (opacity 0), so its focus is drawn on the control around it.
-  const [customFocused, setCustomFocused] = useState(false);
-  const panelId = useId();
+  const blocked = normaliseHex(blockedHex);
+  const isCustom = Boolean(current) && !TEAM_SWATCHES.some((s) => s.hex === current);
 
   const onCustom = (event) => {
     const hex = normaliseHex(event.target.value);
-    if (hex) onChange(hex);
+    if (hex && hex !== blocked) onChange(hex);
   };
-
-  const swatch = (s, i) => {
-    const pressed = i === checkedIndex;
-    return (
-      <button
-        key={s.hex}
-        type="button"
-        className="kit-sw"
-        aria-pressed={pressed ? 'true' : 'false'}
-        aria-label={s.name}
-        title={s.name}
-        onClick={() => onChange(s.hex)}
-        style={swatchVars(s.hex)}
-      >
-        {pressed && <Check />}
-      </button>
-    );
-  };
-
-  const selectedName = isCustom ? 'custom colour' : TEAM_SWATCHES[checkedIndex]?.name;
-  const moreLabel = selectionInMore && !open
-    ? `More colours for ${label}, ${selectedName} selected`
-    : `More colours for ${label}`;
 
   return (
     <div className="kit-picker" role="group" aria-label={label}>
-      <div className="kit-sw-row">
-        {TEAM_SWATCHES.slice(0, QUICK_COUNT).map((s, i) => swatch(s, i))}
-        <button
-          type="button"
-          className={`kit-sw kit-sw-more${selectionInMore && !open ? ' is-holding' : ''}`}
-          aria-expanded={open ? 'true' : 'false'}
-          aria-controls={panelId}
-          aria-label={moreLabel}
-          title="More colours"
-          onClick={() => setOpen((o) => !o)}
-          style={selectionInMore && !open ? swatchVars(current) : undefined}
-        >
-          {selectionInMore && !open ? <Check /> : <Plus open={open} />}
-        </button>
-      </div>
-      <div id={panelId} hidden={!open} className="kit-sw-more-panel">
-        {open && (
-          <>
-            <div className="kit-sw-row">
-              {TEAM_SWATCHES.slice(QUICK_COUNT).map((s, i) => swatch(s, i + QUICK_COUNT))}
-            </div>
-            <label className={`kit-sw-custom${customFocused ? ' is-focused' : ''}${isCustom ? ' is-selected' : ''}`}>
-              <span
-                className={`kit-sw kit-sw-dot${isCustom ? '' : ' kit-sw-more'}`}
-                style={isCustom ? swatchVars(current) : undefined}
-                aria-hidden="true"
-              >
-                {isCustom ? <Check /> : <Plus open={false} />}
-              </span>
-              <span className="kit-sw-custom-text">{isCustom ? 'Custom colour (selected)' : 'Custom colour'}</span>
-              <input
-                type="color"
-                aria-label={isCustom ? `Custom colour for ${label} (selected)` : `Custom colour for ${label}`}
-                value={current ?? TEAM_SWATCHES[0].hex}
-                onChange={onCustom}
-                onFocus={() => setCustomFocused(true)}
-                onBlur={() => setCustomFocused(false)}
-              />
-            </label>
-          </>
-        )}
+      <div className="kit-sw-grid">
+        {TEAM_SWATCHES.map((s) => {
+          const pressed = s.hex === current;
+          const isBlocked = Boolean(blocked) && s.hex === blocked;
+          return (
+            <button
+              key={s.hex}
+              type="button"
+              className="kit-sw"
+              aria-pressed={pressed ? 'true' : 'false'}
+              aria-label={isBlocked ? `${s.name}, used by ${blockedLabel}` : s.name}
+              aria-disabled={isBlocked ? 'true' : undefined}
+              disabled={isBlocked}
+              onClick={() => onChange(s.hex)}
+              style={swatchVars(s.hex)}
+            >
+              <span className="kit-sw-face">{isBlocked ? <Slash /> : pressed && <Check />}</span>
+              <span className="kit-sw-name" aria-hidden="true">{isBlocked ? blockedLabel : s.name}</span>
+            </button>
+          );
+        })}
+        <label className={`kit-sw kit-sw-custom${isCustom ? ' is-selected' : ''}`} style={isCustom ? swatchVars(current) : undefined}>
+          <span className="kit-sw-face kit-sw-face-custom">{isCustom ? <Check /> : <span className="kit-sw-plus" aria-hidden="true">+</span>}</span>
+          <span className="kit-sw-name">{isCustom ? 'Custom (chosen)' : 'Custom'}</span>
+          <input
+            type="color"
+            aria-label={isCustom ? `Custom colour for ${label} (selected)` : `Custom colour for ${label}`}
+            value={current ?? TEAM_SWATCHES[0].hex}
+            onChange={onCustom}
+          />
+        </label>
       </div>
     </div>
   );
@@ -148,4 +111,6 @@ TeamColourPicker.propTypes = {
   label: PropTypes.string.isRequired,
   value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
+  blockedHex: PropTypes.string,
+  blockedLabel: PropTypes.string,
 };

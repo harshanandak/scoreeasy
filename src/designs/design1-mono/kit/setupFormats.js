@@ -189,3 +189,32 @@ export function setupRulesLine(sportConfig, format = {}) {
   if (engine === 'goals') return goalsLine(sportConfig, format);
   return '';
 }
+
+const GOALS_HINTS = {
+  timed: 'Play to a clock',
+  points: 'First to a target score wins',
+  free: 'No limit, finish when you are done',
+};
+
+/**
+ * The main choices with a one-line plain description each, for the "What are you playing" cards.
+ * The description states what the choice produces (sets sports run it through applyFormatChoice
+ * and setupRulesLine); it adds no rule of its own.
+ * @returns {{ id: string, label: string, hint: string }[]}
+ */
+export function describeFormatChoices(sportConfig, format = {}) {
+  const { kind, choices } = formatChoices(sportConfig);
+  if (kind === 'cricket') {
+    return choices.map((c) => ({ ...c, hint: CRICKET_FORMATS.find((f) => f.id === c.id)?.desc || '' }));
+  }
+  if (kind === 'sets') {
+    return choices.map((c) => {
+      const sets = Number(String(c.id).replace('sets-', '')) || 1;
+      const lead = sets === 1 ? 'One set' : `First to ${Math.ceil(sets / 2)} sets`;
+      const line = setupRulesLine(sportConfig, applyFormatChoice(sportConfig, c.id, format));
+      return { ...c, hint: [lead, line].filter(Boolean).join(' · ') };
+    });
+  }
+  if (kind === 'goals') return choices.map((c) => ({ ...c, hint: GOALS_HINTS[c.id] || '' }));
+  return [];
+}

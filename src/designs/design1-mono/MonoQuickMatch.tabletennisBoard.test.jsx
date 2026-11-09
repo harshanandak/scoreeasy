@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { contrastReport, deriveTeamColours } from '../../lib/teamColour';
 import { sportMarkMaskUrl } from '../../lib/sportMarks';
-import { findTeamColourGroup, teamColourGroup } from '../../test/teamColour';
+import { findTeamColourGroup, goToSetupStep, teamColourGroup } from '../../test/teamColour';
 
 const ctx = vi.hoisted(() => ({ draft: null, saved: null }));
 const savedMatch = vi.hoisted(() => vi.fn(() => true));
@@ -42,11 +42,11 @@ describe('tabletennis team board', () => {
   it('starts from the picked setup colours in either existing format', async () => {
     render(<MonoQuickMatch />);
     const colours = await findTeamColourGroup('A');
-    fireEvent.click(within(colours).getByRole('button', { name: 'More colours for Team A colour' }));
     fireEvent.click(within(colours).getByRole('button', { name: 'Purple' }));
     fireEvent.click(within(teamColourGroup('B')).getByRole('button', { name: 'Yellow' }));
-    expect(screen.getByRole('button', { name: 'Best of 5' })).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'Single game' }));
+    goToSetupStep('Game');
+    expect(screen.getByRole('radio', { name: 'Best of 5' })).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(screen.getByRole('radio', { name: 'Single game' }));
     fireEvent.click(screen.getByRole('button', { name: 'Start table tennis' }));
     await screen.findByRole('button', { name: 'Add point for Team A' });
     expect(board()).toHaveTextContent('First to 11');
@@ -154,7 +154,7 @@ describe('tabletennis team board', () => {
 
   it('offers best of seven and retains the selected format', async () => {
     render(<MonoQuickMatch />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Best of 7' }));
+    fireEvent.click(await screen.findByRole('radio', { name: 'Best of 7' }));
     fireEvent.click(screen.getByRole('button', { name: 'Start table tennis' }));
     await screen.findByRole('button', { name: 'Add point for Team A' });
     expect(ctx.saved.format).toMatchObject({ type: 'best-of', sets: 7, points: 11 });

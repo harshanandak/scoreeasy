@@ -6,6 +6,7 @@ import { getSetWinRule } from '../../../utils/quickMatchSets';
 import {
   applyFormatChoice,
   applyGoalsDetail,
+  describeFormatChoices,
   formatChoices,
   goalsDetail,
   selectedFormatChoice,
@@ -104,5 +105,24 @@ describe('quick setup rules line', () => {
     expect(setupRulesLine(sport('basketball'), applyStandardDefaults('basketball'))).toBe('48 min on the clock · no draws');
     expect(setupRulesLine(sport('hockey'), { mode: 'points', target: 5 })).toBe('First to 5 goals wins');
     expect(setupRulesLine(sport('kabaddi'), { mode: 'free' })).toBe('No limit · finish when you are done');
+  });
+});
+
+describe('format cards describe each choice in one plain line', () => {
+  it('sets sports say how many sets and what a set is', () => {
+    const volleyball = describeFormatChoices(sport('volleyball'), applyStandardDefaults('volleyball', {}));
+    expect(volleyball.map((c) => c.label)).toEqual(['Single set', 'Best of 3', 'Best of 5']);
+    expect(volleyball[0].hint).toMatch(/^One set · First to 25/);
+    expect(volleyball[1].hint).toMatch(/^First to 2 sets · 25 points a set/);
+    expect(volleyball[2].hint).toMatch(/^First to 3 sets/);
+    const tennis = describeFormatChoices(sport('tennis'), {});
+    expect(tennis[1].hint).toMatch(/^First to 2 sets · \d+ games a set/);
+  });
+
+  it('cricket uses the format description, goals sports name their mode', () => {
+    const cricket = describeFormatChoices(sport('cricket'), {});
+    expect(cricket.find((c) => c.id === 'T20').hint).toBe('20 overs per side');
+    expect(cricket.every((c) => c.hint)).toBe(true);
+    expect(describeFormatChoices(sport('football'), {}).map((c) => c.id)).toEqual(['timed', 'points', 'free']);
   });
 });

@@ -7,6 +7,7 @@ import MonoHistory from './MonoHistory';
 import MonoQuickMatch from './MonoQuickMatch';
 import { createGameSession, createHistoryRecord, createParticipant } from '../../models/types';
 import { shareText } from '../../mobile/share';
+import { findTeamNameInput, teamNameInput } from '../../test/teamColour';
 
 vi.mock('../../mobile/share', () => ({ shareText: vi.fn() }));
 // MonoQuickMatch (the Rematch target) reads Convex; History itself does not.
@@ -164,7 +165,7 @@ describe('MonoHistory', () => {
     const first = renderHistoryAndSetup();
     fireEvent.click(await screen.findByRole('button', { name: row('Royals', 'Strikers') }));
     fireEvent.click(within(screen.getByRole('dialog', { name: 'Match details' })).getByRole('button', { name: 'Rematch' }));
-    expect(await screen.findByRole('textbox', { name: 'Team A name' })).toHaveValue('Royals');
+    expect(await findTeamNameInput('A')).toHaveValue('Royals');
     expect(swatch('A', 'Maroon')).toHaveAttribute('aria-pressed', 'true');
     expect(swatch('B', 'Sky')).toHaveAttribute('aria-pressed', 'true');
     first.unmount();
@@ -172,8 +173,8 @@ describe('MonoHistory', () => {
     renderHistoryAndSetup();
     fireEvent.click(await screen.findByRole('button', { name: row('Aces', 'Hawks') }));
     fireEvent.click(within(screen.getByRole('dialog', { name: 'Match details' })).getByRole('button', { name: 'Rematch' }));
-    expect(await screen.findByRole('textbox', { name: 'Team A name' })).toHaveValue('Aces');
-    expect(screen.getByRole('textbox', { name: 'Team B name' })).toHaveValue('Hawks');
+    expect(await findTeamNameInput('A')).toHaveValue('Aces');
+    expect(teamNameInput('B')).toHaveValue('Hawks');
     // The default pair, Red v Blue.
     expect(swatch('A', 'Red')).toHaveAttribute('aria-pressed', 'true');
     expect(swatch('B', 'Blue')).toHaveAttribute('aria-pressed', 'true');

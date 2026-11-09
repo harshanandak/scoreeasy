@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { preloadAppRoutes } from '../../test/preloadAppRoutes';
 import { deriveTeamColours } from '../../lib/teamColour';
 import Design1Mono from './index';
-import { findTeamColourGroup, teamColourGroup } from '../../test/teamColour';
+import { findTeamColourGroup, teamColourGroup, teamNameInput } from '../../test/teamColour';
 
 // Kit S1 round 2: Home's Rematch keeps the colours the hero shows. A real handoff through the app
 // shell and real storage: finish yellow v green, open Home, tap Rematch, and the setup and the
@@ -97,7 +97,7 @@ describe('Home Rematch keeps the saved team colours', () => {
     expect(await findTeamColourGroup('A')).toBeInTheDocument();
     expect(checkedSwatch('Team A colour')).toHaveAccessibleName('Yellow');
     expect(checkedSwatch('Team B colour')).toHaveAccessibleName('Green');
-    expect(screen.getByLabelText('Team A name')).toHaveValue('Royals');
+    expect(teamNameInput('A')).toHaveValue('Royals');
 
     // ... and the match that starts is painted yellow v green.
     fireEvent.click(screen.getByRole('button', { name: 'Start volleyball' }));

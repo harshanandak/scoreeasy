@@ -28,8 +28,7 @@ export default function KabaddiRulesPanel({ rules: r, onChange }) {
   );
   return (
     <div className="kit-rules-panel" data-testid="kabaddi-rules-panel">
-      <p className="kit-setup-rules" style={{ margin: 0 }}>Change any rule and this match uses Custom rules.</p>
-
+      <h3 className="kit-rules-group-head">Match</h3>
       {n('Players a side', r.initialPlayers, 2, 12, v => change({
         initialPlayers: v,
         bonus: r.bonus.enabled ? { ...r.bonus, minDefenders: Math.min(v, r.bonus.minDefenders) } : r.bonus,
@@ -48,6 +47,7 @@ export default function KabaddiRulesPanel({ rules: r, onChange }) {
         {n('Interval minutes', r.end.intervalMs / 60000, 0, 30, v => change({ end: { ...r.end, intervalMs: v * 60000 } }))}
       </>}
 
+      <h3 className="kit-rules-group-head">Players out</h3>
       <KitToggleRow label="Players go out and revive in order" hint="Out players come back in the order they went out."
         checked={r.strategy === 'rectangularOuts'}
         onChange={on => change(on
@@ -66,6 +66,7 @@ export default function KabaddiRulesPanel({ rules: r, onChange }) {
         </div>}
       </div>}
 
+      <h3 className="kit-rules-group-head">Raiding</h3>
       <KitToggleRow label="Raid clock" hint="Each raid has a time limit."
         checked={r.raidLimitMs !== null} onChange={on => change({ raidLimitMs: on ? 30000 : null })} />
       {r.raidLimitMs !== null && <div className="kit-rules-sub">

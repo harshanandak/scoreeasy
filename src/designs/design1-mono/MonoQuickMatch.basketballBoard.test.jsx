@@ -4,7 +4,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { contrastReport, deriveTeamColours } from '../../lib/teamColour';
 import { sportIdentity } from '../../lib/sportIdentity';
-import { teamColourGroup } from '../../test/teamColour';
+import { teamColourGroup, teamNameInput } from '../../test/teamColour';
 
 vi.mock('convex/react', () => ({
   useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => undefined }));
@@ -169,8 +169,8 @@ describe('Basketball on the shared goals board', () => {
     localStorage.removeItem(matchStorageKey(key)); render(<MonoQuickMatch />);
     fireEvent.click(within(teamColourGroup('A')).getByRole('button', { name: 'Black' }));
     fireEvent.click(within(teamColourGroup('B')).getByRole('button', { name: 'Yellow' }));
-    fireEvent.change(screen.getByLabelText('Team A name'), { target: { value: 'Hoops' } });
-    fireEvent.change(screen.getByLabelText('Team B name'), { target: { value: 'Dunkers' } });
+    fireEvent.change(teamNameInput('A'), { target: { value: 'Hoops' } });
+    fireEvent.change(teamNameInput('B'), { target: { value: 'Dunkers' } });
     fireEvent.click(screen.getByRole('button', { name: 'Start basketball' }));
     const savedKey = Object.keys(localStorage).find(storedKey => storedKey.startsWith(matchStorageKey('se_quickmatch_draft_basketball_')));
     const saved = JSON.parse(localStorage.getItem(matchStorageKey(savedKey)));

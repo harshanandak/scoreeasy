@@ -111,11 +111,13 @@ KitNumberStepper.propTypes = {
 };
 
 /**
- * A choice among three or more known options as a wrapping grid of chips (radiogroup). One tab
+ * A choice among three or more known options as a wrapping grid of chips (radiogroup). Options with
+ * a `hint` become one-per-row cards: a bold title and a one-line plain description. One tab
  * stop; arrow keys move the choice, Home/End jump. The last chip spans the row when the count is odd.
  */
 export function KitChoiceGrid({ label, labelledBy, options, value, onChange, columns = 2 }) {
   const refs = useRef([]);
+  const uid = useId();
   const enabled = options.filter((o) => !o.disabled);
   const stop = enabled.find((o) => o.id === value) || enabled[0];
   const move = (from, dir) => {
@@ -133,7 +135,7 @@ export function KitChoiceGrid({ label, labelledBy, options, value, onChange, col
   };
   return (
     <div
-      className="kit-choice"
+      className={`kit-choice${options.some((o) => o.hint) ? ' is-cards' : ''}`}
       role="radiogroup"
       aria-label={labelledBy ? undefined : label}
       aria-labelledby={labelledBy}
@@ -146,12 +148,19 @@ export function KitChoiceGrid({ label, labelledBy, options, value, onChange, col
           type="button"
           role="radio"
           aria-checked={o.id === value ? 'true' : 'false'}
+          aria-labelledby={o.hint ? `${uid}-${i}-l` : undefined}
+          aria-describedby={o.hint ? `${uid}-${i}-h` : undefined}
           tabIndex={stop && o.id === stop.id ? 0 : -1}
           disabled={o.disabled}
           onClick={() => { if (o.id !== value) onChange(o.id); }}
           onKeyDown={(e) => onKeyDown(e, o.id)}
         >
-          {o.label}
+          {o.hint ? (
+            <>
+              <span id={`${uid}-${i}-l`} className="kit-choice-label">{o.label}</span>
+              <span id={`${uid}-${i}-h`} className="kit-choice-hint">{o.hint}</span>
+            </>
+          ) : o.label}
         </button>
       ))}
     </div>
@@ -160,7 +169,7 @@ export function KitChoiceGrid({ label, labelledBy, options, value, onChange, col
 KitChoiceGrid.propTypes = {
   label: PropTypes.string,
   labelledBy: PropTypes.string,
-  options: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, label: PropTypes.node.isRequired, disabled: PropTypes.bool })).isRequired,
+  options: PropTypes.arrayOf(PropTypes.shape({ id: PropTypes.string.isRequired, label: PropTypes.node.isRequired, hint: PropTypes.node, disabled: PropTypes.bool })).isRequired,
   value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
   columns: PropTypes.number,
