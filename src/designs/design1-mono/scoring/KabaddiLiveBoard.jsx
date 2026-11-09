@@ -6,7 +6,7 @@ import { HandUnderline } from '../kit/KitParts';
 import { sportIdentityVars } from '../../../lib/sportIdentity';
 import {
   beginLiveRaid, boardView, callDeadline, canCancelRaid, cancelLiveRaid, canUndo, confirmTechnical, draftOf, hasRoster, landRaid, lastAction, lastMark,
-  liveRaids, markDefender, momentOf, namedOutMap, playerName, previewDraft, raidFlags, readback, reopenRaid, startNextHalf, toggleBonus,
+  liveRaids, markDefender, momentOf, namedOutMap, nextUndoTarget, playerName, previewDraft, raidFlags, readback, reopenRaid, startNextHalf, toggleBonus,
   togglePause, touchCount, tryTechnical, undoLabel, undoMark, undoMatch,
 } from '../../../utils/kabaddiBoardModel';
 import './kabaddiOneTap.css';
@@ -18,7 +18,7 @@ import './kabaddiLive.css';
 // one who left the court; the Bonus cell marks the bonus line. Nothing is scored; the score cards
 // only preview what the marks would do. The raid ends with one tap on the result (Back safe,
 // Tackled, Raider out, or Empty when nothing was marked) and everything lands together. Undo
-// takes back the last mark; after a raid has landed it reopens that raid with its marks. The marks
+// takes back the last mark; between raids it steps through clock actions before reopening the raid with its marks. The marks
 // live in the engine draft (`state.activeRaid.draft`), so a refresh mid-raid keeps them. Every number, key
 // state and word comes from the raid engine through kabaddiBoardModel; this view decides nothing
 // about the rules.
@@ -101,10 +101,11 @@ export default function KabaddiLive({ initialMatch, colourStyle, title, subtitle
   };
 
   const latest = lastAction(state);
-  const canReopen = Boolean(!live && latest?.type === 'raid' && latest.raidDraft && canUndo(state));
+  const undoTarget = nextUndoTarget(state);
+  const canReopen = Boolean(!live && undoTarget?.type === 'raid' && undoTarget.raidDraft && canUndo(state));
 
   // One step back: a live raid loses its last mark (then it is cancelled); a landed raid reopens
-  // with its marks; anything older is undone as before.
+  // with its marks once any later clock actions have been undone in journal order.
   const stepBack = () => {
     setFlash(null);
     if (live) {
@@ -125,11 +126,12 @@ export default function KabaddiLive({ initialMatch, colourStyle, title, subtitle
         return;
       }
     }
-    const undone = lastAction(state);
+    const undone = undoTarget;
+    const what = undoLabel(state).split(' · ')[0];
     const next = undoMatch(match);
     save(next);
     setLanded(null);
-    setNote(undone ? { kind: 'undo', what: undone.type === 'raid' ? `raid ${undone.raidNumber}` : 'technical point', totals: boardView(next, at).totals } : null);
+    setNote(undone ? { kind: 'undo', what, totals: boardView(next, at).totals } : null);
   };
 
   // ---- derived, all from the engine ----

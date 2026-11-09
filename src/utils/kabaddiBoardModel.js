@@ -5,7 +5,7 @@
 // output for the board. It never computes a score, a mat count or an eligibility itself.
 import {
   applyRaid, cancelRaid, createKabaddiState, isDoOrDie, isSuperTackleOn, pause, remainingTime, resume, startHalf, startRaid,
-  teamTotal, timeUp, undo, editRaidDraft, undoRaidDraft, reopenLastRaid,
+  teamTotal, timeUp, undo, editRaidDraft, undoRaidDraft, reopenLastRaid, latestUndoTarget,
 } from './kabaddiEngine.js';
 
 /** A new match. `rosters` is the optional team list from setup: up to the configured capacity per team. */
@@ -179,23 +179,10 @@ export function momentOf(entry) {
   return null;
 }
 
-const CLOCK_ACTIONS = new Set(['pause', 'resume', 'correctClock', 'timeUp']);
+export const nextUndoTarget = state => latestUndoTarget(state) ?? null;
 
-function nextUndoTarget(state) {
-  const undone = new Set(state.events.filter((e) => e.type === 'undo').map((e) => e.targetId));
-  const absorbed = new Set(state.events.flatMap((e) => e.absorbedAdminIds ?? []));
-  return [...state.events].reverse().find((e) => !['undo', 'reopen'].includes(e.type) && !undone.has(e.id) && !absorbed.has(e.id)) ?? null;
-}
-
-/** One Undo tap = one scorer action: the latest raid (with any clock records after it) or a half start. */
-export function undoAction(state) {
-  let next = state;
-  for (let target = nextUndoTarget(next); target; target = nextUndoTarget(next)) {
-    next = undo(next);
-    if (!(target.type === 'admin' && CLOCK_ACTIONS.has(target.action))) break;
-  }
-  return next;
-}
+/** One Undo tap reverts one engine journal event, including clock actions. */
+export const undoAction = state => undo(state);
 
 export const canUndo = (state) => !state.activeRaid && state.phase !== 'finished' && nextUndoTarget(state) !== null;
 
@@ -314,7 +301,8 @@ export function undoLabel(state) {
   const back = totalsOf(undoAction(state)).join('–');
   if (target.type === 'raid') return `Raid ${target.raidNumber} · back to ${back}`;
   if (target.type === 'technical') return `Technical · back to ${back}`;
-  return undoHint(state);
+  const action = { pause: 'Pause clock', resume: 'Resume clock', correctClock: 'Clock correction', timeUp: 'Time up', startHalf: 'Start half', finish: 'Finish' }[target.action];
+  return `${action ?? 'Match action'} · ${undoHint(state)}`;
 }
 
 // ---- round 4: Raid by (a started raid with its configured clock), flags on the mat icons ----
@@ -483,7 +471,7 @@ export { timeUp, startHalf };
 export function callDeadline(match, atMs) {
   const state = match.state.phase === 'paused' ? resume(match.state, { atMs }) : match.state;
   if (remainingTime(state, atMs) > 0) return match;
-  return { ...match, state: timeUp(state) };
+  return { ...match, state: timeUp(state, { atMs }) };
 }
 
 export function startNextHalf(match, atMs) {
