@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import { periodPreset } from '../../../utils/goalsPeriods';
 import { KitNumberStepper, KitToggleRow, KitChoiceGrid } from './KitFormControls';
 import { MoreRules, RulesPanel, RulesSegmentRow, RulesSummaryLine } from './RulesParts';
-import { applyFormatChoice, applyGoalsDetail, formatChoices, goalsDetail, setupRulesLine, matchesSetupPreset, setupPresetTitle } from './setupFormats';
+import { applyFormatChoice, applyGoalsDetail, formatChoices, goalsDetail, setupRulesLine, isCustomSetup, setupSourcePreset, setupPresetTitle } from './setupFormats';
 import './setupSteps.css';
 
 /** Which timing preset a format is: official and custom carry period rules, casual has none. */
@@ -25,12 +25,12 @@ export function GoalsGameStep({ sport, format, onChange, onSourceChange = () => 
   const options = [
     { id: 'official', label: official.source, hint: `${official.count} × ${official.minutes} min · the scorer ends every period` },
     { id: 'custom', label: 'Custom school/event', hint: 'Set your own periods and minutes' },
-    { id: 'casual', label: 'Quick casual', hint: 'No period clock · play to a target, a timer, or free' },
+    { id: 'casual', label: 'Quick casual', hint: 'No fixed periods · play to a target, a timer, or free' },
   ];
   return <section className="kit-setup-field" aria-labelledby="goals-format-label">
     <h2 id="goals-format-label" className="kit-setup-label">What are you playing?</h2>
     <KitChoiceGrid labelledBy="goals-format-label" columns={1} options={options} value={goalsPresetOf(format)}
-      onChange={id => { onSourceChange(null); onChange(periodPreset(sport, id)); }} />
+      onChange={id => { const next = periodPreset(sport, id); onSourceChange(id === 'custom' ? { label: goalsPresetOf(format) === 'official' ? official.source : 'Custom school/event', format: next } : null); onChange(next); }} />
   </section>;
 }
 GoalsGameStep.propTypes = { sport: PropTypes.string.isRequired, format: PropTypes.object.isRequired, onChange: PropTypes.func.isRequired, onSourceChange: PropTypes.func };
@@ -40,16 +40,12 @@ export function GoalsRulesStep({ sport, sportConfig, format, onChange, source, o
   const preset = goalsPresetOf(format);
   const rules = format.periods;
   const official = officialOf(sport);
-  const base = source || { label: rules ? official.source : 'Quick casual', format: periodPreset(sport, rules ? 'official' : 'casual') };
-  const title = setupPresetTitle(preset === 'custom' ? base.label : preset === 'official' ? official.source : 'Quick casual', preset === 'custom');
-  const values = value => {
-    const { periodPreset: _preset, formatMode: _mode, periods, ...rest } = value;
-    if (!periods) return rest;
-    const { source: _source, ...periodRules } = periods;
-    return { ...rest, periods: periodRules };
-  };
+  const base = setupSourcePreset(sportConfig, format, source);
+  const customised = isCustomSetup(format, base, sportConfig);
+  const plainLabel = preset === 'official' ? official.source : preset === 'custom' ? 'Custom school/event' : 'Quick casual';
+  const title = setupPresetTitle(customised ? base.label : plainLabel, customised);
   const change = next => {
-    if (matchesSetupPreset(values(next), values(base.format))) { onSourceChange(null); onChange(base.format); return; }
+    if (!isCustomSetup(next, base, sportConfig)) { onSourceChange(null); onChange(base.format); return; }
     onSourceChange(base);
     if (next.periods) {
       const custom = periodPreset(sport, 'custom', next.periods.durations.length, minutesOf(next.periods));
@@ -64,7 +60,7 @@ export function GoalsRulesStep({ sport, sportConfig, format, onChange, source, o
   const detailRow = goalsDetail(sportConfig, format);
   return <section className="kit-setup-field" aria-labelledby="goals-rules-summary">
     <RulesSummaryLine id="goals-rules-summary" title={title} detail={detail}
-      resetLabel={`Reset to ${base.label}`} onReset={preset === 'custom' ? () => { onSourceChange(null); onChange(base.format); } : undefined} />
+      resetLabel={`Reset to ${base.label}`} onReset={customised ? () => { onSourceChange(null); onChange(base.format); } : undefined} />
     <RulesPanel testId="goals-rules-panel">
       {rules ? <>
         <KitNumberStepper label="Number of periods" value={rules.durations.length} min={1} max={8} onChange={count => update(count, minutesOf(rules))} />

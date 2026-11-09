@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { contrastReport, deriveTeamColours } from '../../lib/teamColour';
-import { sportMarkMaskUrl } from '../../lib/sportMarks';
 import { findTeamColourGroup, goToSetupStep, teamColourGroup } from '../../test/teamColour';
 
 const ctx = vi.hoisted(() => ({ draft: null, saved: null }));
@@ -61,8 +60,7 @@ describe('badminton team board', () => {
     await screen.findByRole('button', { name: 'Add point for Royals' });
     expect(board()).toHaveTextContent('Game 1');
     expect(board()).toHaveTextContent('Games 0–0');
-    expect(board().style.getPropertyValue('--sport-mark')).toBe(sportMarkMaskUrl('badminton'));
-    expect(key('Royals').querySelector('.tsb-mark')).not.toBeNull();
+    expect(key('Royals').querySelector('.tsb-mark svg')).not.toBeNull();
     fireEvent.click(key('Strikers'));
     await waitFor(() => expect(key('Strikers')).toHaveTextContent('Serving'));
     expect(key('Royals').querySelector('.tsb-mark')).toBeNull();

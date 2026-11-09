@@ -4,9 +4,10 @@
 import PropTypes from 'prop-types';
 import { sportIdentityVars } from '../../../lib/sportIdentity';
 import { ICON_BY_SPORT_ID } from '../landing/sportIcons';
+import SportMark from './SportMark';
 import './kit.css';
 
-/** The app mark: the hand-drawn volleyball from the app icon (PR #178), in ink, stroke 2.0. */
+/** The app mark: the volleyball sport icon, in ink. */
 export function BrandMark({ size = 28 }) {
   const Ball = ICON_BY_SPORT_ID.volleyball;
   return (
@@ -138,7 +139,7 @@ FilterChip.propTypes = {
 };
 
 /**
- * A sport tile: the engine-gated identity gradient, the clean filled mark cropped at the edge,
+ * A sport tile: the engine-gated identity gradient, the sport's icon (sportIcons.jsx) cropped at the edge,
  * the sport name and (full tiles) its one-line hint. Never hand-drawn.
  */
 export function SportTile({ sport, mini = false, selected = false, onSelect }) {
@@ -153,7 +154,7 @@ export function SportTile({ sport, mini = false, selected = false, onSelect }) {
       aria-label={`Quick match: ${sport.name}`}
       onClick={() => onSelect(sport)}
     >
-      <span className="kit-tile-mark" aria-hidden="true" />
+      <SportMark sportId={sport.id} className="kit-tile-mark" />
       <span className="kit-tile-name">{sport.name}</span>
       {!mini && sport.desc && <span className="kit-tile-hint">{sport.desc}</span>}
     </button>
@@ -167,8 +168,8 @@ SportTile.propTypes = {
 };
 
 /**
- * A list-row / history badge: the sport's identity gradient with its hand-drawn doodle (the
- * originals from sportIcons.jsx, stroke 2 on 32) in the on-colour. Unknown sports get a neutral well.
+ * A list-row / history badge: the sport's identity gradient with its sport icon (from
+ * sportIcons.jsx; strokeWidth={2} keeps the stroke-drawn ones at their designed widths) in the on-colour. Unknown sports get a neutral well.
  */
 export function SportBadge({ sportId }) {
   const Doodle = Object.prototype.hasOwnProperty.call(ICON_BY_SPORT_ID, sportId) ? ICON_BY_SPORT_ID[sportId] : null;

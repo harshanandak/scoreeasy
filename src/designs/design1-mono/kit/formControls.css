@@ -1,5 +1,5 @@
 /* Kit form controls (switch row, number stepper, choice grid). Tokens only: dark mode is a token
-   swap. Every target is 48px. The sticky Start bar is cleared by setup.css scroll-padding. */
+   swap. Every target is 48px. The fixed Start bar is cleared by setup.css scroll-padding. */
 
 /* ---- compact setting rows: label on the left, the control on the right ---- */
 .kit-togglewrap {
@@ -43,7 +43,7 @@
   flex: none;
   align-items: center;
   justify-content: flex-end;
-  min-height: 44px;
+  min-height: 48px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -100,15 +100,15 @@
   outline-offset: 3px;
 }
 
-/* The small (i): 44px to tap, a 20px mark to look at. Sits above the stretched switch. */
+/* The small (i): 48px to tap, a 20px mark to look at. Sits above the stretched switch. */
 .kit-info-btn {
   position: relative;
   z-index: 1;
   display: grid;
   flex: none;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   margin: 0 -6px;
   padding: 0;
   border: 0;
@@ -142,22 +142,22 @@
   font: 500 0.82rem/1.4 var(--se-font-sans);
 }
 
-/* ---- number stepper: smaller, 44px buttons ---- */
+/* ---- number stepper: 48px controls ---- */
 .kit-numstep {
   flex: none;
   gap: 6px;
 }
 
 .kit-numstep .se-ctl {
-  min-height: 44px;
-  width: 44px;
+  min-height: 48px;
+  width: 48px;
   font-size: 1.15rem;
 }
 
 .kit-numstep-input {
   box-sizing: border-box;
   width: 52px;
-  min-height: 44px;
+  min-height: 48px;
   padding: 0 2px;
   border: 0;
   border-radius: 10px;

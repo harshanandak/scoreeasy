@@ -97,3 +97,26 @@ describe('GoalsRulesStep', () => {
     expect(screen.getByRole('group', { name: 'Match length' })).toBeInTheDocument();
   });
 });
+
+
+it('keeps Quick casual plain when Free play is tapped without a rule change', () => {
+  render(<Host />);
+  fireEvent.click(screen.getByRole('radio', { name: 'Quick casual' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Free play' }));
+  expect(screen.getByRole('heading', { name: /^Quick casual/ })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: /^Customised/ })).toBeNull();
+  expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
+  expect(latest).toEqual(periodPreset('football', 'casual'));
+});
+
+it('shows an unchanged Custom card by its plain name, then removes Customised on reversal', () => {
+  render(<Host />);
+  fireEvent.click(screen.getByRole('radio', { name: 'Custom school/event' }));
+  expect(screen.getByRole('heading', { name: /^Custom school\/event/ })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Fewer: Minutes per period' }));
+  expect(screen.getByRole('heading', { name: /^Customised/ })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'More: Minutes per period' }));
+  expect(screen.queryByRole('heading', { name: /^Customised/ })).toBeNull();
+  expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
+});

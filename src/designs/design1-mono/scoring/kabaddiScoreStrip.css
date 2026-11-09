@@ -49,11 +49,8 @@
 .k5-mark {
   display: inline-block;
   flex: none;
-  width: 20px;
-  height: 16px;
-  background: currentColor;
-  -webkit-mask: var(--sport-mark) center / contain no-repeat;
-  mask: var(--sport-mark) center / contain no-repeat;
+  width: 18px;
+  height: 18px;
 }
 
 .k5-score {
@@ -201,11 +198,9 @@
 
 .k5-disc-mark {
   display: block;
-  width: 30px;
-  height: 22px;
-  background: var(--se-color-on-ink);
-  -webkit-mask: var(--sport-mark) center / contain no-repeat;
-  mask: var(--sport-mark) center / contain no-repeat;
+  width: 28px;
+  height: 28px;
+  color: var(--se-color-on-ink);
 }
 
 .k5-clock { font: 800 1.2rem/1 var(--sb-num); font-variant-numeric: tabular-nums; }
@@ -288,7 +283,7 @@
   .k5-pip { height: 6px; }
   .k5-ring { width: 50px; height: 50px; }
   .k5-ring-in b { font-size: 1.25rem; }
-  .k5-disc-mark { width: 24px; height: 18px; }
+  .k5-disc-mark { width: 22px; height: 22px; }
   .k5-pend { top: 28px; height: 22px; font-size: 0.85rem; }
   .k5-cues { padding-top: 6px; }
   .k5-cue { min-height: 30px; }

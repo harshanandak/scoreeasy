@@ -1,11 +1,11 @@
 import { loadQuickMatchDrafts } from '../../utils/appEntry';
 import { periodPreset } from '../../utils/goalsPeriods';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, within, waitFor } from '@testing-library/react';
+import { beforeEach, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
-import { loadCustomSetup, SETUP_PREFS_KEY } from '../../utils/setupPrefs';
-import { closeOpenSheet, findTeamNameInput, goToSetupStep, teamColourGroup } from '../../test/teamColour';
+import { loadCustomSetup, saveCustomSetup } from '../../utils/setupPrefs';
+import { goToSetupStep } from '../../test/teamColour';
 
 vi.mock('convex/react', () => ({
   useConvex: () => ({ query: async () => null }),
@@ -55,4 +55,17 @@ it('starts with standard rules, saves Custom on Start, and applies it only when 
   expect(screen.getByRole('heading', { name: /FIBA/ })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: /Use my last custom setup/ }));
   expect(screen.getByRole('heading', { name: /^Customised/ })).toBeInTheDocument();
+});
+
+
+it('does not overwrite saved rules when an unchanged Custom card starts', async () => {
+  const previous = periodPreset('basketball', 'custom', 4, 9);
+  saveCustomSetup('basketball', { format: previous });
+  renderQuick('/basketball/quick');
+  fireEvent.click(await screen.findByRole('radio', { name: 'Custom school/event' }));
+  goToSetupStep('Rules');
+  expect(screen.getByRole('heading', { name: /^Custom school\/event/ })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /^Reset to/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Start basketball' }));
+  expect(loadCustomSetup('basketball').format).toEqual(previous);
 });

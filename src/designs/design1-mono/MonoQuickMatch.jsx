@@ -61,7 +61,8 @@ import { KitChoiceGrid } from './kit/KitFormControls';
 import TeamCards from './kit/TeamCards';
 import RulesRow from './kit/RulesRow';
 import { LastCustomSetup, SetupStepper } from './kit/SetupSteps';
-import { clearSetupPrefs, loadSetupPrefs, saveSetupPrefs, loadCustomSetup, saveCustomSetup } from '../../utils/setupPrefs';
+import { clearSetupPrefs, loadSetupPrefs, saveSetupPrefs, loadCustomSetup, saveCustomSetup, withoutSetupToss } from '../../utils/setupPrefs';
+import SportMark from './kit/SportMark';
 import {
   isCustomSetup,
   applyFormatChoice,
@@ -608,6 +609,7 @@ export default function MonoQuickMatch() {
       setTeam2Name(saved.team2Name || saved.team2 || 'Team B');
       setTeam1Color(normaliseHex(saved.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
       setTeam2Color(normaliseHex(saved.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
+      if (saved.customSetupSource) setCustomSetupSource(saved.customSetupSource);
       if (saved.format) setFormat(saved.format);
       if (isCricket) {
         const preset = CRICKET_FORMATS.find(f => f.id === saved.format?.preset)
@@ -658,6 +660,7 @@ export default function MonoQuickMatch() {
     setTeam1Color(normaliseHex(draft.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
     setTeam2Color(normaliseHex(draft.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
     setPeriodState(draft.periodState?.version === 1 ? draft.periodState : draft.format?.periods?.version === 1 ? createPeriodMatch(draft.format.periods, Date.now()) : null);
+    if (draft.customSetupSource) setCustomSetupSource(draft.customSetupSource);
     if (draft.format) setFormat(freezeSetsFormat(sportConfig, draft.format, { legacy: true }));
     if (draft.scores) setScores(draft.scores);
     if (Array.isArray(draft.sets)) setSets(draft.sets);
@@ -718,6 +721,7 @@ export default function MonoQuickMatch() {
       phase,
       sport,
       scoringStarted,
+      customSetupSource,
       team1Name,
       team2Name,
       team1Color,
@@ -752,7 +756,7 @@ export default function MonoQuickMatch() {
     // re-serialize and re-save the entire draft each tick. We persist `startedAt`
     // and reconstruct elapsed from wall-clock on restore, so the per-tick write is
     // pure churn. The body still snapshots the latest timer value on real changes.
-  }, [periodState, kabaddiMatch, battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sidesSwapped, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
+  }, [customSetupSource, periodState, kabaddiMatch, battingTeam, cricketHistory, currentSet, format, freeHit, gScore1, gScore2, gScoreHistory, innings, lastAction, phase, quickMatchDraftKey, scores, scoringStarted, servingTeam, sidesSwapped, sets, sport, team1Color, team1Name, team2Color, team2Name, trialBallUsed, vScore1, vScore2, vScoreHistory]);
 
   // Whether this sport rotates serve to the point winner (drives the snapshot's
   // servingTeam). Declared HERE, before the broadcast effect that reads it, so the
@@ -981,6 +985,7 @@ export default function MonoQuickMatch() {
     const canonicalDate = entry.date || entry.completedAt || entry.createdAt || nowIso;
     const normalized = {
       ...entry,
+      ...(customSetupSource ? { customSetupSource } : {}),
       team1: canonicalTeam1,
       team2: canonicalTeam2,
       team1Name: entry.team1Name || canonicalTeam1,
@@ -1108,7 +1113,7 @@ export default function MonoQuickMatch() {
 
   const startMatch = () => {
     if (!team1Name.trim() || !team2Name.trim()) return;
-    if (isCustomSetup(format)) saveCustomSetup(sport, { format, source: customSetupSource });
+    if (isCustomSetup(format, customSetupSource, sportConfig)) saveCustomSetup(sport, { format, source: customSetupSource });
     const presetId = format.kabaddiRules?.presetId;
     saveSetupPrefs(sport, {
       colours: teamColourOn ? [team1Color, team2Color] : null,
@@ -1979,8 +1984,9 @@ export default function MonoQuickMatch() {
     setFormat(prev => ({ ...applyFormatChoice(sportConfig, choiceId, prev), ...(supportsSetsRules(sport) && prev.rulesPreset?.startsWith('Official') ? { rulesPreset: 'Custom school' } : {}) }));
   };
   // New matches always start with standard rules; saved custom rules are opt-in on Rules.
-  useEffect(() => { setSetupStep(0); setCustomSetupSource(null); }, [sport]);
+  useEffect(() => { setSetupStep(0); if (!restoredDraftRef.current && !resultMatchId) setCustomSetupSource(null); }, [sport]);
   const resetRemembered = () => {
+    setCustomSetupSource(null);
     clearSetupPrefs(sport);
     setRemembered(null);
     setTeam1Color(DEFAULT_TEAM_COLOURS.a);
@@ -2017,7 +2023,7 @@ export default function MonoQuickMatch() {
       <button type="button" className="se-ctl kit-setup-back" onClick={handleSetupBack} aria-label={backLabel}>
         <BackArrow size={20} />
       </button>
-      <span className="kit-setup-badge" aria-hidden="true" />
+      <span className="kit-setup-badge" aria-hidden="true"><SportMark sportId={sport} /></span>
       <div className="kit-setup-title">
         <h1>{title}</h1>
         {subtitle && <p>{subtitle}</p>}
@@ -2377,7 +2383,11 @@ export default function MonoQuickMatch() {
           <LastCustomSetup saved={lastCustomSetup}
             summary={lastCustomSetup ? (lastCustomSetup.format.kabaddiRules ? kabaddiRulesLine(lastCustomSetup.format.kabaddiRules) : setupRulesLine(sportConfig, lastCustomSetup.format)) : ''}
             onUse={saved => {
-              setFormat(saved.format);
+              try {
+                const rules = withoutSetupToss(saved.format);
+                setFormat(isKabaddi ? { ...format, kabaddiRules: resolveKabaddiRules('custom', rules.kabaddiRules) }
+                  : { ...rules, ...(Object.hasOwn(format, 'initialServer') ? { initialServer: format.initialServer } : {}) });
+              } catch { return; }
               setCustomSetupSource(saved.source);
               if (isCricket) { setCricketPreset('custom'); setFormatMode('custom'); }
             }} />
@@ -2556,7 +2566,7 @@ export default function MonoQuickMatch() {
 
             {/* Batting team — hero */}
             <div className="mono-scorer-main-score cricket-hero cricket-aggregate-hero">
-              <span className="cricket-mark" aria-hidden="true" />
+              <SportMark sportId="cricket" className="cricket-mark" />
               <p className="text-xs uppercase font-mono" style={{ color: 'var(--se-color-ink-muted)', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 6 }}>
                 {currentName} batting
               </p>
@@ -2916,6 +2926,7 @@ export default function MonoQuickMatch() {
             subtitle={`${sportConfig?.name || 'Match'} \u00b7 ${setsRule}`}
             setUnit={setUnit}
             sportColour={sportConfig?.config?.setLabel ? sportIdentity(sport)?.core : undefined}
+            sportId={sport}
             isLive={Boolean(live?.isLive)}
             colourStyle={teamColourStyle}
             halves={boardHalves}
