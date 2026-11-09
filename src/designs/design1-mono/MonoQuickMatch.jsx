@@ -16,6 +16,7 @@ import { finish as finishKabaddi } from '../../utils/kabaddiEngine';
 import { kabaddiRulesLine } from '../../utils/kabaddiRules';
 import { KabaddiFirstRaid, KabaddiGameStep, KabaddiRulesStep } from './kit/KabaddiSetup';
 import { SetsRulesStep, TennisRulesStep } from './kit/SetsSetup';
+import { CricketRulesStep } from './kit/CricketSetup';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
 import './scoring/cricketBoard.css';
@@ -67,6 +68,8 @@ import SportMark from './kit/SportMark';
 import {
   isCustomSetup,
   setupSourcePreset,
+  matchesSetupPreset,
+  setupRuleValues,
   applyFormatChoice,
   applyGoalsDetail,
   describeFormatChoices,
@@ -610,7 +613,8 @@ export default function MonoQuickMatch() {
       setTeam2Name(saved.team2Name || saved.team2 || 'Team B');
       setTeam1Color(normaliseHex(saved.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
       setTeam2Color(normaliseHex(saved.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
-      if (saved.customSetupSource) setCustomSetupSource(saved.customSetupSource);
+      const savedSource = saved.customSetupSource || (isCricket && lastCustomSetup && matchesSetupPreset(setupRuleValues(sportConfig, saved.format), setupRuleValues(sportConfig, lastCustomSetup.format)) ? lastCustomSetup.source : null);
+      if (savedSource) setCustomSetupSource(savedSource);
       if (saved.format) setFormat(saved.format);
       if (isCricket) {
         const preset = CRICKET_FORMATS.find(f => f.id === saved.format?.preset)
@@ -661,7 +665,9 @@ export default function MonoQuickMatch() {
     setTeam1Color(normaliseHex(draft.team1Color) ?? DEFAULT_TEAM_COLOURS.a);
     setTeam2Color(normaliseHex(draft.team2Color) ?? DEFAULT_TEAM_COLOURS.b);
     setPeriodState(draft.periodState?.version === 1 ? draft.periodState : draft.format?.periods?.version === 1 ? createPeriodMatch(draft.format.periods, Date.now()) : null);
-    if (draft.customSetupSource) setCustomSetupSource(draft.customSetupSource);
+    const restoredSource = draft.customSetupSource || (isCricket && lastCustomSetup && matchesSetupPreset(setupRuleValues(sportConfig, draft.format), setupRuleValues(sportConfig, lastCustomSetup.format)) ? lastCustomSetup.source : null);
+    if (restoredSource) setCustomSetupSource(restoredSource);
+    if (isCricket && draft.format?.preset) { setCricketPreset(draft.format.preset); setFormatMode(draft.format.preset === 'custom' ? 'custom' : 'standard'); }
     if (draft.format) setFormat(freezeSetsFormat(sportConfig, draft.format, { legacy: true }));
     if (draft.scores) setScores(draft.scores);
     if (Array.isArray(draft.sets)) setSets(draft.sets);
@@ -1967,6 +1973,7 @@ export default function MonoQuickMatch() {
   const chooseCricketFormat = (presetId) => {
     const preset = CRICKET_FORMATS.find(f => f.id === presetId);
     if (!preset) return;
+    setCustomSetupSource(null);
     setCricketPreset(preset.id);
     setFormatMode(preset.customizable ? 'custom' : 'standard');
     setFormat(buildCricketFormat(preset.id));
@@ -2234,7 +2241,8 @@ export default function MonoQuickMatch() {
       if (isTennis) return <TennisRulesStep format={format} onChange={setFormat} />;
       if (supportsSetsRules(sport)) return <SetsRulesStep source={customSetupSource} onSourceChange={setCustomSetupSource} sport={sport} sportConfig={sportConfig} format={format} onChange={setFormat} names={[team1Name, team2Name]} />; // Set sports use their existing editable rules; tennis keeps its fixed scoring rules.
 
-      if (isCricket) return null; // cricket
+      if (isCricket) return <CricketRulesStep sportConfig={sportConfig} format={format} cricketPreset={cricketPreset} source={customSetupSource} onSourceChange={setCustomSetupSource}
+        onChange={next => { setFormat(next); setCricketPreset(next.preset); setFormatMode(next.preset === 'custom' ? 'custom' : 'standard'); }} />; // cricket
 
       return null;
     })();

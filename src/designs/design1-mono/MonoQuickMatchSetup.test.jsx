@@ -156,7 +156,9 @@ describe('MonoQuickMatch setup clarity', () => {
 
     expect(await screen.findByRole('button', { name: 'Start cricket' })).toBeEnabled();
     expect(screen.getByRole('radio', { name: 'T20' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByText('20 overs · 11 players · 1 innings each')).toBeInTheDocument();
+    // The rules line now lives in the Rules step, not under the Game cards.
+    goToSetupStep('Rules');
+    expect(screen.getByRole('heading', { level: 2, name: /^T20 · 20 overs · 11 players · 1 innings each/ })).toBeInTheDocument();
   });
 
   it('opens cricket query presets on the matching setup step after route switches', async () => {
@@ -168,7 +170,7 @@ describe('MonoQuickMatch setup clarity', () => {
 
     expect(await screen.findByRole('button', { name: 'Start cricket' })).toBeEnabled();
     expect(screen.getByRole('radio', { name: 'Gully' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByRole('button', { name: 'Edit rules' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Rules' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Game', current: 'step' })).toBeInTheDocument();
   });
 
@@ -299,16 +301,16 @@ describe('MonoQuickMatch setup clarity', () => {
     expect(screen.getByText('First to 5 goals wins')).toBeInTheDocument();
   });
 
-  it('edits gully rules one tap away and returns to setup with them', async () => {
+  it('edits gully rules in the Rules step and starts with them', async () => {
     renderQuickMatch({ pathname: '/cricket/quick', search: '?format=gully' });
-    fireEvent.click(await screen.findByRole('button', { name: 'Edit rules' }));
-    expect(screen.getByRole('heading', { level: 1, name: 'Match rules' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'More players' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Last man bats' }));
-    expect(screen.getByRole('button', { name: 'Last man bats' })).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
-    expect(await screen.findByRole('button', { name: 'Start cricket' })).toBeInTheDocument();
-    expect(screen.getByText('5 overs · 7 players · 1 innings each · bat only')).toBeInTheDocument();
+    await screen.findByRole('button', { name: 'Rules' });
+    goToSetupStep('Rules');
+    fireEvent.click(screen.getByRole('button', { name: 'More: Players per side' }));
+    fireEvent.click(screen.getByRole('button', { name: 'More rules' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Last man bats' }));
+    expect(screen.getByRole('switch', { name: 'Last man bats' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('heading', { level: 2, name: /5 overs · 7 players · 1 innings each · bat only/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start cricket' })).toBeInTheDocument();
   });
 
   it('edits points per set for a sets sport in the Rules step; the Game cards state the new rules', async () => {
@@ -320,7 +322,7 @@ describe('MonoQuickMatch setup clarity', () => {
     expect(await screen.findByRole('radio', { name: 'Best of 3' })).toHaveAccessibleDescription(/21 points a set · win by 2 · decider to 15 · cap 27/);
   });
 
-  it.each([['volleyball', 'Rules'], ['kabaddi', null], ['tennis', null], ['cricket', null], ['football', null]])(
+  it.each([['volleyball', 'Rules'], ['kabaddi', null], ['tennis', null], ['cricket', 'Rules'], ['football', null]])(
     '%s: Start is available with the defaults on the first step',
     async (sport, rulesAction) => {
       renderQuickMatch(`/${sport}/quick`);
