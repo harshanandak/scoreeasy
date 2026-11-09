@@ -33,3 +33,43 @@ describe('knockout card set outcomes', () => {
     }
   });
 });
+
+describe('cricket knockout card display', () => {
+  const names = (id) => (id === 'A' ? 'Alpha' : 'Beta');
+  const renderCard = (match, tournament) => render(
+    <KnockoutMatchCard match={match} tournament={tournament} sport="cricket" id="1" engine="custom-cricket" navigate={vi.fn()} getTeamName={names} />,
+  );
+
+  it('shows the innings lines and result of a completed Test knockout whose team scores were never set', () => {
+    // Knockouts start with team1Score and team2Score null, and the Test scorer saves innings, winner and
+    // winDesc without setting them.
+    const match = {
+      id: 'final', round: 'final', label: 'Final', team1Id: 'A', team2Id: 'B', status: 'completed',
+      winner: 'A', winDesc: 'Won by 56 runs', team1Score: null, team2Score: null,
+      innings: [
+        { teamId: 'A', runs: 243, wickets: 10, balls: 300, allOut: true },
+        { teamId: 'B', runs: 187, wickets: 6, balls: 250, declared: true },
+      ],
+    };
+    renderCard(match, { format: { preset: 'test', overs: null, totalInnings: 4 } });
+    expect(screen.getByText('243/all')).toBeInTheDocument();
+    expect(screen.getByText('187/6d')).toBeInTheDocument();
+    expect(screen.getByText('Won by 56 runs')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit Score' })).toBeInTheDocument();
+  });
+
+  it('counts a knockout innings in balls when the knockout format tracks balls and the group format tracks overs', () => {
+    // The scorer falls back to knockoutConfig.format for a knockout match without its own format.
+    const match = {
+      id: 'final', round: 'final', label: 'Final', team1Id: 'A', team2Id: 'B', status: 'completed', winner: 'A',
+      winDesc: 'Won by 5 runs', team1Score: { runs: 40, wickets: 2, balls: 30 }, team2Score: { runs: 35, wickets: 3, balls: 30 },
+    };
+    const tournament = {
+      format: { preset: 'custom', overs: 5, trackOvers: true },
+      knockoutConfig: { teamsAdvancing: 2, format: { preset: 'custom', overs: 5, trackOvers: false } },
+    };
+    renderCard(match, tournament);
+    expect(screen.getAllByText('30 balls')).toHaveLength(2);
+    expect(screen.queryByText('5 ov')).not.toBeInTheDocument();
+  });
+});
