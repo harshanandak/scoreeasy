@@ -1,5 +1,5 @@
 /* Kit form controls (switch row, number stepper, choice grid). Tokens only: dark mode is a token
-   swap. Every target is 48px. The sticky Start bar is cleared by setup.css scroll-padding. */
+   swap. Every target is 48px. The fixed Start bar is cleared by setup.css scroll-padding. */
 
 /* ---- compact setting rows: label on the left, the control on the right ---- */
 .kit-togglewrap {

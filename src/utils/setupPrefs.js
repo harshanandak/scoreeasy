@@ -1,7 +1,7 @@
 import { matchStorageKey } from './accountStorage';
-// Per-sport team colours and last customised rules, scoped to the current guest or signed-in
-// account with matchStorageKey. Names and toss results are never preferences. Colours auto-fill;
-// saved custom rules are opt-in, and blocked or malformed storage never prevents match setup.
+// Per-sport colours, format-id metadata and customised rules use the current guest or account
+// scope from matchStorageKey. Only colours auto-fill; custom rules are opt-in. Names and toss
+// choices are excluded. Blocked or malformed storage never prevents match setup.
 import { resolveKabaddiRules } from './kabaddiRules';
 import { normaliseHex } from '../lib/teamColour';
 
