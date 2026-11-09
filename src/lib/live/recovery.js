@@ -13,9 +13,12 @@ export function flushLiveSession(clientMatchId, mutations) {
   if (!clientMatchId) return Promise.resolve(null);
   if (inFlight.has(clientMatchId)) return inFlight.get(clientMatchId);
   const task = Promise.resolve().then(async () => {
-    const session = loadSession(clientMatchId);
-    if (!session?.matchId || session.broadcastError) return null;
-    const current = () => loadSession(clientMatchId)?.matchId === session.matchId;
+    let session = loadSession(clientMatchId);
+    if (!session || session.broadcastError) return null;
+    const current = () => {
+      const latest = loadSession(clientMatchId);
+      return Boolean(latest && latest.matchId === session.matchId);
+    };
     const send = async (item) => {
       if (!current()) return;
       const common = { matchId: session.matchId, clientEventId: item.clientEventId, at: item.at, snapshot: item.snapshot };
@@ -31,6 +34,26 @@ export function flushLiveSession(clientMatchId, mutations) {
         saveSession(clientMatchId, updated);
       }
     };
+    if (!session.matchId && session.finalizeIntent && mutations.getOwnedSession) {
+      try {
+        const restored = await mutations.getOwnedSession(clientMatchId);
+        const latest = loadSession(clientMatchId);
+        if (!latest?.finalizeIntent || latest.broadcastError) return null;
+        if (!latest.matchId && !restored) {
+          const error = Object.assign(new Error('Live match not found'), { data: { code: 'match_not_found' } });
+          rejectSession(error);
+          return { error };
+        }
+        if (!latest.matchId && restored?.matchId) {
+          saveSession(clientMatchId, { ...latest, matchId: restored.matchId, token: restored.token, seq: Math.max(latest.seq ?? 0, restored.lastSeq ?? 0) });
+        }
+        session = loadSession(clientMatchId);
+      } catch (error) {
+        if (permanentSessionError(error)) rejectSession(error);
+        return { error };
+      }
+    }
+    if (!session?.matchId) return null;
     let result = await reconcile(send, { clientMatchId });
     // A terminal snapshot may be appended while an empty drain is resolving.
     while (!result.error && current() && size(clientMatchId) > 0) {
