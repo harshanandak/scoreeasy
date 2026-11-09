@@ -85,7 +85,7 @@ describe('KabaddiRulesStep summary, changes and reset', () => {
   it('shows standard values, uses the existing Custom rules and recognises restored values', () => {
     const standard = resolveKabaddiRules('standard');
     render(<Host initial={{ kabaddiRules: standard }} />);
-    expect(screen.getByRole('spinbutton', { name: 'Players a side' })).toHaveValue(7);
+    expect(screen.getByRole('spinbutton', { name: 'Players a side' })).toHaveValue('7');
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Minutes a half' }), { target: { value: '15' } });
     expect(latest.kabaddiRules).toEqual(custom(standard, { end: { ...standard.end, halfMs: 900000 } }));
     expect(screen.getByRole('heading', { name: /^Customised ? from Standard/ })).toBeInTheDocument();
