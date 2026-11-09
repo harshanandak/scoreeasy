@@ -319,3 +319,10 @@ it('counts volleyball scores only after a fixture is completed', () => {
   expect(completed.find(row => row.teamId === 'a')).toMatchObject({ played: 1, won: 1, lost: 0, matchPoints: 2 });
   expect(completed.find(row => row.teamId === 'b')).toMatchObject({ played: 1, won: 0, lost: 1, matchPoints: 0 });
 });
+
+
+it('preserves legacy abandoned volleyball results', () => {
+  const teams = [{ id: 'a' }, { id: 'b' }];
+  const match = { team1Id: 'a', team2Id: 'b', score1: 12, score2: 8, status: 'abandoned' };
+  calculateVolleyballStandings(teams, [match]).forEach(row => expect(row).toMatchObject({ played: 1, noResult: 1, won: 0, lost: 0, matchPoints: 0 }));
+});

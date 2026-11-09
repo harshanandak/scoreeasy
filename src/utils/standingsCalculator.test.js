@@ -425,3 +425,16 @@ describe('finished fixtures in generic standings', () => {
     expect(completed.find(row => row.teamId === 'b')).toMatchObject({ played: 1, won: 0, lost: 1, [pointsField]: 0 });
   });
 });
+
+
+it.each([
+  ['sets', calculateSetsStandings, { sets: [] }],
+  ['goals', calculateGoalsStandings, { score1: 1, score2: 0 }],
+])('preserves legacy abandoned %s results without counting unfinished ones', (_sport, calculate, score) => {
+  const teams = [{ id: 'a' }, { id: 'b' }];
+  const match = { team1Id: 'a', team2Id: 'b', resultType: 'abandoned', ...score };
+  expect(calculate(teams, [{ ...match, status: 'in_progress' }], {})).toEqual(calculate(teams, [], {}));
+  for (const status of ['completed', 'abandoned']) {
+    calculate(teams, [{ ...match, status }], {}).forEach(row => expect(row).toMatchObject({ played: 1, noResult: 1, won: 0, lost: 0 }));
+  }
+});
