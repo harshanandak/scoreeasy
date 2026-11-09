@@ -68,6 +68,24 @@ describe('KitNumberStepper', () => {
     expect(input).toHaveAttribute('aria-valuenow', '9');
   });
 
+  it('reads the whole typed number and never rewrites its meaning', () => {
+    const seen = vi.fn();
+    render(<Harness start={21} min={1} max={99} onSeen={seen} />);
+    const input = screen.getByRole('spinbutton');
+    // Leading zeros keep the value: 00021 is 21 (already the value, so no change), 0009 is 9.
+    fireEvent.change(input, { target: { value: '00021' } });
+    expect(seen).not.toHaveBeenCalled();
+    fireEvent.change(input, { target: { value: '0009' } });
+    expect(seen).toHaveBeenLastCalledWith(9);
+    // A fraction or stray characters are rejected, never read as a different whole number.
+    fireEvent.change(input, { target: { value: '2.5' } });
+    fireEvent.change(input, { target: { value: '1a2' } });
+    fireEvent.change(input, { target: { value: '-3' } });
+    expect(seen).toHaveBeenCalledTimes(1);
+    fireEvent.blur(input);
+    expect(input).toHaveAttribute('aria-valuenow', '9');
+  });
+
   it('steps with the arrow keys and stays inside the bounds', () => {
     render(<Harness start={11} />);
     const input = screen.getByRole('spinbutton');
