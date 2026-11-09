@@ -7,6 +7,7 @@ export function useGuestMatchUploads(queue) {
   const ready = queue?.ready;
   const [notice, setNotice] = useState(null);
   useEffect(() => {
+    setNotice(null);
     if (!ready || !ownerId) return;
     const acknowledged = () => {
       const count = consumeGuestUploadNotice(ownerId);

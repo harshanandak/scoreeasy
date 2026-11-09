@@ -1,0 +1,18 @@
+.guest-upload-notice {
+  position: fixed;
+  z-index: 205;
+  right: 16px;
+  bottom: 24px;
+  left: 16px;
+  max-width: 520px;
+  min-height: 48px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--se-color-ink, #111);
+  color: var(--se-color-on-ink, #fff);
+  font: 650 0.92rem var(--se-font-sans, sans-serif);
+}
+@media (max-width: 767px) {
+  .guest-upload-notice { bottom: calc(84px + var(--se-safe-bottom, 0px)); }
+}
