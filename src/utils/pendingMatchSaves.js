@@ -202,6 +202,7 @@ export function attemptMatchSave(record, save, canSend = () => true, manual = fa
     if (!sameCompletion(currentRecord(record), record) || !fixtureStillMatches(record)) return { status: 'pending', clientMatchId: record.payload.clientMatchId };
     record = write({ ...record, state: 'syncing', terminal: false });
     if (pendingWrites.has(key)) await pendingWrites.get(key);
+    if (isMatchSaveConfirmed(record.ownerId, record.payload.clientMatchId, record.completionId) || localSaveConfirmed(record)) return { status: 'synced', clientMatchId: record.payload.clientMatchId };
     if (!canSend() || !sameCompletion(currentRecord(record), record) || !fixtureStillMatches(record)) return { status: 'pending', clientMatchId: record.payload.clientMatchId };
     try {
       await save(record.payload);
