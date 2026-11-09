@@ -2,6 +2,12 @@ import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
+import { useConvex, usePaginatedQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { useAuth } from '../../hooks/useAuth';
+import { matchSaveOwner } from '../../hooks/usePendingMatchSaves';
+import { mergeAccountHistory } from '../../utils/accountHistory';
+import ErrorBoundary from '../../components/ErrorBoundary';
 import { useGameHistory } from '../../hooks/useGameHistory';
 import {
   loadCompletedQuickMatches,
@@ -230,6 +236,8 @@ function buildTournamentEntries() {
           id: `tour-${sport.id}-${tournament.id}-${match.id}`,
           source: 'tournament',
           clientMatchId: getTournamentMatchClientId({ sportId: sport.id, tournament, match }),
+          syncOwnerId: match.syncOwnerId,
+          sync: match.sync,
           tournamentMatch: { storageKey: sport.storageKey, tournamentId: tournament.id, matchId: match.id },
           sport: sport.id,
           sportName: sport.name,
@@ -251,7 +259,36 @@ function buildTournamentEntries() {
 }
 
 export default function MonoHistory() {
+  const auth = useAuth();
+  const client = useConvex();
+  const ownerId = matchSaveOwner(auth);
+  const userId = auth.user?._id;
+  if (client && ownerId && userId) {
+    return (
+      <ErrorBoundary key={`${ownerId}:${userId}`} captureToSentry={false}
+        fallback={<HistoryContent ownerId={ownerId} userId={userId} cloudStatus="Failed" />}>
+        <AccountHistory ownerId={ownerId} userId={userId} />
+      </ErrorBoundary>
+    );
+  }
+  return <HistoryContent key={ownerId || 'guest'} ownerId={ownerId} userId={userId} />;
+}
+
+function AccountHistory({ ownerId, userId }) {
+  const { results, status, loadMore } = usePaginatedQuery(api.matches.getByUser, { userId }, { initialNumItems: 50 });
+  return <HistoryContent ownerId={ownerId} userId={userId} cloudMatches={results} cloudStatus={status} loadMore={() => loadMore(50)} />;
+}
+AccountHistory.propTypes = { ownerId: PropTypes.string.isRequired, userId: PropTypes.string.isRequired };
+
+export function HistoryContent({ ownerId = null, userId = null, cloudMatches = [], cloudStatus = 'Exhausted', loadMore = null }) {
   const navigate = useNavigate();
+  const [online, setOnline] = useState(navigator.onLine !== false);
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine !== false);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update); };
+  }, []);
   const { history, refresh: refreshLegacyHistory } = useGameHistory();
   const [view, setView] = useState('matches');
   const [quickMatches, setQuickMatches] = useState([]);
@@ -304,6 +341,8 @@ export default function MonoHistory() {
         id: `quick-${qm.id}`,
         rawId: qm.id,
         clientMatchId: qm.clientMatchId || buildQuickMatchClientId(qm.sport, qm.id),
+        syncOwnerId: qm.syncOwnerId,
+        sync: qm.sync,
         source: 'quick',
         sport: qm.sport,
         sportName: getSportById(qm.sport)?.name || 'Custom',
@@ -345,9 +384,8 @@ export default function MonoHistory() {
   }, [history]);
 
   const allEntries = useMemo(() => {
-    return [...quickEntries, ...tournamentEntries, ...legacyEntries]
-      .sort((a, b) => toTimestamp(b.date) - toTimestamp(a.date));
-  }, [quickEntries, tournamentEntries, legacyEntries]);
+    return mergeAccountHistory([...quickEntries, ...tournamentEntries, ...legacyEntries], cloudMatches, ownerId, userId);
+  }, [quickEntries, tournamentEntries, legacyEntries, cloudMatches, ownerId, userId]);
 
   // Sport chips: the sports already played, most played first, then every other registered sport
   // (re-picking a chip clears it, as before).
@@ -376,10 +414,10 @@ export default function MonoHistory() {
     || sortOrder !== SORT_NEWEST
     || filter !== 'all';
 
-  const quickCount = quickEntries.length;
-  const tournamentCount = tournamentEntries.length + legacyEntries.length;
+  const quickCount = allEntries.filter(entry => entry.source === 'quick').length;
+  const tournamentCount = allEntries.filter(entry => entry.source === 'tournament').length;
   const totalCount = allEntries.length;
-  const clearableCount = quickCount + legacyEntries.length;
+  const clearableCount = quickEntries.length + legacyEntries.length;
 
   const resetDiscoveryFilters = () => {
     setFilter('all');
@@ -562,6 +600,9 @@ export default function MonoHistory() {
       ) : (
         <div id="tabpanel-history-matches" role="tabpanel" aria-labelledby="tab-history-matches" ref={matchesPanelRef}>
           <InProgressMatches />
+          {!online && <p role="status">Offline. Showing matches available on this device. Account history will refresh when you reconnect.</p>}
+          {online && cloudStatus === 'LoadingFirstPage' && <p role="status">Loading account history… Your local matches are available below.</p>}
+          {cloudStatus === 'Failed' && <p role="status">Account history is unavailable. Your local matches are shown below. Reload to try again.</p>}
           {totalCount === 0 ? (
             <section className="kit-card kit-empty" aria-labelledby="history-empty-title">
               <EmptyHistoryArt />
@@ -654,7 +695,7 @@ export default function MonoHistory() {
                             else rowRefs.current.delete(entry.id);
                           }}
                         />
-                        {entry.source === 'quick' && <MatchSyncStatus compact clientMatchId={entry.clientMatchId} quickMatchId={entry.rawId} />}
+                        {entry.source === 'quick' && !entry.cloudOnly && <MatchSyncStatus compact clientMatchId={entry.clientMatchId} quickMatchId={entry.rawId} />}
                         {entry.tournamentMatch && <MatchSyncStatus compact clientMatchId={entry.clientMatchId} tournamentMatch={entry.tournamentMatch} />}
                         </Fragment>
                       ))}
@@ -681,6 +722,11 @@ export default function MonoHistory() {
               )}
             </>
           )}
+          {loadMore && (cloudStatus === 'CanLoadMore' || cloudStatus === 'LoadingMore') && (
+            <button type="button" className="se-ctl" disabled={!online || cloudStatus === 'LoadingMore'} onClick={loadMore}>
+              {cloudStatus === 'LoadingMore' ? 'Loading older matches…' : 'Load older account matches'}
+            </button>
+          )}
         </div>
       )}
 
@@ -689,9 +735,9 @@ export default function MonoHistory() {
           <MatchDetails
             entry={selectedEntry}
             confirmingDelete={Boolean(pendingDelete && !pendingDelete.deleted && pendingDelete.entry.id === selectedEntry.id)}
-            onRematch={selectedEntry.source === 'quick' && getSportById(selectedEntry.sport) ? () => rematchEntry(selectedEntry) : null}
+            onRematch={!selectedEntry.cloudOnly && selectedEntry.source === 'quick' && getSportById(selectedEntry.sport) ? () => rematchEntry(selectedEntry) : null}
             onShare={() => shareEntry(selectedEntry)}
-            onDelete={selectedEntry.source === 'quick' ? () => confirmDeleteQuickMatch(selectedEntry) : null}
+            onDelete={!selectedEntry.cloudOnly && selectedEntry.source === 'quick' ? () => confirmDeleteQuickMatch(selectedEntry) : null}
             onConfirmDelete={completeDeleteQuickMatch}
             onCancelDelete={() => setPendingDelete(null)}
             onClose={closeDetails}
@@ -708,6 +754,10 @@ export default function MonoHistory() {
     </div>
   );
 }
+HistoryContent.propTypes = {
+  ownerId: PropTypes.string, userId: PropTypes.string, cloudMatches: PropTypes.array,
+  cloudStatus: PropTypes.string, loadMore: PropTypes.func,
+};
 
 /* The month card: the newest month in the list, its total, and one stack bar whose segments and
    legend are the same per-sport counts as that month's rows below (they always sum to the list). */
@@ -857,7 +907,7 @@ function MatchDetails({ entry, confirmingDelete, onRematch, onShare, onDelete, o
   const colours = entry.colours ? teamColourVars(deriveTeamColours(entry.colours[0], entry.colours[1])) : null;
   const meta = [
     entry.sportName,
-    entry.source === 'quick' ? 'Quick match' : 'Tournament',
+    entry.source === 'quick' ? 'Quick match' : entry.source === 'account' ? 'Account match' : 'Tournament',
     entry.isLegacy ? entry.participants : entry.tournamentName,
     formatDate(entry.date),
     entry.elapsedSeconds > 0 ? formatElapsed(entry.elapsedSeconds) : null,
@@ -870,6 +920,7 @@ function MatchDetails({ entry, confirmingDelete, onRematch, onShare, onDelete, o
   return (
     <div className="kit-detail" style={colours || undefined}>
       <p className="kit-detail-meta">{meta}</p>
+      {entry.cloudOnly && <p>Saved account result · read-only. A full scoring board is not available for this saved summary.</p>}
       {entry.isLegacy ? (
         <p className="kit-row-title" style={{ margin: '0 0 8px', fontSize: '1.05rem' }}>{entry.tournamentName}</p>
       ) : (

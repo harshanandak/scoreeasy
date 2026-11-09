@@ -3,6 +3,8 @@ import { QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { authedQuery } from "./lib/functions";
 import { matchSaveMutation } from "./lib/matchSaveMutation";
+import { paginationOptsValidator } from "convex/server";
+import { matchDocument } from "./lib/matchFields";
 
 async function getMatchesForUserId(ctx: QueryCtx, userId: Id<"users">) {
   const matches = await ctx.db.query("matches")
@@ -171,14 +173,21 @@ export const save = matchSaveMutation({
 });
 
 export const getByUser = authedQuery({
-  args: { userId: v.id("users") },
-  handler: async (ctx, { userId }) => {
+  args: { userId: v.id("users"), paginationOpts: v.optional(paginationOptsValidator) },
+  returns: v.object({
+    page: v.array(matchDocument), isDone: v.boolean(), continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
+  }),
+  handler: async (ctx, { userId, paginationOpts }) => {
     if (userId !== ctx.user._id) {
       throw new Error("Not authorized");
     }
 
-    const { matches } = await getMatchesForUserId(ctx, userId);
-    return sortMatchesByDate(matches);
+    const matches = ctx.db.query("matches")
+      .withIndex("by_operator_date", (q) => q.eq("operatedBy", ctx.user._id)).order("desc");
+    const options = paginationOpts || { numItems: 100, cursor: null };
+    return matches.paginate({ ...options, numItems: Math.min(100, Math.max(1, options.numItems)) });
   },
 });
 
