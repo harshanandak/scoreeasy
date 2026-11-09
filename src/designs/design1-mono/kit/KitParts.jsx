@@ -168,7 +168,7 @@ SportTile.propTypes = {
 
 /**
  * A list-row / history badge: the sport's identity gradient with its sport icon (from
- * sportIcons.jsx, stroke 2 for the stroke-drawn ones) in the on-colour. Unknown sports get a neutral well.
+ * sportIcons.jsx; strokeWidth={2} keeps the stroke-drawn ones at their designed widths) in the on-colour. Unknown sports get a neutral well.
  */
 export function SportBadge({ sportId }) {
   const Doodle = Object.prototype.hasOwnProperty.call(ICON_BY_SPORT_ID, sportId) ? ICON_BY_SPORT_ID[sportId] : null;
