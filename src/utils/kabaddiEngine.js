@@ -130,8 +130,8 @@ function append(state, after, entry, before = snapshot(state)) {
   return next;
 }
 
-function admin(state, after, action, details = {}) {
-  return append(state, after, { id: `admin-${state.revision + 1}`, type: 'admin', action, ...details });
+function admin(state, after, action, details = {}, before) {
+  return append(state, after, { id: `admin-${state.revision + 1}`, type: 'admin', action, ...details }, before);
 }
 
 export function nextRaider(state) { return state.nextRaidTeam; }
@@ -256,13 +256,16 @@ export function reopenLastRaid(state, { id, atMs }) {
 }
 
 /** Explicit half deadline: an active raid still requires a referee outcome. */
-export function timeUp(state) {
+export function timeUp(state, { atMs = (state.clock?.anchorMonotonicMs ?? 0) + (state.clock?.remainingAtAnchorMs ?? 0) } = {}) {
   assertState(state);
   check(state.phase === 'playing' && halfLimit(state) !== null, 'timeUp requires timed play');
+  const before = snapshot(state);
+  before.clock = frozenClock(state, atMs);
+  if (state.activeRaid?.raidClock) before.activeRaid.raidClock = frozenClock(state, atMs, 'raid');
   const after = copyState(state);
-  after.clock = { ...after.clock, remainingAtAnchorMs: 0, running: false, persistedWallAnchor: null };
+  after.clock = { ...before.clock, remainingAtAnchorMs: 0 };
   after.phase = state.activeRaid ? (state.half === 1 ? 'halfPending' : 'fullPending') : (state.half === 1 ? 'halfTime' : 'finishReview');
-  return admin(state, after, 'timeUp');
+  return admin(state, after, 'timeUp', {}, before);
 }
 
 export function pause(state, { atMs = (state.clock?.anchorMonotonicMs ?? 0) } = {}) {

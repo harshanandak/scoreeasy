@@ -471,7 +471,7 @@ export { timeUp, startHalf };
 export function callDeadline(match, atMs) {
   const state = match.state.phase === 'paused' ? resume(match.state, { atMs }) : match.state;
   if (remainingTime(state, atMs) > 0) return match;
-  return { ...match, state: timeUp(state) };
+  return { ...match, state: timeUp(state, { atMs }) };
 }
 
 export function startNextHalf(match, atMs) {
