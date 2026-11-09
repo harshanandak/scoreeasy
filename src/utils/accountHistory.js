@@ -23,7 +23,7 @@ export function mergeAccountHistory(local, cloud, ownerId, userId) {
     entries.set(match.clientMatchId || match.id, match);
   }
   for (const match of cloud) {
-    if (!ownerId || !userId || match.operatedBy !== userId) continue;
+    if (!ownerId || !userId || match.accountOwnerId !== ownerId || match.operatedBy !== userId) continue;
     const key = match.clientMatchId || `cloud-${match._id}`;
     const existing = entries.get(key);
     if (!existing || existing.sync?.status === 'synced') entries.set(key, cloudHistoryEntry(match));

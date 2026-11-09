@@ -7,7 +7,7 @@ import MonoHistory from './MonoHistory';
 const h = vi.hoisted(() => ({ results: [], status: 'Exhausted', loadMore: vi.fn() }));
 vi.mock('convex/react', () => ({ useConvex: () => ({}), useQuery: () => [], useMutation: () => vi.fn(), usePaginatedQuery: () => h }));
 const auth = id => ({ isAuthenticated: Boolean(id), user: id ? { _id: `db-${id}` } : null, clerkUser: id ? { id } : null });
-const cloud = { _id: 'result', operatedBy: 'db-X', sport: 'football', team1: 'Account North', team2: 'Account South', score1: 2, score2: 1, winner: 'Account North', date: Date.parse('2026-11-01'), clientMatchId: 'quick:football:cloud' };
+const cloud = { _id: 'result', accountOwnerId: 'X', operatedBy: 'db-X', sport: 'football', team1: 'Account North', team2: 'Account South', score1: 2, score2: 1, winner: 'Account North', date: Date.parse('2026-11-01'), clientMatchId: 'quick:football:cloud' };
 const tree = id => <AuthContext.Provider value={auth(id)}><MemoryRouter><MonoHistory /></MemoryRouter></AuthContext.Provider>;
 beforeEach(() => {
   localStorage.clear(); h.results = [cloud]; h.status = 'Exhausted'; h.loadMore.mockReset();
@@ -29,6 +29,8 @@ it('removes X rows and an open details sheet on sign-out and an X to Y account s
   expect(screen.queryByText(/Account North/)).not.toBeInTheDocument();
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   rerender(tree('Y'));
+  expect(screen.queryByText(/Account North/)).not.toBeInTheDocument();
+  rerender(<AuthContext.Provider value={{ ...auth('Y'), user: { _id: 'db-X' } }}><MemoryRouter><MonoHistory /></MemoryRouter></AuthContext.Provider>);
   expect(screen.queryByText(/Account North/)).not.toBeInTheDocument();
 });
 it('keeps local results while account History is loading or offline and pages older results', () => {

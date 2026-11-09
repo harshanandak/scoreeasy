@@ -18,7 +18,7 @@ for (const key of keys) {
   localStorage.setItem(key, '[]');
 }
 localStorage.setItem('se_quickmatches', JSON.stringify([{ id: 'demo-local', sport: 'football', team1: 'North FC', team2: 'South FC', score1: 2, score2: 1, winner: 'North FC', status: 'completed', completedAt: '2026-11-08T12:00:00Z' }]));
-const cloudMatches = guest || state === 'loading' ? [] : [{ _id: 'demo-cloud', operatedBy: 'demo-user', clientMatchId: 'quick:volleyball:demo-cloud', sport: 'volleyball', team1: 'Falcons', team2: 'Hawks', score1: 3, score2: 1, winner: 'Falcons', date: Date.parse('2026-11-09T08:00:00Z') }];
+const cloudMatches = guest || state === 'loading' ? [] : [{ _id: 'demo-cloud', accountOwnerId: 'demo-user', operatedBy: 'demo-user', clientMatchId: 'quick:volleyball:demo-cloud', sport: 'volleyball', team1: 'Falcons', team2: 'Hawks', score1: 3, score2: 1, winner: 'Falcons', date: Date.parse('2026-11-09T08:00:00Z') }];
 createRoot(document.getElementById('root')).render(
   <AuthContext.Provider value={{ isAuthenticated: !guest, user: guest ? null : { _id: 'demo-user' } }}>
     <MemoryRouter><main className="mono-app" style={{ maxWidth: 672, margin: 'auto' }}>

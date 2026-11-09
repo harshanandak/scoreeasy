@@ -275,7 +275,7 @@ export default function MonoHistory() {
 }
 
 function AccountHistory({ ownerId, userId }) {
-  const { results, status, loadMore } = usePaginatedQuery(api.matches.getByUser, { userId }, { initialNumItems: 50 });
+  const { results, status, loadMore } = usePaginatedQuery(api.matches.getByUser, { userId, expectedOwnerId: ownerId }, { initialNumItems: 50 });
   return <HistoryContent ownerId={ownerId} userId={userId} cloudMatches={results} cloudStatus={status} loadMore={() => loadMore(50)} />;
 }
 AccountHistory.propTypes = { ownerId: PropTypes.string.isRequired, userId: PropTypes.string.isRequired };

@@ -173,13 +173,18 @@ export const save = matchSaveMutation({
 });
 
 export const getByUser = authedQuery({
-  args: { userId: v.id("users"), paginationOpts: v.optional(paginationOptsValidator) },
+  args: { userId: v.id("users"), expectedOwnerId: v.optional(v.string()), paginationOpts: v.optional(paginationOptsValidator) },
   returns: v.object({
-    page: v.array(matchDocument), isDone: v.boolean(), continueCursor: v.string(),
+    page: v.array(matchDocument.extend({ accountOwnerId: v.string() })), isDone: v.boolean(), continueCursor: v.string(),
     splitCursor: v.optional(v.union(v.string(), v.null())),
     pageStatus: v.optional(v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())),
   }),
-  handler: async (ctx, { userId, paginationOpts }) => {
+  handler: async (ctx, { userId, expectedOwnerId, paginationOpts }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    if (expectedOwnerId && expectedOwnerId !== identity.subject && expectedOwnerId !== ctx.user._id) {
+      throw new Error("Not authorized for the active account");
+    }
     if (userId !== ctx.user._id) {
       throw new Error("Not authorized");
     }
@@ -187,7 +192,8 @@ export const getByUser = authedQuery({
     const matches = ctx.db.query("matches")
       .withIndex("by_operator_date", (q) => q.eq("operatedBy", ctx.user._id)).order("desc");
     const options = paginationOpts || { numItems: 100, cursor: null };
-    return matches.paginate({ ...options, numItems: Math.min(100, Math.max(1, options.numItems)) });
+    const result = await matches.paginate({ ...options, numItems: Math.min(100, Math.max(1, options.numItems)) });
+    return { ...result, page: result.page.map(match => ({ ...match, accountOwnerId: expectedOwnerId || identity.subject })) };
   },
 });
 

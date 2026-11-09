@@ -4,7 +4,7 @@ Decisions needed: none.
 
 PR A implements the read side of forge-1013 independently of guest-upload PR B.
 
-The test-only commit was pushed first. [Red CI](https://github.com/harshanandak/scoreeasy/actions/runs/42598348765) reported `Validator error: Unexpected field paginationOpts in object` and `Failed to resolve import "./accountHistory"`. The subsequent [implementation CI](https://github.com/harshanandak/scoreeasy/actions/runs/42599678522) passed on implementation commit `2d83ae210f016b6121715daee1935b6bc0db9540`. Evidence-only changes follow that implementation; consult the PR for checks on its current head.
+The test-only commit was pushed first. [Red CI](https://github.com/harshanandak/scoreeasy/actions/runs/42598348765) reported `Validator error: Unexpected field paginationOpts in object` and `Failed to resolve import "./accountHistory"`. The subsequent [implementation CI](https://github.com/harshanandak/scoreeasy/actions/runs/42599678522) passed on implementation commit `2d83ae210f016b6121715daee1935b6bc0db9540`. Evidence and an additional active-account binding fix follow that implementation; consult the PR for checks on its current head.
 
 Acceptance walkthrough:
 
