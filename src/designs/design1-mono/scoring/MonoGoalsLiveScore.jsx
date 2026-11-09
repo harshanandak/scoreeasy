@@ -190,7 +190,7 @@ export default function MonoGoalsLiveScore() {
     setSaveWarning('');
     saveTournamentToConvex(updatedTournament);
     if (frozenPeriod) setPeriodState(frozenPeriod);
-    live.finalize({ resultType: decided ? 'decided' : 'abandoned', ...(frozenPeriod ? { snapshot: periodSnapshot(frozenPeriod, finalScore1, finalScore2) } : {}) });
+    live.finalize({ resultType: decided ? 'decided' : 'abandoned', snapshot: buildLiveSnapshot(finalScore1, finalScore2, frozenPeriod) });
     return true;
   }, completeMatch, 300);
 

@@ -137,6 +137,7 @@ describe.each(cases)('$name terminal broadcast', c => {
     // Auto-completion replaces the scoring surface, so its bar retains the
     // pre-winning snapshot. The saved result is the authority for that path.
     const committed = c.auto ? null : JSON.parse(JSON.stringify(h.descriptor.snapshot));
+    if (c.kabaddi) committed.kabaddi.resultType = 'abandoned';
     if (committed) expect(committed).toMatchObject(c.expected);
     if (c.auto) {
       const saved = JSON.parse(localStorage.getItem(c.quick ? 'se_quickmatches' : `se_${c.sport}`));

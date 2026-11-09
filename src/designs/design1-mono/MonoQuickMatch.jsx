@@ -828,7 +828,11 @@ export default function MonoQuickMatch() {
   // it. A separate effect declared IMMEDIATELY AFTER the snapshot effect runs in
   // source order — so the last point enqueues BEFORE finalize drains+archives.
   useEffect(() => {
-    if (phase === 'result') void liveRef.current.finalize({ resultType: result?.resultType, ...(result?.periodState ? { snapshot: periodSnapshot(result.periodState, result.score1, result.score2) } : {}) });
+    if (phase === 'result') void liveRef.current.finalize({ resultType: result?.resultType, snapshot: {
+      ...liveSnapshot,
+      ...(result?.periodState ? periodSnapshot(result.periodState, result.score1, result.score2) : {}),
+      ...(result?.kabaddi ? { kabaddi: kabaddiSnapshot(result.kabaddi) } : {}),
+    } });
   }, [phase]);
 
   // Apply cricket defaults when the quick-match sport route changes.

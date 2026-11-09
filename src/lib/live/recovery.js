@@ -14,7 +14,7 @@ export function flushLiveSession(clientMatchId, mutations) {
   if (inFlight.has(clientMatchId)) return inFlight.get(clientMatchId);
   const task = Promise.resolve().then(async () => {
     let session = loadSession(clientMatchId);
-    if (!session || session.broadcastError) return null;
+    if (!session || session.broadcastError || (session.finalizeIntent && session.isShared !== true)) return null;
     const current = () => {
       const latest = loadSession(clientMatchId);
       return Boolean(latest && latest.matchId === session.matchId);
@@ -45,7 +45,7 @@ export function flushLiveSession(clientMatchId, mutations) {
           return { error };
         }
         if (!latest.matchId && restored?.matchId) {
-          saveSession(clientMatchId, { ...latest, matchId: restored.matchId, token: restored.token, seq: Math.max(latest.seq ?? 0, restored.lastSeq ?? 0) });
+          saveSession(clientMatchId, { ...latest, matchId: restored.matchId, token: restored.token, isShared: restored.isShared === true, seq: Math.max(latest.seq ?? 0, restored.lastSeq ?? 0) });
         }
         session = loadSession(clientMatchId);
       } catch (error) {
@@ -53,7 +53,7 @@ export function flushLiveSession(clientMatchId, mutations) {
         return { error };
       }
     }
-    if (!session?.matchId) return null;
+    if (!session?.matchId || (session.finalizeIntent && session.isShared !== true)) return null;
     let result = await reconcile(send, { clientMatchId });
     // A terminal snapshot may be appended while an empty drain is resolving.
     while (!result.error && current() && size(clientMatchId) > 0) {
@@ -64,7 +64,8 @@ export function flushLiveSession(clientMatchId, mutations) {
       if (permanentSessionError(result.error)) rejectSession(result.error);
       return result;
     }
-    const intent = current() && loadSession(clientMatchId)?.finalizeIntent;
+    const latest = current() && loadSession(clientMatchId);
+    const intent = latest?.isShared === true && latest.finalizeIntent;
     if (!intent) return result;
     try {
       const finalized = await mutations.finalize({ matchId: session.matchId, ...intent });
