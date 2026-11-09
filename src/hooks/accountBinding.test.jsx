@@ -27,7 +27,7 @@ beforeEach(() => {
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   h.query.mockResolvedValue(null);
 });
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.useRealTimers(); });
 
 it('retains A\'s submitted save rejected after switching to B, hides its status, and retries automatically for A', async () => {
   let reject;
@@ -145,6 +145,35 @@ it.each(['acknowledge', 'reject'])('handles a same-account signout/signin with a
   await waitFor(() => expect(pendingMatchSaves('same-A')).toEqual([]));
   expect(h.save).toHaveBeenCalledTimes(outcome === 'acknowledge' ? 1 : 2);
   for (const [args] of h.save.mock.calls) expect(args.expectedOwnerId).toBe('same-A');
+});
+
+it('retries a late owner mismatch with normal backoff when A returned before B rejection arrived', async () => {
+  vi.useFakeTimers();
+  const latePayload = { ...payload, clientMatchId: 'late-mismatch-after-return' };
+  let reject;
+  h.save.mockImplementationOnce(() => new Promise((_, fail) => { reject = fail; })).mockResolvedValue('saved');
+  enqueueMatchSave('late-A', latePayload);
+  const worker = renderHook(({ account }) => usePendingMatchSaves(auth(account)), { initialProps: { account: 'late-A' } });
+  await act(async () => { await Promise.resolve(); });
+  expect(h.save).toHaveBeenCalledExactlyOnceWith({ ...latePayload, expectedOwnerId: 'late-A' });
+  worker.rerender({ account: 'B' });
+  worker.rerender({ account: 'late-A' });
+  const rejectedAt = Date.now();
+  await act(async () => { reject(mismatch()); });
+  expect(pendingMatchSaves('late-A')).toMatchObject([{
+    ownerId: 'late-A', state: 'pending', terminal: false, ownerMismatch: false,
+    attempts: 1, nextAttemptAt: rejectedAt + 5000,
+  }]);
+  await act(async () => {
+    globalThis.dispatchEvent(new Event('focus'));
+    globalThis.dispatchEvent(new Event('online'));
+    await vi.advanceTimersByTimeAsync(4999);
+  });
+  expect(h.save).toHaveBeenCalledTimes(1);
+  await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+  expect(h.save).toHaveBeenCalledTimes(2);
+  expect(h.save.mock.calls[1][0]).toEqual({ ...latePayload, expectedOwnerId: 'late-A' });
+  expect(pendingMatchSaves('late-A')).toEqual([]);
 });
 
 it('waits for the cloud account identity before submitting a new live creation or restore', async () => {
