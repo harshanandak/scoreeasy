@@ -69,6 +69,14 @@ describe('account namespaces', () => {
 });
 
 describe('copy, verify, remove migration', () => {
+  it('coalesces gamescore_ enumerated first with the newer se_ score before copying', () => {
+    localStorage.setItem('gamescore_quickmatches', JSON.stringify([{ ...match, score1: 3, score2: 0 }]));
+    localStorage.setItem('se_quickmatches', JSON.stringify([{ ...match, score1: 8, score2: 0 }]));
+    expect(storage.loadQuickMatch(match.id)).toMatchObject({ score1: 8, score2: 0 });
+    expect(localStorage.getItem('gamescore_quickmatches')).toBeNull();
+    expect(localStorage.getItem('se_quickmatches')).toBeNull();
+  });
+
   it('routes legacy ownership to separate spaces and is repeatable', () => {
     localStorage.setItem('se_quickmatches', JSON.stringify([match, { ...match, id: 'owned', syncOwnerId: 'clerk-X' }]));
     expect(storage.loadQuickMatches().map(m => m.id)).toEqual(['offline']);

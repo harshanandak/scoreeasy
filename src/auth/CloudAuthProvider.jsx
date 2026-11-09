@@ -4,6 +4,7 @@ import { useUser } from '@clerk/clerk-react';
 import { useConvexAuth, useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { AuthContext } from './AuthContext';
+import { rememberSignedInAccount } from './localAccount';
 
 function getClerkSyncFingerprint(isAuthenticated, isClerkLoaded, clerkUser) {
   if (!isAuthenticated || !isClerkLoaded || !clerkUser) {
@@ -21,6 +22,9 @@ function getClerkSyncFingerprint(isAuthenticated, isClerkLoaded, clerkUser) {
 export default function CloudAuthProvider({ children }) {
   const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
+  useEffect(() => {
+    if (isClerkLoaded) rememberSignedInAccount(clerkUser?.id || null);
+  }, [isClerkLoaded, clerkUser?.id]);
   const storeUser = useMutation(api.users.store);
   const [isBootstrappingUser, setIsBootstrappingUser] = useState(false);
   const [storeRetryTick, setStoreRetryTick] = useState(0);

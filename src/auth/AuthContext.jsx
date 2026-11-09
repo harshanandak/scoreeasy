@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { createContext, useContext, useMemo } from 'react';
+import { lastSignedInAccount } from './localAccount';
 
 const LOCAL_AUTH_STATE = {
   authMode: 'local',
@@ -26,6 +27,7 @@ export function LocalAuthProvider({
       ...LOCAL_AUTH_STATE,
       cloudAuthAvailable,
       authModeReason: reason,
+      localAccountId: lastSignedInAccount(),
     }),
     [cloudAuthAvailable, reason],
   );

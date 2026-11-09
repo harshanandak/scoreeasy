@@ -1,23 +1,26 @@
 import { act, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CloudAuthProvider from './CloudAuthProvider';
+import { lastSignedInAccount } from './localAccount';
 
 const mocks = vi.hoisted(() => ({
   storeUser: vi.fn(),
   convexUser: null,
+  clerkLoaded: true,
+  signedIn: true,
 }));
 
 vi.mock('@clerk/clerk-react', () => ({
   useUser: () => ({
-    isLoaded: true,
-    user: {
+    isLoaded: mocks.clerkLoaded,
+    user: mocks.signedIn ? {
       id: 'user_123',
       imageUrl: '',
       fullName: 'Test User',
       primaryEmailAddress: {
         emailAddress: 'test@example.com',
       },
-    },
+    } : null,
   }),
 }));
 
@@ -46,6 +49,9 @@ describe('CloudAuthProvider', () => {
     vi.useFakeTimers();
     vi.setSystemTime(0);
     mocks.convexUser = null;
+    mocks.clerkLoaded = true;
+    mocks.signedIn = true;
+    localStorage.clear();
     mocks.storeUser.mockReset();
     warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
@@ -75,5 +81,18 @@ describe('CloudAuthProvider', () => {
     });
 
     expect(mocks.storeUser).toHaveBeenCalledTimes(2);
+  });
+
+  it('persists only the confirmed Clerk account and clears it on confirmed sign-out', () => {
+    mocks.convexUser = undefined;
+    const { rerender } = render(<CloudAuthProvider><div>child</div></CloudAuthProvider>);
+    expect(lastSignedInAccount()).toBe('user_123');
+    mocks.clerkLoaded = false;
+    mocks.signedIn = false;
+    rerender(<CloudAuthProvider><div>child</div></CloudAuthProvider>);
+    expect(lastSignedInAccount()).toBe('user_123');
+    mocks.clerkLoaded = true;
+    rerender(<CloudAuthProvider><div>child</div></CloudAuthProvider>);
+    expect(lastSignedInAccount()).toBeNull();
   });
 });

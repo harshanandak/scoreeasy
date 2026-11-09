@@ -9,7 +9,9 @@ import { claimGuestStorage, withMatchStorageScope } from './accountStorage';
 export async function claimGuestMatchSaves(ownerId) {
   if (!ownerId) return [];
   const run = async () => {
+    const ownership = await pendingMatchSaveOwnership();
     await claimGuestStorage(ownerId, claim => {
+      if ([...(ownership.get(claim.clientMatchId) || [])].some(owner => owner !== ownerId)) return false;
       const prior = readGuestClaim(claim.clientMatchId);
       return prior && prior.ownerId !== ownerId ? false : acquireGuestClaim(prior || claim);
     });

@@ -17,8 +17,7 @@ it.each([false, true])('never claims X unmarked result after its IndexedDB queue
   const scope = await import('./accountStorage');
   localStorage.removeItem('se_quickmatches');
   scope.setMatchStorageScope('X');
-  const { saveQuickMatch } = await import('./storage');
-  saveQuickMatch(match);
+  localStorage.setItem('se_quickmatches', JSON.stringify([match]));
   const queue = await import('./pendingMatchSaves');
   const blocked = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Full', 'QuotaExceededError'); });
   queue.enqueueMatchSave('X', payload, match.id);
@@ -27,7 +26,7 @@ it.each([false, true])('never claims X unmarked result after its IndexedDB queue
   const store = await import('./pendingMatchSaveStore');
   const [record] = await store.loadPendingSaveFallback('X');
   expect(record).toMatchObject({ ownerId: 'X', payload: { clientMatchId: payload.clientMatchId } });
-  expect(JSON.parse(localStorage.getItem(scope.matchStorageKey('se_quickmatches', 'X')))[0].syncOwnerId).toBeUndefined();
+  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].syncOwnerId).toBeUndefined();
   expect(localStorage.getItem(key)).toBeNull();
   if (ownerMismatch) await store.storePendingSaveFallback(key, { ...record, ownerMismatch: true });
   vi.resetModules();
@@ -42,6 +41,39 @@ it.each([false, true])('never claims X unmarked result after its IndexedDB queue
   expect((await import('./storage')).loadQuickMatches()).toEqual([]);
   await refreshed.hydratePendingMatchSaves('X');
   expect(refreshed.pendingMatchSaves('X')).toHaveLength(1);
+  nextScope.setMatchStorageScope('X');
+  expect((await import('./storage')).loadQuickMatch(match.id)).toMatchObject(match);
+});
+
+it('quarantines shared unmarked results while durable ownership is unreadable and retries safely', async () => {
+  const store = await import('./pendingMatchSaveStore');
+  await store.storePendingSaveFallback(key, { ownerId: 'X', payload, quickMatchId: match.id, state: 'pending' });
+  const blocked = vi.spyOn(store, 'loadPendingSaveFallback').mockRejectedValue(new Error('unreadable'));
+  const scope = await import('./accountStorage');
+  const storage = await import('./storage');
+  const { claimGuestMatchSaves } = await import('./guestMatchUploads');
+  expect(storage.loadQuickMatches()).toEqual([]);
+  expect(await claimGuestMatchSaves('Y')).toEqual([]);
+  expect(localStorage.getItem(scope.matchStorageKey('se_quickmatches', 'Y'))).toBeNull();
+  expect(localStorage.getItem(scope.matchStorageKey('se_quickmatches', null))).toBeNull();
+  expect(JSON.parse(localStorage.getItem('se_quickmatches'))).toEqual([match]);
+  blocked.mockRestore();
+  expect(await claimGuestMatchSaves('Y')).toEqual([]);
+  scope.setMatchStorageScope('X');
+  expect(storage.loadQuickMatch(match.id)).toMatchObject(match);
+  scope.setMatchStorageScope(null);
+  expect(storage.loadQuickMatches()).toEqual([]);
+});
+
+it('checks pending ownership before copying an already scoped guest result', async () => {
+  const scope = await import('./accountStorage');
+  localStorage.removeItem('se_quickmatches');
+  localStorage.setItem(scope.matchStorageKey('se_quickmatches', null), JSON.stringify([match]));
+  const store = await import('./pendingMatchSaveStore');
+  await store.storePendingSaveFallback(key, { ownerId: 'X', payload, quickMatchId: match.id, state: 'pending' });
+  const { claimGuestMatchSaves } = await import('./guestMatchUploads');
+  expect(await claimGuestMatchSaves('Y')).toEqual([]);
+  expect(localStorage.getItem(scope.matchStorageKey('se_quickmatches', 'Y'))).toBeNull();
 });
 
 it('also respects another owner localStorage record with ownerMismatch set', async () => {

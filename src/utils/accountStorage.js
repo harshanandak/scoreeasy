@@ -8,6 +8,17 @@ const matchKeys = new Set(['se_quickmatches', 'se_tournaments', 'se_statistics',
   'se_matches_pending_undo', 'se_stats_pending_undo', ...getSportsList().map(sport => sport.storageKey)]);
 let activeOwner = null;
 let legacyOwner = null;
+let durableOwnership = null;
+let ownershipRead = null;
+export async function resolveMatchStorageOwnership() {
+  if (!ownershipRead) {
+    durableOwnership = null;
+    ownershipRead = import('./pendingMatchSaves').then(module => module.pendingMatchSaveOwnership())
+      .then(owners => { durableOwnership = owners; return owners; })
+      .finally(() => { ownershipRead = null; });
+  }
+  return ownershipRead;
+}
 const keys = storage => Array.from({ length: storage.length }, (_, i) => storage.key(i)).filter(Boolean);
 const prefix = owner => owner ? `${ROOT}account:${encodeURIComponent(owner)}:` : `${ROOT}guest:`;
 const logicalKey = key => key.replace(/^gamescore_/, 'se_');
@@ -45,29 +56,40 @@ function merge(original, existing) {
   }
   return [...rows.values()];
 }
-const ownerOf = row => row?.syncOwnerId || (row?.record && ownerOf(row.record)) || (row?.match && ownerOf(row.match)) || null;
+function ownerOf(row, key, tournamentId, ownership) {
+  if (row?.syncOwnerId) return row.syncOwnerId;
+  if (row?.record || row?.match) return ownerOf(row.record || row.match, key, tournamentId, ownership);
+  if (!ownership) throw new Error('Legacy ownership is unresolved');
+  const sport = getSportsList().find(sport => sport.storageKey === key)?.id;
+  const id = row?.clientMatchId || (key === 'se_quickmatches' ? `quick:${row?.sport}:${row?.id}`
+    : tournamentId != null ? `tournament:${sport}:${tournamentId}:${row?.id}` : null);
+  const owners = ownership.get(id);
+  if (owners?.size > 1) throw new Error('Legacy ownership is ambiguous');
+  return owners?.values().next().value || null;
+}
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
   if (!value || typeof value !== 'object') return value;
   return Object.fromEntries(Object.entries(value).map(([key, data]) => [key,
     key === 'syncOwnerId' && data === legacyOwner ? activeOwner : canonicalize(data)]));
 }
-function split(value) {
+function split(value, key, ownership) {
   const groups = new Map();
   const add = (owner, row) => groups.set(owner, [...(groups.get(owner) || []), row]);
   for (const row of Array.isArray(value) ? value : [value]) {
+    const owner = item => ownerOf(item, key, row?.id, ownership);
     const fixtures = [...(row?.matches || []), ...(row?.knockoutMatches || [])];
     if (Array.isArray(row?.items)) {
-      for (const owner of new Set(row.items.map(item => ownerOf(item.match)))) {
-        const items = row.items.filter(item => ownerOf(item.match) === owner);
-        add(owner, { ...row, items, order: row.order?.filter(id => items.some(item => String(item.match?.id) === String(id))) });
+      for (const account of new Set(row.items.map(item => owner(item.match)))) {
+        const items = row.items.filter(item => owner(item.match) === account);
+        add(account, { ...row, items, order: row.order?.filter(id => items.some(item => String(item.match?.id) === String(id))) });
       }
-    } else if (!ownerOf(row) && fixtures.length) {
-      for (const owner of new Set(fixtures.map(ownerOf))) add(owner, { ...row,
-        matches: row.matches?.filter(match => ownerOf(match) === owner),
-        knockoutMatches: row.knockoutMatches?.filter(match => ownerOf(match) === owner),
+    } else if (!row?.syncOwnerId && fixtures.length) {
+      for (const account of new Set(fixtures.map(owner))) add(account, { ...row,
+        matches: row.matches?.filter(match => owner(match) === account),
+        knockoutMatches: row.knockoutMatches?.filter(match => owner(match) === account),
       });
-    } else add(ownerOf(row), row);
+    } else add(owner(row), row);
   }
   return new Map([...groups].map(([owner, rows]) => [owner, Array.isArray(value) ? rows : rows[0]]));
 }
@@ -76,7 +98,24 @@ function split(value) {
 export function migrateMatchStorage(storage = globalThis.localStorage) {
   let changed = false;
   try {
-    for (const source of keys(storage)) {
+    const sources = keys(storage);
+    let ownership = durableOwnership;
+    if (!globalThis.indexedDB) {
+      ownership = new Map();
+      for (const key of keys(storage).filter(key => key.startsWith('se_pending_match:'))) {
+        const record = JSON.parse(storage.getItem(key));
+        const id = record?.clientMatchId || record?.payload?.clientMatchId;
+        if (!id || !record.ownerId) continue;
+        if (!ownership.has(id)) ownership.set(id, new Set());
+        ownership.get(id).add(record.ownerId);
+      }
+    } else if (!ownership && sources.some(source => scoped(logicalKey(source)))) {
+      resolveMatchStorageOwnership().then(() => {
+        if (migrateMatchStorage(storage)) globalThis.dispatchEvent(new Event(MATCH_STORAGE_CHANGED));
+      }).catch(() => { /* Keep shared rows quarantined until ownership can be read. */ });
+    }
+    // Coalesce both prefixes before touching destinations; existing destinations still win retries.
+    for (const source of sources) {
       const key = logicalKey(source);
       const aliasPrefix = legacyOwner && prefix(legacyOwner);
       const alias = aliasPrefix && source.startsWith(aliasPrefix);
@@ -85,11 +124,16 @@ export function migrateMatchStorage(storage = globalThis.localStorage) {
       const raw = storage.getItem(source);
       let value;
       try { value = JSON.parse(raw); } catch { continue; }
+      const counterpart = !alias && source.startsWith('gamescore_') ? key : null;
+      const preferred = counterpart && storage.getItem(counterpart);
+      if (preferred != null) {
+        try { value = merge(value, JSON.parse(preferred)); } catch { continue; }
+      }
       const backup = `${BACKUP}${encodeURIComponent(source)}`;
       try {
         if (storage.getItem(backup) === null) storage.setItem(backup, raw);
         if (storage.getItem(backup) !== raw) throw new Error('Migration source changed; retain both versions');
-        for (let [owner, data] of alias ? [[activeOwner, value]] : split(value)) {
+        for (let [owner, data] of alias ? [[activeOwner, value]] : split(value, logical, ownership)) {
           if (alias) data = canonicalize(data);
           if (owner === legacyOwner && legacyOwner) { owner = activeOwner; data = canonicalize(data); }
           const target = matchStorageKey(logical, owner);
@@ -119,12 +163,14 @@ export function scopedMatchStorage(storage) {
 
 /** Reserve each guest document before copying; only verified destinations permit source removal. */
 export async function claimGuestStorage(owner, reserve, storage = globalThis.localStorage) {
+  const ownership = await resolveMatchStorageOwnership();
   migrateMatchStorage(storage);
   let changed = false;
   for (const source of keys(storage).filter(key => key.startsWith(prefix(null)))) {
     const key = source.slice(prefix(null).length);
     const initial = JSON.parse(storage.getItem(source));
     for (const row of Array.isArray(initial) ? initial : [initial]) {
+      if ([...split(row, key, ownership).keys()].some(account => account && account !== owner)) continue;
       const id = key === 'se_quickmatches' ? row.clientMatchId || `quick:${row.sport}:${row.id}`
         : `local:${key}:${rowId(row)}`;
       if (!await reserve({ ownerId: owner, clientMatchId: id, ...(key === 'se_quickmatches' ? { quickMatchId: row.id, noticePending: row.status === 'completed' } : {}) })) continue;

@@ -7,7 +7,8 @@ import AppLoading from '../components/AppLoading';
 export default function MatchStorageBoundary({ children }) {
   const auth = useAuth();
   // Clerk survives a Convex reconnect; a missing Convex token does not mean sign-out.
-  const owner = auth.clerkUser?.id || (auth.isAuthenticated ? auth.user?._id : null) || null;
+  const owner = auth.clerkUser?.id || (auth.authMode === 'local' ? auth.localAccountId : null)
+    || (auth.isAuthenticated ? auth.user?._id : null) || null;
   const [mountedOwner, setMountedOwner] = useState(getMatchStorageScope);
   useLayoutEffect(() => {
     setMatchStorageScope(owner, auth.user?._id);

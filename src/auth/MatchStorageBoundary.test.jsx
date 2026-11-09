@@ -1,10 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it } from 'vitest';
-import { AuthContext } from './AuthContext';
+import { AuthContext, LocalAuthProvider } from './AuthContext';
 import MatchStorageBoundary from './MatchStorageBoundary';
 import { loadData, saveData } from '../utils/storage';
 import { setMatchStorageScope } from '../utils/accountStorage';
 import { useState } from 'react';
+import { rememberSignedInAccount } from './localAccount';
+import { getAuthBootstrapMode, shouldUseCloudAuthRoot } from './bootstrap';
 
 function Board() {
   const [score, setScore] = useState(() => loadData('se_quickmatch_draft_football_live', 0));
@@ -31,4 +33,34 @@ it('retains the Clerk account namespace when Convex authentication is temporaril
   fireEvent.click(screen.getByRole('button', { name: 'Score 0' }));
   rerender(view({ id: 'clerk-X' }, false));
   expect(screen.getByRole('button', { name: 'Score 1' })).toBeInTheDocument();
+});
+
+it.each([false, true])('offline cold start after sign-in keeps account scoring (explicit sign-out: %s)', signedOut => {
+  rememberSignedInAccount('clerk-X');
+  setMatchStorageScope('clerk-X');
+  saveData('se_quickmatch_draft_football_live', 8);
+  if (signedOut) rememberSignedInAccount(null);
+  setMatchStorageScope(null);
+  const bootstrap = getAuthBootstrapMode({ clerkPublishableKey: 'pk_test_fixture', convexUrl: 'https://example.convex.cloud', isOnline: false });
+  expect(bootstrap.mode).toBe('local');
+  render(<LocalAuthProvider reason={bootstrap.reason}><MatchStorageBoundary><Board /></MatchStorageBoundary></LocalAuthProvider>);
+  fireEvent.click(screen.getByRole('button', { name: `Score ${signedOut ? 0 : 8}` }));
+  expect(screen.getByRole('button', { name: `Score ${signedOut ? 1 : 9}` })).toBeInTheDocument();
+  setMatchStorageScope('clerk-X');
+  expect(loadData('se_quickmatch_draft_football_live')).toBe(signedOut ? 8 : 9);
+  setMatchStorageScope(null);
+  expect(loadData('se_quickmatch_draft_football_live', 0)).toBe(signedOut ? 1 : 0);
+});
+
+it.each([false, true])('native cloud-probe failure on a scoring route retains the local identity (explicit sign-out: %s)', signedOut => {
+  rememberSignedInAccount('clerk-X');
+  setMatchStorageScope('clerk-X');
+  saveData('se_quickmatch_draft_football_live', 8);
+  if (signedOut) rememberSignedInAccount(null);
+  setMatchStorageScope(null);
+  expect(shouldUseCloudAuthRoot({ authMode: 'cloud', shouldProbeNativeCloud: true, nativeProbeStatus: 'retrying', pathname: '/quick-match' })).toBe(false);
+  render(<LocalAuthProvider reason="native-offline" cloudAuthAvailable><MatchStorageBoundary><Board /></MatchStorageBoundary></LocalAuthProvider>);
+  fireEvent.click(screen.getByRole('button', { name: `Score ${signedOut ? 0 : 8}` }));
+  setMatchStorageScope('clerk-X');
+  expect(loadData('se_quickmatch_draft_football_live')).toBe(signedOut ? 8 : 9);
 });

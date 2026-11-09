@@ -40,16 +40,19 @@ describe('automatic guest upload claim', () => {
     expect(enqueueQuickMatchSave({ sport: 'football', isAuthenticated: true, user: { _id: 'Y' } }, { ...guest, id: 'stale' }).status).toBe('idle');
     expect(pendingMatchSaves('Y')).toEqual([]);
   });
-  it('leaves the result local when the owner claim cannot be persisted', async () => {
+  it.each(['reservation', 'destination'])('leaves the result local when the %s write cannot be persisted', async failure => {
     saveQuickMatch({ ...guest, id: 'quota' });
     const original = Storage.prototype.setItem;
     const blocked = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
-      if (key === matchStorageKey('se_quickmatches', 'X')) throw new DOMException('Full', 'QuotaExceededError');
+      const blockedKey = failure === 'reservation' ? `se_guest_match_claim:${encodeURIComponent('quick:football:quota')}`
+        : matchStorageKey('se_quickmatches', 'X');
+      if (key === blockedKey) throw new DOMException('Full', 'QuotaExceededError');
       return original.call(this, key, value);
     });
     expect(await claimGuestMatchSaves('X')).toEqual([]);
     expect(loadQuickMatch('quota').syncOwnerId).toBeUndefined();
     expect(withMatchStorageScope('X', () => loadQuickMatch('quota'))).toBeNull();
+    expect(pendingMatchSaves('X')).toEqual([]);
     blocked.mockRestore();
     expect(await claimGuestMatchSaves('X')).toHaveLength(1);
   });
