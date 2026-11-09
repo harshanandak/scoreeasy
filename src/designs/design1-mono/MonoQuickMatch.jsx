@@ -15,7 +15,7 @@ import { isKabaddiMigrationBackup, kabaddiMigrationBackupKey, migrateLegacyKabad
 import { finish as finishKabaddi } from '../../utils/kabaddiEngine';
 import { kabaddiRulesLine } from '../../utils/kabaddiRules';
 import { KabaddiFirstRaid, KabaddiGameStep, KabaddiRulesStep } from './kit/KabaddiSetup';
-import { SetsRulesStep } from './kit/SetsSetup';
+import { SetsRulesStep, TennisRulesStep } from './kit/SetsSetup';
 import { resolveKabaddiRules } from '../../utils/kabaddiRules';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './scoring/BoardShell';
 import './scoring/cricketBoard.css';
@@ -1974,7 +1974,8 @@ export default function MonoQuickMatch() {
       chooseCricketFormat(choiceId);
       return;
     }
-    setFormat(prev => ({ ...applyFormatChoice(sportConfig, choiceId, prev), ...(supportsSetsRules(sport) && prev.rulesPreset?.startsWith('Official') ? { rulesPreset: 'Custom school' } : {}) }));
+    setCustomSetupSource(null);
+    setFormat(applyFormatChoice(sportConfig, choiceId, applyStandardDefaults(sport, {})));
   };
   // New matches always start with standard rules; saved custom rules are opt-in on Rules.
   useEffect(() => { setSetupStep(0); setCustomSetupSource(null); }, [sport]);
@@ -2220,7 +2221,8 @@ export default function MonoQuickMatch() {
 
       if (supportsGoalPeriods(sport)) return null; // goals sports (basketball, football, hockey)
 
-      if (supportsSetsRules(sport)) return <SetsRulesStep sport={sport} sportConfig={sportConfig} format={format} onChange={setFormat} names={[team1Name, team2Name]} />; // set sports with rules to edit (tennis has none)
+      if (isTennis) return <TennisRulesStep format={format} onChange={setFormat} />;
+      if (supportsSetsRules(sport)) return <SetsRulesStep source={customSetupSource} onSourceChange={setCustomSetupSource} sport={sport} sportConfig={sportConfig} format={format} onChange={setFormat} names={[team1Name, team2Name]} />; // set sports with rules to edit (tennis has none)
 
       if (isCricket) return null; // cricket
 

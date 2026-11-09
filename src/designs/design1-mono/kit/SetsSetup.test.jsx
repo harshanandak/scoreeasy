@@ -12,8 +12,9 @@ function Host({ sport = 'volleyball', preset = 'casual' }) {
     const casual = applySetsPreset(sport, 'casual', {});
     return preset === 'casual' ? casual : applySetsPreset(sport, preset, casual);
   });
+  const [source, setSource] = useState(null);
   latest = format;
-  return <SetsRulesStep sport={sport} sportConfig={getSportById(sport)} format={format} onChange={setFormat} names={['Royals', 'Strikers']} />;
+  return <SetsRulesStep source={source} onSourceChange={setSource} sport={sport} sportConfig={getSportById(sport)} format={format} onChange={setFormat} names={['Royals', 'Strikers']} />;
 }
 const official = SETS_PROFILES.volleyball.label;
 const openMore = () => fireEvent.click(screen.getByRole('button', { name: 'More rules' }));
@@ -31,7 +32,7 @@ describe('SetsRulesStep', () => {
   it('picks the official preset with its source one tap under More rules', () => {
     render(<Host />);
     fireEvent.click(screen.getByRole('radio', { name: official }));
-    expect(latest).toEqual(applySetsPreset('volleyball', 'official', applySetsPreset('volleyball', 'casual', {})));
+    expect(latest).toEqual(applySetsPreset('volleyball', 'official', {}));
     expect(screen.getByRole('heading', { level: 2, name: new RegExp(`^${official}`) })).toBeInTheDocument();
     openMore();
     expect(screen.getByRole('link', { name: 'Rules source and edition' })).toHaveAttribute('href', SETS_PROFILES.volleyball.source);
@@ -69,4 +70,18 @@ describe('SetsRulesStep', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Unknown' }));
     expect(latest.initialServer).toBeNull();
   });
+});
+
+
+it.each(['volleyball', 'badminton', 'tabletennis'])('%s exposes standard rule controls and edits through Custom', sport => {
+  render(<Host sport={sport} preset="official" />);
+  openMore();
+  expect(screen.getByRole('combobox', { name: 'Win by' })).toHaveValue('2');
+  expect(screen.getByRole('spinbutton', { name: 'Custom points to win' })).toHaveValue(SETS_PROFILES[sport].points);
+  fireEvent.change(screen.getByRole('combobox', { name: 'Win by' }), { target: { value: '1' } });
+  const officialFormat = applySetsPreset(sport, 'official', applySetsPreset(sport, 'casual', {}));
+  expect(latest).toEqual(applySetsPreset(sport, 'custom', { ...officialFormat, customization: { winBy: 1 } }));
+  expect(screen.getByRole('heading', { name: /^Customised/ })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('radio', { name: SETS_PROFILES[sport].label }));
+  expect(latest).toEqual(applySetsPreset(sport, 'official', {}));
 });
