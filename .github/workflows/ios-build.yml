@@ -76,8 +76,31 @@ jobs:
       - name: Sync Capacitor iOS
         run: bunx cap sync ios
 
+      - name: Resolve Swift packages
+        run: |
+          artifact_cache="$HOME/Library/Caches/org.swift.swiftpm/artifacts"
+          if [ -d "$artifact_cache" ]; then
+            ls -ld "$artifact_cache"
+            find "$artifact_cache" -maxdepth 1 -name '*capacitor_swift_pm*' -print
+          else
+            echo "Shared SwiftPM artifact cache does not exist before resolution."
+          fi
+          # Keep this job's package resolution out of the runner's shared artifact cache.
+          swiftpm_path="$(mktemp -d "$RUNNER_TEMP/swiftpm.XXXXXX")"
+          echo "SWIFTPM_PATH=$swiftpm_path" >> "$GITHUB_ENV"
+          xcodebuild \
+            -resolvePackageDependencies \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -clonedSourcePackagesDirPath "$swiftpm_path/SourcePackages" \
+            -packageCachePath "$swiftpm_path/Cache"
+
       - name: List Xcode project
-        run: xcodebuild -list -project ios/App/App.xcodeproj
+        run: |
+          xcodebuild -list -project ios/App/App.xcodeproj \
+            -clonedSourcePackagesDirPath "$SWIFTPM_PATH/SourcePackages" \
+            -packageCachePath "$SWIFTPM_PATH/Cache" \
+            -disableAutomaticPackageResolution
 
       - name: Build iOS simulator target
         run: |
@@ -85,6 +108,9 @@ jobs:
           xcodebuild \
             -project ios/App/App.xcodeproj \
             -scheme App \
+            -clonedSourcePackagesDirPath "$SWIFTPM_PATH/SourcePackages" \
+            -packageCachePath "$SWIFTPM_PATH/Cache" \
+            -disableAutomaticPackageResolution \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
