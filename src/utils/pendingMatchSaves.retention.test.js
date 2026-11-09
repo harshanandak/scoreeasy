@@ -59,7 +59,7 @@ it('prunes every legacy synced IDB payload while preserving unacknowledged state
     { ownerId: 'another-owner', payload, state: 'synced' },
   ].map(record => ({ ...record, storageBackend: 'indexedDB', storageFailed: false }));
   await new Promise((resolve, reject) => {
-    const open = indexedDB.open('se-pending-match-saves', 1);
+    const open = indexedDB.open('se-pending-match-saves');
     open.onsuccess = () => {
       const database = open.result;
       const tx = database.transaction('records', 'readwrite');
