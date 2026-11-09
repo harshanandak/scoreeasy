@@ -61,11 +61,21 @@ it.each([false, true])('interleaved X and Y claims queue exactly one account (We
   } });
   const { claimGuestMatchSaves } = await import('./guestMatchUploads');
   const { pendingMatchSaves } = await import('./pendingMatchSaves');
-  const results = await Promise.all([claimGuestMatchSaves('X'), claimGuestMatchSaves('Y')]);
-  expect(results.flat()).toEqual([payload.clientMatchId]);
+  const original = Storage.prototype.setItem;
+  let second;
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (storageKey, value) {
+    if (storageKey === 'se_quickmatches') throw new DOMException('Full', 'QuotaExceededError');
+    if (storageKey === `se_guest_match_claim:${encodeURIComponent(payload.clientMatchId)}` && JSON.parse(value).ownerId === 'X' && !second) {
+      second = Promise.resolve(claimGuestMatchSaves('Y'));
+    }
+    return original.call(this, storageKey, value);
+  });
+  const first = await claimGuestMatchSaves('X');
+  expect(second).toBeDefined();
+  expect([...first, ...await second]).toEqual([payload.clientMatchId]);
   const records = [...pendingMatchSaves('X'), ...pendingMatchSaves('Y')];
   expect(records).toHaveLength(1);
-  expect(JSON.parse(localStorage.getItem('se_quickmatches'))[0].syncOwnerId).toBe(records[0].ownerId);
+  expect(JSON.parse(localStorage.getItem(`se_guest_match_claim:${encodeURIComponent(payload.clientMatchId)}`)).ownerId).toBe(records[0].ownerId);
 });
 
 it('revalidates a guest claim immediately before draining its record', async () => {
