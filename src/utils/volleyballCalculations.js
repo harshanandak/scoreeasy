@@ -59,6 +59,7 @@ export function calculateVolleyballStandings(teams, matches) {
   }));
 
   matches.forEach(match => {
+    if (match.status !== 'completed' && match.status !== 'abandoned') return;
     if (match.score1 === null || match.score2 === null) return;
 
     const t1 = stats.find(s => s.teamId === match.team1Id);
