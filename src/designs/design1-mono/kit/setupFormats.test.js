@@ -126,3 +126,18 @@ describe('format cards describe each choice in one plain line', () => {
     expect(describeFormatChoices(sport('football'), {}).map((c) => c.id)).toEqual(['timed', 'points', 'free']);
   });
 });
+
+
+describe('preset rule comparison', () => {
+  it('compares nested rules regardless of key order and detects every changed value', async () => {
+    const { matchesSetupPreset, setupPresetTitle } = await import('./setupFormats');
+    const preset = { end: { kind: 'target', points: 21 }, extras: [30, null] };
+    expect(matchesSetupPreset({ extras: [30, null], end: { points: 21, kind: 'target' } }, preset)).toBe(true);
+    expect(matchesSetupPreset({ ...preset, end: { kind: 'target', points: 22 } }, preset)).toBe(false);
+    expect(matchesSetupPreset({ ...preset, extras: [null, 30] }, preset)).toBe(false);
+    expect(matchesSetupPreset({ ...preset, extra: false }, preset)).toBe(false);
+    expect(matchesSetupPreset(null, {})).toBe(false);
+    expect(setupPresetTitle('T20', false)).toBe('T20');
+    expect(setupPresetTitle('T20', true)).toBe('Customised · from T20');
+  });
+});

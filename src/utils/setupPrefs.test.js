@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { SETUP_PREFS_KEY, clearSetupPrefs, loadSetupPrefs, saveSetupPrefs } from './setupPrefs';
+import { withMatchStorageScope } from './accountStorage';
+import { loadCustomSetup, saveCustomSetup, SETUP_PREFS_KEY, clearSetupPrefs, loadSetupPrefs, saveSetupPrefs } from './setupPrefs';
 
 beforeEach(() => globalThis.localStorage.clear());
 
@@ -34,5 +35,22 @@ describe('setup prefs', () => {
     }));
     expect(loadSetupPrefs('tennis')).toBeNull();
     expect(loadSetupPrefs('kabaddi')).toBeNull();
+  });
+});
+
+
+describe('saved custom rules', () => {
+  it('keeps one setup per sport and isolates accounts and guests', () => {
+    const format = { preset: 'custom', overs: 15, players: 8 };
+    withMatchStorageScope('scorer-a', () => {
+      saveCustomSetup('cricket', { format });
+      saveCustomSetup('tennis', { format: { type: 'single', points: 4 } });
+      expect(loadCustomSetup('cricket')).toEqual({ format, source: null });
+      saveCustomSetup('cricket', { format: { ...format, overs: 12 } });
+      expect(loadCustomSetup('cricket').format.overs).toBe(12);
+      expect(loadCustomSetup('tennis').format.points).toBe(4);
+    });
+    withMatchStorageScope('scorer-b', () => expect(loadCustomSetup('cricket')).toBeNull());
+    expect(loadCustomSetup('cricket')).toBeNull();
   });
 });

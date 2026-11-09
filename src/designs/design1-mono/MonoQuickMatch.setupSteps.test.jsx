@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import MonoQuickMatch from './MonoQuickMatch';
-import { SETUP_PREFS_KEY } from '../../utils/setupPrefs';
+import { loadCustomSetup, SETUP_PREFS_KEY } from '../../utils/setupPrefs';
 import { closeOpenSheet, findTeamNameInput, goToSetupStep, teamColourGroup } from '../../test/teamColour';
 
 vi.mock('convex/react', () => ({
@@ -55,7 +55,7 @@ describe('quick setup steps', () => {
 
   it('kabaddi: three steps with who raids first on Teams and the rules on Rules', async () => {
     renderQuick('/kabaddi/quick');
-    expect(await screen.findByRole('radio', { name: 'Quick casual' })).toHaveAttribute('aria-checked', 'true');
+    expect(await screen.findByRole('radio', { name: 'Standard' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByRole('button', { name: /^Start/ })).toBeInTheDocument();
 
     goToSetupStep('Teams');
@@ -63,7 +63,7 @@ describe('quick setup steps', () => {
     expect(screen.queryByRole('radio', { name: 'Quick casual' })).toBeNull();
 
     goToSetupStep('Rules');
-    expect(screen.getByRole('heading', { level: 2, name: /^Quick casual/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /^Standard/ })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Raid clock' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Start/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Next/ })).toBeNull();
@@ -72,9 +72,9 @@ describe('quick setup steps', () => {
     expect(screen.getByRole('switch', { name: 'Bonus point' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('switch', { name: 'Raid clock' }));
-    expect(screen.getByRole('heading', { level: 2, name: /^Custom, based on Quick casual/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /^Customised · from Standard/ })).toBeInTheDocument();
     goToSetupStep('Game');
-    expect(screen.getByRole('radio', { name: 'Custom' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'Customised' })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('skipped steps keep their defaults when Start is pressed from the first step', async () => {
@@ -102,8 +102,8 @@ describe('remembered quick setup', () => {
     first.unmount();
     dropDrafts();
     renderQuick('/volleyball/quick');
-    expect(await screen.findByRole('status')).toHaveTextContent('Using your last colours and format for Volleyball.');
-    expect(screen.getByRole('radio', { name: 'Single set' })).toHaveAttribute('aria-checked', 'true');
+    expect(await screen.findByRole('status')).toHaveTextContent('Using your last colours for Volleyball.');
+    expect(screen.getByRole('radio', { name: 'Best of 3' })).toHaveAttribute('aria-checked', 'true');
     expect(await findTeamNameInput('A')).toHaveValue('Team A');
     expect(within(teamColourGroup('A')).getByRole('button', { name: 'Yellow' })).toHaveAttribute('aria-pressed', 'true');
 
@@ -122,4 +122,27 @@ describe('remembered quick setup', () => {
     expect(screen.queryByText(/Using your last colours/)).toBeNull();
     expect(within(teamColourGroup('A')).getByRole('button', { name: 'Red' })).toHaveAttribute('aria-pressed', 'true');
   });
+});
+
+
+it('starts kabaddi standard and offers the last custom rules only on request', async () => {
+  const first = renderQuick('/kabaddi/quick');
+  expect(await screen.findByRole('radio', { name: 'Standard' })).toHaveAttribute('aria-checked', 'true');
+  goToSetupStep('Rules');
+  expect(screen.queryByRole('button', { name: /Use my last custom setup/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Fewer: Minutes a half' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Start kabaddi' }));
+  expect(loadCustomSetup('kabaddi').format.kabaddiRules.end.halfMs).toBe(1140000);
+  first.unmount(); dropDrafts();
+  renderQuick('/kabaddi/quick');
+  expect(await screen.findByRole('radio', { name: 'Standard' })).toHaveAttribute('aria-checked', 'true');
+  goToSetupStep('Rules');
+  expect(screen.getByRole('spinbutton', { name: 'Minutes a half' })).toHaveValue('20');
+  fireEvent.click(screen.getByRole('button', { name: /Use my last custom setup/ }));
+  expect(screen.getByRole('spinbutton', { name: 'Minutes a half' })).toHaveValue('19');
+  expect(screen.getByRole('heading', { name: /^Customised/ })).toBeInTheDocument();
+  goToSetupStep('Game');
+  fireEvent.click(screen.getByRole('radio', { name: 'Standard' }));
+  goToSetupStep('Rules');
+  expect(screen.getByRole('spinbutton', { name: 'Minutes a half' })).toHaveValue('20');
 });
