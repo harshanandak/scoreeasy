@@ -7,6 +7,8 @@ import { api } from '../../../convex/_generated/api';
 import { useAuth } from '../../hooks/useAuth';
 import { matchSaveOwner } from '../../hooks/usePendingMatchSaves';
 import { mergeAccountHistory } from '../../utils/accountHistory';
+import { useMatchOwners } from '../../hooks/useMatchOwners';
+import { PENDING_SAVES_CHANGED } from '../../utils/pendingMatchSaves';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { useGameHistory } from '../../hooks/useGameHistory';
 import {
@@ -281,6 +283,7 @@ function AccountHistory({ ownerId, userId }) {
 AccountHistory.propTypes = { ownerId: PropTypes.string.isRequired, userId: PropTypes.string.isRequired };
 
 export function HistoryContent({ ownerId = null, userId = null, cloudMatches = [], cloudStatus = 'Exhausted', loadMore = null }) {
+  const ownership = useMatchOwners();
   const navigate = useNavigate();
   const [online, setOnline] = useState(navigator.onLine !== false);
   useEffect(() => {
@@ -316,11 +319,20 @@ export function HistoryContent({ ownerId = null, userId = null, cloudMatches = [
   }, [historyStatus, undoOffered]);
 
   useEffect(() => {
-    const loadedQuick = loadCompletedQuickMatches();
-    loadedQuick.sort((a, b) => toTimestamp(b.completedAt || b.date || b.createdAt) - toTimestamp(a.completedAt || a.date || a.createdAt));
+    const refresh = () => {
+      const loadedQuick = loadCompletedQuickMatches();
+      loadedQuick.sort((a, b) => toTimestamp(b.completedAt || b.date || b.createdAt) - toTimestamp(a.completedAt || a.date || a.createdAt));
 
-    setQuickMatches(loadedQuick);
-    setTournamentEntries(buildTournamentEntries());
+      setQuickMatches(loadedQuick);
+      setTournamentEntries(buildTournamentEntries());
+    };
+    refresh();
+    window.addEventListener(PENDING_SAVES_CHANGED, refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener(PENDING_SAVES_CHANGED, refresh);
+      window.removeEventListener('storage', refresh);
+    };
   }, []);
 
   // The Stats panel mutates the SAME quick-match store (se_quickmatches) with its
@@ -384,8 +396,8 @@ export function HistoryContent({ ownerId = null, userId = null, cloudMatches = [
   }, [history]);
 
   const allEntries = useMemo(() => {
-    return mergeAccountHistory([...quickEntries, ...tournamentEntries, ...legacyEntries], cloudMatches, ownerId, userId);
-  }, [quickEntries, tournamentEntries, legacyEntries, cloudMatches, ownerId, userId]);
+    return mergeAccountHistory([...quickEntries, ...tournamentEntries, ...legacyEntries], cloudMatches, ownerId, userId, ownership);
+  }, [quickEntries, tournamentEntries, legacyEntries, cloudMatches, ownerId, userId, ownership]);
 
   // Sport chips: the sports already played, most played first, then every other registered sport
   // (re-picking a chip clears it, as before).

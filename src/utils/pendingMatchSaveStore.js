@@ -1,13 +1,24 @@
 const DATABASE = 'se-pending-match-saves';
 const STORE = 'records';
+const OWNERS = 'owners';
+
+function putOwner(store, record) {
+  const clientMatchId = record?.clientMatchId || record?.payload?.clientMatchId;
+  if (clientMatchId && record.ownerId) store.put({ clientMatchId, ownerId: record.ownerId }, [clientMatchId, record.ownerId]);
+}
 
 function transaction(mode, action) {
   return new Promise((resolve, reject) => {
-    const open = indexedDB.open(DATABASE, 1);
+    const open = indexedDB.open(DATABASE, 2);
     let abandoned = false;
     open.onupgradeneeded = () => {
-      const store = open.result.createObjectStore(STORE);
-      store.createIndex('ownerId', 'ownerId');
+      if (!open.result.objectStoreNames.contains(STORE)) {
+        open.result.createObjectStore(STORE).createIndex('ownerId', 'ownerId');
+      }
+      const owners = open.result.createObjectStore(OWNERS);
+      owners.createIndex('clientMatchId', 'clientMatchId');
+      const read = open.transaction.objectStore(STORE).getAll();
+      read.onsuccess = () => read.result.forEach(record => putOwner(owners, record));
     };
     open.onerror = () => reject(open.error);
     open.onblocked = () => {
@@ -17,16 +28,44 @@ function transaction(mode, action) {
     open.onsuccess = () => {
       const database = open.result;
       if (abandoned) { database.close(); return; }
+      let tx;
       try {
-        const tx = database.transaction(STORE, mode);
+        tx = database.transaction([STORE, OWNERS], mode);
         let result;
         tx.oncomplete = () => { database.close(); resolve(result); };
         tx.onabort = () => { database.close(); reject(tx.error || new Error('Pending save storage aborted')); };
-        action(tx.objectStore(STORE), (value) => { result = value; });
+        action(tx.objectStore(STORE), (value) => { result = value; }, tx.objectStore(OWNERS));
       } catch (error) {
+        tx?.abort();
         database.close();
         reject(error);
       }
+    };
+  });
+}
+
+export function loadMatchOwners(records) {
+  return transaction('readwrite', (_store, complete, owners) => {
+    records.forEach(record => putOwner(owners, record));
+    const read = owners.getAll();
+    read.onsuccess = () => {
+      const result = new Map();
+      for (const { clientMatchId, ownerId } of read.result) {
+        if (!result.has(clientMatchId)) result.set(clientMatchId, new Set());
+        result.get(clientMatchId).add(ownerId);
+      }
+      complete(result);
+    };
+  });
+}
+
+export function claimMatchOwner(clientMatchId, ownerId) {
+  return transaction('readwrite', (_store, complete, owners) => {
+    const read = owners.index('clientMatchId').getAll(clientMatchId);
+    read.onsuccess = () => {
+      const available = read.result.every(record => record.ownerId === ownerId);
+      if (available) putOwner(owners, { clientMatchId, ownerId });
+      complete(available);
     };
   });
 }
@@ -71,7 +110,9 @@ export function storePendingSaveFallback(key, record) {
     ...(record.quickCompletionFingerprint ? { quickCompletionFingerprint: record.quickCompletionFingerprint } : {}),
   };
   const marker = record.state === 'synced' ? compact : record;
-  return transaction('readwrite', (store, complete) => {
+  return transaction('readwrite', (store, complete, owners) => {
+    // Ownership commits with the queue record and survives its acknowledgement/pruning.
+    putOwner(owners, record);
     const read = store.get(key);
     read.onsuccess = () => {
       const previous = read.result;

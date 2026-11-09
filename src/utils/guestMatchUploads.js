@@ -2,7 +2,7 @@ import { getSportsList } from '../models/sportRegistry';
 import { loadCompletedQuickMatches, loadSportTournaments } from './storage';
 import { normalizeMatchForConvex } from './normalizeMatch';
 import { buildTournamentConvexPayload, getTournamentMatches, isTournamentMatchCompleted, tournamentCompletionId } from './tournamentSync';
-import { enqueueMatchSave, isMatchSaveConfirmed, loadMatchSaveLocal, pendingMatchSaveOwnership } from './pendingMatchSaves';
+import { enqueueMatchSave, isMatchSaveConfirmed, loadMatchSaveLocal, matchOwners } from './pendingMatchSaves';
 import { acquireGuestClaim, guestClaimKey, guestClaims, readGuestClaim, writeGuestClaim } from './guestMatchOwnership';
 
 export async function claimGuestMatchSaves(ownerId) {
@@ -29,7 +29,7 @@ export function unuploadedGuestTournamentResults() {
 }
 
 async function claimAvailableMatches(ownerId) {
-  const ownership = await pendingMatchSaveOwnership();
+  const ownership = await matchOwners();
   const claimed = [];
   const claim = async (match, payload, quickMatchId, tournamentMatch) => {
     if (match.syncOwnerId) return;

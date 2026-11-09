@@ -1,5 +1,6 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { IDBFactory } from 'fake-indexeddb';
 import { useGuestMatchUploads } from './useGuestMatchUploads';
 import { usePendingMatchSaves } from './usePendingMatchSaves';
 import { loadQuickMatch, saveQuickMatch } from '../utils/storage';
@@ -8,12 +9,13 @@ const h = vi.hoisted(() => ({ save: vi.fn() }));
 vi.mock('convex/react', () => ({ useMutation: () => h.save }));
 const account = id => ({ isAuthenticated: Boolean(id), clerkUser: id ? { id } : null, user: id ? { _id: `db-${id}` } : null });
 beforeEach(() => {
+  vi.stubGlobal('indexedDB', new IDBFactory());
   localStorage.clear(); h.save.mockReset();
   Object.defineProperty(navigator, 'locks', { configurable: true, value: { request: (_name, run) => Promise.resolve().then(run) } });
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
   saveQuickMatch({ id: 'hook-guest', sport: 'football', team1: 'North', team2: 'South', score1: 2, score2: 1, status: 'completed', completedAt: '2026-11-01' });
 });
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 it('automatically claims on sign-in and announces only the server acknowledgement for the active account', async () => {
   let resolve;
   h.save.mockImplementation(() => new Promise(done => { resolve = done; }));

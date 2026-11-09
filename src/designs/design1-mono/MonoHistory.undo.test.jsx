@@ -6,6 +6,8 @@ import { loadQuickMatches, saveQuickMatches } from '../../utils/storage';
 import { removeMatchHistory, restoreMatchHistory } from '../../utils/matchHistoryRecovery';
 import { createGameSession, createHistoryRecord, createParticipant } from '../../models/types';
 
+vi.mock('../../hooks/useMatchOwners', () => ({ useMatchOwners: () => new Map() }));
+
 const RECOVERY_KEY = 'se_matches_pending_undo';
 const completed = id => ({
   id, sport: 'football', status: 'completed', team1: id, team2: 'Away',

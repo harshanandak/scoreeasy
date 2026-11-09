@@ -1,3 +1,5 @@
+import { claimMatchOwner } from './pendingMatchSaveStore';
+
 const PREFIX = 'se_guest_match_claim:';
 export const guestClaimKey = id => `${PREFIX}${encodeURIComponent(id)}`;
 
@@ -43,13 +45,13 @@ export async function acquireGuestClaim(claim) {
         const db = open.result;
         if (blocked) { db.close(); return; }
         try {
-          const tx = db.transaction('owners', 'readwrite');
+          // Honor old installations' claims; new reservations live in the shared owner store.
+          const tx = db.transaction('owners', 'readonly');
           const store = tx.objectStore('owners');
           const read = store.get(claim.clientMatchId);
           let granted = false;
           read.onsuccess = () => {
             granted = !read.result || read.result.ownerId === claim.ownerId;
-            if (!read.result) store.add({ ownerId: claim.ownerId }, claim.clientMatchId);
           };
           tx.oncomplete = () => { db.close(); resolve(granted); };
           tx.onabort = () => { db.close(); reject(tx.error); };
@@ -58,5 +60,6 @@ export async function acquireGuestClaim(claim) {
     });
     if (!acquired) return false;
   } else if (!navigator.locks?.request) return false;
+  if (!await claimMatchOwner(claim.clientMatchId, claim.ownerId)) return false;
   return writeGuestClaim(claim);
 }

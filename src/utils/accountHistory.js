@@ -16,10 +16,13 @@ export function cloudHistoryEntry(match) {
   };
 }
 
-export function mergeAccountHistory(local, cloud, ownerId, userId) {
+export function mergeAccountHistory(local, cloud, ownerId, userId, ownership = null) {
   const entries = new Map();
   for (const match of local) {
+    const owners = ownership?.get(match.clientMatchId);
+    if (owners && [...owners].some(owner => owner !== ownerId && owner !== userId)) continue;
     if (match.syncOwnerId && match.syncOwnerId !== ownerId && match.syncOwnerId !== userId) continue;
+    if (!match.syncOwnerId && !owners?.size && !ownership && !match.isLegacy) continue;
     entries.set(match.clientMatchId || match.id, match);
   }
   for (const match of cloud) {

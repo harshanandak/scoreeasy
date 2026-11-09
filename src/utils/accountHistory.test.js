@@ -15,7 +15,7 @@ describe('account History union', () => {
     expect(mergeAccountHistory([local], [cloud], null, null)).toEqual([]);
     expect(mergeAccountHistory([local], [cloud], 'Y', 'db-Y')).toEqual([]);
     expect(mergeAccountHistory([local], [cloud], 'Y', 'db-X')).toEqual([]);
-    expect(mergeAccountHistory([{ id: 'guest' }, local], [], 'Y', 'db-Y')).toEqual([{ id: 'guest' }]);
+    expect(mergeAccountHistory([{ id: 'guest' }, local], [], 'Y', 'db-Y', new Map())).toEqual([{ id: 'guest' }]);
   });
   it('does not invent a board, winner or completed score for cloud summaries', () => {
     expect(cloudHistoryEntry({ ...cloud, resultType: 'abandoned' })).toMatchObject({ score: '2 - 1', winner: null, cloudOnly: true, resultType: 'abandoned' });

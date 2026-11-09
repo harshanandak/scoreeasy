@@ -1,11 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { IDBFactory } from 'fake-indexeddb';
 import { claimGuestMatchSaves, consumeGuestUploadNotice } from './guestMatchUploads';
 import { enqueueQuickMatchSave } from '../hooks/useMatchSync';
 import { loadQuickMatch, saveQuickMatch, saveSportTournament, loadSportTournaments } from './storage';
 import { attemptMatchSave, enqueueMatchSave, pendingMatchSaves } from './pendingMatchSaves';
 
 const guest = { id: 'guest', sport: 'football', team1: 'North', team2: 'South', score1: 2, score2: 1, winner: 'North', status: 'completed', completedAt: '2026-11-01T12:00:00Z' };
-beforeEach(() => { localStorage.clear(); Object.defineProperty(navigator, 'locks', { configurable: true, value: { request: (_name, run) => Promise.resolve().then(run) } }); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
+beforeEach(() => { vi.stubGlobal('indexedDB', new IDBFactory()); localStorage.clear(); Object.defineProperty(navigator, 'locks', { configurable: true, value: { request: (_name, run) => Promise.resolve().then(run) } }); Object.defineProperty(navigator, 'onLine', { configurable: true, value: true }); });
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 describe('automatic guest upload claim', () => {
   it('claims once for X, survives another scan and never queues X for Y', async () => {
     saveQuickMatch(guest);

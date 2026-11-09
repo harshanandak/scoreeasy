@@ -1,7 +1,8 @@
 import { loadQuickMatch, saveQuickMatch, loadSportTournaments, saveSportTournament } from './storage';
 import { ConvexError } from 'convex/values';
-import { tournamentCompletionId } from './tournamentSync';
-import { fallbackCompletionMatches, loadPendingSaveFallback, matchSaveFingerprint, storePendingSaveFallback } from './pendingMatchSaveStore';
+import { getTournamentMatchClientId, getTournamentMatches, tournamentCompletionId } from './tournamentSync';
+import { getSportsList } from '../models/sportRegistry';
+import { fallbackCompletionMatches, loadMatchOwners, loadPendingSaveFallback, matchSaveFingerprint, storePendingSaveFallback } from './pendingMatchSaveStore';
 import { guestClaimKey, readGuestClaim } from './guestMatchOwnership';
 
 export { tournamentCompletionId } from './tournamentSync';
@@ -70,7 +71,11 @@ async function confirmFallback(record) {
   if (volatileRecords.has(key)) {
     write({ ...record, state: 'synced' });
     await pendingWrites.get(key);
+    return volatileRecords.get(key)?.storageFailed === false;
   }
+  if (!globalThis.indexedDB) return false;
+  try { await storePendingSaveFallback(key, { ...record, state: 'synced' }); return true; }
+  catch { return false; }
 }
 
 export const isMatchSaveConfirmed = (ownerId, clientMatchId, completionId) => {
@@ -122,22 +127,25 @@ export function pendingMatchSaves(ownerId, includeSynced = false) {
   return [...records.values()];
 }
 
-export async function pendingMatchSaveOwnership() {
+export async function matchOwners() {
   await Promise.allSettled([...pendingWrites.values()]);
   const records = [...volatileRecords.values()];
   for (let index = 0; index < localStorage.length; index += 1) {
     const key = localStorage.key(index);
-    if (key?.startsWith(PREFIX)) records.push(JSON.parse(localStorage.getItem(key)));
+    if (key?.startsWith(PREFIX) || key?.startsWith('se_guest_match_claim:')) records.push(JSON.parse(localStorage.getItem(key)));
   }
-  if (globalThis.indexedDB) records.push(...await loadPendingSaveFallback());
-  const owners = new Map();
-  for (const record of records) {
-    const id = record?.clientMatchId || record?.payload?.clientMatchId;
-    if (!id || !record.ownerId) continue;
-    if (!owners.has(id)) owners.set(id, new Set());
-    owners.get(id).add(record.ownerId);
+  // Read raw stores: forgiving loaders could mistake an unreadable owner marker for guest data.
+  for (const match of JSON.parse(localStorage.getItem('se_quickmatches') || '[]')) {
+    records.push({ clientMatchId: match.clientMatchId || `quick:${match.sport}:${match.id}`, ownerId: match.syncOwnerId });
   }
-  return owners;
+  for (const sport of getSportsList()) {
+    for (const tournament of JSON.parse(localStorage.getItem(sport.storageKey) || '[]')) {
+      for (const match of getTournamentMatches(tournament)) {
+        records.push({ clientMatchId: match.clientMatchId || getTournamentMatchClientId({ sportId: sport.id, tournament, match }), ownerId: match.syncOwnerId });
+      }
+    }
+  }
+  return loadMatchOwners(records);
 }
 
 export function pruneSyncedMatchSaves(ownerId) {
@@ -174,8 +182,8 @@ function write(record) {
     record = { ...record, storageBackend: 'indexedDB', storageFailed: !(previous?.storageFailed === false && sameCompletion(previous, record)) };
     dirtyRecords.add(key);
     volatileRecords.set(key, record);
-    if (globalThis.indexedDB) persistFallback(key, record);
   }
+  if (globalThis.indexedDB) persistFallback(key, record);
   notify();
   return record;
 }
@@ -203,6 +211,7 @@ export function enqueueMatchSave(ownerId, payload, quickMatchId, tournamentMatch
     state: priorCompletionSaved ? 'failed' : 'pending', terminal: priorCompletionSaved,
     priorCompletionSaved, attempts: 0, nextAttemptAt: 0 });
   updateLocalMatch(record, record.state);
+  notify();
   return record;
 }
 
@@ -277,9 +286,11 @@ export function attemptMatchSave(record, save, canSend = () => true, manual = fa
         return { status: 'failed', clientMatchId: record.payload.clientMatchId };
       }
       updateLocalMatch(record, 'synced');
-      await confirmFallback(record);
+      const durable = await confirmFallback(record);
       // Only a server acknowledgement permits removal of a pending save.
-      try { localStorage.removeItem(key); } catch { /* Retrying a retained record is idempotent. */ }
+      if (durable || localSaveConfirmed(record)) {
+        try { localStorage.removeItem(key); } catch { /* Retrying a retained record is idempotent. */ }
+      }
       if (record.storageBackend !== 'indexedDB') volatileRecords.delete(key);
       return { status: 'synced', clientMatchId: record.payload.clientMatchId };
     } catch (error) {
@@ -289,9 +300,11 @@ export function attemptMatchSave(record, save, canSend = () => true, manual = fa
       let acknowledged = isMatchSaveConfirmed(record.ownerId, record.payload.clientMatchId, record.completionId) || localSaveConfirmed(record);
       try { acknowledged ||= persistedBeforeSend && localStorage.getItem(key) === null; } catch { /* A failed read is not acknowledgement. */ }
       if (acknowledged) {
-        await confirmFallback(record);
+        const durable = await confirmFallback(record);
         if (record.storageBackend !== 'indexedDB') volatileRecords.delete(key);
-        try { localStorage.removeItem(key); } catch { /* The confirmation suppresses this stale record. */ }
+        if (durable || localSaveConfirmed(record)) {
+          try { localStorage.removeItem(key); } catch { /* The confirmation suppresses this stale record. */ }
+        }
         return { status: 'synced', clientMatchId: record.payload.clientMatchId };
       }
       const attempts = record.attempts + 1;

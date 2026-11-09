@@ -8,6 +8,8 @@ import { createGameSession, createHistoryRecord, createParticipant } from '../..
 import { shareText } from '../../mobile/share';
 
 vi.mock('../../mobile/share', () => ({ shareText: vi.fn() }));
+// These layout/action fixtures represent a successful ownership read with guest results.
+vi.mock('../../hooks/useMatchOwners', () => ({ useMatchOwners: () => new Map() }));
 // MonoQuickMatch (the Rematch target) reads Convex; History itself does not.
 vi.mock('convex/react', () => ({ useConvex: () => ({ query: async () => null }), useMutation: () => vi.fn(), useQuery: () => [] }));
 

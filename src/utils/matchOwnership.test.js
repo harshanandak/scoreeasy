@@ -93,6 +93,17 @@ it('backfills existing local queue records and quick/tournament owner markers', 
   expect(await queue.matchOwners()).toEqual(owners);
 });
 
+it('refuses a guest claim when another owner commits after the ownership scan', async () => {
+  const store = await import('./pendingMatchSaveStore');
+  expect((await queue.matchOwners()).has(id)).toBe(false);
+  await store.storePendingSaveFallback(key, { ownerId: 'X', payload, state: 'pending' });
+  const { acquireGuestClaim } = await import('./guestMatchOwnership');
+  expect(await acquireGuestClaim({ clientMatchId: id, ownerId: 'Y' })).toBe(false);
+  expect(localStorage.getItem(`se_guest_match_claim:${encodeURIComponent(id)}`)).toBeNull();
+  expect(await acquireGuestClaim({ clientMatchId: id, ownerId: 'X' })).toBe(true);
+  expect((await queue.matchOwners()).get(id)).toEqual(new Set(['X']));
+});
+
 it.each(['missing', 'blocked'])('fails closed when IndexedDB is %s, then recovers genuine guest claiming', async failure => {
   const database = indexedDB;
   if (failure === 'missing') vi.stubGlobal('indexedDB', undefined);
