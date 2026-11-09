@@ -3,7 +3,7 @@ import { ConvexError } from 'convex/values';
 import { tournamentCompletionId } from './tournamentSync';
 import { fallbackCompletionMatches, loadPendingSaveFallback, matchSaveFingerprint, storePendingSaveFallback } from './pendingMatchSaveStore';
 import { guestClaimKey, readGuestClaim } from './guestMatchOwnership';
-import { getMatchStorageScope, withMatchStorageScope } from './accountStorage';
+import { getMatchStorageScope, registerPendingOwnershipReader, withMatchStorageScope } from './accountStorage';
 
 export { tournamentCompletionId } from './tournamentSync';
 
@@ -319,3 +319,6 @@ export function attemptMatchSave(record, save, canSend = () => true, manual = fa
   inFlight.set(key, request);
   return request;
 }
+
+// Publish the reader only after the queue's module state has initialized.
+registerPendingOwnershipReader(pendingMatchSaveOwnership);

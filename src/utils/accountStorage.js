@@ -10,10 +10,18 @@ let activeOwner = null;
 let legacyOwner = null;
 let durableOwnership = null;
 let ownershipRead = null;
+let pendingOwnershipReader = null;
+export function registerPendingOwnershipReader(read) {
+  pendingOwnershipReader = read;
+}
 export async function resolveMatchStorageOwnership() {
+  if (!pendingOwnershipReader) {
+    durableOwnership = null;
+    throw new Error('Pending save ownership reader is not ready');
+  }
   if (!ownershipRead) {
     durableOwnership = null;
-    ownershipRead = import('./pendingMatchSaves').then(module => module.pendingMatchSaveOwnership())
+    ownershipRead = Promise.resolve().then(pendingOwnershipReader)
       .then(owners => { durableOwnership = owners; return owners; })
       .finally(() => { ownershipRead = null; });
   }
