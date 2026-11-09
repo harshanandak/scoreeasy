@@ -38,19 +38,44 @@ export function loadPendingSaveFallback(ownerId) {
   });
 }
 
-export function storePendingSaveFallback(key, record) {
+export async function fallbackCompletionMatches(a, b) {
+  if (!a || !b) return false;
+  if (a?.completionId !== b?.completionId) return false;
+  return await payloadFingerprint(a) === await payloadFingerprint(b);
+}
+
+async function payloadFingerprint(record) {
+  if (record.payloadFingerprint) return record.payloadFingerprint;
+  const bytes = new TextEncoder().encode(JSON.stringify(record.payload));
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+export async function storePendingSaveFallback(key, record) {
+  const fingerprint = await payloadFingerprint(record);
+  const compact = {
+    ownerId: record.ownerId, clientMatchId: record.clientMatchId || record.payload.clientMatchId,
+    completionId: record.completionId, payloadFingerprint: fingerprint, state: 'synced',
+    syncedAt: record.syncedAt || Date.now(), storageBackend: 'indexedDB', storageFailed: false,
+  };
+  const marker = record.state === 'synced' ? compact : record;
   return transaction('readwrite', (store, complete) => {
     const read = store.get(key);
     read.onsuccess = () => {
       const previous = read.result;
       // A stale tab cannot overwrite acknowledgement of the same completion.
       if (previous?.state === 'synced' && previous.completionId === record.completionId
-        && (!record.completionId || JSON.stringify(previous.payload) === JSON.stringify(record.payload))) {
+        && (previous.payloadFingerprint === fingerprint || (previous.payload && JSON.stringify(previous.payload) === JSON.stringify(record.payload)))) {
+        if (previous.payload) {
+          store.put(compact, key);
+          complete(compact);
+          return;
+        }
         complete(previous);
         return;
       }
-      store.put(record, key);
-      complete(record);
+      store.put(marker, key);
+      complete(marker);
     };
   });
 }

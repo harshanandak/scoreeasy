@@ -5,6 +5,7 @@ import { IDBDatabase, IDBFactory } from 'fake-indexeddb';
 const owner = 'retention-owner';
 const payload = { clientMatchId: 'retained-result', sport: 'football', team1: 'North', team2: 'South', score1: 2, score2: 1, date: 1 };
 const keyFor = (account, id) => `se_pending_match:${encodeURIComponent(account)}:${encodeURIComponent(id)}`;
+const writeLocal = Storage.prototype.setItem;
 let queue;
 let store;
 
@@ -73,7 +74,8 @@ it('prunes every legacy synced IDB payload while preserving unacknowledged state
   await queue.hydratePendingMatchSaves(owner);
   const retained = await store.loadPendingSaveFallback(owner);
   expectCompact(retained.filter(record => record.state === 'synced'), 8);
-  expect(retained.filter(record => record.state !== 'synced')).toEqual(records.slice(8, 11));
+  expect(retained.filter(record => record.state !== 'synced')).toEqual(expect.arrayContaining(records.slice(8, 11)));
+  expect(retained.filter(record => record.state !== 'synced')).toHaveLength(3);
   expect(await store.loadPendingSaveFallback('another-owner')).toEqual([records[11]]);
 });
 
@@ -106,13 +108,24 @@ it('queues and sends a new completion with the same clientMatchId after compacti
 });
 
 it.each([false, true])('hydrates a compact acknowledgement over only its matching dirty completion (replacement: %s)', async replacement => {
-  const stale = await enqueue();
+  const reference = { storageKey: 'se_football', tournamentId: 100, matchId: 'final' };
+  const fixture = result => writeLocal.call(localStorage, 'se_football', JSON.stringify([{ id: 100, matches: [{
+    id: 'final', status: 'completed', score1: result.score1, score2: result.score2, completedAt: result.date,
+  }] }]));
+  fixture(payload);
+  const stale = queue.enqueueMatchSave(owner, payload, undefined, reference);
+  await queue.hydratePendingMatchSaves(owner);
   const transaction = IDBDatabase.prototype.transaction;
   const blocked = vi.spyOn(IDBDatabase.prototype, 'transaction').mockImplementation(function (stores, mode, ...options) {
     if (mode === 'readwrite') throw new DOMException('Full', 'QuotaExceededError');
     return transaction.call(this, stores, mode, ...options);
   });
-  if (replacement) await enqueue({ ...payload, score1: 9, date: 2 });
+  if (replacement) {
+    const result = { ...payload, score1: 9, date: 2 };
+    fixture(result);
+    queue.enqueueMatchSave(owner, result, undefined, reference);
+    await queue.hydratePendingMatchSaves(owner);
+  }
   else await queue.attemptMatchSave(stale, () => Promise.reject(new Error('Rejected')));
   await waitFor(() => expect(queue.pendingMatchSaves(owner)[0]).toMatchObject({ storageFailed: true }));
   blocked.mockRestore();
