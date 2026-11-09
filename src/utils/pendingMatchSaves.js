@@ -23,6 +23,7 @@ export async function hydratePendingMatchSaves(ownerId) {
   const ownerPrefix = `${PREFIX}${encodeURIComponent(ownerId)}:`;
   await Promise.allSettled([...pendingWrites].filter(([key]) => key.startsWith(ownerPrefix)).map(([, pending]) => pending));
   const beforeRead = new Map(revisions);
+  let changed = false;
   try {
     for (const record of await loadPendingSaveFallback(ownerId)) {
       if (record?.ownerId !== ownerId || !record.payload?.clientMatchId) continue;
@@ -31,10 +32,12 @@ export async function hydratePendingMatchSaves(ownerId) {
       // Failed writes leave newer session state that a successful read cannot replace.
       if (dirtyRecords.has(key) && !(record.state === 'synced' && sameCompletion(volatileRecords.get(key), record))) continue;
       dirtyRecords.delete(key);
+      changed ||= JSON.stringify(volatileRecords.get(key)) !== JSON.stringify(record);
       volatileRecords.set(key, record);
       if (record.state === 'synced') confirmed.set(key, record.completionId);
     }
   } catch { /* Keep session records and their storage warning when fallback is unavailable. */ }
+  if (changed) notify();
 }
 
 function persistFallback(key, record) {

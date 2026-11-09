@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { IDBDatabase, IDBFactory } from 'fake-indexeddb';
 import { ConvexError } from 'convex/values';
@@ -94,7 +94,27 @@ it('keeps an uncommitted permanent rejection terminal and session-only through h
   const stored = (await loadPendingSaveFallback(owner))[0];
   await storePendingSaveFallback(`se_pending_match:${encodeURIComponent(owner)}:${encodeURIComponent(payload.clientMatchId)}`, { ...stored, state: 'synced' });
   await act(async () => { window.dispatchEvent(new Event('focus')); await hydratePendingMatchSaves(owner); });
+  expect(pendingMatchSaves(owner, true)[0]).toMatchObject({ state: 'synced', storageFailed: false });
   await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved to your account'));
   expect(pendingMatchSaves(owner)).toEqual([]);
   expect(save).toHaveBeenCalledTimes(1);
+});
+
+it('clears the session-only failure after manual Retry commits and succeeds', async () => {
+  await seedDurable();
+  let writes;
+  save.mockImplementationOnce(async () => { writes = failFallbackWrites(); throw new ConvexError('Rejected'); });
+  Object.defineProperty(navigator, 'onLine', { configurable: true, value: true });
+  await attemptMatchSave(pendingMatchSaves(owner)[0], save);
+  await hydratePendingMatchSaves(owner);
+  mount();
+  expect(screen.getByRole('status')).toHaveTextContent(/Couldn't save.*kept only for this session.*lost on refresh/i);
+  writes.mockRestore();
+  fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved to your account'));
+  await act(async () => { await hydratePendingMatchSaves(owner); });
+  expect((await loadPendingSaveFallback(owner))[0]).toMatchObject({ state: 'synced', storageFailed: false });
+  expect(screen.getByRole('status')).not.toHaveTextContent(/only for this session|lost on refresh/i);
+  expect(pendingMatchSaves(owner)).toEqual([]);
+  expect(save).toHaveBeenCalledTimes(2);
 });
