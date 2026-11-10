@@ -130,16 +130,18 @@ export default function GuestLanding() {
           <KitSection id="landing-example-title" title="See a match being scored" />
           <SportPicker selectedId={selectedId} onSelect={id => { setSelectedId(id); setPoints([]); setTouched(false); setRevision(0); }} />
           <ExampleCard demo={demo} onPoint={team => { setTouched(true); setRevision(value => value + 1); setPoints(previous => [...previous, team]); }} touched={touched} revision={revision} onUndo={() => setPoints(previous => previous.slice(0, -1))} canUndo={points.length > 0} />
+
+
+          <Link className="se-ctl" to={cloudAuthAvailable ? '/signup' : 'https://scoreeasy.app/signup'} onClick={markAppEntered}>Create a free account</Link>
+        </section>
+      </div>
+
           <div className="kit-landing-actions">
             <Link className="se-go" to={startPath} onClick={markAppEntered}>
               {`Start ${selected.name}`} <GoArrow />
             </Link>
             <Link className="se-ctl" to="/login" onClick={markAppEntered}>Sign in</Link>
           </div>
-
-          <Link className="se-ctl" to={cloudAuthAvailable ? '/signup' : 'https://scoreeasy.app/signup'} onClick={markAppEntered}>Create a free account</Link>
-        </section>
-      </div>
 
       <section className="home-faq" aria-labelledby="landing-faq-title">
         <h2 id="landing-faq-title">Questions</h2>

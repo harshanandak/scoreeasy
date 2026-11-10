@@ -266,7 +266,7 @@
  .kit-landing-picker { gap:6px; margin-bottom:8px; }
  .kit-landing-card { margin-top:8px; padding:12px; }
  .kit-landing-card button.kit-last-team { min-height:52px; }
- .kit-landing-example > .kit-landing-actions { position:fixed; z-index:50; bottom:0; left:0; right:0; background:var(--se-color-surface); padding:4px 16px calc(4px + env(safe-area-inset-bottom)); margin:0; display:grid; grid-template-columns:2fr 1fr; gap:8px; align-items:center; border-top:1px solid var(--se-color-line-soft); }
+ .kit-screen.kit-landing > .kit-landing-actions { position:fixed; z-index:50; bottom:0; left:0; right:0; background:var(--se-color-surface); padding:4px 16px calc(4px + env(safe-area-inset-bottom)); margin:0; display:grid; grid-template-columns:2fr 1fr; gap:8px; align-items:center; border-top:1px solid var(--se-color-line-soft); }
  .kit-landing-actions .se-go,.kit-landing-actions .se-ctl { width:100%; white-space:nowrap; min-height:56px; padding:8px; }
  .kit-landing-example > .se-ctl { display:flex; width:fit-content; margin-top:12px; min-height:48px; }
 }
