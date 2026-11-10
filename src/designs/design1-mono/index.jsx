@@ -379,7 +379,7 @@ function shouldDeferOnboardingForPath(pathname = '') {
 
 function AppEntryRoute() {
   const { isAuthenticated, isLoading } = useAuth();
-  const appEntryState = loadAppEntryState();
+  const [appEntryState] = useState(loadAppEntryState);
   const target = getAppEntryTarget({
     isAuthenticated,
     isLoading,
