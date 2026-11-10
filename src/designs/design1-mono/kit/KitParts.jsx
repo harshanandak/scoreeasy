@@ -6,12 +6,23 @@ import { sportIdentityVars } from '../../../lib/sportIdentity';
 import { ICON_BY_SPORT_ID } from '../landing/sportIcons';
 import './kit.css';
 
-/** The app mark: the volleyball sport icon, in ink. */
+/**
+ * The Score Easy mark: the hand-drawn stroke ball of the app icon (scripts/app-icon/a-mark.svg), in ink.
+ * It is drawn here on purpose, not borrowed from the sport icons, so redrawing a sport icon never
+ * changes the logo.
+ */
 export function BrandMark({ size = 28 }) {
-  const Ball = ICON_BY_SPORT_ID.volleyball;
   return (
     <span className="kit-brand-mark" aria-hidden="true">
-      <Ball size={size} color="currentColor" strokeWidth={2} />
+      <svg width={size} height={size} viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="16" cy="16" r="13.5" />
+        <path d="M16 2.5c0 0-1.2 6.8 3.5 12.5s11.2 5.8 11.2 5.8" />
+        <path d="M4.2 8.5c0 0 6.2 2.2 12.8 0s9-7.2 9-7.2" />
+        <path d="M4 22c0 0 5.5-4.5 4.8-12S3.5 3 3.5 3" />
+        <path d="M16 29.5c0 0 1-7-3.8-12.5S1.5 11.5 1.5 11.5" />
+        <path d="M28 22.5c0 0-6 2-12.5-.5s-8.8-7.5-8.8-7.5" />
+        <path d="M28.5 9c0 0-5.8 4.2-5 12s5 8.5 5 8.5" />
+      </svg>
     </span>
   );
 }
