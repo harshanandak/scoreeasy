@@ -10,6 +10,7 @@ import { getSportById, getSportsList } from '../../../models/sportRegistry';
 import { applyDelivery, createInnings, deriveChase, deriveInnings, makeDelivery, makeFormat } from '../../../utils/cricketEngine';
 import { applyRaid, createKabaddiState, startHalf, teamTotal } from '../../../utils/kabaddiEngine';
 import { freezeSetsFormat, serveAfterPoint } from '../../../models/setsRules';
+import { formatPeriodClock } from '../../../utils/goalsPeriods';
 import { PRESETS } from '../../../lib/teamColour';
 
 /** One side of the card: the big number, plus a small suffix when the sport has one (cricket wickets, "/5").
@@ -82,11 +83,12 @@ function setsDemo(sportId, { names, bestOf, sets, current, colours }, extra = []
   return {
     sportId,
     colours,
-    context: line(
+    over: state.isMatchOver,
+    context: state.isMatchOver ? `${names[state.winner === 'A' ? 0 : 1]} won ${state.setsA}-${state.setsB}` : line(
       `${unit} ${state.currentSet} of ${bestOf}`,
       `${unit.toLowerCase()}s ${state.setsA}-${state.setsB}`,
       POINT_STATE_LABELS[state.pointState],
-      `${names[server === 2 ? 1 : 0]} serving`,
+      (sportId !== 'volleyball' || state.pointsA + state.pointsB > 0) && `${names[server === 2 ? 1 : 0]} serving`,
     ),
     teams: [
       { name: names[0], score: String(state.pointsA), meta: `${unit}s ${state.setsA}` },
@@ -118,8 +120,9 @@ function tennisDemo(extra = []) {
   else if (state.isBreakPoint) callout = 'break point';
   return {
     sportId: 'tennis',
+    over: state.isMatchOver,
     colours: colourPair('Sky v Navy'),
-    context: line(`Set ${state.sets.length + 1} · games ${state.currentSet.gamesA}-${state.currentSet.gamesB}`, `${state.server === 'A' ? 'Player 1' : 'Player 2'} serving`, callout),
+    context: state.isMatchOver ? `Player ${state.winner === 'A' ? 1 : 2} won ${state.setsWonA}-${state.setsWonB}` : line(`Set ${state.sets.length + 1} · games ${state.currentSet.gamesA}-${state.currentSet.gamesB}`, `${state.server === 'A' ? 'Player 1' : 'Player 2'} serving`, callout),
     teams: [
       { name: 'Player 1', score: state.currentGame.labelA, meta: `Games ${state.currentSet.gamesA}` },
       { name: 'Player 2', score: state.currentGame.labelB, meta: `Games ${state.currentSet.gamesB}` },
@@ -140,15 +143,18 @@ function goalsDemo(sportId, { names, totals, values, spacing, periods, context, 
   const state = goalsState(extended, { periods });
   const last = state.timeline.at(-1);
   const periodIndex = last?.periodIndex ?? 0;
+  const periodStart = periods.slice(0, periodIndex).reduce((total, period) => total + period.durationSec, 0);
+  const remaining = Math.max(0, periods[periodIndex].durationSec - ((last?.at ?? 0) - periodStart));
   const halfCount = periods.length / 2;
   const firstHalf = (side) => state.lineScore.periods.slice(0, halfCount).reduce((sum, period) => sum + period[side], 0);
   const halfTime = periodIndex >= halfCount ? `HT ${firstHalf('a')}-${firstHalf('b')}` : undefined;
   return {
     sportId,
+    over: false,
     colours,
     context: sportId === 'football'
       ? line(periods[periodIndex]?.label, context({ last, period: periods[periodIndex], halfTime }))
-      : line(`${periods[periodIndex]?.label} of ${periods.length}`, `${Math.floor((last?.at ?? 0) / 60)}:${String((last?.at ?? 0) % 60).padStart(2, '0')}`, halfTime),
+      : line(`${periods[periodIndex]?.label} of ${periods.length}`, formatPeriodClock(remaining), halfTime),
     teams: [
       { name: names[0], score: String(state.totalA) },
       { name: names[1], score: String(state.totalB) },
@@ -176,6 +182,7 @@ function kabaddiDemo(extra = []) {
   const [a, b] = state.teams;
   return {
     sportId: 'kabaddi',
+    over: false,
     colours,
     context: line(`Half ${state.half}`, `${state.teams[state.nextRaidTeam].name} raid next`),
     teams: [
@@ -197,6 +204,10 @@ const AUSTRALIA_BALLS = [1, 0, 4, 2, 0, 1, 'W', 1, 1, 6, 0, 2, 4, 1, 0, 1, 'W', 
 function playInnings(balls, format, overrides) {
   let incoming = 3;
   return balls.reduce((current, ball) => {
+    if (overrides.target) {
+      const chase = deriveChase(current, format);
+      if (chase.runsNeeded <= 0 || chase.ballsLeft <= 0) return current;
+    }
     const wicket = ball === 'W';
     const delivery = makeDelivery(wicket
       ? { wicket: { type: 'bowled', out: current.striker, completedRuns: 0, incoming: `p${incoming}` } }
@@ -212,10 +223,14 @@ function cricketDemo(extra = []) {
   const reply = playInnings([...AUSTRALIA_BALLS, ...extra.map(() => 1)], format, { battingTeam: 'B', bowlingTeam: 'A', target: first.runs + 1 });
   const second = deriveInnings(reply, format);
   const chase = deriveChase(reply, format);
+  const over = chase.runsNeeded <= 0 || chase.ballsLeft <= 0;
+  const result = chase.runsNeeded <= 0 ? `Australia won by ${10 - second.wkts} wickets`
+    : second.runs === first.runs ? 'Match tied' : `India won by ${first.runs - second.runs} runs`;
   return {
     sportId: 'cricket',
+    over,
     colours: colourPair('Red v Blue'),
-    context: `T20 · ${second.overs} of 20 overs`,
+    context: over ? result : `T20 · ${second.overs} of 20 overs`,
     teams: [
       { name: 'India', score: String(first.runs), suffix: `/${first.wkts}`, meta: `${first.overs} overs` },
       { name: 'Australia', score: String(second.runs), suffix: `/${second.wkts}`, meta: `${second.overs} overs · Need ${chase.runsNeeded} off ${chase.ballsLeft}` },

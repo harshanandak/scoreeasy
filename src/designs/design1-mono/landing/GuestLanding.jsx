@@ -56,7 +56,7 @@ function ExampleCard({ demo, onPoint, onUndo, canUndo, touched, revision }) {
   const [teamA, teamB] = demo.teams;
   const label = `${teamA.name} ${teamA.score}, ${teamB.name} ${teamB.score}. ${demo.context}`;
   const team = (side, row) => (
-    <button type="button" className="kit-last-team" onClick={() => onPoint(side === 'a' ? 'A' : 'B')} disabled={demo.sportId === 'cricket' && side === 'a'} aria-label={`Score for ${row.name}`}>
+    <button type="button" className="kit-last-team" onClick={() => onPoint(side === 'a' ? 'A' : 'B')} disabled={demo.over || (demo.sportId === 'cricket' && side === 'a')} aria-label={`Score for ${row.name}`}>
       <span className={`kit-last-bar kit-last-bar-${side}`} aria-hidden="true" />
       <span className="kit-last-name">
         {row.name}
@@ -88,6 +88,7 @@ ExampleCard.propTypes = {
   touched: PropTypes.bool.isRequired, revision: PropTypes.number.isRequired,
   onPoint: PropTypes.func.isRequired, onUndo: PropTypes.func.isRequired, canUndo: PropTypes.bool.isRequired,
   demo: PropTypes.shape({
+    over: PropTypes.bool,
     sportId: PropTypes.string.isRequired,
     colours: PropTypes.arrayOf(PropTypes.string).isRequired,
     context: PropTypes.string.isRequired,
@@ -128,14 +129,14 @@ export default function GuestLanding() {
             <Link className="se-go" to={startPath} onClick={markAppEntered}>
               {`Start ${selected.name}`} <GoArrow />
             </Link>
-            <Link className="se-ctl" to="/login" onClick={markAppEntered}>Sign in</Link>
+            <Link className="se-ctl" to="/login">Sign in</Link>
           </div>
         </header>
 
         <section className="kit-landing-example" aria-labelledby="landing-example-title">
           <KitSection id="landing-example-title" title="See a match being scored" />
           <SportPicker selectedId={selectedId} onSelect={id => { setSelectedId(id); setPoints([]); setTouched(false); setRevision(0); }} />
-          <ExampleCard demo={demo} onPoint={team => { setTouched(true); setRevision(value => value + 1); setPoints(previous => [...previous, team]); }} touched={touched} revision={revision} onUndo={() => setPoints(previous => previous.slice(0, -1))} canUndo={points.length > 0} />
+          <ExampleCard demo={demo} onPoint={team => { if (demo.over) return; setTouched(true); setRevision(value => value + 1); setPoints(previous => [...previous, team]); }} touched={touched} revision={revision} onUndo={() => setPoints(previous => previous.slice(0, -1))} canUndo={points.length > 0} />
 
 
           <Link className="se-ctl" to={cloudAuthAvailable ? '/signup' : 'https://scoreeasy.app/signup'} onClick={markAppEntered}>Create a free account</Link>

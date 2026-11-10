@@ -1430,9 +1430,11 @@ function TournamentDispatcher() {
 
 export default function Design1Mono() {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   useEffect(() => {
-    if (isAppShellPath(location.pathname) || isSportAppPath(location.pathname)) markAppEntered();
-  }, [location.pathname]);
+    const spectator = location.pathname === '/live' || location.pathname.startsWith('/live/');
+    if (isAuthenticated || (!spectator && (isAppShellPath(location.pathname) || isSportAppPath(location.pathname)))) markAppEntered();
+  }, [location.pathname, isAuthenticated]);
   const navigate = useNavigate();
   // `authMode === 'cloud'` is set only by CloudAuthProvider, which is nested
   // inside ConvexProviderWithClerk — so this flag doubles as proof that a

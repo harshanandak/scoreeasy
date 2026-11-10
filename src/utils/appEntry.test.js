@@ -66,7 +66,7 @@ describe('app entry contract', () => {
     expect(getAppEntryTarget({ returningPlayerState: true })).toBe(APP_ENTRY_PATH);
   });
 
-  it('keeps anonymous first-time visitors on the public marketing route', () => {
+  it('keeps anonymous first-time visitors on Home', () => {
     expect(getAppEntryTarget()).toBe(PUBLIC_HOME_PATH);
   });
 

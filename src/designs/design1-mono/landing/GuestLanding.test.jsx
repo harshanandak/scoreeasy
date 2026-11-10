@@ -67,9 +67,9 @@ describe('Home', () => {
     const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(match => JSON.parse(match[1]));
     expect(blocks.find(block => block['@type'] === 'FAQPage').mainEntity.map(item => [item.name, item.acceptedAnswer.text])).toEqual(LANDING_FAQ.map(item => [item.question, item.answer]));
   });
-  it('remembers Start and Sign in clicks', () => {
+  it('does not remember an unfinished Sign in attempt', () => {
     renderLanding();
     fireEvent.click(screen.getByRole('link', { name: 'Sign in' }));
-    expect(JSON.parse(localStorage.getItem('se_entered_app'))).toBe(true);
+    expect(localStorage.getItem('se_entered_app')).toBeNull();
   });
 });

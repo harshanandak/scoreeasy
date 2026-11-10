@@ -55,7 +55,7 @@ describe('landing demo', () => {
   it('sums basketball baskets to the scripted totals, with the half-time score from the line score', () => {
     const demo = buildDemo('basketball');
     expect(scores(demo)).toEqual(['78', '72']);
-    expect(demo.context).toMatch(/^Q3 of 4 \u00b7 \d+:\d{2} \u00b7 HT \d+-\d+$/);
+    expect(demo.context).toMatch(/^Q3 of 4 \u00b7 (?:[0-9]|1[0-5]):[0-5][0-9] \u00b7 HT \d+-\d+$/);
     const [htA, htB] = demo.context.match(/HT (\d+)-(\d+)/).slice(1).map(Number);
     expect(htA).toBeGreaterThan(0);
     expect(htA).toBeLessThan(78);
@@ -66,7 +66,7 @@ describe('landing demo', () => {
   it("plays hockey in the registry's four field-hockey quarters", () => {
     const demo = buildDemo('hockey');
     expect(scores(demo)).toEqual(['3', '2']);
-    expect(demo.context).toMatch(/^Q[1-4] of 4 \u00b7 \d+:\d{2} \u00b7 HT \d+-\d+$/);
+    expect(demo.context).toMatch(/^Q[1-4] of 4 \u00b7 (?:[0-9]|1[0-5]):[0-5][0-9] \u00b7 HT \d+-\d+$/);
     const [htA, htB] = demo.context.match(/HT (\d+)-(\d+)/).slice(1).map(Number);
     expect(htA).toBeLessThanOrEqual(3);
     expect(htB).toBeLessThanOrEqual(2);
@@ -97,6 +97,22 @@ describe('landing demo', () => {
     expect(demo.teams.every((team) => Number.isInteger(Number(team.score)))).toBe(true);
     expect(demo.context).toMatch(/^Half 1 · (Tigers|Bulls) raid next$/);
   });
+
+  for (const sport of ['volleyball', 'badminton', 'tabletennis', 'tennis', 'cricket']) {
+    it(`${sport} ignores taps after its result`, () => {
+      const points = [];
+      let demo = buildDemo(sport);
+      for (let i = 0; i < 200 && !demo.over; i += 1) {
+        points.push(sport === 'cricket' ? 'B' : 'A');
+        demo = buildDemo(sport, points);
+      }
+      expect(demo.over).toBe(true);
+      expect(demo.context).toMatch(/won|tied/);
+      const after = buildDemo(sport, [...points, 'B']);
+      expect(after.teams).toEqual(demo.teams);
+      expect(after.context).toBe(demo.context);
+    });
+  }
 
   it('rejects a sport with no demo', () => {
     expect(() => buildDemo('curling')).toThrow('No landing demo');
