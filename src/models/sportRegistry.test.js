@@ -8,7 +8,7 @@ import {
   isTeamColourSport,
 } from './sportRegistry';
 import { LATER_SPORT_IDS, PRIORITY_SPORT_IDS, SPORT_ORDER } from './sportFocus';
-import { ICON_BY_SPORT_ID } from '../designs/design1-mono/landing/sportIcons';
+import { SPORT_MARKS } from '../lib/sportMarks';
 
 
 // ─── The ICP game focus: 9 registered sports ──────────────────────────────────
@@ -310,10 +310,10 @@ describe('isTeamColourSport', () => {
     expect(isTeamColourSport(undefined)).toBe(false);
   });
 
-  it('gives every opted-in board a sport identity and a sport icon', () => {
+  it('gives every opted-in board a sport identity and a sport mark', () => {
     for (const sport of getSportsList().filter((s) => isTeamColourSport(s.id))) {
       expect(sport.identityColour, sport.id).toBeTruthy();
-      expect(ICON_BY_SPORT_ID[sport.id], sport.id).toBeTruthy();
+      expect(SPORT_MARKS[sport.id], sport.id).toBeTruthy();
     }
   });
 });

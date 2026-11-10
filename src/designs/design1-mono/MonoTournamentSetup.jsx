@@ -11,7 +11,6 @@ import { getTournamentMatchCountPreview } from '../../utils/tournamentDisplay';
 import { sportIdentity, sportIdentityVars } from '../../lib/sportIdentity';
 import BackArrow from './components/BackArrow';
 import { KitWash, GoArrow } from './kit/KitParts';
-import SportMark from './kit/SportMark';
 import { KitSegmented, KitStepper } from './kit/KitSetupParts';
 import { SetupSteps, ChoiceCards } from './kit/TournamentSetupParts';
 
@@ -614,7 +613,7 @@ export default function MonoTournamentSetup() {
         >
           <BackArrow size={20} />
         </button>
-        <span className="kit-setup-badge" aria-hidden="true"><SportMark sportId={sport} /></span>
+        <span className="kit-setup-badge" aria-hidden="true" />
         <div className="kit-setup-title">
           <h1>New tournament</h1>
           <p>{sportConfig.name} · Step {step} of {STEP_LABELS.length}</p>
