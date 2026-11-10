@@ -213,10 +213,10 @@ function cricketDemo(extra = []) {
   return {
     sportId: 'cricket',
     colours: colourPair('Red v Blue'),
-    context: `T20 ? ${second.overs} of 20 overs`,
+    context: `T20 · ${second.overs} of 20 overs`,
     teams: [
       { name: 'India', score: String(first.runs), suffix: `/${first.wkts}`, meta: `${first.overs} overs` },
-      { name: 'Australia', score: String(second.runs), suffix: `/${second.wkts}`, meta: `${second.overs} overs ? Need ${chase.runsNeeded} off ${chase.ballsLeft}` },
+      { name: 'Australia', score: String(second.runs), suffix: `/${second.wkts}`, meta: `${second.overs} overs · Need ${chase.runsNeeded} off ${chase.ballsLeft}` },
     ],
   };
 }
