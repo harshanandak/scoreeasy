@@ -518,18 +518,11 @@ describe('app entry route contract', () => {
     expect(screen.queryByRole('navigation', { name: 'App navigation' })).not.toBeInTheDocument();
   });
 
-  it('keeps marketing Home and brand clicks on the public entry resolver', async () => {
-    renderApp('/marketing');
-
+  it('keeps a single Home brand without mounting the app navigation', async () => {
+    const { container } = renderApp('/marketing');
     expect(await screen.findByText('Public marketing')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
-
-    await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
-    });
-    expect(screen.queryByText('App dashboard')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Score Easy home' }));
-    await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/));
+    expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
+    expect(container.querySelector('.global-nav-brand')).toBeNull();
   });
 
   it('does not show app bottom navigation after scoring starts', async () => {

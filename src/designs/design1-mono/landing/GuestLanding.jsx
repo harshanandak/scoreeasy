@@ -124,6 +124,12 @@ export default function GuestLanding() {
           <p className="kit-sub">
             No account needed. Your score saves on this phone, even offline.
           </p>
+          <div className="kit-landing-actions">
+            <Link className="se-go" to={startPath} onClick={markAppEntered}>
+              {`Start ${selected.name}`} <GoArrow />
+            </Link>
+            <Link className="se-ctl" to="/login" onClick={markAppEntered}>Sign in</Link>
+          </div>
         </header>
 
         <section className="kit-landing-example" aria-labelledby="landing-example-title">
@@ -136,12 +142,7 @@ export default function GuestLanding() {
         </section>
       </div>
 
-          <div className="kit-landing-actions">
-            <Link className="se-go" to={startPath} onClick={markAppEntered}>
-              {`Start ${selected.name}`} <GoArrow />
-            </Link>
-            <Link className="se-ctl" to="/login" onClick={markAppEntered}>Sign in</Link>
-          </div>
+
 
       <section className="home-faq" aria-labelledby="landing-faq-title">
         <h2 id="landing-faq-title">Questions</h2>

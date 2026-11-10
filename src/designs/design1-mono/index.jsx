@@ -1740,7 +1740,7 @@ export default function Design1Mono() {
   return (
     <div className="se-app-shell min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
-      <GlobalNavigation requestScoringExit={requestScoringExit} scoringStarted={scoringStarted} boardVisible={boardCount > 0} />
+      {location.pathname !== '/' && <GlobalNavigation requestScoringExit={requestScoringExit} scoringStarted={scoringStarted} boardVisible={boardCount > 0} />}
       <OfflineFallback onNavigate={navigateFromOfflineFallback} />
       {authMode === 'cloud' ? <ConvexReconnectingFallback /> : null}
       <OnboardingReminder />
