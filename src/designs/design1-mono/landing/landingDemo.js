@@ -9,6 +9,7 @@ import { goalsState } from '../../../models/live/goals';
 import { getSportById, getSportsList } from '../../../models/sportRegistry';
 import { applyDelivery, createInnings, deriveChase, deriveInnings, makeDelivery, makeFormat } from '../../../utils/cricketEngine';
 import { applyRaid, createKabaddiState, startHalf, teamTotal } from '../../../utils/kabaddiEngine';
+import { freezeSetsFormat, serveAfterPoint } from '../../../models/setsRules';
 import { PRESETS } from '../../../lib/teamColour';
 
 /** One side of the card: the big number, plus a small suffix when the sport has one (cricket wickets, "/5").
@@ -76,6 +77,8 @@ function setsDemo(sportId, { names, bestOf, sets, current, colours }, extra = []
     winBy: sport.config.winBy,
     bestOf,
   });
+  const rules = freezeSetsFormat(sport, { type: 'best-of', sets: bestOf, points: sport.config.pointsPerSet, initialServer: 1 }).setsRules;
+  const server = serveAfterPoint(rules, { score: { score1: state.pointsA, score2: state.pointsB }, currentSet: state.currentSet - 1, sets: state.completedSets.map(row => ({ score1: row.a, score2: row.b, completed: true })), servingTeam: 1, winner: letters.at(-1) === 'B' ? 2 : 1 });
   return {
     sportId,
     colours,
@@ -83,10 +86,11 @@ function setsDemo(sportId, { names, bestOf, sets, current, colours }, extra = []
       `${unit} ${state.currentSet} of ${bestOf}`,
       `${unit.toLowerCase()}s ${state.setsA}-${state.setsB}`,
       POINT_STATE_LABELS[state.pointState],
+      `${names[server === 2 ? 1 : 0]} serving`,
     ),
     teams: [
-      { name: names[0], score: String(state.pointsA) },
-      { name: names[1], score: String(state.pointsB) },
+      { name: names[0], score: String(state.pointsA), meta: `${unit}s ${state.setsA}` },
+      { name: names[1], score: String(state.pointsB), meta: `${unit}s ${state.setsB}` },
     ],
   };
 }
@@ -115,10 +119,10 @@ function tennisDemo(extra = []) {
   return {
     sportId: 'tennis',
     colours: colourPair('Sky v Navy'),
-    context: line(`Set ${state.sets.length + 1} · games ${state.currentSet.gamesA}-${state.currentSet.gamesB}`, callout),
+    context: line(`Set ${state.sets.length + 1} · games ${state.currentSet.gamesA}-${state.currentSet.gamesB}`, `${state.server === 'A' ? 'Player 1' : 'Player 2'} serving`, callout),
     teams: [
-      { name: 'Player 1', score: state.currentGame.labelA },
-      { name: 'Player 2', score: state.currentGame.labelB },
+      { name: 'Player 1', score: state.currentGame.labelA, meta: `Games ${state.currentSet.gamesA}` },
+      { name: 'Player 2', score: state.currentGame.labelB, meta: `Games ${state.currentSet.gamesB}` },
     ],
   };
 }
@@ -142,7 +146,7 @@ function goalsDemo(sportId, { names, totals, values, spacing, periods, context, 
   return {
     sportId,
     colours,
-    context: context({ last, period: periods[periodIndex], halfTime }),
+    context: line(periods[periodIndex]?.label, `${Math.floor((last?.at ?? 0) / 60)}:${String((last?.at ?? 0) % 60).padStart(2, '0')}`, context({ last, period: periods[periodIndex], halfTime })),
     teams: [
       { name: names[0], score: String(state.totalA) },
       { name: names[1], score: String(state.totalB) },
@@ -173,8 +177,8 @@ function kabaddiDemo(extra = []) {
     colours,
     context: line(`Half ${state.half}`, `${state.teams[state.nextRaidTeam].name} raid next`),
     teams: [
-      { name: a.name, score: String(teamTotal(a)) },
-      { name: b.name, score: String(teamTotal(b)) },
+      { name: a.name, score: String(teamTotal(a)), meta: state.nextRaidTeam === 0 ? 'Raiding next' : 'Defending next' },
+      { name: b.name, score: String(teamTotal(b)), meta: state.nextRaidTeam === 1 ? 'Raiding next' : 'Defending next' },
     ],
   };
 }
@@ -209,10 +213,10 @@ function cricketDemo(extra = []) {
   return {
     sportId: 'cricket',
     colours: colourPair('Red v Blue'),
-    context: `Australia need ${chase.runsNeeded} off ${chase.ballsLeft} balls`,
+    context: `T20 ? ${second.overs} of 20 overs`,
     teams: [
-      { name: 'India', score: String(first.runs), suffix: `/${first.wkts}` },
-      { name: 'Australia', score: String(second.runs), suffix: `/${second.wkts}` },
+      { name: 'India', score: String(first.runs), suffix: `/${first.wkts}`, meta: `${first.overs} overs` },
+      { name: 'Australia', score: String(second.runs), suffix: `/${second.wkts}`, meta: `${second.overs} overs ? Need ${chase.runsNeeded} off ${chase.ballsLeft}` },
     ],
   };
 }

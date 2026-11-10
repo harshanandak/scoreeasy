@@ -50,7 +50,7 @@ function SportPicker({ selectedId, onSelect }) {
 
 SportPicker.propTypes = { selectedId: PropTypes.string.isRequired, onSelect: PropTypes.func.isRequired };
 
-function ExampleCard({ demo, onPoint, onUndo, canUndo }) {
+function ExampleCard({ demo, onPoint, onUndo, canUndo, touched, revision }) {
   const sport = getSportById(demo.sportId);
   const colours = teamColourVars(deriveTeamColours(...demo.colours));
   const [teamA, teamB] = demo.teams;
@@ -62,7 +62,7 @@ function ExampleCard({ demo, onPoint, onUndo, canUndo }) {
         {row.name}
         {row.meta && <small className="kit-landing-meta">{row.meta}</small>}
       </span>
-      <span className="kit-last-score">{row.score}{row.suffix && <small>{row.suffix}</small>}</span>
+      <span key={revision} className={`kit-last-score${touched ? ' home-score-bump' : ''}`}>{row.score}{row.suffix && <small>{row.suffix}</small>}</span>
     </button>
   );
 
@@ -79,12 +79,13 @@ function ExampleCard({ demo, onPoint, onUndo, canUndo }) {
         {team('b', teamB)}
       </div>
       <p className="kit-last-detail" aria-live="polite">{demo.context}</p>
-      <div className="home-demo-tools"><span>{demo.sportId === 'cricket' ? 'Tap Australia for a single' : 'Tap a team to score'}</span><button type="button" className="se-ctl" onClick={onUndo} disabled={!canUndo}>Undo</button></div>
+      <div className="home-demo-tools"><span className="home-demo-hint" hidden={touched}>{demo.sportId === 'cricket' ? 'Tap Australia for a single' : 'Tap a team to score'}</span><button type="button" className="se-ctl home-undo" onClick={onUndo} disabled={!canUndo}>Undo</button></div>
     </div>
   );
 }
 
 ExampleCard.propTypes = {
+  touched: PropTypes.bool.isRequired, revision: PropTypes.number.isRequired,
   onPoint: PropTypes.func.isRequired, onUndo: PropTypes.func.isRequired, canUndo: PropTypes.bool.isRequired,
   demo: PropTypes.shape({
     sportId: PropTypes.string.isRequired,
@@ -102,6 +103,8 @@ export default function GuestLanding() {
   const { cloudAuthAvailable } = useAuth();
   const [selectedId, setSelectedId] = useState(sports[0].id);
   const selected = getSportById(selectedId);
+  const [touched, setTouched] = useState(false);
+  const [revision, setRevision] = useState(0);
   const [points, setPoints] = useState([]);
   const demo = useMemo(() => buildDemo(selectedId, points), [selectedId, points]);
   const nextSport = sports[(sports.findIndex((sport) => sport.id === selectedId) + 1) % sports.length];
@@ -125,20 +128,16 @@ export default function GuestLanding() {
 
         <section className="kit-landing-example" aria-labelledby="landing-example-title">
           <KitSection id="landing-example-title" title="See a match being scored" />
-          <SportPicker selectedId={selectedId} onSelect={id => { setSelectedId(id); setPoints([]); }} />
-          <ExampleCard demo={demo} onPoint={team => setPoints(previous => [...previous, team])} onUndo={() => setPoints(previous => previous.slice(0, -1))} canUndo={points.length > 0} />
+          <SportPicker selectedId={selectedId} onSelect={id => { setSelectedId(id); setPoints([]); setTouched(false); setRevision(0); }} />
+          <ExampleCard demo={demo} onPoint={team => { setTouched(true); setRevision(value => value + 1); setPoints(previous => [...previous, team]); }} touched={touched} revision={revision} onUndo={() => setPoints(previous => previous.slice(0, -1))} canUndo={points.length > 0} />
           <div className="kit-landing-actions">
             <Link className="se-go" to={startPath} onClick={markAppEntered}>
               {`Start ${selected.name}`} <GoArrow />
             </Link>
             <Link className="se-ctl" to="/login" onClick={markAppEntered}>Sign in</Link>
-            <Link className="se-go" to={startPath} onClick={markAppEntered}>{`Start ${selected.name}`} <GoArrow /></Link>
-            <Link className="se-ctl" to={cloudAuthAvailable ? '/signup' : 'https://scoreeasy.app/signup'} onClick={markAppEntered}>Create a free account</Link>
           </div>
 
-          <p className="kit-landing-note">
-            An example match, scored by the same rules the app uses for each sport. Tap Start to score your own.
-          </p>
+          <Link className="se-ctl" to={cloudAuthAvailable ? '/signup' : 'https://scoreeasy.app/signup'} onClick={markAppEntered}>Create a free account</Link>
         </section>
       </div>
 

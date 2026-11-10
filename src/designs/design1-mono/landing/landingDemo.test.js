@@ -55,7 +55,7 @@ describe('landing demo', () => {
   it('sums basketball baskets to the scripted totals, with the half-time score from the line score', () => {
     const demo = buildDemo('basketball');
     expect(scores(demo)).toEqual(['78', '72']);
-    expect(demo.context).toMatch(/^Q3 of 4 · HT \d+-\d+$/);
+    expect(demo.context).toMatch(/^Q3 ? \d+:\d{2} ? Q3 of 4 · HT \d+-\d+$/);
     const [htA, htB] = demo.context.match(/HT (\d+)-(\d+)/).slice(1).map(Number);
     expect(htA).toBeGreaterThan(0);
     expect(htA).toBeLessThan(78);
@@ -66,7 +66,7 @@ describe('landing demo', () => {
   it("plays hockey in the registry's four field-hockey quarters", () => {
     const demo = buildDemo('hockey');
     expect(scores(demo)).toEqual(['3', '2']);
-    expect(demo.context).toMatch(/^Q[1-4] of 4 · HT \d+-\d+$/);
+    expect(demo.context).toMatch(/^Q[1-4] ? \d+:\d{2} ? Q[1-4] of 4 · HT \d+-\d+$/);
     const [htA, htB] = demo.context.match(/HT (\d+)-(\d+)/).slice(1).map(Number);
     expect(htA).toBeLessThanOrEqual(3);
     expect(htB).toBeLessThanOrEqual(2);
@@ -78,7 +78,8 @@ describe('landing demo', () => {
     expect(demo.teams.map((team) => team.suffix)).toEqual([expect.stringMatching(/^\/\d+$/), '/2']);
     // The chase line comes from deriveChase: the target is India's total + 1 and 120 - 33 balls are left.
     const [indiaRuns, australiaRuns] = scores(demo).map(Number);
-    expect(demo.context).toBe(`Australia need ${indiaRuns + 1 - australiaRuns} off 87 balls`);
+    expect(demo.context).toBe('T20 ? 5.3 of 20 overs');
+    expect(demo.teams[1].meta).toBe(`5.3 overs ? Need ${indiaRuns + 1 - australiaRuns} off 87`);
   });
 
   it('only cricket carries a suffix on the big number', () => {

@@ -38,11 +38,11 @@ describe('Home', () => {
 
   it('keeps master actions and the selected sport together', () => {
     renderLanding();
-    expect(startLinks('Start Cricket')).toHaveLength(2);
+    expect(startLinks('Start Cricket')).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: 'Create a free account' })).toBeInTheDocument();
     fireEvent.click(pickFor('Volleyball'));
-    expect(startLinks('Start Volleyball')).toHaveLength(2);
+    expect(startLinks('Start Volleyball')).toHaveLength(1);
     for (const link of startLinks('Start Volleyball')) expect(link).toHaveAttribute('href', '/play?sport=volleyball');
   });
   it('shows engine scores for every sport and reverses a demo tap', () => {
