@@ -113,33 +113,35 @@
   color: var(--team-b-on);
 }
 
-/* "show the game": the sport's icon (kit/SportMark) on the serving key, cropped by the key's
-   inner edge. Engine motif colour, so it can never cost text contrast. */
+/* "show the game": the sport's ball-and-action mark on the serving key, flying at the net and
+   cropped by the key's inner edge. Engine motif colour, so it can never cost text contrast. */
 .tsb-mark {
   position: absolute;
   z-index: -1;
   bottom: 2%;
-  right: -14%;
-  aspect-ratio: 1;
-  /* sized by the key's height, so on short keys (360 x 640) the mark shrinks instead of climbing
-     into the numeral; it stays anchored to the bottom and the net-side edge */
-  height: 29%;
+  left: 4%;
+  width: 118%;
+  aspect-ratio: 140 / 100;
+  /* on short keys (360 x 640) the mark shrinks instead of climbing into the numeral; it stays
+     anchored to the bottom and the net-side edge */
+  max-height: 29%;
+  -webkit-mask: var(--sport-mark) right bottom / contain no-repeat;
+  mask: var(--sport-mark) right bottom / contain no-repeat;
   pointer-events: none;
 }
 
 .tsb-key[data-side='right'] .tsb-mark {
-  right: auto;
-  left: -14%;
+  left: auto;
+  right: 4%;
+  transform: scaleX(-1);
 }
 
 .tsb-key-a .tsb-mark {
-  color: var(--team-a-motif-ink);
-  opacity: var(--team-a-motif-alpha);
+  background: var(--team-a-motif);
 }
 
 .tsb-key-b .tsb-mark {
-  color: var(--team-b-motif-ink);
-  opacity: var(--team-b-motif-alpha);
+  background: var(--team-b-motif);
 }
 
 /* serving tag: inverted (on-colour fill, team-colour text), the same gated pair as the labels */

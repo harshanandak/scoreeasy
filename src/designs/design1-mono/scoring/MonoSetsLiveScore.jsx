@@ -655,7 +655,6 @@ export default function MonoSetsLiveScore() {
           title={`${team1Name} v ${team2Name}`}
           subtitle={`${sportConfig.name} · ${targetPoints} points to win · Win by ${winBy}`}
           sportColour={sportIdentity(sport)?.core}
-          sportId={sport}
           setUnit={rules.unit}
           colourStyle={teamColourStyle}
           halves={halves}

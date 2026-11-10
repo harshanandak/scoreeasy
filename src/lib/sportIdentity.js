@@ -6,6 +6,7 @@
 // the sheen and with the mark under it, exactly like a scorer key. Only engine output leaves here.
 import { getSportById } from '../models/sportRegistry';
 import { colourVars, deriveIdentityColour } from './teamColour';
+import { sportMarkMaskUrl } from './sportMarks';
 
 const cache = new Map();
 
@@ -21,13 +22,16 @@ export function sportIdentity(sportId) {
 }
 
 /**
- * CSS custom properties for a sport surface: --sport-{hi,core,lo,on,scrim,tint,line,motif,motif-ink,motif-alpha}.
- * The sport's icon is a component (kit/SportMark), not a variable.
+ * CSS custom properties for a sport surface: --sport-{hi,core,lo,on,scrim,tint,line,motif} and
+ * --sport-mark (the ball-and-action mask) when the sport has one.
  * @param {string | undefined} sportId registry id
  * @returns {Record<string, string>} empty for unknown sports
  */
 export function sportIdentityVars(sportId) {
   const identity = sportIdentity(sportId);
   if (!identity) return {};
-  return colourVars(identity, '--sport');
+  const vars = colourVars(identity, '--sport');
+  const mark = sportMarkMaskUrl(sportId);
+  if (mark) vars['--sport-mark'] = mark;
+  return vars;
 }

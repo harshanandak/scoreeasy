@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import TeamSetsBoard from './TeamSetsBoard';
+import { sportMarkMaskUrl } from '../../../lib/sportMarks';
 
 // Presentational contract of the Refined Soft team-colour board: it shows what the scorer tells
 // it, once, and never invents state. Scoring rules are tested on MonoQuickMatch.
@@ -15,8 +16,7 @@ function renderBoard(overrides = {}) {
     title: 'Royals v Strikers',
     subtitle: 'Volleyball · 25 pts · win by 2',
     isLive: false,
-    sportId: 'volleyball',
-    colourStyle: {},
+    colourStyle: { '--sport-mark': sportMarkMaskUrl('volleyball') },
     halves: halves(),
     meta: ['Set 2', 'Sets 1–0', '18:42'],
     setHistory: [],
@@ -51,9 +51,9 @@ describe('TeamSetsBoard', () => {
     expect(screen.getByText('Live')).toBeInTheDocument();
   });
 
-  it('puts the sport icon on the serving key only, and moves it with the serve', () => {
+  it('puts the ball mark on the serving key only, and moves it with the serve', () => {
     const { rerender, props } = renderBoard();
-    expect(key('Royals').querySelector('.tsb-mark svg')).not.toBeNull();
+    expect(key('Royals').querySelector('.tsb-mark')).not.toBeNull();
     expect(key('Strikers').querySelector('.tsb-mark')).toBeNull();
     expect(within(key('Royals')).getByText('Serving')).toBeInTheDocument();
     expect(within(key('Strikers')).queryByText('Serving')).toBeNull();
@@ -65,12 +65,12 @@ describe('TeamSetsBoard', () => {
   });
 
   it('draws no mark for a sport without one, but still says who serves', () => {
-    renderBoard({ sportId: 'not-a-sport' });
+    renderBoard({ colourStyle: {} });
     expect(document.querySelector('.tsb-mark')).toBeNull();
     expect(within(key('Royals')).getByText('Serving')).toBeInTheDocument();
   });
 
-  it('tells each key which side of the net it is on, so the mark sits on its net-side edge', () => {
+  it('tells each key which side of the net it is on, so the mark faces the net', () => {
     renderBoard();
     expect(key('Royals')).toHaveAttribute('data-side', 'left');
     expect(key('Strikers')).toHaveAttribute('data-side', 'right');
