@@ -146,7 +146,9 @@ function goalsDemo(sportId, { names, totals, values, spacing, periods, context, 
   return {
     sportId,
     colours,
-    context: line(periods[periodIndex]?.label, `${Math.floor((last?.at ?? 0) / 60)}:${String((last?.at ?? 0) % 60).padStart(2, '0')}`, context({ last, period: periods[periodIndex], halfTime })),
+    context: sportId === 'football'
+      ? line(periods[periodIndex]?.label, context({ last, period: periods[periodIndex], halfTime }))
+      : line(`${periods[periodIndex]?.label} of ${periods.length}`, `${Math.floor((last?.at ?? 0) / 60)}:${String((last?.at ?? 0) % 60).padStart(2, '0')}`, halfTime),
     teams: [
       { name: names[0], score: String(state.totalA) },
       { name: names[1], score: String(state.totalB) },
