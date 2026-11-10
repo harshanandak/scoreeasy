@@ -16,8 +16,11 @@ import { PRESETS } from '../../../lib/teamColour';
 /** One side of the card: the big number, plus a small suffix when the sport has one (cricket wickets, "/5").
  *  `context` is the one line under the board: the chase in cricket, the set count in volleyball, the
  *  half-time score in football. Every value is read from the sport's engine.
+ *  `board` is the sport's own scoreboard columns for Home's slides: a label per column (finished
+ *  sets, tennis games, cricket overs), each side's cells, and which side serves (null when none).
  *  @typedef {{ name: string, score: string, suffix?: string }} DemoTeam
- *  @typedef {{ sportId: string, colours: [string, string], teams: [DemoTeam, DemoTeam], context: string }} Demo */
+ *  @typedef {{ cols: string[], cells: [string[], string[]], serving: 0|1|null }} DemoBoard
+ *  @typedef {{ sportId: string, colours: [string, string], teams: [DemoTeam, DemoTeam], context: string, board?: DemoBoard }} Demo */
 
 /** The sports the landing can show: the registered ones, in focus order. */
 export const DEMO_SPORT_IDS = getSportsList().map((sport) => sport.id);
@@ -80,7 +83,13 @@ function setsDemo(sportId, { names, bestOf, sets, current, colours }, extra = []
   });
   const rules = freezeSetsFormat(sport, { type: 'best-of', sets: bestOf, points: sport.config.pointsPerSet, initialServer: 1 }).setsRules;
   const server = serveAfterPoint(rules, { score: { score1: state.pointsA, score2: state.pointsB }, currentSet: state.currentSet - 1, sets: state.completedSets.map(row => ({ score1: row.a, score2: row.b, completed: true })), servingTeam: 1, winner: letters.at(-1) === 'B' ? 2 : 1 });
+  const serveKnown = !state.isMatchOver && (sportId !== 'volleyball' || state.pointsA + state.pointsB > 0);
   return {
+    board: {
+      cols: state.completedSets.map((_, i) => `${unit[0]}${i + 1}`),
+      cells: [state.completedSets.map(row => String(row.a)), state.completedSets.map(row => String(row.b))],
+      serving: serveKnown ? (server === 2 ? 1 : 0) : null,
+    },
     sportId,
     colours,
     over: state.isMatchOver,
@@ -118,7 +127,16 @@ function tennisDemo(extra = []) {
   if (state.isMatchPoint) callout = 'match point';
   else if (state.isSetPoint) callout = 'set point';
   else if (state.isBreakPoint) callout = 'break point';
+  const current = state.isMatchOver ? [] : [state.currentSet];
   return {
+    board: {
+      cols: [...state.sets, ...current].map((_, i) => `S${i + 1}`),
+      cells: [
+        [...state.sets.map(set => set.a), ...current.map(set => set.gamesA)].map(String),
+        [...state.sets.map(set => set.b), ...current.map(set => set.gamesB)].map(String),
+      ],
+      serving: state.isMatchOver ? null : (state.server === 'A' ? 0 : 1),
+    },
     sportId: 'tennis',
     over: state.isMatchOver,
     colours: colourPair('Sky v Navy'),
@@ -149,6 +167,7 @@ function goalsDemo(sportId, { names, totals, values, spacing, periods, context, 
   const firstHalf = (side) => state.lineScore.periods.slice(0, halfCount).reduce((sum, period) => sum + period[side], 0);
   const halfTime = periodIndex >= halfCount ? `HT ${firstHalf('a')}-${firstHalf('b')}` : undefined;
   return {
+    board: { cols: [], cells: [[], []], serving: null },
     sportId,
     over: false,
     colours,
@@ -227,6 +246,8 @@ function cricketDemo(extra = []) {
   const result = chase.runsNeeded <= 0 ? `Australia won by ${10 - second.wkts} wickets`
     : second.runs === first.runs ? 'Match tied' : `India won by ${first.runs - second.runs} runs`;
   return {
+    board: { cols: ['Overs'], cells: [[first.overs], [second.overs]], serving: null },
+    chase: over ? result : `Australia need ${chase.runsNeeded} off ${chase.ballsLeft}`,
     sportId: 'cricket',
     over,
     colours: colourPair('Red v Blue'),

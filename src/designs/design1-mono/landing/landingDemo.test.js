@@ -114,6 +114,16 @@ describe('landing demo', () => {
     });
   }
 
+  it("gives each sport's own board columns from the engines", () => {
+    expect(buildDemo('tennis').board).toEqual({ cols: ['S1', 'S2'], cells: [['6', '3'], ['3', '2']], serving: 0 });
+    expect(buildDemo('volleyball').board).toEqual({ cols: ['S1', 'S2'], cells: [['25', '23'], ['21', '25']], serving: 0 });
+    expect(buildDemo('badminton').board.cols).toEqual(['G1']);
+    expect(buildDemo('cricket').board.cols).toEqual(['Overs']);
+    expect(buildDemo('cricket').chase).toMatch(/^Australia need \d+ off 87$/);
+    // One scored point moves the serve with the rally (badminton): Lee wins it and serves next.
+    expect(buildDemo('badminton', ['B']).board.serving).toBe(1);
+  });
+
   it('rejects a sport with no demo', () => {
     expect(() => buildDemo('curling')).toThrow('No landing demo');
   });

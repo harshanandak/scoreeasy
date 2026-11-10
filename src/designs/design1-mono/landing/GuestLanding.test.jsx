@@ -4,10 +4,11 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { LocalAuthProvider } from '../../../auth/AuthContext';
-import { getSportsList } from '../../../models/sportRegistry';
+import { getSportById } from '../../../models/sportRegistry';
 import GuestLanding from './GuestLanding';
 import { buildDemo } from './landingDemo';
 import { LANDING_FAQ } from './landingFaq';
+import { SLIDES } from './ScoreSlides';
 
 function LocationProbe() {
   const location = useLocation();
@@ -27,8 +28,10 @@ function renderLanding({ cloudAuthAvailable = false } = {}) {
   );
 }
 
-function pickFor(name) { return screen.getByRole('button', { name, exact: true }); }
-function startLinks(name) { return screen.getAllByRole('link', { name }); }
+function slides(container) {
+  return [...container.querySelectorAll('[aria-roledescription="slide"]')];
+}
+
 describe('Home', () => {
   beforeEach(() => { localStorage.clear(); });
 
@@ -36,31 +39,51 @@ describe('Home', () => {
     cleanup();
   });
 
-  it('puts the sport tabs on the scoreboard and keeps Start on the chosen tab', () => {
+  it('has one fixed Start that opens the sport picker, plus Sign in and sign up', () => {
     renderLanding();
-    const card = screen.getByTestId('landing-example');
-    expect(within(card).getByRole('group', { name: 'Pick a sport' })).toBeInTheDocument();
-    expect(within(card).getAllByRole('listitem')).toHaveLength(3);
-    expect(startLinks('Start Cricket')).toHaveLength(1);
+    const start = screen.getAllByRole('link', { name: 'Start a match' });
+    expect(start).toHaveLength(1);
+    expect(start[0]).toHaveAttribute('href', '/play');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: 'Create a free account' })).toBeInTheDocument();
-    fireEvent.click(pickFor('Volleyball'));
-    expect(startLinks('Start Volleyball')).toHaveLength(1);
-    for (const link of startLinks('Start Volleyball')) expect(link).toHaveAttribute('href', '/play?sport=volleyball');
   });
-  it('shows engine scores for every sport and reverses a demo tap', () => {
-    renderLanding();
-    for (const sport of getSportsList()) {
-      fireEvent.click(pickFor(sport.name));
-      const card = screen.getByTestId('landing-example');
-      const initial = card.textContent;
-      const demo = buildDemo(sport.id);
-      fireEvent.click(within(card).getByRole('button', { name: `Score for ${demo.teams[1].name}` }));
-      expect(card.textContent).not.toBe(initial);
-      fireEvent.click(within(card).getByRole('button', { name: 'Undo' }));
-      expect(card.textContent).toBe(initial);
+
+  it('shows a labelled carousel of sport boards with no sport tabs and no hint list', () => {
+    const { container } = renderLanding();
+    const carousel = screen.getByTestId('landing-example');
+    expect(carousel).toHaveAttribute('aria-roledescription', 'carousel');
+    expect(carousel).toHaveAccessibleName();
+    expect(within(carousel).queryByRole('group', { name: 'Pick a sport' })).toBeNull();
+    expect(within(carousel).queryAllByRole('listitem')).toHaveLength(0);
+    const all = slides(container);
+    expect(all).toHaveLength(SLIDES.length);
+    expect(all.filter((slide) => slide.getAttribute('aria-hidden') !== 'true')).toHaveLength(1);
+  });
+
+  it('draws every slide from its sport engine, with a short calm tagline', () => {
+    const { container } = renderLanding();
+    slides(container).forEach((slide, i) => {
+      const demo = buildDemo(SLIDES[i].sportId);
+      for (const team of demo.teams) {
+        expect(slide.textContent).toContain(team.name);
+        expect(slide.textContent).toContain(team.score);
+      }
+      expect(SLIDES[i].tagline.split(/\s+/).length).toBeLessThanOrEqual(8);
+      expect(SLIDES[i].tagline).not.toMatch(/!/);
+    });
+  });
+
+  it('moves between slides with the dots and never changes the Start label', () => {
+    const { container } = renderLanding();
+    for (const [i, slide] of SLIDES.entries()) {
+      const dot = screen.getByRole('button', { name: `Show ${getSportById(slide.sportId).name}` });
+      fireEvent.click(dot);
+      expect(dot).toHaveAttribute('aria-current', 'true');
+      expect(slides(container)[i]).not.toHaveAttribute('aria-hidden');
+      expect(screen.getByRole('link', { name: 'Start a match' })).toHaveAttribute('href', '/play');
     }
   });
+
   it('keeps FAQs collapsed and the structured data consistent', () => {
     const { container } = renderLanding();
     const rows = [...container.querySelectorAll('details')];
@@ -70,6 +93,7 @@ describe('Home', () => {
     const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(match => JSON.parse(match[1]));
     expect(blocks.find(block => block['@type'] === 'FAQPage').mainEntity.map(item => [item.name, item.acceptedAnswer.text])).toEqual(LANDING_FAQ.map(item => [item.question, item.answer]));
   });
+
   it('does not remember an unfinished Sign in attempt', () => {
     renderLanding();
     fireEvent.click(screen.getByRole('link', { name: 'Sign in' }));

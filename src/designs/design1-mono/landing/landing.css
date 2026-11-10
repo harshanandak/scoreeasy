@@ -35,195 +35,328 @@
   font-size: 1rem;
 }
 
-/* ---- the scoreboard: a TV score bug with the sport tabs on top ---- */
+/* ---- the scoreboard: a slideshow of real sport boards ----
+   Motion rules: transform and opacity only, ease-out, no scale and no bounce. Every slide sits in
+   the same grid cell, so the card is as tall as the tallest board and never changes height. */
 .kit-landing-example .kit-sec {
   margin: 24px 2px 10px;
 }
 
-.home-bug {
+.home-slides {
+  --se-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --shift: 8px;
+}
+
+.home-slides[data-dir='back'] {
+  --shift: -8px;
+}
+
+.home-slides-card {
+  display: grid;
   overflow: hidden;
   border: 2px solid var(--se-color-ink);
   border-radius: 18px;
   background: var(--se-color-surface);
-  box-shadow: 4px 4px 0 var(--sport-core, var(--se-color-ink));
+  box-shadow: 4px 4px 0 var(--se-color-ink);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-/* One row of the Kit filter chips; it scrolls sideways inside the card, never the page. */
-.home-bug-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 10px;
-  overflow-x: auto;
-  border-bottom: 2px solid var(--se-color-ink);
-  scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(90deg, black calc(100% - 28px), transparent);
-  mask-image: linear-gradient(90deg, black calc(100% - 28px), transparent);
-}
-
-.home-bug-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.home-bug-fields {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-
-.home-bug-side {
-  position: relative;
+.home-slide {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  grid-area: 1 / 1;
   min-width: 0;
-  min-height: 150px;
-  padding: 20px 10px 16px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(var(--shift));
+  transition:
+    opacity 520ms var(--se-ease-out),
+    transform 520ms var(--se-ease-out),
+    visibility 0s linear 520ms;
+}
+
+.home-slide.is-leaving {
+  transform: translateX(calc(var(--shift) * -1));
+}
+
+.home-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+/* The engine steps are timed by these invisible animations, so they pause with the rest. */
+.home-tick {
+  position: absolute;
+  width: 0;
+  height: 0;
+  animation: home-tick linear forwards;
+}
+
+@keyframes home-tick {
+  to {
+    transform: translateX(1px);
+  }
+}
+
+.home-board {
+  padding: 14px 14px 0;
+}
+
+.home-board-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+
+.home-board-head .kit-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.home-board-head .kit-badge svg {
+  width: 24px;
+  height: 24px;
+}
+
+.home-board-sport {
+  font: 800 0.8rem/1 var(--se-font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.home-board-live,
+.home-board-undo {
+  margin-left: auto;
+  font: 800 0.72rem/1 var(--se-font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-board-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--se-color-live);
+}
+
+.home-board-live i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: home-live 2s ease-in-out infinite;
+}
+
+@keyframes home-live {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* "Undo" turns into "Undone" by a crossfade of two words in one cell. */
+.home-board-undo {
+  display: inline-grid;
+  padding: 6px 10px;
+  border: 2px solid var(--se-color-ink);
+  border-radius: 10px;
+  color: var(--se-color-ink);
+}
+
+.home-board-undo > span {
+  grid-area: 1 / 1;
+  text-align: center;
+  transition: opacity 300ms var(--se-ease-out);
+}
+
+.home-board-undo > span + span,
+.home-board-undo.is-done > span:first-child {
+  opacity: 0;
+}
+
+.home-board-undo.is-done > span + span {
+  opacity: 1;
+}
+
+.home-board-grid {
+  display: grid;
+  align-items: center;
+  column-gap: 6px;
+  margin-top: 10px;
+}
+
+.home-board-label {
+  color: var(--se-color-ink-soft);
+  font: 700 0.66rem/1 var(--se-font-mono);
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.home-board-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 56px;
+  font-size: 1.05rem;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.home-board-bar {
+  flex: none;
+  width: 5px;
+  height: 30px;
+  border-radius: 3px;
+  background: var(--team-a-core, var(--se-color-ink));
+}
+
+.home-board-bar-b {
+  background: var(--team-b-core, var(--se-color-ink));
+}
+
+.home-board-serve {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sport-core, var(--se-color-ink));
+  opacity: 0;
+  transition: opacity 300ms var(--se-ease-out);
+}
+
+.home-board-serve.is-on {
+  opacity: 1;
+}
+
+.home-board-cell {
+  display: inline-block;
+  color: var(--se-color-ink-soft);
+  font: 700 1.25rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.home-board-score {
+  justify-self: end;
+  min-width: 2ch;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.home-board-num {
+  display: inline-block;
+  font: 800 2.7rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.home-board-suffix {
+  display: inline-block;
+  margin-left: 1px;
+  color: var(--se-color-ink-soft);
+  font: 800 1.45rem/1 var(--se-font-num);
+}
+
+.home-board-foot {
+  margin: 4px -14px 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--se-color-line-soft);
+  font: 750 0.9rem/1.3 var(--se-font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A number that changed rises 0.2em into place while it fades in. */
+.home-roll {
+  animation: home-roll 320ms var(--se-ease-out);
+}
+
+@keyframes home-roll {
+  from {
+    opacity: 0;
+    transform: translateY(0.2em);
+  }
+}
+
+.home-slide-tag {
+  margin: 0;
+  padding: 14px 14px 16px;
+  border-top: 2px solid var(--se-color-ink);
+  font: 800 1.2rem/1.2 var(--se-font-display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+/* Progress: one short track per slide; the current one fills over the hold time. */
+.home-slides-dots {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.home-dot {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 0;
   background: transparent;
-  color: var(--se-color-ink);
-  font: inherit;
-  text-align: center;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Each side carries its team colour as a bar along the top, as on a broadcast score bug. */
-.home-bug-side::before {
-  content: '';
+.home-dot-track {
+  position: relative;
+  overflow: hidden;
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--se-color-ink) 22%, transparent);
+}
+
+.home-dot[aria-current='true'] .home-dot-track {
+  width: 28px;
+}
+
+.home-dot-fill {
   position: absolute;
-  inset: 0 0 auto;
-  height: 6px;
-  background: var(--team-a-core, var(--se-color-ink));
-}
-
-.home-bug-side-b {
-  border-left: 2px solid var(--se-color-ink);
-}
-
-.home-bug-side-b::before {
-  background: var(--team-b-core, var(--se-color-ink));
-}
-
-.home-bug-side:active:not(:disabled) {
-  background: var(--se-color-surface-warm);
-}
-
-.home-bug-side:disabled {
-  cursor: default;
-}
-
-.home-bug-name {
-  max-width: 100%;
-  font: 800 0.8rem/1.1 var(--se-font-mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
-}
-
-.home-bug-num {
-  font: 800 4.6rem/0.95 var(--se-font-num);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.home-bug.has-suffix .home-bug-num {
-  font-size: 3.6rem;
-}
-
-.home-bug-num small {
-  margin-left: 1px;
-  font-size: 0.5em;
-  opacity: 0.8;
-}
-
-.home-bug-meta {
-  color: var(--se-color-ink-soft);
-  font-size: 0.78rem;
-  font-weight: 600;
-  line-height: 1.3;
-  text-wrap: balance;
-}
-
-.home-bug-vs {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
+  inset: 0;
   background: var(--se-color-ink);
-  box-shadow: 0 0 0 3px var(--se-color-surface);
-  color: var(--se-color-on-ink);
-  font: 800 0.72rem/1 var(--se-font-mono);
-  letter-spacing: 0.04em;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
+  transform-origin: left center;
+  animation: home-dot-fill 4600ms linear forwards;
 }
 
-.home-bug-status {
-  margin: 0;
-  padding: 10px 14px;
-  border-top: 2px solid var(--se-color-ink);
-  font: 800 0.95rem/1.3 var(--se-font-display);
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-  text-wrap: balance;
-}
-
-.home-bug-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px 12px;
-  border-top: 1px solid var(--se-color-line-soft);
-}
-
-.home-bug-hints {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--se-color-ink-soft);
-  font-size: 0.8rem;
-  font-weight: 650;
-  line-height: 1.35;
-}
-
-.home-bug-hints li::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-right: 8px;
-  border-radius: 50%;
-  background: var(--sport-core, var(--se-color-ink));
-  vertical-align: middle;
-}
-
-.home-undo {
-  flex: none;
-  min-width: 88px;
-}
-
-.home-score-bump {
-  animation: home-score-bump 180ms ease-out;
-}
-
-@keyframes home-score-bump {
-  50% {
-    transform: scale(1.12);
+@keyframes home-dot-fill {
+  from {
+    transform: scaleX(0);
   }
 }
 
+.home-slides.is-paused .home-dot-fill,
+.home-slides.is-paused .home-tick,
+.home-slides.is-paused .home-board-live i {
+  animation-play-state: paused;
+}
+
+/* No autoplay and no motion: the first slide shows, and a dot switches at once. */
 @media (prefers-reduced-motion: reduce) {
-  .home-score-bump {
+  .home-slide,
+  .home-board-undo > span,
+  .home-board-serve {
+    transition: none;
+  }
+
+  .home-tick,
+  .home-dot-fill,
+  .home-roll,
+  .home-board-live i {
     animation: none;
   }
 }
@@ -324,16 +457,6 @@
   text-decoration: underline;
 }
 
-@media (max-width: 380px) {
-  .home-bug-num {
-    font-size: 4rem;
-  }
-
-  .home-bug.has-suffix .home-bug-num {
-    font-size: 3.1rem;
-  }
-}
-
 /* ---- desktop: headline left, scoreboard right, both from the top ---- */
 @media (min-width: 900px) {
   .kit-landing {
@@ -387,35 +510,22 @@
     white-space: nowrap;
   }
 
-  /* The tabs stay one row, as on the phone; a thin scrollbar shows a mouse there is more. */
-  .home-bug-tabs {
-    gap: 6px;
-    padding-bottom: 6px;
-    scrollbar-width: thin;
+  .home-board {
+    padding: 18px 18px 0;
   }
 
-  .home-bug-tabs::-webkit-scrollbar {
-    display: block;
-    height: 6px;
+  .home-board-foot {
+    margin: 6px -18px 0;
+    padding: 12px 18px;
   }
 
-  .home-bug-tabs .kit-fchip {
-    min-height: 40px;
-    padding: 0 12px;
-    font-size: 0.86rem;
+  .home-board-num {
+    font-size: 3.2rem;
   }
 
-  .home-bug-side {
-    min-height: 164px;
-    padding-top: 26px;
-  }
-
-  .home-bug-num {
-    font-size: 5.8rem;
-  }
-
-  .home-bug.has-suffix .home-bug-num {
-    font-size: 4.6rem;
+  .home-slide-tag {
+    padding: 16px 18px 18px;
+    font-size: 1.35rem;
   }
 
   .home-faq {
