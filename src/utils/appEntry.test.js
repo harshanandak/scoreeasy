@@ -2,7 +2,7 @@ import { matchStorageKey } from './accountStorage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_ENTRY_PATH,
-  PUBLIC_MARKETING_PATH,
+  PUBLIC_HOME_PATH,
   getAppEntryTarget,
   hasReturningPlayerState,
   loadActiveSessionSummaries,
@@ -67,7 +67,7 @@ describe('app entry contract', () => {
   });
 
   it('keeps anonymous first-time visitors on the public marketing route', () => {
-    expect(getAppEntryTarget()).toBe(PUBLIC_MARKETING_PATH);
+    expect(getAppEntryTarget()).toBe(PUBLIC_HOME_PATH);
   });
 
   it('waits while auth state is loading', () => {
@@ -254,6 +254,6 @@ describe('app entry contract', () => {
     globalThis.localStorage.setItem(matchStorageKey('gs_history'), JSON.stringify([{ id: 'legacy-1' }]));
 
     expect(loadReturningPlayerState()).toBe(false);
-    expect(getAppEntryTarget(loadAppEntryState())).toBe(PUBLIC_MARKETING_PATH);
+    expect(getAppEntryTarget(loadAppEntryState())).toBe(PUBLIC_HOME_PATH);
   });
 });

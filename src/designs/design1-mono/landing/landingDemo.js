@@ -66,10 +66,10 @@ const POINT_STATE_LABELS = { setPoint: 'set point', matchPoint: 'match point' };
 
 // ---- sets sports: volleyball, badminton, table tennis ------------------------------------
 
-function setsDemo(sportId, { names, bestOf, sets, current, colours }) {
+function setsDemo(sportId, { names, bestOf, sets, current, colours }, extra = []) {
   const sport = getSportById(sportId);
   const unit = sport.config.setLabel || 'Set';
-  const letters = [...sets.flatMap(([a, b]) => rallies(a, b)), ...rallies(...current)];
+  const letters = [...sets.flatMap(([a, b]) => rallies(a, b)), ...rallies(...current), ...extra];
   const state = volleyballState(pointEvents(letters), {
     pointsPerSet: sport.config.pointsPerSet,
     deciderPoints: sport.config.deciderPoints,
@@ -99,7 +99,7 @@ function tennisGame(winner, loserPoints = 0) {
   return [...Array.from({ length: loserPoints }, () => loser), ...Array.from({ length: 4 }, () => winner)];
 }
 
-function tennisDemo() {
+function tennisDemo(extra = []) {
   const gameWinners = ['A', 'B', 'A', 'A', 'B', 'A', 'B', 'A', 'A']; // set 1: 6-3 to A
   const secondSet = ['B', 'A', 'B', 'A', 'A']; // set 2 so far: A 3, B 2
   const points = [
@@ -107,7 +107,7 @@ function tennisDemo() {
     ...secondSet.flatMap((winner, i) => tennisGame(winner, i % 2)),
     'A', 'A', 'B', // the game in play: A 30, B 15
   ];
-  const state = tennisState(pointEvents(points), TENNIS_PRESETS.standard);
+  const state = tennisState(pointEvents([...points, ...extra]), TENNIS_PRESETS.standard);
   let callout;
   if (state.isMatchPoint) callout = 'match point';
   else if (state.isSetPoint) callout = 'set point';
@@ -127,12 +127,13 @@ function tennisDemo() {
 
 // `context` gets the last goal, the period in play and the half-time score ("HT 1-0", from the
 // engine's line score, once play is past the half) and returns the one line under the board.
-function goalsDemo(sportId, { names, totals, values, spacing, periods, context, colours }) {
+function goalsDemo(sportId, { names, totals, values, spacing, periods, context, colours }, extra = []) {
   const events = timedEvents(
     sideScores('A', totals[0], values[0], spacing[0]),
     sideScores('B', totals[1], values[1], spacing[1]),
   );
-  const state = goalsState(events, { periods });
+  const extended = extra.reduce((all, team) => appendPoint(all, { team, value: 1, at: all.at(-1)?.at ?? 0 }), events);
+  const state = goalsState(extended, { periods });
   const last = state.timeline.at(-1);
   const periodIndex = last?.periodIndex ?? 0;
   const halfCount = periods.length / 2;
@@ -157,14 +158,15 @@ const KABADDI_RAIDS = [
   ['touch', 3], ['touch', 1], ['touch', 2], ['tackled'], ['touch', 1], ['touch', 2],
 ];
 
-function kabaddiDemo() {
+function kabaddiDemo(extra = []) {
   const colours = colourPair('Purple v Orange');
   const start = startHalf(createKabaddiState({ names: ['Tigers', 'Bulls'], colours }));
-  const state = KABADDI_RAIDS.reduce((current, [type, count], i) => applyRaid(current, {
+  const seeded = KABADDI_RAIDS.reduce((current, [type, count], i) => applyRaid(current, {
     id: `landing-raid-${i + 1}`,
     type,
     ...(count ? { count } : {}),
   }), start);
+  const state = extra.reduce((current, team) => applyRaid(current, { id: `tap-${current.raidNumber}-${team}`, type: current.nextRaidTeam === (team === 'A' ? 0 : 1) ? 'touch' : 'tackled', ...(current.nextRaidTeam === (team === 'A' ? 0 : 1) ? { count: 1 } : {}) }), seeded);
   const [a, b] = state.teams;
   return {
     sportId: 'kabaddi',
@@ -198,10 +200,10 @@ function playInnings(balls, format, overrides) {
   }, createInnings(overrides));
 }
 
-function cricketDemo() {
+function cricketDemo(extra = []) {
   const format = makeFormat({ name: 'T20', oversPerInnings: 20 });
   const first = deriveInnings(playInnings(INDIA_BALLS, format, { battingTeam: 'A', bowlingTeam: 'B' }), format);
-  const reply = playInnings(AUSTRALIA_BALLS, format, { battingTeam: 'B', bowlingTeam: 'A', target: first.runs + 1 });
+  const reply = playInnings([...AUSTRALIA_BALLS, ...extra.map(() => 1)], format, { battingTeam: 'B', bowlingTeam: 'A', target: first.runs + 1 });
   const second = deriveInnings(reply, format);
   const chase = deriveChase(reply, format);
   return {
@@ -220,13 +222,13 @@ function cricketDemo() {
 const BUILDERS = {
   cricket: cricketDemo,
   kabaddi: kabaddiDemo,
-  volleyball: () => setsDemo('volleyball', {
+  volleyball: (extra) => setsDemo('volleyball', {
     names: ['Eagles', 'Hawks'], bestOf: 5, sets: [[25, 21], [23, 25]], current: [18, 16], colours: colourPair('Red v Blue'),
-  }),
-  badminton: () => setsDemo('badminton', {
+  }, extra),
+  badminton: (extra) => setsDemo('badminton', {
     names: ['Chen', 'Lee'], bestOf: 3, sets: [[21, 18]], current: [15, 12], colours: colourPair('Purple v Orange'),
-  }),
-  football: () => goalsDemo('football', {
+  }, extra),
+  football: (extra) => goalsDemo('football', {
     names: ['City', 'United'],
     totals: [2, 1],
     values: [[1], [1]],
@@ -234,8 +236,8 @@ const BUILDERS = {
     periods: [{ label: '1st half', durationSec: 2700 }, { label: '2nd half', durationSec: 2700 }],
     context: ({ last, halfTime }) => line(`${last?.minute ?? 0}'`, halfTime),
     colours: colourPair('Sky v Navy'),
-  }),
-  basketball: () => goalsDemo('basketball', {
+  }, extra),
+  basketball: (extra) => goalsDemo('basketball', {
     names: ['Lakers', 'Celtics'],
     totals: [78, 72],
     values: [[2, 3, 2, 2, 1], [2, 2, 3, 2, 1]],
@@ -243,12 +245,12 @@ const BUILDERS = {
     periods: ['Q1', 'Q2', 'Q3', 'Q4'].map((label) => ({ label, durationSec: 600 })),
     context: ({ period, halfTime }) => line(`${period?.label ?? 'Q1'} of 4`, halfTime),
     colours: colourPair('Yellow v White'),
-  }),
+  }, extra),
   tennis: tennisDemo,
-  tabletennis: () => setsDemo('tabletennis', {
+  tabletennis: (extra) => setsDemo('tabletennis', {
     names: ['Mei', 'Sam'], bestOf: 5, sets: [[11, 7], [9, 11]], current: [8, 6], colours: colourPair('Black v Green'),
-  }),
-  hockey: () => goalsDemo('hockey', {
+  }, extra),
+  hockey: (extra) => goalsDemo('hockey', {
     names: ['Lions', 'Wolves'],
     totals: [3, 2],
     values: [[1], [1]],
@@ -257,7 +259,7 @@ const BUILDERS = {
     periods: ['Q1', 'Q2', 'Q3', 'Q4'].map((label) => ({ label, durationSec: 900 })),
     context: ({ period, halfTime }) => line(`${period?.label ?? 'Q1'} of 4`, halfTime),
     colours: colourPair('Red v Maroon'),
-  }),
+  }, extra),
 };
 
 const cache = new Map();
@@ -267,7 +269,8 @@ const cache = new Map();
  * @param {string} sportId registry id
  * @returns {Demo}
  */
-export function buildDemo(sportId) {
+export function buildDemo(sportId, extra = []) {
+  if (extra.length) return BUILDERS[sportId](extra);
   if (!cache.has(sportId)) {
     const build = BUILDERS[sportId];
     if (!build) throw new Error(`No landing demo for sport: ${sportId}`);

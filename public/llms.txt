@@ -6,7 +6,7 @@ Score Easy runs in a phone or desktop browser at https://scoreeasy.app. Scoring 
 
 ## Pages
 
-- [Score Easy home](https://scoreeasy.app/marketing): what the app does, a sample scorecard for each sport, how it works and common questions.
+- [Score Easy home](https://scoreeasy.app/): what the app does, a sample scorecard for each sport, common questions.
 - [Privacy](https://scoreeasy.app/privacy): what is stored on your device and what is stored in the cloud when you sign in.
 - [Terms](https://scoreeasy.app/terms): how to use the app.
 - [Contact](https://scoreeasy.app/contact): support email and what to include in a bug report.

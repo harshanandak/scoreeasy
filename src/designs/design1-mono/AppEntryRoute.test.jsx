@@ -134,11 +134,11 @@ describe('app entry route contract', () => {
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/login?returnTo=%2Fprofile');
   });
 
-  it('sends anonymous first-time root visits to the public marketing route', async () => {
+  it('renders Home at root for a new visitor', async () => {
     renderApp('/');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/marketing');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
     });
     expect(screen.getByText('Public marketing')).toBeInTheDocument();
   });
@@ -214,19 +214,17 @@ describe('app entry route contract', () => {
     expect(screen.getByText('Cricket Test scorer')).toBeInTheDocument();
   });
 
-  it('keeps public marketing intentionally reachable for signed-in users', async () => {
-    authState = {
-      ...authState,
-      isAuthenticated: true,
-      user: { username: 'harsha' },
-    };
-
+  it('redirects legacy marketing links through root for signed-in users', async () => {
+    authState = { ...authState, isAuthenticated: true, user: { username: 'harsha' } };
     renderApp('/marketing');
+    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
+  });
 
-    await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/marketing');
-    });
-    expect(screen.getByText('Public marketing')).toBeInTheDocument();
+  it('sends a visitor who previously entered the app to the dashboard', async () => {
+    globalThis.localStorage.setItem('se_entered_app', JSON.stringify(true));
+    renderApp('/');
+    expect(await screen.findByText('App dashboard')).toBeInTheDocument();
   });
 
   it('maps legacy dashboard links to the app dashboard route', async () => {
@@ -513,7 +511,7 @@ describe('app entry route contract', () => {
     expect(container.querySelector('.global-nav-brand')).toBeInTheDocument();
   });
 
-  it('does not show app bottom navigation on the public marketing route', async () => {
+  it('does not show app bottom navigation on the legacy marketing route', async () => {
     renderApp('/marketing');
 
     expect(await screen.findByText('Public marketing')).toBeInTheDocument();
@@ -527,11 +525,11 @@ describe('app entry route contract', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Home' }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/marketing');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
     });
     expect(screen.queryByText('App dashboard')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Score Easy home' }));
-    await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent('/marketing'));
+    await waitFor(() => expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/));
   });
 
   it('does not show app bottom navigation after scoring starts', async () => {

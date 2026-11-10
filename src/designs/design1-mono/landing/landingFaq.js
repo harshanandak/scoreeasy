@@ -1,4 +1,4 @@
-/* The landing FAQ. GuestLanding renders these as visible text, and index.html carries the same
+/* The landing FAQ. GuestLanding renders these in collapsed disclosure rows, and index.html carries the same
    questions and answers word for word as FAQPage JSON-LD (a test keeps the two in step). Every
    answer states only what the shipped app does:
    - scoring needs no account, and every point is saved on the device first (guest scoring);
