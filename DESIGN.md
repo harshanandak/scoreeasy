@@ -35,11 +35,9 @@ destructive actions. Use a readable sans for interface labels and tabular
 numerals for scores. Large score numerals may use the scorer's existing condensed
 face. Avoid uppercase monospace on every label.
 
-Behind the score: the team gradient, plus the sport's icon on the serving
-team's key only (src/designs/design1-mono/kit/SportMark.jsx, drawing the icon
-from landing/sportIcons.jsx in the engine's gated motif colour:
---team-{a,b}-motif-ink at --team-{a,b}-motif-alpha opacity). No court line
-drawings on the scorer.
+Behind the score: the team gradient, plus the sport's ball-and-action mark on
+the serving team's key only (src/lib/sportMarks.js, painted in the engine's
+gated motif colour). No court line drawings on the scorer.
 
 ## Controls and state
 

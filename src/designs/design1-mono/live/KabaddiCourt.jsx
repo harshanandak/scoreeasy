@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { clockText, playerLabel } from '../../../utils/kabaddiLiveModel';
 import { scorerOf } from './kabaddiView';
-import SportMark from '../kit/SportMark';
 import './kabaddiCourt.css';
 
 // The Live tab's court, round 5 (notes: E:/tmp/kabaddi-k2/viewer-r5/NOTES.md). A broadcast-style
@@ -410,7 +409,7 @@ export default function KabaddiCourt({ live, last, roster, stage, story = [] }) 
     <section className="kc-card" aria-label="Court" data-stage={stage}>
       <div className="kc-head">
         <span className={`kc-who kc-who-${key(teamNow)}`}>
-          <SportMark sportId="kabaddi" className="kc-mark" />
+          <i className="kc-mark" aria-hidden="true" />
           <span>{label}</span>
         </span>
         {live.inPlay && !showResult && <span className="kc-mat" aria-hidden="true"><i className="kc-dot-a" />{live.mat[0]}<em>on mat</em><i className="kc-dot-b" />{live.mat[1]}</span>}

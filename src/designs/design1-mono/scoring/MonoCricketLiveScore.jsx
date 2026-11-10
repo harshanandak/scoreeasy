@@ -3,7 +3,6 @@ import { isLimitedOversMatchDecided } from '../../../utils/cricketCalculations';
 import { BoardBar, BoardHeader, BoardOptionsSheet } from './BoardShell';
 import { useTeamColours } from './useTeamColours';
 import { sportIdentity } from '../../../lib/sportIdentity';
-import SportMark from '../kit/SportMark';
 import './cricketBoard.css';
 import { useScoringProgress } from './scoringProgressContext';
 import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
@@ -938,7 +937,7 @@ export default function MonoCricketLiveScore() {
 
         {/* Batting team score */}
         <div className="mono-scorer-main-score cricket-hero cricket-aggregate-hero">
-          <SportMark sportId="cricket" className="cricket-mark" />
+          <span className="cricket-mark" aria-hidden="true" />
           <p className="text-xs uppercase tracking-widest mb-2" style={{ color: 'var(--se-color-ink-muted)' }}>
             {currentName} batting
           </p>

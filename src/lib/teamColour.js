@@ -324,7 +324,7 @@ export function teamColourVars(derived) {
  * CSS custom properties for one engine-derived colour under a prefix.
  * @param {object} t one team (or identity) from the engine
  * @param {string} prefix e.g. '--team-a' or '--sport'
- * @returns {Record<string, string>} {prefix}-{hi,core,lo,on,scrim,tint,line,motif,motif-ink,motif-alpha}
+ * @returns {Record<string, string>} {prefix}-{hi,core,lo,on,scrim,tint,line,motif}
  */
 export function colourVars(t, prefix) {
   return {
@@ -336,9 +336,5 @@ export function colourVars(t, prefix) {
     [`${prefix}-tint`]: t.tint,
     [`${prefix}-line`]: t.line,
     [`${prefix}-motif`]: rgba(t.motifCol, t.motifA),
-    // The same motif split into a solid colour and an alpha, for a mark that sets `opacity` so
-    // overlapping strokes inside one icon do not double up.
-    [`${prefix}-motif-ink`]: t.motifCol,
-    [`${prefix}-motif-alpha`]: String(+t.motifA.toFixed(2)),
   };
 }

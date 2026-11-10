@@ -1,9 +1,0 @@
-/* SportMark: the icon's svg fills the box the caller's class sizes. Colour is the caller's `color`
-   (the icon paints in currentColor); a motif that carries alpha sets `opacity` instead of an rgba
-   colour, so strokes that overlap inside one icon (tennis strings on the frame, hockey and kabaddi
-   joints) stay one flat tone. */
-.se-sport-mark > svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}

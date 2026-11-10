@@ -40,14 +40,12 @@ describe('sport identities', () => {
     for (const [label, ratio, min] of rows) expect(ratio, label).toBeGreaterThanOrEqual(min);
   });
 
-  it('exposes engine output as css vars, and nothing for unknown sports', () => {
+  it('exposes engine output and the mark as css vars, and nothing for unknown sports', () => {
     const vars = sportIdentityVars('cricket');
     expect(vars['--sport-core']).toBe('#154ecd');
     expect(vars['--sport-on']).toBe('#ffffff');
     expect(vars['--sport-motif']).toMatch(/^rgba\(/);
-    expect(vars['--sport-motif-ink']).toMatch(/^#[0-9a-f]{6}$/);
-    expect(vars['--sport-motif-alpha']).toMatch(/^0\.\d+$/);
-    expect(vars).not.toHaveProperty('--sport-mark');
+    expect(vars['--sport-mark']).toMatch(/^url\("data:image\/svg\+xml,/);
     expect(sportIdentityVars('not-a-sport')).toEqual({});
     expect(sportIdentityVars('toString')).toEqual({});
   });

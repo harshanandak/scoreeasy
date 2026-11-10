@@ -14,7 +14,6 @@ import { useScoringBoard } from '../scoring/scoringProgressContext';
 import { NEUTRAL, colourVars, deriveTeamColours } from '../../../lib/teamColour';
 import { sportIdentityVars } from '../../../lib/sportIdentity';
 import { GoArrow } from './KitParts';
-import SportMark from './SportMark';
 import './finish.css';
 
 /** OS reduced-motion setting; a boolean override (tests, previews) wins. */
@@ -180,7 +179,7 @@ export default function KitFinish({
   return (
     <section className="kit-screen kit-finish" data-screen="finish" role="region" aria-label="Match result" style={style}>
       <div className="kit-fin-top">
-        <span className="kit-fin-badge" aria-hidden="true"><SportMark sportId={sportId} /></span>
+        <span className="kit-fin-badge" aria-hidden="true" />
         <div className="kit-fin-title">
           <b>{model.outcome === 'none' ? 'No result' : 'Full time'}</b>
           {metaLine && <small>{metaLine}</small>}

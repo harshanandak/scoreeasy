@@ -29,7 +29,6 @@ import { useTeamColours } from './useTeamColours';
 import { sportIdentity } from '../../../lib/sportIdentity';
 import { getPowerplayPhase } from '../../../utils/cricketCalculations';
 import { resolveGuidedRules, guidedCompletionReason } from '../../../utils/cricketRules';
-import SportMark from '../kit/SportMark';
 import './cricketBoard.css';
 
 // C3/C4 Guided cricket scorer. Pure component: the live innings is engine state
@@ -446,7 +445,7 @@ export default function MonoCricketGuidedScorer({
 
         {/* Batting identity, score and engine-derived chase figures. */}
         <div className="ck-hero cricket-hero">
-          <SportMark sportId="cricket" className="cricket-mark" />
+          <span className="cricket-mark" aria-hidden="true" />
           <p className="cricket-who">
             <span>{battingTeamName} batting</span>
             {getPowerplayPhase({ powerplay: fmt.powerplays }, currentOverNo) && <span className="cricket-moment">{getPowerplayPhase({ powerplay: fmt.powerplays }, currentOverNo).label}</span>}
