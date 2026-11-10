@@ -1,22 +1,25 @@
-/* Home (/), Kit. Everything here composes Kit parts (kit.css, history.css chips);
-   only layout and the few landing-only rules live in this file. Colour comes from --se-color-*
-   tokens and the engine vars (--sport-*, --team-a-*, --team-b-*), so a dark theme is a token swap.
-   Hierarchy: sport picker, interactive scorecard, compact FAQ. */
+/* Home (/), Kit. Composes Kit parts (kit.css, history.css chips, the .se-go / .se-ctl buttons);
+   only layout and the scoreboard live here. Colour comes from --se-color-* tokens and the engine
+   vars (--sport-*, --team-a-*, --team-b-*), so a dark theme is a token swap.
+   Phone: headline, one sentence, Start and Sign in, then the scoreboard, a short FAQ and the footer.
+   Desktop: the same, with the headline left and the scoreboard right, both starting at the top. */
 
 .kit-landing {
   padding-bottom: 40px;
   background: transparent;
 }
 
+/* ---- hero ---- */
 .kit-landing-hero .kit-title {
   margin-top: 10px;
+  text-wrap: balance;
 }
 
 .kit-landing-actions {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 22px;
+  margin-top: 20px;
 }
 
 .kit-landing-actions .se-go,
@@ -25,116 +28,265 @@
   width: 100%;
   min-height: 56px;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .kit-landing-actions .se-ctl {
-  min-height: 52px;
   font-size: 1rem;
 }
 
-/* The inside of the closing card brings its own padding. */
-.kit-landing-ready .kit-landing-actions {
-  margin-top: 0;
+/* ---- the scoreboard: a TV score bug with the sport tabs on top ---- */
+.kit-landing-example .kit-sec {
+  margin: 24px 2px 10px;
 }
 
-/* ---- numbered mono eyebrows and heavy headlines (the original page's voice, in Kit tokens) ---- */
-.kit-landing-eyebrow,
-.kit-landing-label {
-  margin: 0;
-  color: var(--se-color-ink-soft);
-  font: 700 0.72rem/1.2 var(--se-font-mono);
-  letter-spacing: 0.12em;
+.home-bug {
+  overflow: hidden;
+  border: 2px solid var(--se-color-ink);
+  border-radius: 18px;
+  background: var(--se-color-surface);
+  box-shadow: 4px 4px 0 var(--sport-core, var(--se-color-ink));
+}
+
+/* One row of the Kit filter chips; it scrolls sideways inside the card, never the page. */
+.home-bug-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  overflow-x: auto;
+  border-bottom: 2px solid var(--se-color-ink);
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, black calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, black calc(100% - 28px), transparent);
+}
+
+.home-bug-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.home-bug-fields {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.home-bug-side {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 150px;
+  padding: 20px 10px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Each side carries its team colour as a bar along the top, as on a broadcast score bug. */
+.home-bug-side::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 6px;
+  background: var(--team-a-core, var(--se-color-ink));
+}
+
+.home-bug-side-b {
+  border-left: 2px solid var(--se-color-ink);
+}
+
+.home-bug-side-b::before {
+  background: var(--team-b-core, var(--se-color-ink));
+}
+
+.home-bug-side:active:not(:disabled) {
+  background: var(--se-color-surface-warm);
+}
+
+.home-bug-side:disabled {
+  cursor: default;
+}
+
+.home-bug-name {
+  max-width: 100%;
+  font: 800 0.8rem/1.1 var(--se-font-mono);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
-.kit-landing-hero .kit-landing-eyebrow {
-  margin-top: 6px;
+.home-bug-num {
+  font: 800 4.6rem/0.95 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.kit-landing-head {
-  margin: 48px 2px 16px;
+.home-bug.has-suffix .home-bug-num {
+  font-size: 3.6rem;
 }
 
-/* A short bar in the picked sport's colour leads every section eyebrow. */
-.kit-landing-head .kit-landing-eyebrow::before {
+.home-bug-num small {
+  margin-left: 1px;
+  font-size: 0.5em;
+  opacity: 0.8;
+}
+
+.home-bug-meta {
+  color: var(--se-color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.home-bug-vs {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--se-color-ink);
+  box-shadow: 0 0 0 3px var(--se-color-surface);
+  color: var(--se-color-on-ink);
+  font: 800 0.72rem/1 var(--se-font-mono);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.home-bug-status {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 2px solid var(--se-color-ink);
+  font: 800 0.95rem/1.3 var(--se-font-display);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.home-bug-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.home-bug-hints {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--se-color-ink-soft);
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.home-bug-hints li::before {
   content: '';
   display: inline-block;
-  width: 22px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   margin-right: 8px;
-  border-radius: 2px;
+  border-radius: 50%;
   background: var(--sport-core, var(--se-color-ink));
   vertical-align: middle;
 }
 
-.kit-landing-head h2 {
-  margin: 10px 0 0;
-  font: 800 clamp(1.9rem, 9vw, 2.5rem)/0.98 var(--se-font-display);
-  letter-spacing: -0.025em;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
+.home-undo {
+  flex: none;
+  min-width: 88px;
 }
 
-/* ---- the sport picker: a 3 x 3 grid of real sport tiles, nothing scrolls ---- */
-.kit-landing-picker {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0 0 14px;
+.home-score-bump {
+  animation: home-score-bump 180ms ease-out;
 }
 
-.kit-pick {
+@keyframes home-score-bump {
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-score-bump {
+    animation: none;
+  }
+}
+
+.kit-landing-signup {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  box-sizing: border-box;
-  min-height: 92px;
-  padding: 10px 6px;
-  border: 0;
-  border-radius: 20px;
-  background: var(--se-color-surface);
-  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
-  color: var(--se-color-ink);
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.kit-pick:active {
-  transform: scale(0.97);
-}
-
-.kit-pick-name {
-  font: 750 0.84rem/1.1 var(--se-font-sans);
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-/* Selected is an ink fill with a ring round the badge: Kit's chip treatment, so it never rests on
-   colour alone and reads in sunlight. */
-.kit-pick.is-selected {
-  background: var(--se-color-ink);
-  box-shadow: none;
-  color: var(--se-color-on-ink);
-}
-
-.kit-pick.is-selected .kit-pick-name {
-  font-weight: 850;
-}
-
-.kit-pick.is-selected .kit-badge {
-  box-shadow: 0 0 0 2px var(--se-color-on-ink);
-}
-
-.kit-landing-note {
-  margin: 12px 2px 0;
+  gap: 0 6px;
+  margin: 10px 2px 0;
   color: var(--se-color-ink-soft);
-  font-size: 0.85rem;
-  font-weight: 500;
-  line-height: 1.4;
+  font-size: 0.9rem;
+  font-weight: 550;
+}
+
+.kit-landing-signup a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  color: var(--se-color-ink);
+  font-weight: 750;
+}
+
+/* ---- FAQ: four collapsed rows ---- */
+.home-faq {
+  max-width: 760px;
+  margin-top: 24px;
+}
+
+.home-faq h2 {
+  margin: 0 2px 4px;
+  font: 750 1.05rem/1.15 var(--se-font-display);
+}
+
+.home-faq details {
+  border-bottom: 1px solid var(--se-color-line-soft);
+}
+
+.home-faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 48px;
+  font-size: 0.92rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.home-faq summary::after {
+  content: '+';
+  font-size: 1.2rem;
+}
+
+.home-faq details[open] summary::after {
+  content: '-';
+}
+
+.home-faq p {
+  max-width: 65ch;
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  line-height: 1.5;
 }
 
 /* ---- footer: every link a 48px target ---- */
@@ -172,15 +324,24 @@
   text-decoration: underline;
 }
 
-/* ---- desktop: hero left, example right, steps in a row, list and FAQ in a readable column ---- */
-@media (min-width: 900px) {
-  .kit-landing {
-    max-width: 1080px;
-    padding: 0 32px 56px;
+@media (max-width: 380px) {
+  .home-bug-num {
+    font-size: 4rem;
   }
 
-  /* The tint would end in a hard edge at the 1080px column, so its sides fade out.
-     (A 100vw-wide wash was tried first; it froze the page in the preview browser.) */
+  .home-bug.has-suffix .home-bug-num {
+    font-size: 3.1rem;
+  }
+}
+
+/* ---- desktop: headline left, scoreboard right, both from the top ---- */
+@media (min-width: 900px) {
+  .kit-landing {
+    max-width: 1120px;
+    padding: 0 40px 56px;
+  }
+
+  /* The tint would end in a hard edge at the column, so its sides fade out. */
   .kit-landing > .kit-wash {
     -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
     mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
@@ -188,13 +349,14 @@
 
   .kit-landing-top {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 48px;
-    align-items: center;
-    padding-top: 20px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 56px;
+    align-items: start;
+    padding-top: 36px;
   }
 
   .kit-landing-hero .kit-title {
+    margin-top: 0;
     font-size: 3.6rem;
   }
 
@@ -204,77 +366,59 @@
   }
 
   .kit-landing-actions {
-    max-width: 360px;
+    flex-direction: row;
+    margin-top: 28px;
   }
 
-  .kit-landing-example .kit-sec:first-child {
-    margin-top: 0;
+  .kit-landing-actions .se-go,
+  .kit-landing-actions .se-ctl {
+    width: auto;
+    padding: 0 28px;
   }
 
-  .kit-landing-head {
-    margin-top: 72px;
+  /* The scoreboard's top lines up with the headline's, so its section title is for screen readers. */
+  .kit-landing-example .kit-sec {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 
-  .kit-landing-head h2 {
-    font-size: 3rem;
+  /* The tabs stay one row, as on the phone; a thin scrollbar shows a mouse there is more. */
+  .home-bug-tabs {
+    gap: 6px;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
   }
 
-    .home-faq {
-    max-width: 760px;
+  .home-bug-tabs::-webkit-scrollbar {
+    display: block;
+    height: 6px;
   }
 
+  .home-bug-tabs .kit-fchip {
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 0.86rem;
+  }
 
-}
+  .home-bug-side {
+    min-height: 164px;
+    padding-top: 26px;
+  }
 
-/* Home keeps the original row scorecard and the app's team identity bars. */
-.kit-landing-card { margin-top: 12px; }
-.kit-landing-card .kit-last-score { font-variant-numeric: tabular-nums; }
-.kit-last-score small { font-size: .5em; }
-.home-faq { max-width:760px; margin-top:24px; }
-.home-faq h2 { font:700 1rem var(--se-font-sans); }
-.home-faq details { border-bottom:1px solid var(--se-color-line-soft); }
-.home-faq summary { min-height:48px; display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; font-size:.8rem; font-weight:650; }
-.home-faq summary::after { content:'+'; font-size:1.2rem; }
-.home-faq details[open] summary::after { content:'-'; }
-.home-faq p { margin:0 0 12px; font-size:.85rem; line-height:1.5; max-width:65ch; }
+  .home-bug-num {
+    font-size: 5.8rem;
+  }
 
-.kit-landing-card button.kit-last-team { width:100%; min-height:64px; border:0; background:transparent; color:var(--se-color-ink); text-align:left; cursor:pointer; }
-.kit-landing-card button:disabled { cursor:default; }
-.home-demo-tools { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:.8rem; }
-.home-demo-tools button { min-height:48px; }
+  .home-bug.has-suffix .home-bug-num {
+    font-size: 4.6rem;
+  }
 
-.kit-landing-meta { display:block; margin-top:3px; font:500 .75rem/1.3 var(--se-font-sans); color:var(--se-color-ink-soft); }
-.home-demo-hint { padding:6px 8px; border-radius:12px; background:var(--se-color-surface-warm); }
-.home-demo-hint[hidden] { display:none; }
-.home-demo-tools { min-height:48px; }
-.home-demo-tools .home-undo { margin-left:auto; border:2px solid var(--se-color-ink); border-radius:14px; background:var(--se-color-surface); box-shadow:2px 2px 0 var(--se-color-ink); }
-.home-undo:disabled { opacity:.45; border-style:solid; }
-.kit-landing-card button.kit-last-team:active { background:var(--se-color-surface-warm); transform:scale(.98); }
-.home-score-bump { animation:home-score-bump 180ms ease-out; }
-@keyframes home-score-bump { 50% { transform:scale(1.15); } }
-@media(prefers-reduced-motion:reduce) { .home-score-bump { animation:none; } .kit-landing-card button.kit-last-team:active { transform:none; } }
-@media(max-width:899px) {
- .kit-landing { padding-bottom:calc(88px + env(safe-area-inset-bottom)); }
- .kit-landing .kit-title { font-size:1.8rem; line-height:1.05; margin:8px 0; }
- .kit-landing .kit-sub { font-size:.85rem; line-height:1.35; margin:8px 0; }
- .kit-landing-hero .kit-landing-eyebrow { display:none; }
- .kit-landing-example .kit-sec { margin:12px 0 8px; }
- .kit-pick { min-height:56px; padding:6px; gap:4px; border-radius:14px; }
- .kit-pick .kit-badge { width:24px; height:24px; border-radius:8px; }
- .kit-pick .kit-badge svg { width:20px; height:20px; }
- .kit-pick-name { font-size:.7rem; }
- .kit-landing-picker { gap:6px; margin-bottom:8px; }
- .kit-landing-card { margin-top:8px; padding:12px; }
- .kit-landing-card button.kit-last-team { min-height:52px; }
- .kit-screen.kit-landing .kit-landing-actions { position:fixed; z-index:50; bottom:0; left:0; right:0; background:var(--se-color-surface); padding:4px 16px calc(4px + env(safe-area-inset-bottom)); margin:0; display:grid; grid-template-columns:2fr 1fr; gap:8px; align-items:center; border-top:1px solid var(--se-color-line-soft); }
- .kit-landing-actions .se-go,.kit-landing-actions .se-ctl { width:100%; white-space:nowrap; min-height:56px; padding:8px; }
- .kit-landing-example > .se-ctl { display:flex; width:fit-content; margin-top:12px; min-height:48px; }
-}
-
-/* Let the phone action bar sit above sibling sections without a parent stacking context. */
-.kit-screen.kit-landing > .kit-landing-top { position:static; z-index:auto; }
-@media(min-width:900px) {
- .kit-landing-top { align-items:start; }
- .kit-landing-hero .kit-landing-actions { margin-top:22px; }
- .kit-landing .home-faq { max-width:none; }
+  .home-faq {
+    margin-top: 56px;
+  }
 }

@@ -36,8 +36,11 @@ describe('Home', () => {
     cleanup();
   });
 
-  it('keeps master actions and the selected sport together', () => {
+  it('puts the sport tabs on the scoreboard and keeps Start on the chosen tab', () => {
     renderLanding();
+    const card = screen.getByTestId('landing-example');
+    expect(within(card).getByRole('group', { name: 'Pick a sport' })).toBeInTheDocument();
+    expect(within(card).getAllByRole('listitem')).toHaveLength(3);
     expect(startLinks('Start Cricket')).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: 'Create a free account' })).toBeInTheDocument();
