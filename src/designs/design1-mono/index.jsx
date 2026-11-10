@@ -9,7 +9,8 @@ import { getTennisQuickDraftKey } from '../../utils/tennisQuickMatch';
 import { useAuth } from '../../hooks/useAuth';
 import {
   APP_ENTRY_PATH,
-  PUBLIC_MARKETING_PATH,
+  PUBLIC_HOME_PATH,
+  markAppEntered,
   getAppEntryTarget,
   loadAppEntryState,
 } from '../../utils/appEntry';
@@ -292,7 +293,7 @@ const GUARD_BYPASS_PREFIXES = [
   // Public spectator links must work for a signed-in-not-onboarded user
   // following a share link — never bounce them to /onboarding.
   '/live',
-  PUBLIC_MARKETING_PATH,
+  '/marketing',
   '/privacy',
   '/terms',
   '/contact',
@@ -320,7 +321,7 @@ const APP_SHELL_PREFIXES = [
   '/users/search',
 ];
 const PUBLIC_SHELL_PREFIXES = [
-  PUBLIC_MARKETING_PATH,
+  '/marketing',
   '/privacy',
   '/terms',
   '/contact',
@@ -378,7 +379,7 @@ function shouldDeferOnboardingForPath(pathname = '') {
 
 function AppEntryRoute() {
   const { isAuthenticated, isLoading } = useAuth();
-  const appEntryState = loadAppEntryState();
+  const [appEntryState] = useState(loadAppEntryState);
   const target = getAppEntryTarget({
     isAuthenticated,
     isLoading,
@@ -386,6 +387,7 @@ function AppEntryRoute() {
   });
 
   if (!target) return <LazyFallback />;
+  if (target === PUBLIC_HOME_PATH) return <MonoLanding />;
   return <Navigate to={target} replace />;
 }
 
@@ -672,7 +674,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) 
   const [open, setOpen] = useState(false);
   const mobileMenuRef = useRef(null);
   const pathname = location.pathname;
-  const homePath = pathname === PUBLIC_MARKETING_PATH ? '/' : APP_ENTRY_PATH;
+  const homePath = pathname === PUBLIC_HOME_PATH ? '/' : APP_ENTRY_PATH;
   // Only setup screens with a fixed Start bar replace the dock. Scoring keeps its existing guard.
   const setupWithStart = isSportAppPath(pathname) && (
     (/^\/[^/]+\/quick$/.test(normalizePathname(pathname)) && !new URLSearchParams(location.search).has('result'))
@@ -1428,6 +1430,11 @@ function TournamentDispatcher() {
 
 export default function Design1Mono() {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
+  useEffect(() => {
+    const spectator = location.pathname === '/live' || location.pathname.startsWith('/live/');
+    if (isAuthenticated || (!spectator && (isAppShellPath(location.pathname) || isSportAppPath(location.pathname)))) markAppEntered();
+  }, [location.pathname, isAuthenticated]);
   const navigate = useNavigate();
   // `authMode === 'cloud'` is set only by CloudAuthProvider, which is nested
   // inside ConvexProviderWithClerk — so this flag doubles as proof that a
@@ -1735,7 +1742,7 @@ export default function Design1Mono() {
   return (
     <div className="se-app-shell min-h-screen font-swiss" style={{ background: 'var(--se-color-canvas)', color: 'var(--se-color-ink-strong)' }}>
       <a href="#main-content" className="skip-link">Skip to main content</a>
-      <GlobalNavigation requestScoringExit={requestScoringExit} scoringStarted={scoringStarted} boardVisible={boardCount > 0} />
+      {location.pathname !== '/' && <GlobalNavigation requestScoringExit={requestScoringExit} scoringStarted={scoringStarted} boardVisible={boardCount > 0} />}
       <OfflineFallback onNavigate={navigateFromOfflineFallback} />
       {authMode === 'cloud' ? <ConvexReconnectingFallback /> : null}
       <OnboardingReminder />
@@ -1749,7 +1756,7 @@ export default function Design1Mono() {
             <OnboardingGuard>
               <Routes>
                 <Route path="" element={<AppEntryRoute />} />
-                <Route path={PUBLIC_MARKETING_PATH.slice(1)} element={<MonoLanding />} />
+                <Route path="marketing" element={<Navigate to="/" replace />} />
                 <Route path={APP_ENTRY_PATH.slice(1)} element={<DashboardLanding />} />
                 <Route path="privacy" element={<LegalPage type="privacy" />} />
                 <Route path="terms" element={<LegalPage type="terms" />} />

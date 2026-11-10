@@ -24,38 +24,38 @@ describe('landing demo', () => {
 
   it('reads volleyball from the sets engine: set 3 of 5, 1-1 in sets, 18-16 in the set', () => {
     const demo = buildDemo('volleyball');
-    expect(demo.context).toBe('Set 3 of 5 · sets 1-1');
+    expect(demo.context).toBe("Set 3 of 5 \u00b7 sets 1-1 \u00b7 Eagles serving");
     expect(scores(demo)).toEqual(['18', '16']);
   });
 
   it('uses the Game label for badminton', () => {
     const demo = buildDemo('badminton');
-    expect(demo.context).toBe('Game 2 of 3 · games 1-0');
+    expect(demo.context).toBe("Game 2 of 3 \u00b7 games 1-0 \u00b7 Chen serving");
     expect(scores(demo)).toEqual(['15', '12']);
   });
 
   it('counts table tennis from the sets engine: set 3 of 5, 1-1 in sets, 8-6 in the set', () => {
     const demo = buildDemo('tabletennis');
-    expect(demo.context).toBe('Set 3 of 5 · sets 1-1');
+    expect(demo.context).toBe("Set 3 of 5 \u00b7 sets 1-1 \u00b7 Sam serving");
     expect(scores(demo)).toEqual(['8', '6']);
   });
 
   it('reads tennis as 30-15 at 3-2 in set two', () => {
     const demo = buildDemo('tennis');
-    expect(demo.context).toBe('Set 2 · games 3-2');
+    expect(demo.context).toBe("Set 2 \u00b7 games 3-2 \u00b7 Player 1 serving");
     expect(scores(demo)).toEqual(['30', '15']);
   });
 
   it("sums football goals from the goals engine and gives the minute and half-time score", () => {
     const demo = buildDemo('football');
     expect(scores(demo)).toEqual(['2', '1']);
-    expect(demo.context).toBe("63' · HT 1-0");
+    expect(demo.context).toBe("2nd half \u00b7 63' \u00b7 HT 1-0");
   });
 
   it('sums basketball baskets to the scripted totals, with the half-time score from the line score', () => {
     const demo = buildDemo('basketball');
     expect(scores(demo)).toEqual(['78', '72']);
-    expect(demo.context).toMatch(/^Q3 of 4 · HT \d+-\d+$/);
+    expect(demo.context).toMatch(/^Q3 of 4 \u00b7 (?:[0-9]|1[0-5]):[0-5][0-9] \u00b7 HT \d+-\d+$/);
     const [htA, htB] = demo.context.match(/HT (\d+)-(\d+)/).slice(1).map(Number);
     expect(htA).toBeGreaterThan(0);
     expect(htA).toBeLessThan(78);
@@ -66,7 +66,7 @@ describe('landing demo', () => {
   it("plays hockey in the registry's four field-hockey quarters", () => {
     const demo = buildDemo('hockey');
     expect(scores(demo)).toEqual(['3', '2']);
-    expect(demo.context).toMatch(/^Q[1-4] of 4 · HT \d+-\d+$/);
+    expect(demo.context).toMatch(/^Q[1-4] of 4 \u00b7 (?:[0-9]|1[0-5]):[0-5][0-9] \u00b7 HT \d+-\d+$/);
     const [htA, htB] = demo.context.match(/HT (\d+)-(\d+)/).slice(1).map(Number);
     expect(htA).toBeLessThanOrEqual(3);
     expect(htB).toBeLessThanOrEqual(2);
@@ -78,7 +78,8 @@ describe('landing demo', () => {
     expect(demo.teams.map((team) => team.suffix)).toEqual([expect.stringMatching(/^\/\d+$/), '/2']);
     // The chase line comes from deriveChase: the target is India's total + 1 and 120 - 33 balls are left.
     const [indiaRuns, australiaRuns] = scores(demo).map(Number);
-    expect(demo.context).toBe(`Australia need ${indiaRuns + 1 - australiaRuns} off 87 balls`);
+    expect(demo.context).toBe('T20 · 5.3 of 20 overs');
+    expect(demo.teams[1].meta).toBe(`5.3 overs · Need ${indiaRuns + 1 - australiaRuns} off 87`);
   });
 
   it('only cricket carries a suffix on the big number', () => {
@@ -96,6 +97,22 @@ describe('landing demo', () => {
     expect(demo.teams.every((team) => Number.isInteger(Number(team.score)))).toBe(true);
     expect(demo.context).toMatch(/^Half 1 · (Tigers|Bulls) raid next$/);
   });
+
+  for (const sport of ['volleyball', 'badminton', 'tabletennis', 'tennis', 'cricket']) {
+    it(`${sport} ignores taps after its result`, () => {
+      const points = [];
+      let demo = buildDemo(sport);
+      for (let i = 0; i < 200 && !demo.over; i += 1) {
+        points.push(sport === 'cricket' ? 'B' : 'A');
+        demo = buildDemo(sport, points);
+      }
+      expect(demo.over).toBe(true);
+      expect(demo.context).toMatch(/won|tied/);
+      const after = buildDemo(sport, [...points, 'B']);
+      expect(after.teams).toEqual(demo.teams);
+      expect(after.context).toBe(demo.context);
+    });
+  }
 
   it('rejects a sport with no demo', () => {
     expect(() => buildDemo('curling')).toThrow('No landing demo');

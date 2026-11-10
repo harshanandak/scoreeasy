@@ -1,5 +1,5 @@
 import { getSportsList } from '../models/sportRegistry';
-import { listDataKeys, loadData } from './storage';
+import { listDataKeys, loadData, saveData } from './storage';
 import { QUICK_MATCH_DRAFT_PREFIX, migrateQuickMatchDraft } from './quickMatchDrafts';
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 import { getTournamentMatches, isTournamentMatchCompleted } from './tournamentSync';
@@ -8,7 +8,9 @@ import { isKabaddiMigrationBackup, migrateLegacyKabaddiBackups } from './kabaddi
 
 export const APP_ENTRY_RESOLVER_PATH = '/';
 export const APP_ENTRY_PATH = '/app';
-export const PUBLIC_MARKETING_PATH = '/marketing';
+export const PUBLIC_HOME_PATH = '/';
+export const ENTERED_APP_KEY = 'se_entered_app';
+export function markAppEntered() { saveData(ENTERED_APP_KEY, true); }
 export const QUICK_MATCHES_KEY = 'se_quickmatches';
 export { QUICK_MATCH_DRAFT_PREFIX } from './quickMatchDrafts';
 export const SESSIONS_KEY = 'gs_sessions';
@@ -170,7 +172,7 @@ export function loadAppEntryState() {
 
     return {
       draftEntryPath,
-      returningPlayerState: hasReturningPlayerState({
+      returningPlayerState: loadData(ENTERED_APP_KEY, false) === true || hasReturningPlayerState({
         activeSessions: loadActiveSessionSummaries(),
         quickMatchDrafts,
         quickMatches,
@@ -197,5 +199,5 @@ export function getAppEntryTarget({
 } = {}) {
   if (isLoading) return null;
   if (draftEntryPath) return draftEntryPath;
-  return isAuthenticated || returningPlayerState ? APP_ENTRY_PATH : PUBLIC_MARKETING_PATH;
+  return isAuthenticated || returningPlayerState ? APP_ENTRY_PATH : PUBLIC_HOME_PATH;
 }
