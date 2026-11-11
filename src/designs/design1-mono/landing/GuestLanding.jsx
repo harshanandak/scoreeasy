@@ -64,7 +64,7 @@ export default function GuestLanding() {
           <KitSection id="landing-example-title" title="See a match being scored" />
           <ScoreSlides />
           <p className="kit-landing-signup">
-            Your matches on every phone?{' '}
+            Save across phones?{' '}
             <Link to={cloudAuthAvailable ? '/signup' : 'https://scoreeasy.app/signup'} onClick={markAppEntered}>Create a free account</Link>
           </p>
         </section>
