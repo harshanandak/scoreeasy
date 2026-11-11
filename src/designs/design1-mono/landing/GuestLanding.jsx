@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
-import { markAppEntered } from '../../../utils/appEntry';
+import { getHomePath, loadReturningPlayerState, markAppEntered } from '../../../utils/appEntry';
 import { BrandMark, GoArrow } from '../kit/KitParts';
 import SportPicker from '../kit/SportPicker';
 import StoryScenes from './StoryScenes';
@@ -21,6 +21,8 @@ ColourLayers.propTypes = { index: PropTypes.number.isRequired };
 export default function GuestLanding() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [returningPlayer] = useState(loadReturningPlayerState);
+  const ctaPointer = useRef(false);
   const wide = useHomeMedia('(min-width: 900px)');
   const reduced = useHomeMedia('(prefers-reduced-motion: reduce)');
   const stageRef = useRef(null);
@@ -73,8 +75,11 @@ export default function GuestLanding() {
         <ColourLayers index={story.index} />
         <div className="in">
           <nav className="top" aria-label="Main">
-            <Link className="brand" to="/" aria-label="Score Easy home"><BrandMark />Score Easy</Link>
-            {!isAuthenticated && <Link className="signin se-ctl" to="/login">Sign in</Link>}
+            <Link className="brand" to={getHomePath(isAuthenticated)} aria-label="Score Easy home"><BrandMark />Score Easy</Link>
+            {!isAuthenticated && <div className="top-actions">
+              {returningPlayer && <Link className="my-matches" to="/app">My matches</Link>}
+              <Link className="signin se-ctl" to="/login">Sign in</Link>
+            </div>}
           </nav>
           <div className="grid">
             <div className="lead">
@@ -82,12 +87,13 @@ export default function GuestLanding() {
             </div>
             <section
               ref={stageRef} className="stage" tabIndex={0} aria-roledescription="carousel"
-              aria-label="How scoring works. Tap the right side for next, left side for back. Press and hold to pause. Use arrow keys to navigate and Space to pause or play."
+              aria-label="How scoring works. Swipe or use arrow keys to change stories. Tap or press Space to pause or play."
               data-story={story.index} data-playing={story.playing} {...story.handlers}
             >
               <StoryScenes index={story.index} state={story.state} reduced={reduced} />
-              <button className="story-pause" type="button" onClick={story.togglePaused} disabled={reduced}
-                aria-label={reduced ? 'Automatic playback disabled for reduced motion' : story.paused ? 'Play stories' : 'Pause stories'}>
+              {story.paused && <span className="paused-chip" role="status" aria-label="Paused. Tap to play">Paused. Tap to play</span>}
+              <button className="story-pause" type="button" onClick={story.togglePaused}
+                aria-label={story.paused ? 'Play stories' : 'Pause stories'}>
                 {story.paused ? 'Play stories' : 'Pause stories'}
               </button>
             </section>
@@ -97,9 +103,9 @@ export default function GuestLanding() {
                 <svg className="arrow" viewBox="0 0 28 30"><path className="shaft" d="M2 5C16 1 25 9 19 27" /><path className="head" d="M13 21.5L19 28l6.5-5.5" /></svg>
               </div>
               <button type="button" className="cta" onClick={start} aria-label={STORIES[labelIndex].label}
-                onPointerEnter={() => setReason('hover', true)} onPointerLeave={() => setReason('hover', false)}
-                onFocus={() => setReason('focus', true)} onBlur={() => setReason('focus', false)}
-                onPointerDown={(event) => { event.currentTarget.setPointerCapture?.(event.pointerId); setReason('press', true); }}
+                onPointerEnter={(event) => { if (event.pointerType === 'mouse') setReason('hover', true); }} onPointerLeave={() => setReason('hover', false)}
+                onFocus={() => { if (!ctaPointer.current) setReason('focus', true); }} onBlur={() => { ctaPointer.current = false; setReason('focus', false); }}
+                onPointerDown={(event) => { ctaPointer.current = true; event.currentTarget.setPointerCapture?.(event.pointerId); setReason('focus', false); setReason('press', true); }}
                 onPointerUp={() => setReason('press', false)} onPointerCancel={() => setReason('press', false)}
                 onLostPointerCapture={() => setReason('press', false)}>
                 <span className="lbls" aria-hidden="true">{STORIES.map((item, i) => (

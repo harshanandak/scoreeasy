@@ -223,9 +223,10 @@
 .home-stage-page .story-pause { position: absolute; top: 36px; right: 0; z-index: 2; min-height: 44px; padding: 8px 14px; border: 2px solid var(--home-ink); border-radius: 14px; background: var(--home-white); color: var(--home-ink); font: 750 15px var(--sans); clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; }
 .home-stage-page .story-pause:focus-visible { clip-path: none; width: auto; height: auto; outline: 3px solid var(--home-white); outline-offset: 3px; }
 .home-stage-page .stage[data-playing='false'] *, .home-stage-page .stage[data-playing='false'] *::after { animation-play-state: paused; }
-/* Preserve the specified stage height while keeping all hero actions in a short phone viewport. */
+/* Recover stage space for the notch inset without shrinking text or touch targets. */
 @media (max-width: 1023px) {
-  .home-stage-page .top { height: 64px; }
+  .home-stage-page { --stage-h: clamp(270px, 35svh, 300px); }
+  .home-stage-page .top { height: calc(64px + env(safe-area-inset-top, 0px) + 14px); padding-top: calc(6px + env(safe-area-inset-top, 0px) + 14px); }
   .home-stage-page h1 { margin-top: 4px; }
   .home-stage-page .stage { margin-top: 14px; }
   .home-stage-page .act { margin-top: 0; }
@@ -247,3 +248,8 @@
 
 .home-stage-page .roll { display: inline-block; }
 .home-stage-page .end-foot nav a { display: inline-flex; align-items: center; min-height: 44px; }
+
+.home-stage-page .top-actions { display: flex; align-items: center; gap: 8px; }
+.home-stage-page .my-matches { display: inline-flex; align-items: center; min-height: 44px; color: var(--home-white); font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.home-stage-page .my-matches:focus-visible { outline: 3px solid var(--home-white); outline-offset: 3px; }
+.home-stage-page .paused-chip { position: absolute; z-index: 1; top: 36px; right: 0; display: inline-flex; align-items: center; min-height: 28px; padding: 0 11px; border-radius: 999px; background: rgb(0 0 0 / 72%); color: var(--home-white); font-size: 12px; font-weight: 800; pointer-events: none; }

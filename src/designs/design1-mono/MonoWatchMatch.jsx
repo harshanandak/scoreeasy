@@ -1,3 +1,5 @@
+import { getHomePath } from '../../utils/appEntry';
+import { useAuth } from '../../hooks/useAuth';
 import { clockRemaining, formatPeriodClock } from '../../utils/goalsPeriods';
 import { isAbandoned, ABANDONED_LABEL } from '../../utils/matchOutcome';
 import KabaddiWatch from './live/KabaddiWatch';
@@ -644,6 +646,7 @@ function WatchSkeleton() {
  * Both states below reuse it so a spectator is never left without a button.
  */
 function WatchDeadEnd({ titleId, title, message, onRetry }) {
+  const { isAuthenticated } = useAuth();
   return (
     <div className="kit-screen" data-screen="watch-dead-end" style={{ minHeight: '100vh', paddingTop: 72 }}>
       <section className="kit-card kit-empty" aria-labelledby={titleId}>
@@ -658,7 +661,7 @@ function WatchDeadEnd({ titleId, title, message, onRetry }) {
               Try again
             </button>
           ) : null}
-          <Link to="/app" className={onRetry ? 'se-ctl' : 'se-go'} style={{ textDecoration: 'none' }}>
+          <Link to={getHomePath(isAuthenticated)} className={onRetry ? 'se-ctl' : 'se-go'} style={{ textDecoration: 'none' }}>
             Go to Score Easy
           </Link>
         </div>
@@ -722,6 +725,7 @@ export default function MonoWatchMatch() {
 }
 
 function WatchMatchPage({ onRetry }) {
+  const { isAuthenticated } = useAuth();
   const { token } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -805,7 +809,7 @@ function WatchMatchPage({ onRetry }) {
           }}
         >
           <Link
-            to="/app"
+            to={getHomePath(isAuthenticated)}
             aria-label="Score Easy home"
             className="cursor-pointer"
             style={{

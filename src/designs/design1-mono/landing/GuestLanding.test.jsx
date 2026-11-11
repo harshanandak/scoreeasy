@@ -41,9 +41,10 @@ describe('Home stage', () => {
     localStorage.clear();
     setScreen();
     vi.stubGlobal('IntersectionObserver', FakeObserver);
-    vi.stubGlobal('PointerEvent', MouseEvent);
-    vi.stubGlobal('requestAnimationFrame', (callback) => setTimeout(() => callback(performance.now()), 20));
-    vi.stubGlobal('cancelAnimationFrame', clearTimeout);
+    vi.stubGlobal('PointerEvent', class extends MouseEvent {
+      constructor(type, options = {}) { super(type, options); this.pointerType = options.pointerType ?? 'mouse'; }
+    });
+    vi.stubGlobal('requestAnimationFrame', vi.fn());
     vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
     Element.prototype.scrollIntoView = vi.fn();
   });
@@ -83,6 +84,17 @@ describe('Home stage', () => {
     renderLanding({ signedIn: true });
     expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
     expect(start()).toHaveAccessibleName('Start a tennis match');
+  });
+
+  it('shows My matches only to a returning guest, alongside Sign in', () => {
+    const { unmount } = renderLanding();
+    expect(screen.queryByRole('link', { name: 'My matches' })).toBeNull();
+    unmount();
+    localStorage.setItem('se_entered_app', 'true');
+    renderLanding();
+    const top = within(document.querySelector('.top'));
+    expect(top.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
+    expect(top.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
   });
 
   it.each([[899, 'on your phone'], [900, 'from the sideline'], [1280, 'from the sideline']])('uses the approved headline at %ipx', (width, phrase) => {
@@ -166,12 +178,8 @@ describe('Home stage', () => {
     expect(screen.getByLabelText('Current route')).toHaveAttribute('data-new-match', 'true');
   });
 
-  it('wraps tap zones, arrow keys and horizontal swipes in both directions, ignoring drags and cancellation', () => {
+  it('wraps arrow keys and horizontal swipes in both directions, ignoring drags and cancellation', () => {
     renderLanding();
-    stage().getBoundingClientRect = () => ({ left: 20, width: 300 });
-    const tap = (x) => { fireEvent.pointerDown(stage(), { clientX: x, clientY: 100 }); fireEvent.pointerUp(stage(), { clientX: x, clientY: 100 }); };
-    tap(30); expect(stage()).toHaveAttribute('data-story', '3');
-    tap(250); expect(stage()).toHaveAttribute('data-story', '0');
     previous(); expect(stage()).toHaveAttribute('data-story', '3');
     next(); expect(stage()).toHaveAttribute('data-story', '0');
     fireEvent.pointerDown(stage(), { clientX: 250, clientY: 100 });
@@ -199,15 +207,90 @@ describe('Home stage', () => {
     expect(stage()).toHaveAttribute('data-story', '0');
   });
 
-  it('pauses after a 220ms hold and resumes from the same frame without navigating on release', () => {
-    renderLanding(); advance(2000);
-    fireEvent.pointerDown(stage(), { clientX: 100, clientY: 100 }); advance(230);
+  it('a tap pauses, shows the only pause chip, and a second tap resumes the partial step', () => {
+    renderLanding(); advance(1500);
+    const tap = () => {
+      fireEvent.pointerDown(stage(), { clientX: 100, clientY: 100 });
+      fireEvent.pointerUp(stage(), { clientX: 100, clientY: 100 });
+    };
+    expect(screen.queryByRole('status')).toBeNull();
+    tap();
     const before = scene().textContent;
     expect(stage()).toHaveAttribute('data-playing', 'false');
+    expect(screen.getByRole('status')).toHaveTextContent('Paused');
+    expect(screen.getByRole('status')).toHaveAccessibleName('Paused. Tap to play');
     advance(15000); expect(scene().textContent).toBe(before);
-    fireEvent.pointerUp(stage(), { clientX: 100, clientY: 100 });
+    tap();
     expect(stage()).toHaveAttribute('data-story', '0');
-    advance(1000); expect(scene().textContent).not.toBe(before);
+    expect(screen.queryByRole('status')).toBeNull();
+    advance(299); expect(scene().textContent).toBe(before);
+    advance(2); expect(scene().textContent).not.toBe(before);
+  });
+
+  it('pressing and holding does not pause, and swiping from a paused story restarts autoplay', () => {
+    renderLanding();
+    fireEvent.pointerDown(stage(), { clientX: 250, clientY: 100 });
+    advance(1500);
+    expect(stage()).toHaveAttribute('data-playing', 'true');
+    fireEvent.pointerUp(stage(), { clientX: 250, clientY: 100 });
+    expect(stage()).toHaveAttribute('data-playing', 'false');
+    fireEvent.pointerDown(stage(), { clientX: 250, clientY: 100 });
+    fireEvent.pointerUp(stage(), { clientX: 100, clientY: 100 });
+    expect(stage()).toHaveAttribute('data-story', '1');
+    expect(stage()).toHaveAttribute('data-playing', 'true');
+    expect(screen.queryByRole('status')).toBeNull();
+    advance(STORIES[1].duration * 1000);
+    expect(stage()).toHaveAttribute('data-story', '2');
+    fireEvent.keyDown(stage(), { key: ' ' });
+    previous();
+    expect(stage()).toHaveAttribute('data-story', '1');
+    expect(stage()).toHaveAttribute('data-playing', 'true');
+    advance(STORIES[1].duration * 1000);
+    expect(stage()).toHaveAttribute('data-story', '2');
+  });
+
+  it('mouse hover alone holds playback and resumes on leave without a Paused chip', () => {
+    renderLanding();
+    fireEvent.pointerEnter(start(), { pointerType: 'mouse' });
+    expect(stage()).toHaveAttribute('data-playing', 'false');
+    expect(screen.queryByRole('status')).toBeNull();
+    advance(20000); expect(stage()).toHaveAttribute('data-story', '0');
+    fireEvent.pointerLeave(start(), { pointerType: 'mouse' });
+    expect(stage()).toHaveAttribute('data-playing', 'true');
+    advance(STORIES[0].duration * 1000);
+    expect(stage()).toHaveAttribute('data-story', '1');
+  });
+
+  it('automatic holds resume themselves but never clear a user pause', () => {
+    renderLanding();
+    fireEvent.keyDown(stage(), { key: ' ' });
+    const observer = FakeObserver.all[0];
+    act(() => observer.callback([{ isIntersecting: false, intersectionRatio: 0 }]));
+    fireEvent.pointerEnter(start(), { pointerType: 'mouse' });
+    act(() => observer.callback([{ isIntersecting: true, intersectionRatio: 1 }]));
+    fireEvent.pointerLeave(start(), { pointerType: 'mouse' });
+    advance(20000);
+    expect(stage()).toHaveAttribute('data-playing', 'false');
+    expect(screen.getByRole('status')).toHaveTextContent('Paused');
+    fireEvent.keyDown(stage(), { key: ' ' });
+    advance(STORIES[0].duration * 1000);
+    expect(stage()).toHaveAttribute('data-story', '1');
+  });
+
+  it.each(['touch', 'pen'])('ignores %s hover and retained pointer focus, but holds while pressed', (pointerType) => {
+    renderLanding();
+    const button = start();
+    fireEvent.pointerEnter(button, { pointerType });
+    advance(1000);
+    expect(stage()).toHaveAttribute('data-playing', 'true');
+    fireEvent.pointerDown(button, { pointerType });
+    fireEvent.focus(button);
+    expect(stage()).toHaveAttribute('data-playing', 'false');
+    fireEvent.pointerUp(button, { pointerType });
+    fireEvent.focus(button);
+    expect(stage()).toHaveAttribute('data-playing', 'true');
+    advance(STORIES[0].duration * 1000);
+    expect(stage()).toHaveAttribute('data-story', '1');
   });
 
   it('toggles the keyboard-only pause control and Space on the stage without intercepting button keys', () => {
@@ -227,7 +310,7 @@ describe('Home stage', () => {
     expect(stage()).toHaveAttribute('data-playing', 'false');
   });
 
-  it('pauses off screen and in a hidden tab and cleans up observers, timers and animation frames', () => {
+  it('pauses off screen and in a hidden tab and cleans up observers and timers', () => {
     const { unmount } = renderLanding(); advance(2000);
     const observer = FakeObserver.all[0];
     act(() => observer.callback([{ isIntersecting: false, intersectionRatio: 0 }]));
@@ -282,17 +365,23 @@ describe('Home stage', () => {
     expect(phones[1].querySelector('.sc')).toHaveTextContent('2');
   });
 
-  it('uses final truthful frames for reduced motion, never auto advances, and still navigates', () => {
+  it('uses final truthful reduced-motion frames, auto advances every 6s, and still pauses and navigates', () => {
     setScreen({ reduced: true }); renderLanding();
     expect(scene()).toHaveTextContent('Game Asha');
     expect(scene().querySelector('[data-player="Asha"] .pt')).toHaveTextContent(/^0$/);
     expect(within(scene()).getByRole('img', { name: 'Meera serving' })).toBeInTheDocument();
-    advance(60000); expect(stage()).toHaveAttribute('data-story', '0');
-    next(); expect(scene().querySelector('.c-runs')).toHaveTextContent(/^8$/);
+    advance(5999); expect(stage()).toHaveAttribute('data-story', '0');
+    advance(1); expect(stage()).toHaveAttribute('data-story', '1');
+    expect(scene().querySelector('.c-runs')).toHaveTextContent(/^8$/);
     expect(scene().querySelectorAll('.ball.f')).toHaveLength(5);
-    next(); expect([...scene().querySelectorAll('.sc')].map((el) => el.textContent)).toEqual(['2', '2']);
-    next(); expect(scene().querySelectorAll('.mom.shown')).toHaveLength(3);
+    advance(6000); expect([...scene().querySelectorAll('.sc')].map((el) => el.textContent)).toEqual(['2', '2']);
+    advance(6000); expect(scene().querySelectorAll('.mom.shown')).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause stories' }));
+    advance(12000); expect(stage()).toHaveAttribute('data-story', '3');
     expect(stage()).toHaveAttribute('data-playing', 'false');
+    fireEvent.keyDown(stage(), { key: ' ' });
+    advance(6000); expect(stage()).toHaveAttribute('data-story', '0');
+    previous();
     fireEvent.click(start());
     expect(screen.getByRole('heading', { name: 'Pick your sport' }).scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
   });
