@@ -3,7 +3,7 @@
    tokens and the engine vars, so a dark theme is a token swap.
 
    Phone (< 768): the first screen is the top bar (logo, Sign in), the headline, one line of
-   reassurance and the animation rail, sized to fill the screen (100svh); below it Start, Play's own
+   reassurance and a compact animation rail, with Start immediately below the controls; then Play's own
    sport picker, the FAQ and the footer. A slim bar with Start sticks to the bottom once the in-flow
    Start has scrolled away, and goes while the picker or the closing block is on screen.
    Tablet (768-1023): the same order, the copy held to 560px, two cards in the rail.
@@ -46,9 +46,9 @@
   box-sizing: border-box;
   min-height: 48px;
   padding: 0 20px;
-  border: 2px solid var(--se-color-ink);
+  border: 1px solid var(--se-color-ink-muted);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--se-color-ink) 7%, var(--se-color-surface));
+  background: color-mix(in srgb, var(--se-color-ink) 3%, var(--se-color-surface));
   color: var(--se-color-ink);
   font-size: 1rem;
   font-weight: 800;
@@ -103,7 +103,7 @@
 .home-start {
   display: grid;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
 .home-start .se-go,
@@ -116,7 +116,6 @@
   box-shadow: var(--se-lift);
 }
 
-.home-saves,
 .home-account {
   margin: 0;
   color: var(--se-color-ink-soft);
@@ -181,7 +180,11 @@
   bottom: -20%;
 }
 
-.home-picker h2:focus-visible {
+.home-picker h2:focus {
+  outline: none;
+}
+
+.home-picker[data-keyboard-focus='true'] h2:focus-visible {
   outline: 3px solid var(--se-color-focus-ring);
   outline-offset: 4px;
   border-radius: 6px;
@@ -452,40 +455,22 @@
   text-decoration: underline;
 }
 
-/* ---- phone: the first screen fills the screen, card and controls included ---- */
+/* The live-link story needs 300px of art plus the card's heading and padding. */
 @media (max-width: 767.98px) {
-  .home-first {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    min-height: 100svh;
-  }
-
   .home-hero {
     display: flex;
-    flex: 1;
     flex-direction: column;
-    min-height: 0;
-    padding-bottom: max(64px, env(safe-area-inset-bottom));
+    padding-bottom: 0;
   }
 
   .home-demo {
     display: flex;
-    flex: 1;
     flex-direction: column;
-    min-height: 0;
     margin-top: 16px;
   }
 
-  .home-rail {
-    flex: 1;
-    min-height: 0;
-  }
-
   .home-stage {
-    flex: 1;
-    min-height: 300px;
-    max-height: 520px;
+    height: 380px;
   }
 }
 
@@ -555,9 +540,10 @@
   .home-hero {
     position: relative;
     display: flex;
-    align-items: center;
-    min-height: 560px;
-    padding-bottom: 24px;
+    align-items: flex-start;
+    min-height: 472px;
+    padding-top: 56px;
+    padding-bottom: 0;
   }
 
   .home-copy {
@@ -583,17 +569,17 @@
   /* From the headline column's right edge out to the right edge of the window. */
   .home-demo {
     position: absolute;
-    top: 0;
+    top: 56px;
     right: calc(var(--gutter) - var(--bleed));
     bottom: 0;
-    left: calc(504px + var(--gutter));
+    left: calc(560px + var(--gutter));
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     margin-top: 0;
   }
 
   .home-picker {
-    margin-top: 24px;
+    margin-top: 88px;
   }
 
   .home-faq {

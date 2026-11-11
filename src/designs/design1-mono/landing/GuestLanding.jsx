@@ -10,8 +10,8 @@ import { LANDING_FAQ } from './landingFaq';
 import HomeRail from './HomeRail';
 import { useBreakpoint, useMediaQuery, useReducedMotion } from './railHooks';
 
-/* Home (/). Phone first screen: the top bar (logo, Sign in), the headline, one line of reassurance
-   and the animation rail, nothing else. Below it: Start a match, Play's own sport picker (Popular
+/* Home (/). Phone: top bar, headline, one reassurance line, compact animation rail, then Start.
+   Below it: Play's own sport picker (Popular
    as full tiles, More sports as mini tiles), the FAQ, a closing Start and the footer.
    Start a match never leaves the page: it scrolls to the picker and moves focus to its heading, so
    starting is one tap on a sport. On a phone a slim bar with the same Start sticks to the bottom
@@ -37,7 +37,7 @@ export default function GuestLanding() {
   const pickerRef = useRef(null);
   const endRef = useRef(null);
   const [showBar, setShowBar] = useState(false);
-  const device = wide ? 'device' : 'phone';
+  const [pickerKeyboardFocus, setPickerKeyboardFocus] = useState(false);
 
   const startSport = (sport) => {
     markAppEntered();
@@ -45,7 +45,8 @@ export default function GuestLanding() {
   };
 
   /* Start a match: bring the sport picker to the top and put focus on its heading. */
-  const goToPicker = () => {
+  const goToPicker = (event) => {
+    setPickerKeyboardFocus(Boolean(event?.detail === 0 && event.currentTarget.matches(':focus-visible')));
     pickerRef.current?.scrollIntoView?.({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
     document.getElementById(PICKER_HEADING_ID)?.focus({ preventScroll: true });
   };
@@ -87,7 +88,6 @@ export default function GuestLanding() {
   const startBlock = (
     <div className="home-start" ref={startRef}>
       {startButton}
-      <p className="home-saves">No account needed. Your score saves on this {device}, even offline.</p>
       {!isAuthenticated && (
         <p className="home-account">
           Save across {wide ? 'devices' : 'phones'}?{' '}
@@ -130,9 +130,9 @@ export default function GuestLanding() {
       <div className="home-wrap">
         {size !== 'desktop' && startBlock}
 
-        <section ref={pickerRef} className="home-picker" aria-labelledby={PICKER_HEADING_ID}>
-          <KitSection id={PICKER_HEADING_ID} title="Pick your sport" focusable />
-          <SportPicker onSelect={startSport} idPrefix="home" />
+        <section ref={pickerRef} className="home-picker" data-keyboard-focus={pickerKeyboardFocus} aria-labelledby={PICKER_HEADING_ID}>
+          <KitSection id={PICKER_HEADING_ID} title="Pick your sport" focusable aside={<Link className="kit-link" to="/play" onClick={markAppEntered}>See all</Link>} />
+          <SportPicker onSelect={startSport} idPrefix="home" showPopularHeading={false} />
         </section>
 
         <section className="home-faq" aria-labelledby="landing-faq-title">

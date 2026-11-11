@@ -106,7 +106,7 @@ describe('Home', () => {
       const rail = within(first).getByTestId('landing-example');
       expect(follows(headline, assure)).toBe(true);
       expect(follows(assure, rail)).toBe(true);
-      // Nothing else is above the fold: Start and the sport picker come after the rail.
+      // Start stays after the animation in document order; browser checks cover its first-screen fit.
       expect(within(first).queryByRole('button', { name: 'Start a match' })).toBeNull();
       expect(within(first).queryByRole('heading', { name: 'Pick your sport' })).toBeNull();
       const start = container.querySelector('.home-start').querySelector('.se-go');
@@ -138,15 +138,16 @@ describe('Home', () => {
       setScreen({ width: 390 });
       const phone = renderLanding();
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score your next match on your phone.');
-      expect(screen.getByText('No account needed. Your score saves on this phone, even offline.')).toBeInTheDocument();
+      expect(screen.getAllByText('Free · No account · Works offline')).toHaveLength(1);
+      expect(document.querySelector('.home-start')).not.toHaveTextContent(/offline|No account/);
       expect(screen.getByText(/Save across phones\?/)).toBeInTheDocument();
       phone.unmount();
       setScreen({ width: 900 });
       renderLanding();
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score your next match from the sideline.');
-      expect(screen.getByText('No account needed. Your score saves on this device, even offline.')).toBeInTheDocument();
+      expect(document.querySelector('.home-start')).not.toHaveTextContent(/offline|No account/);
       expect(screen.getByText(/Save across devices\?/)).toBeInTheDocument();
-      expect(screen.queryByText(/phone/i, { selector: 'h1, .home-saves, .home-account' })).toBeNull();
+      expect(screen.queryByText(/phone/i, { selector: 'h1, .home-account' })).toBeNull();
     });
 
     it('keeps FAQs collapsed and the structured data consistent', () => {
@@ -175,9 +176,11 @@ describe('Home', () => {
       const { container } = renderLanding();
       const start = container.querySelector('.home-start').querySelector('.se-go');
       expect(start.tagName).toBe('BUTTON');
-      fireEvent.click(start);
+      fireEvent.click(start, { detail: 1 });
       expect(scrolled).toEqual([container.querySelector('.home-picker')]);
       expect(screen.getByRole('heading', { name: 'Pick your sport' })).toHaveFocus();
+      expect(screen.getByRole('heading', { name: 'Pick your sport' })).toHaveAttribute('tabindex', '-1');
+      expect(container.querySelector('.home-picker')).toHaveAttribute('data-keyboard-focus', 'false');
       expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
     });
 
@@ -198,9 +201,10 @@ describe('Home', () => {
         expect(tile.querySelector('.kit-tile-hint')).not.toBeNull();
       }
       for (const tile of more) expect(tile).toHaveClass('kit-tile-mini');
-      expect(screen.getByRole('heading', { name: PRIORITY_GROUP_LABEL })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: PRIORITY_GROUP_LABEL })).toBeNull();
+      expect(screen.getByRole('region', { name: PRIORITY_GROUP_LABEL })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: LATER_GROUP_LABEL })).toBeInTheDocument();
-      expect(screen.queryByRole('link', { name: 'See all' })).toBeNull();
+      expect(screen.getByRole('link', { name: 'See all' })).toHaveAttribute('href', '/play');
     });
 
     it('starts the tapped sport quick match from a tile', () => {
