@@ -539,18 +539,20 @@
 
   .home-hero {
     position: relative;
-    display: flex;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 440px minmax(0, 1fr);
+    column-gap: 24px;
+    align-items: center;
     min-height: 472px;
     padding-top: 56px;
-    padding-bottom: 0;
+    padding-bottom: 64px;
   }
 
   .home-copy {
     position: relative;
     z-index: 2;
-    width: 480px;
-    max-width: 480px;
+    width: 440px;
+    max-width: 440px;
   }
 
   .home-copy .kit-title {
@@ -566,13 +568,10 @@
     margin-top: 28px;
   }
 
-  /* From the headline column's right edge out to the right edge of the window. */
+  /* The grid gap protects the text; only the band bleeds to the viewport edge. */
   .home-demo {
-    position: absolute;
-    top: 56px;
-    right: calc(var(--gutter) - var(--bleed));
-    bottom: 0;
-    left: calc(560px + var(--gutter));
+    position: relative;
+    width: calc(100% + var(--bleed));
     display: flex;
     align-items: flex-start;
     margin-top: 0;
