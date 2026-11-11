@@ -1,4 +1,3 @@
-import { registerPendingOwnershipReader, resolveMatchStorageOwnership } from '../../../utils/accountStorage';
 import { readFileSync } from 'node:fs';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -106,23 +105,19 @@ describe('Home stage', () => {
     expect({ ...localStorage }).toEqual(before);
   });
 
-  it('refreshes My matches after delayed ownership resolves without rewriting legacy storage', async () => {
-    vi.stubGlobal('indexedDB', {});
-    localStorage.setItem('se_quickmatch_draft_volleyball', '{ "sport": "volleyball", "phase": "scoring", "vScore1": 12 }');
-    const before = { ...localStorage };
-    let finish;
-    const pending = new Promise(resolve => { finish = resolve; });
-    registerPendingOwnershipReader(() => pending);
-    const ownership = resolveMatchStorageOwnership();
-    try {
-      renderLanding();
-      expect(screen.queryByRole('link', { name: 'My matches' })).toBeNull();
-      await act(async () => { finish(new Map()); await ownership; });
-      expect(screen.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
-      expect({ ...localStorage }).toEqual(before);
-    } finally {
-      registerPendingOwnershipReader(null);
-    }
+  it('refreshes My matches on storage events and removes the listener on unmount', () => {
+    const { unmount } = renderLanding();
+    expect(screen.queryByRole('link', { name: 'My matches' })).toBeNull();
+    const key = 'se_quickmatch_draft_volleyball';
+    localStorage.setItem(key, 'unparsed saved data');
+    fireEvent(window, new StorageEvent('storage', { key, newValue: 'unparsed saved data' }));
+    expect(screen.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
+    localStorage.removeItem(key);
+    fireEvent(window, new StorageEvent('storage', { key, newValue: null }));
+    expect(screen.queryByRole('link', { name: 'My matches' })).toBeNull();
+    const remove = vi.spyOn(window, 'removeEventListener');
+    unmount();
+    expect(remove).toHaveBeenCalledWith('storage', expect.any(Function));
   });
 
   it.each([[899, 'on your phone'], [900, 'from the sideline'], [1280, 'from the sideline']])('uses the approved headline at %ipx', (width, phrase) => {

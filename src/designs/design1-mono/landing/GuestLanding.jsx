@@ -1,4 +1,3 @@
-import { MATCH_STORAGE_CHANGED, MATCH_STORAGE_OWNERSHIP_RESOLVED } from '../../../utils/accountStorage';
 import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useNavigate } from 'react-router-dom';
@@ -38,13 +37,8 @@ export default function GuestLanding() {
 
   useEffect(() => {
     const refresh = () => setReturningPlayer(loadReturningPlayerState());
-    window.addEventListener(MATCH_STORAGE_CHANGED, refresh);
-    window.addEventListener(MATCH_STORAGE_OWNERSHIP_RESOLVED, refresh);
-    refresh();
-    return () => {
-      window.removeEventListener(MATCH_STORAGE_CHANGED, refresh);
-      window.removeEventListener(MATCH_STORAGE_OWNERSHIP_RESOLVED, refresh);
-    };
+    window.addEventListener('storage', refresh);
+    return () => window.removeEventListener('storage', refresh);
   }, []);
   useEffect(() => { if (!ctaHeld) setLabelIndex(story.index); }, [story.index, ctaHeld]);
   useEffect(() => {

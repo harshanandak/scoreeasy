@@ -1,8 +1,11 @@
-import { matchStorageKey, withMatchStorageScope } from './accountStorage';
-import * as accountStorage from './accountStorage';
+import { matchStorageKey } from './accountStorage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_ENTRY_PATH,
+  ENTERED_APP_KEY,
+  QUICK_MATCHES_KEY,
+  QUICK_MATCH_DRAFT_PREFIX,
+  SESSIONS_KEY,
   PUBLIC_HOME_PATH,
   getAppEntryTarget,
   getHomePath,
@@ -14,7 +17,7 @@ import {
   loadInProgressMatches,
 } from './appEntry';
 import { getSportsList } from '../models/sportRegistry';
-import { getTennisQuickDraftKey } from './tennisQuickMatch';
+import { TENNIS_QUICK_DRAFT_PREFIX, getTennisQuickDraftKey } from './tennisQuickMatch';
 
 function expectNativeEntry(state, draftEntryPath) {
   expect(state.returningPlayerState).toBe(true);
@@ -96,8 +99,8 @@ describe('app entry contract', () => {
     expect(getHomePath(auth, native)).toBe(expected);
   });
 
-  it('opens a fresh native installation on the dashboard', () => {
-    expect(getAppEntryTarget({ native: true })).toBe(APP_ENTRY_PATH);
+  it.each([[false, false, '/'], [true, false, '/app'], [false, true, '/app']])('preserves native fallback for auth=%s returning=%s', (isAuthenticated, returningPlayerState, expected) => {
+    expect(getAppEntryTarget({ native: true, isAuthenticated, returningPlayerState })).toBe(expected);
   });
 
   it('detects returning-player continuity from resume and recent-match state', () => {
@@ -109,43 +112,35 @@ describe('app entry contract', () => {
     expect(hasReturningPlayerState()).toBe(false);
   });
 
-  it.each([false, true])('returning-player scan never rewrites raw legacy storage, with scoped draft=%s', (scopedDraft) => {
-    const key = 'se_quickmatch_draft_volleyball';
-    const raw = '{ "phase": "scoring", "sport": "volleyball", "vScore1": 12, "syncOwnerId": "other-account" }';
-    localStorage.setItem(key, raw);
-    localStorage.setItem('gamescore_quickmatch_draft_volleyball', raw);
-    localStorage.setItem(matchStorageKey('se_quickmatches', 'other-account'), '[{"id":"private"}]');
-    if (scopedDraft) localStorage.setItem(matchStorageKey(key), '{ "phase": "scoring", "sport": "volleyball", "vScore1": 12 }');
+  it.each([
+    ENTERED_APP_KEY, QUICK_MATCHES_KEY, SESSIONS_KEY,
+    `${QUICK_MATCH_DRAFT_PREFIX}volleyball`, `${TENNIS_QUICK_DRAFT_PREFIX}saved`,
+    'gamescore_quickmatch_draft_volleyball', 'gamescore_quickmatches', 'gamescore_tennis_quick_draft_saved',
+    matchStorageKey(QUICK_MATCHES_KEY, 'another account'), matchStorageKey(SESSIONS_KEY),
+    matchStorageKey(`${TENNIS_QUICK_DRAFT_PREFIX}saved`, 'another account'),
+    ...getSportsList().flatMap(sport => [sport.storageKey, sport.storageKey.replace(/^se_/, 'gamescore_'), matchStorageKey(sport.storageKey, 'another account')]),
+  ])('offers My matches for key %s without reading values or changing storage', key => {
+    localStorage.setItem(key, 'not JSON');
     const before = storageSnapshot();
-    const write = vi.spyOn(Storage.prototype, 'setItem');
-    const remove = vi.spyOn(Storage.prototype, 'removeItem');
-    const migratingView = vi.spyOn(accountStorage, 'scopedMatchStorage');
-    expect(loadReturningPlayerState()).toBe(scopedDraft);
-    expect(storageSnapshot()).toEqual(before);
-    expect(write).not.toHaveBeenCalled();
-    expect(remove).not.toHaveBeenCalled();
-    expect(migratingView).not.toHaveBeenCalled();
-  });
-
-  it.each(['se_', 'gamescore_'])('counts raw %s guest drafts without rewriting storage', prefix => {
-    const raw = '{ "sport": "volleyball", "phase": "scoring", "vScore1": 12 }';
-    localStorage.setItem(`${prefix}quickmatch_draft_volleyball`, raw);
-    const before = storageSnapshot();
+    const read = vi.spyOn(Storage.prototype, 'getItem');
     const write = vi.spyOn(Storage.prototype, 'setItem');
     const remove = vi.spyOn(Storage.prototype, 'removeItem');
     expect(loadReturningPlayerState()).toBe(true);
+    expect(read).not.toHaveBeenCalled();
     expect(storageSnapshot()).toEqual(before);
     expect(write).not.toHaveBeenCalled();
     expect(remove).not.toHaveBeenCalled();
   });
 
-  it('returning-player scan isolates guest and account keys without migrations', () => {
-    localStorage.setItem(matchStorageKey('se_quickmatches', 'scorer'), '[{"id":"private"}]');
-    localStorage.setItem('se_local_migration:se_quickmatches', '[{"id":"backup"}]');
+  it('has no returning-player hint for an empty store', () => {
+    expect(loadReturningPlayerState()).toBe(false);
+    expect(storageSnapshot()).toEqual({});
+  });
+
+  it.each(['theme', 'se_migrated', 'gs_preferences', 'se_setup_prefs_v1', 'se_local:account:scorer:gs_preferences', 'unrelated_se_quickmatches'])('ignores unrelated key %s without changing storage', key => {
+    localStorage.setItem(key, 'not JSON');
     const before = storageSnapshot();
     expect(loadReturningPlayerState()).toBe(false);
-    expect(withMatchStorageScope('scorer', loadReturningPlayerState)).toBe(true);
-    expect(withMatchStorageScope('another-scorer', loadReturningPlayerState)).toBe(false);
     expect(storageSnapshot()).toEqual(before);
   });
 
@@ -286,10 +281,10 @@ describe('app entry contract', () => {
     expect(JSON.parse(globalThis.localStorage.getItem(matchStorageKey('se_volleyball')))).toEqual(storedTournament);
   });
 
-  it('ignores malformed tournament storage during app entry', () => {
+  it('offers the link for a tournament key even when its value is malformed', () => {
     globalThis.localStorage.setItem(matchStorageKey('se_volleyball'), JSON.stringify({ id: 'bad-cup' }));
 
-    expect(loadReturningPlayerState()).toBe(false);
+    expect(loadReturningPlayerState()).toBe(true);
   });
 
   it('keeps corrupt session storage from hiding other returning-player state', () => {
@@ -300,10 +295,10 @@ describe('app entry contract', () => {
     expect(loadReturningPlayerState()).toBe(true);
   });
 
-  it('does not route legacy history-only users to an empty app dashboard', () => {
+  it('offers history-only users My matches without redirecting the web root', () => {
     globalThis.localStorage.setItem(matchStorageKey('gs_history'), JSON.stringify([{ id: 'legacy-1' }]));
 
-    expect(loadReturningPlayerState()).toBe(false);
+    expect(loadReturningPlayerState()).toBe(true);
     expect(getAppEntryTarget(loadAppEntryState())).toBe(PUBLIC_HOME_PATH);
   });
 });

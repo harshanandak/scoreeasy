@@ -1,7 +1,7 @@
-import { readOnlyMatchStorage } from './accountStorage';
 import { Capacitor } from '@capacitor/core';
 import { getSportsList } from '../models/sportRegistry';
 import { listDataKeys, loadData, saveData } from './storage';
+import { KEYS as SESSION_STORAGE_KEYS } from './universalStorage';
 import { QUICK_MATCH_DRAFT_PREFIX, migrateQuickMatchDraft } from './quickMatchDrafts';
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 import { getTournamentMatches, isTournamentMatchCompleted } from './tournamentSync';
@@ -193,29 +193,17 @@ export function loadAppEntryState() {
   }
 }
 
+// A false positive only offers /app, whose readers enforce access; avoid hiding saved matches or migrating them for a link.
 export function loadReturningPlayerState() {
   try {
-    const storage = readOnlyMatchStorage(globalThis.localStorage, { includeLegacy: true });
-    const read = (key) => {
-      try { return JSON.parse(storage.getItem(key)); } catch { return null; }
-    };
-    const rows = (key) => { const value = read(key); return Array.isArray(value) ? value : []; };
-    if (read(ENTERED_APP_KEY) === true) return true;
-    const sports = getSportsList();
-    const drafts = Array.from({ length: storage.length }, (_, index) => storage.key(index)).filter(Boolean).filter((key) => {
-      if (isKabaddiMigrationBackup(key)) return false;
-      if (key.startsWith(TENNIS_QUICK_DRAFT_PREFIX)) return read(key)?.status === 'in-progress';
-      if (!key.startsWith(QUICK_MATCH_DRAFT_PREFIX)) return false;
-      const draft = read(key);
-      const sport = draft?.sport || sports.find(item => key === `${QUICK_MATCH_DRAFT_PREFIX}${item.id}`)?.id;
-      return draft?.phase === 'scoring' && sports.some(item => item.id === sport);
-    });
-    return hasReturningPlayerState({
-      activeSessions: rows(SESSIONS_KEY).filter(session => session?.status === 'active' || session?.status === 'paused'),
-      quickMatchDrafts: drafts,
-      quickMatches: rows(QUICK_MATCHES_KEY),
-      tournaments: sports.flatMap(sport => rows(sport.storageKey)),
-    });
+    const storage = globalThis.localStorage;
+    const matchKeys = new Set([ENTERED_APP_KEY, QUICK_MATCHES_KEY, SESSIONS_KEY, SESSION_STORAGE_KEYS.HISTORY,
+      ...getSportsList().map(sport => sport.storageKey)]);
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = (storage.key(index) || '').replace(/^se_local:(?:guest|account:[^:]+):/, '').replace(/^gamescore_/, 'se_');
+      if (matchKeys.has(key) || key.startsWith(QUICK_MATCH_DRAFT_PREFIX) || key.startsWith(TENNIS_QUICK_DRAFT_PREFIX)) return true;
+    }
+    return false;
   } catch {
     return false;
   }
@@ -225,10 +213,11 @@ export function getAppEntryTarget({
   draftEntryPath = null,
   isAuthenticated = false,
   isLoading = false,
+  returningPlayerState = false,
   native = Capacitor.isNativePlatform(),
 } = {}) {
   if (isLoading) return null;
   if (!native) return getHomePath(isAuthenticated, false);
   if (draftEntryPath) return draftEntryPath;
-  return APP_ENTRY_PATH;
+  return isAuthenticated || returningPlayerState ? APP_ENTRY_PATH : PUBLIC_HOME_PATH;
 }
