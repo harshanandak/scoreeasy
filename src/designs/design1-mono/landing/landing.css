@@ -117,13 +117,16 @@
 
 /* ---------- Start, on the same surface ---------- */
 .home-stage-page .act{margin-top:6px}
-.home-stage-page .nudge{display:flex;justify-content:center;align-items:flex-start;gap:4px;height:46px;pointer-events:none;transition:opacity .7s var(--ease),transform .7s var(--ease)}
+/* The nudge is hand-placed: the note leans left of the arrow and sits right of centre, and the hooked arrow
+   lands over the Go disc. Offsets are measured from the centre of the Start button, because the label is
+   centred and the disc trails it (disc centre is about 76px to 103px right of centre across the four labels). */
+.home-stage-page .nudge{position:relative;height:var(--nudge-h,46px);pointer-events:none;transition:opacity .7s var(--ease),transform .7s var(--ease)}
 .home-stage-page .nudge.gone{opacity:0;transform:translateY(-6px)}
-.home-stage-page .note{margin-top:4px;font-family:var(--hand);font-weight:700;font-size:24px;line-height:1;color:var(--home-white);opacity:0;transform:translateY(16px);animation:home-rise .6s .7s var(--spring) forwards}
-@keyframes home-rise{to{opacity:1;transform:none}}
-.home-stage-page .arrow{flex:none;width:28px;height:32px;margin-top:10px;overflow:visible}
+.home-stage-page .note{position:absolute;right:calc(50% - 72px);bottom:9px;font-family:var(--hand);font-weight:700;font-size:24px;line-height:1;white-space:nowrap;color:var(--home-white);opacity:0;transform:translateY(16px) rotate(-5deg);transform-origin:100% 100%;animation:home-rise .6s .7s var(--spring) forwards}
+@keyframes home-rise{to{opacity:1;transform:rotate(-5deg)}}
+.home-stage-page .arrow{position:absolute;left:calc(50% + 76px);bottom:3px;width:36px;height:28px;overflow:visible}
 .home-stage-page .arrow path{fill:none;stroke:var(--home-white);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-.home-stage-page .arrow .shaft{stroke-dasharray:40;stroke-dashoffset:40;animation:home-draw .45s 1.15s var(--ease) forwards}
+.home-stage-page .arrow .shaft{stroke-dasharray:48;stroke-dashoffset:48;animation:home-draw .45s 1.15s var(--ease) forwards}
 .home-stage-page .arrow .head{stroke-dasharray:18;stroke-dashoffset:18;animation:home-draw .2s 1.55s var(--ease) forwards}
 .home-stage-page .cta{position:relative;overflow:hidden}
 /* On a coloured surface the one forward action is the white Kit button: ink edge, offset shadow, 2px press,
@@ -223,17 +226,21 @@
 .home-stage-page .story-pause { position: absolute; top: 36px; right: 0; z-index: 2; min-height: 44px; padding: 8px 14px; border: 2px solid var(--home-ink); border-radius: 14px; background: var(--home-white); color: var(--home-ink); font: 750 15px var(--sans); clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; }
 .home-stage-page .story-pause:focus-visible { clip-path: none; width: auto; height: auto; outline: 3px solid var(--home-white); outline-offset: 3px; }
 .home-stage-page .stage[data-playing='false'] *, .home-stage-page .stage[data-playing='false'] *::after { animation-play-state: paused; }
-/* Phones: clear the notch and give the hero room to breathe. The hero may run past the first
-   screen; the arrow's 42px (10px offset + 32px drawing) needs the nudge row to stay taller than it. */
+/* Phones: one spacing scale (8, 12, 16, 24, 32) and the proximity rule. The four groups (top bar, headline,
+   story stage, Start) sit 24px apart; inside Start the note row is 32px and the account link is 12px under
+   the button. The stage is sized by its tallest scene: every scene shares one grid cell, so there is no
+   fixed height to leave a hole under the shorter ones. The hero may run past the first screen. */
 @media (max-width: 1023px) {
-  .home-stage-page { --stage-h: clamp(320px, 44svh, 380px); }
   .home-stage-page .top { height: calc(64px + env(safe-area-inset-top, 0px) + 14px); padding-top: calc(6px + env(safe-area-inset-top, 0px) + 14px); }
-  .home-stage-page h1 { margin-top: 12px; }
-  .home-stage-page .stage { margin-top: 26px; }
-  .home-stage-page .act { margin-top: 10px; }
-  .home-stage-page .nudge { height: 54px; }
-  .home-stage-page .acct { margin-top: 18px; }
-  .home-stage-page .hero { padding-bottom: 36px; }
+  .home-stage-page h1 { margin-top: 24px; }
+  .home-stage-page .stage { display: grid; grid-template-columns: minmax(0, 1fr); height: auto; margin-top: 24px; }
+  .home-stage-page .scene { position: relative; inset: auto; grid-area: 1 / 1; }
+  .home-stage-page .body { padding: 12px 0; }
+  .home-stage-page .caption { max-width: min(26ch, calc(100% - 40px)); }
+  .home-stage-page .act { margin-top: 24px; }
+  .home-stage-page .nudge { --nudge-h: 32px; }
+  .home-stage-page .acct { margin-top: 12px; }
+  .home-stage-page .hero { padding-bottom: 32px; }
 }
 @media (min-width: 1024px) {
   .home-stage-page .grid { grid-template-areas: 'lead stage' 'act stage'; row-gap: 0; }
@@ -243,7 +250,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .home-stage-page *, .home-stage-page *::before, .home-stage-page *::after { animation: none !important; transition: none !important; }
-  .home-stage-page .note { transform: none; }
+  .home-stage-page .note { transform: rotate(-5deg); }
   .home-stage-page .nudge.gone { opacity: 0; }
 }
 
@@ -253,4 +260,8 @@
 .home-stage-page .top-actions { display: flex; align-items: center; gap: 8px; }
 .home-stage-page .my-matches { display: inline-flex; align-items: center; min-height: 44px; color: var(--home-white); font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .home-stage-page .my-matches:focus-visible { outline: 3px solid var(--home-white); outline-offset: 3px; }
-.home-stage-page .paused-chip { position: absolute; z-index: 1; top: 36px; right: 0; display: inline-flex; align-items: center; min-height: 28px; padding: 0 11px; border-radius: 999px; background: var(--home-pause-background); color: var(--home-white); font-size: 12px; font-weight: 800; pointer-events: none; }
+/* Pause state: a quiet icon like a video player, bottom right of the stage (the top right holds the perk chip,
+   the caption is capped so it never runs under the glyph). No text; the live region says Paused / Playing. */
+.home-stage-page .pause-mark { position: absolute; z-index: 1; right: 0; bottom: 0; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--home-pause-background); color: var(--home-white); pointer-events: none; animation: home-fade .15s var(--ease); }
+@keyframes home-fade { from { opacity: 0; } }
+.home-stage-page .stage-live { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

@@ -32,6 +32,8 @@ export default function GuestLanding() {
   const story = useHomeStory(stageRef, reduced, ctaHeld);
   const [labelIndex, setLabelIndex] = useState(0);
   const [nudgeGone, setNudgeGone] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
+  const lastPaused = useRef(false);
   const [pickerKeyboardFocus, setPickerKeyboardFocus] = useState(false);
   const themeMeta = useRef(null);
 
@@ -54,6 +56,11 @@ export default function GuestLanding() {
     };
   }, []);
   useEffect(() => { themeMeta.current?.setAttribute('content', STORIES[story.index].theme); }, [story.index]);
+  useEffect(() => {
+    if (lastPaused.current === story.paused) return;
+    lastPaused.current = story.paused;
+    setAnnouncement(story.paused ? 'Paused' : 'Playing');
+  }, [story.paused]);
   useEffect(() => {
     const timer = setTimeout(() => setNudgeGone(true), 5200);
     return () => clearTimeout(timer);
@@ -96,7 +103,10 @@ export default function GuestLanding() {
               data-story={story.index} data-playing={story.playing} {...story.handlers}
             >
               <StoryScenes index={story.index} state={story.state} reduced={reduced} />
-              {story.paused && <span className="paused-chip" role="status" aria-label="Paused. Tap to play">Paused. Tap to play</span>}
+              {story.paused && <span className="pause-mark" data-testid="pause-mark" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><rect x="2" y="1" width="3" height="10" rx="1" /><rect x="7" y="1" width="3" height="10" rx="1" /></svg>
+              </span>}
+              <span className="stage-live" role="status" aria-live="polite">{announcement}</span>
               <button className="story-pause" type="button" onClick={story.togglePaused}
                 aria-label={story.paused ? 'Play stories' : 'Pause stories'}>
                 {story.paused ? 'Play stories' : 'Pause stories'}
@@ -105,7 +115,7 @@ export default function GuestLanding() {
             <div className="act">
               <div className={`nudge${nudgeGone ? ' gone' : ''}`} aria-hidden="true">
                 <span className="note">Go on, try one</span>
-                <svg className="arrow" viewBox="0 0 28 30"><path className="shaft" d="M2 5C16 1 25 9 19 27" /><path className="head" d="M13 21.5L19 28l6.5-5.5" /></svg>
+                <svg className="arrow" viewBox="0 0 36 28"><path className="shaft" d="M2 6C16 0 33 6 28 24" /><path className="head" d="M22.5 18.5L28 25l6-5.5" /></svg>
               </div>
               <button type="button" className="cta" onClick={start} aria-label={STORIES[labelIndex].label}
                 onPointerEnter={(event) => { if (event.pointerType === 'mouse') setReason('hover', true); }} onPointerLeave={() => setReason('hover', false)}
