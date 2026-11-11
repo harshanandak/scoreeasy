@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { useCallback, useEffect, Suspense, lazy, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
@@ -12,6 +13,7 @@ import {
   PUBLIC_HOME_PATH,
   markAppEntered,
   getAppEntryTarget,
+  getHomePath,
   loadAppEntryState,
 } from '../../utils/appEntry';
 import { AuthUserButton } from '../../components/AuthButtons';
@@ -379,7 +381,7 @@ function shouldDeferOnboardingForPath(pathname = '') {
 
 function AppEntryRoute() {
   const { isAuthenticated, isLoading } = useAuth();
-  const [appEntryState] = useState(loadAppEntryState);
+  const [appEntryState] = useState(() => Capacitor.isNativePlatform() ? loadAppEntryState() : {});
   const target = getAppEntryTarget({
     isAuthenticated,
     isLoading,
@@ -674,7 +676,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) 
   const [open, setOpen] = useState(false);
   const mobileMenuRef = useRef(null);
   const pathname = location.pathname;
-  const homePath = pathname === PUBLIC_HOME_PATH ? '/' : APP_ENTRY_PATH;
+  const homePath = getHomePath(isAuthenticated);
   // Only setup screens with a fixed Start bar replace the dock. Scoring keeps its existing guard.
   const setupWithStart = isSportAppPath(pathname) && (
     (/^\/[^/]+\/quick$/.test(normalizePathname(pathname)) && !new URLSearchParams(location.search).has('result'))
@@ -782,7 +784,7 @@ function GlobalNavigation({ requestScoringExit, scoringStarted, boardVisible }) 
   }
 
   const bottomNavItems = [
-    { tab: 'home', label: 'Home', path: APP_ENTRY_PATH, icon: 'home' },
+    { tab: 'home', label: 'Home', path: homePath, icon: 'home' },
     { tab: 'play', label: 'Play', path: '/play', icon: 'play' },
     { tab: 'live', label: 'Live', path: '/live', icon: 'live' },
     { tab: 'history', label: 'History', path: '/history', icon: 'matches' },

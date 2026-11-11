@@ -194,7 +194,7 @@ describe('ErrorBoundary', () => {
     expect(Sentry.captureException).toHaveBeenCalledTimes(1);
 
     fireEvent.click(screen.getByRole('button', { name: 'Home' }));
-    expect(assign).toHaveBeenCalledWith('/app');
+    expect(assign).toHaveBeenCalledWith('/');
   });
 
   it('keeps a silent fallback boundary silent on a chunk error', () => {

@@ -86,6 +86,6 @@ describe('Home kept-match list: entries that cannot open', () => {
   it('never auto-resumes into a lone entry that cannot open', () => {
     localStorage.setItem(matchStorageKey(ORPHAN_KEY), JSON.stringify(orphan));
     expect(loadInProgressMatches()).toHaveLength(1);
-    expect(getAppEntryTarget(loadAppEntryState())).toBe('/app');
+    expect(getAppEntryTarget({ ...loadAppEntryState(), native: true })).toBe('/app');
   });
 });

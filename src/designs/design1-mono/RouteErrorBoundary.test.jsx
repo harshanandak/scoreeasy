@@ -81,7 +81,7 @@ describe('RouteErrorBoundary: discarding a kept match from the crash screen', ()
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Discard' }));
     expect(localStorage.getItem(matchStorageKey(DRAFT_KEY))).toBeNull();
     expect(loadInProgressMatches()).toEqual([]);
-    expect(assign).toHaveBeenCalledWith('/app');
+    expect(assign).toHaveBeenCalledWith('/');
   });
 
   it('is not offered on the new-version screen', () => {
@@ -143,6 +143,6 @@ describe('RouteErrorBoundary: discarding a kept match from the crash screen', ()
     expect(screen.getByRole('dialog')).toHaveTextContent('Ace v Bee');
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Discard' }));
     expect(localStorage.getItem(matchStorageKey('se_tennis_quick_draft_t1'))).toBeNull();
-    expect(assign).toHaveBeenCalledWith('/app');
+    expect(assign).toHaveBeenCalledWith('/');
   });
 });

@@ -292,6 +292,7 @@ export const homeStoryTokens = {
     "--home-panel": "rgba(255,255,255,.12)",
     "--home-live-panel": "rgba(0,0,0,.24)",
     "--home-chip": "rgba(0,0,0,.26)",
+    "--home-pause-background": "rgb(0 0 0 / 72%)",
     "--home-copy": "rgba(255,255,255,.86)",
     "--home-cta-shadow": "rgba(0,0,0,.55)",
     "--home-footer-shade": "rgba(0,0,0,.25)",

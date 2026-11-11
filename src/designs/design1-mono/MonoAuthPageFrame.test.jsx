@@ -27,6 +27,7 @@ function renderFrame(initialEntry = '/login') {
         <Route path="/volleyball/quick" element={<p>Guest scoring</p>} />
         <Route path="/play" element={<p>Play hub</p>} />
         <Route path="/app" element={<p>Home screen</p>} />
+        <Route path="/" element={<p>Public Home screen</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -116,7 +117,7 @@ describe('MonoAuthPageFrame', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Sign in to continue');
     expect(screen.getByRole('button', { name: 'Continue as guest' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Back to home' }));
-    expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
-    expect(screen.getByText('Home screen')).toBeInTheDocument();
+    expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
+    expect(screen.getByText('Public Home screen')).toBeInTheDocument();
   });
 });

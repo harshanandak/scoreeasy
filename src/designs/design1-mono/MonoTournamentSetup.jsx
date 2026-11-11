@@ -1,3 +1,5 @@
+import { useAuth } from '../../hooks/useAuth';
+import { getHomePath } from '../../utils/appEntry';
 import { supportsGoalPeriods, periodPreset } from '../../utils/goalsPeriods';
 import GoalsPeriodSetup from './components/GoalsPeriodSetup';
 import { useState, useEffect } from 'react';
@@ -82,6 +84,7 @@ function getRoundRobinPlayoffTeamsAdvancing(teamCount, requestedTeamsAdvancing) 
 
 export default function MonoTournamentSetup() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const { sport } = useParams();
   const [searchParams] = useSearchParams();
@@ -489,7 +492,7 @@ export default function MonoTournamentSetup() {
   };
 
   const goBack = () => {
-    if (step === 1) navigate('/app');
+    if (step === 1) navigate(getHomePath(isAuthenticated));
     else setStep(step - 1);
   };
 

@@ -1,5 +1,7 @@
+import { Capacitor } from '@capacitor/core';
 import { getSportsList } from '../models/sportRegistry';
 import { listDataKeys, loadData, saveData } from './storage';
+import { KEYS as SESSION_STORAGE_KEYS } from './universalStorage';
 import { QUICK_MATCH_DRAFT_PREFIX, migrateQuickMatchDraft } from './quickMatchDrafts';
 import { TENNIS_QUICK_DRAFT_PREFIX } from './tennisQuickMatch';
 import { getTournamentMatches, isTournamentMatchCompleted } from './tournamentSync';
@@ -9,6 +11,10 @@ import { isKabaddiMigrationBackup, migrateLegacyKabaddiBackups } from './kabaddi
 export const APP_ENTRY_RESOLVER_PATH = '/';
 export const APP_ENTRY_PATH = '/app';
 export const PUBLIC_HOME_PATH = '/';
+export function getHomePath(isAuthenticated, native = Capacitor.isNativePlatform()) {
+  return native || isAuthenticated ? APP_ENTRY_PATH : PUBLIC_HOME_PATH;
+}
+
 export const ENTERED_APP_KEY = 'se_entered_app';
 export function markAppEntered() { saveData(ENTERED_APP_KEY, true); }
 export const QUICK_MATCHES_KEY = 'se_quickmatches';
@@ -187,8 +193,20 @@ export function loadAppEntryState() {
   }
 }
 
+// A false positive only offers /app, whose readers enforce access; avoid hiding saved matches or migrating them for a link.
 export function loadReturningPlayerState() {
-  return loadAppEntryState().returningPlayerState;
+  try {
+    const storage = globalThis.localStorage;
+    const matchKeys = new Set([ENTERED_APP_KEY, QUICK_MATCHES_KEY, SESSIONS_KEY, SESSION_STORAGE_KEYS.HISTORY,
+      ...getSportsList().map(sport => sport.storageKey)]);
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = (storage.key(index) || '').replace(/^se_local:(?:guest|account:[^:]+):/, '').replace(/^gamescore_/, 'se_');
+      if (matchKeys.has(key) || key.startsWith(QUICK_MATCH_DRAFT_PREFIX) || key.startsWith(TENNIS_QUICK_DRAFT_PREFIX)) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 export function getAppEntryTarget({
@@ -196,8 +214,10 @@ export function getAppEntryTarget({
   isAuthenticated = false,
   isLoading = false,
   returningPlayerState = false,
+  native = Capacitor.isNativePlatform(),
 } = {}) {
   if (isLoading) return null;
+  if (!native) return getHomePath(isAuthenticated, false);
   if (draftEntryPath) return draftEntryPath;
   return isAuthenticated || returningPlayerState ? APP_ENTRY_PATH : PUBLIC_HOME_PATH;
 }

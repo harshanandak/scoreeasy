@@ -1,3 +1,5 @@
+import { useAuth } from '../../../hooks/useAuth';
+import { getHomePath } from '../../../utils/appEntry';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { getSportById } from '../../../models/sportRegistry';
@@ -11,6 +13,7 @@ export default function RouteRecoveryActions({
   primaryLabel = null,
 }) {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const sport = sportId ? getSportById(sportId) : null;
   const quickPath = sport ? `/${sport.id}/quick` : null;
   const tournamentPath = sport ? `/${sport.id}/tournament` : null;
@@ -24,7 +27,7 @@ export default function RouteRecoveryActions({
     sport ? { label: 'Choose another sport', path: playPath, primary: false } : null,
     // Every recovery screen offers a guaranteed escape Home, including
     // sport-scoped 404s that previously dead-ended at "Choose another sport".
-    { label: 'Home', path: '/app', primary: false },
+    { label: 'Home', path: getHomePath(isAuthenticated), primary: false },
   ].filter(Boolean);
 
   return (

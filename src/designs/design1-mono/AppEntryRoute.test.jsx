@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { matchStorageKey } from '../../utils/accountStorage';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -17,6 +18,7 @@ let renderAuthUserButton;
 let simulatedScoringStarted;
 let liveFeed = [];
 let realAccountFlow = false;
+let realMarketing = false;
 
 vi.mock('convex/react', () => ({
   useConvex: () => ({ query: async () => null }),
@@ -37,9 +39,10 @@ vi.mock('../../components/AuthButtons', () => ({
   AuthUserButton: (props) => (renderAuthUserButton ? <button type="button" {...props}>Account menu</button> : null),
 }));
 
-vi.mock('./MonoLanding', () => ({
-  default: () => <p>Public marketing</p>,
-}));
+vi.mock('./MonoLanding', async (importOriginal) => {
+  const { default: Landing } = await importOriginal();
+  return { default: () => realMarketing ? <Landing /> : <p>Public marketing</p> };
+});
 
 vi.mock('./landing/DashboardLanding', async (importOriginal) => {
   const { default: Dashboard } = await importOriginal();
@@ -84,9 +87,28 @@ function renderApp(initialEntry) {
   );
 }
 
+async function openMobileMenu(container) {
+  const prototype = HTMLDialogElement.prototype;
+  const original = Object.getOwnPropertyDescriptor(prototype, 'showModal');
+  Object.defineProperty(prototype, 'showModal', { configurable: true, value() { this.open = true; } });
+  try {
+    fireEvent.click(container.querySelector('.global-mobile-menu-button'));
+    const dialog = container.querySelector('#global-mobile-menu');
+    expect(dialog).toHaveAttribute('open');
+    expect(dialog).toHaveAttribute('aria-label', 'Navigation menu');
+    // JSDOM retains desktop display:none for the mounted mobile sheet.
+    return await within(dialog).findByRole('navigation', { name: 'Navigation menu', hidden: true });
+  } finally {
+    if (original) Object.defineProperty(prototype, 'showModal', original);
+    else delete prototype.showModal;
+  }
+}
+
 describe('app entry route contract', () => {
   beforeEach(() => {
     realAccountFlow = false;
+    realMarketing = false;
+    vi.spyOn(Capacitor, 'isNativePlatform').mockReturnValue(false);
     liveFeed = [];
     authState = {
       authMode: 'local',
@@ -158,18 +180,19 @@ describe('app entry route contract', () => {
     expect(screen.getByText('App dashboard')).toBeInTheDocument();
   });
 
-  it('sends returning local players with recent matches to the app dashboard route', async () => {
+  it('keeps returning web guests with recent matches on marketing', async () => {
     globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{ id: 'recent-1' }]));
 
     renderApp('/');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
     });
-    expect(screen.getByText('App dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Public marketing')).toBeInTheDocument();
   });
 
-  it('sends draft-only quick-match players to the draft scorer route', async () => {
+  it('native sends draft-only quick-match players to the draft scorer route', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
     globalThis.localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify({
       phase: 'scoring',
       sport: 'volleyball',
@@ -183,7 +206,8 @@ describe('app entry route contract', () => {
     expect(screen.getByText('Quick match setup')).toBeInTheDocument();
   });
 
-  it('sends tennis quick-live draft players to the draft scorer route', async () => {
+  it('native sends tennis quick-live draft players to the draft scorer route', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
     globalThis.localStorage.setItem(matchStorageKey('se_tennis_quick_draft_match-1'), JSON.stringify({
       id: 'match-1',
       sport: 'tennis',
@@ -198,7 +222,8 @@ describe('app entry route contract', () => {
     expect(screen.getByText('Tennis quick scorer')).toBeInTheDocument();
   });
 
-  it('sends in-progress cricket Test quick matches to the draft scorer route', async () => {
+  it('native sends in-progress cricket Test quick matches to the draft scorer route', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
     globalThis.localStorage.setItem(matchStorageKey('se_quickmatches'), JSON.stringify([{
       id: 'test-1',
       sport: 'cricket',
@@ -221,10 +246,101 @@ describe('app entry route contract', () => {
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
   });
 
-  it('sends a visitor who previously entered the app to the dashboard', async () => {
+  it('keeps a web guest who previously entered the app on marketing', async () => {
     globalThis.localStorage.setItem('se_entered_app', JSON.stringify(true));
     renderApp('/');
+    expect(await screen.findByText('Public marketing')).toBeInTheDocument();
+  });
+
+  it.each([false, true])('web root with a saved draft uses auth=%s and never auto-resumes', async (signedIn) => {
+    authState = { ...authState, isAuthenticated: signedIn, user: signedIn ? { username: 'harsha' } : null };
+    const key = matchStorageKey('se_tennis_quick_draft_kept');
+    const draft = JSON.stringify({ id: 'kept', sport: 'tennis', status: 'in-progress' });
+    localStorage.setItem(key, draft);
+    realMarketing = !signedIn;
+    renderApp('/');
+    if (signedIn) {
+      expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+      expect(screen.getByLabelText('Current route')).toHaveTextContent('/app');
+      expect(document.querySelector('[data-screen="guest-landing"]')).toBeNull();
+    } else {
+      expect(await screen.findByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
+      expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
+      expect(document.querySelector('[data-screen="guest-landing"]')).not.toBeNull();
+    }
+    expect(localStorage.getItem(key)).toBe(draft);
+  });
+
+  // The My matches check itself never touches storage (appEntry.test.js asserts byte-identical storage).
+  // App boot may still adopt an unscoped legacy draft into the guest namespace, as it does on master,
+  // so here we assert the saved match survives with its score, wherever boot placed it.
+  it.each([false, true])('marketing offers My matches and keeps the saved draft, scoped=%s', async (scoped) => {
+    const key = scoped ? matchStorageKey('se_quickmatch_draft_volleyball') : 'se_quickmatch_draft_volleyball';
+    const draft = JSON.stringify({ phase: 'scoring', sport: 'volleyball', team1Name: 'Kept', vScore1: 12 });
+    localStorage.setItem(key, draft);
+    realMarketing = true;
+    renderApp('/');
+    await screen.findByRole('link', { name: 'Sign in' });
+    expect(screen.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
+    const kept = localStorage.getItem(matchStorageKey('se_quickmatch_draft_volleyball')) ?? localStorage.getItem(key);
+    expect(JSON.parse(kept)).toEqual(JSON.parse(draft));
+  });
+
+  it('new web visitors see real marketing without My matches', async () => {
+    realMarketing = true;
+    renderApp('/');
+    await screen.findByRole('link', { name: 'Sign in' });
+    expect(screen.queryByRole('link', { name: 'My matches' })).toBeNull();
+  });
+
+  it('native returning players enter the dashboard, including entered-flag-only players', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+    localStorage.setItem('se_entered_app', 'true');
+    renderApp('/');
     expect(await screen.findByText('App dashboard')).toBeInTheDocument();
+  });
+
+  it.each([false, true].flatMap((signedIn) => ['brand', 'header', 'dock', 'sheet'].map(surface => [signedIn, surface])))('Home auth=%s surface=%s uses the shared destination', async (signedIn, surface) => {
+    authState = { ...authState, isAuthenticated: signedIn, user: signedIn ? { username: 'harsha' } : null };
+    const { container } = renderApp('/app');
+    await screen.findByText('App dashboard');
+    const selectors = { header: '.global-nav-links', dock: '.global-bottom-nav', sheet: '.global-mobile-menu-panel' };
+    const panel = surface === 'sheet' ? await openMobileMenu(container) : container.querySelector(selectors[surface]);
+    const button = surface === 'brand' ? container.querySelector('.global-nav-brand')
+      : within(panel).getByRole('button', { name: 'Home', hidden: true });
+    fireEvent.click(button);
+    await screen.findByText(signedIn ? 'App dashboard' : 'Public marketing');
+    expect(screen.getByLabelText('Current route').textContent).toBe(signedIn ? '/app' : '/');
+    if (signedIn) expect(within(container.querySelector('.global-bottom-nav')).getByRole('button', { name: 'Home', hidden: true })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it.each([false, true])('legal and recovery Home destinations follow auth=%s', async (signedIn) => {
+    authState = { ...authState, isAuthenticated: signedIn, user: signedIn ? { username: 'harsha' } : null };
+    renderApp('/privacy');
+    expect(await screen.findByRole('link', { name: 'SCORE EASY' })).toHaveAttribute('href', signedIn ? '/app' : '/');
+    cleanup();
+    const { container } = renderApp('/unknown-home-recovery');
+    const card = await waitFor(() => {
+      const cards = [...container.querySelectorAll('div')].filter(el => el.className === 'grid grid-cols-1 sm:grid-cols-2 gap-2');
+      expect(cards).toHaveLength(1);
+      return cards[0];
+    });
+    fireEvent.click(within(card).getByRole('button', { name: 'Home' }));
+    await screen.findByText(signedIn ? 'App dashboard' : 'Public marketing');
+    expect(screen.getByLabelText('Current route').textContent).toBe(signedIn ? '/app' : '/');
+  });
+
+  it.each([false, true].flatMap((signedIn) => ['/volleyball/tournament', '/volleyball/tournament/new'].map(path => [signedIn, path])))('tournament Home auth=%s on %s uses the shared destination', async (signedIn, path) => {
+    authState = { ...authState, isAuthenticated: signedIn, user: signedIn ? { username: 'harsha' } : null };
+    renderApp(path);
+    const button = await waitFor(() => {
+      const surface = document.querySelector(path.endsWith('/new') ? '[data-screen="tournament-setup"]' : '[data-screen="tournaments"]');
+      expect(surface).not.toBeNull();
+      return within(surface).getByRole('button', { name: path.endsWith('/new') ? 'Home' : 'Go back to home', hidden: true });
+    });
+    fireEvent.click(button);
+    await screen.findByText(signedIn ? 'App dashboard' : 'Public marketing');
+    expect(screen.getByLabelText('Current route').textContent).toBe(signedIn ? '/app' : '/');
   });
 
   it('maps legacy dashboard links to the app dashboard route', async () => {
@@ -393,25 +509,17 @@ describe('app entry route contract', () => {
     expect(within(dock()).getByRole('button', { name: 'Live, 1 match now', hidden: true })).toHaveAttribute('aria-current', 'page');
     expect(container.querySelector('.global-nav-links [aria-current="page"]')).toHaveTextContent('Live');
     expect(dock().querySelector('.kit-nav-live-dot')).toBeInTheDocument();
-    // JSDOM has no native dialog.showModal; model only the browser's open flag.
-    const dialogPrototype = HTMLDialogElement.prototype;
-    const showModal = Object.getOwnPropertyDescriptor(dialogPrototype, 'showModal');
-    Object.defineProperty(dialogPrototype, 'showModal', { configurable: true, value() { this.open = true; } });
-    try {
-      fireEvent.click(container.querySelector('.global-mobile-menu-button'));
-      expect(within(container.querySelector('.global-mobile-menu-panel')).getByRole('button', { name: 'Live, 1 match now', hidden: true })).toHaveAttribute('aria-current', 'page');
-      fireEvent.click(container.querySelector('.global-mobile-menu-close'));
-    } finally {
-      if (showModal) Object.defineProperty(dialogPrototype, 'showModal', showModal);
-      else delete dialogPrototype.showModal;
-    }
+    const menu = await openMobileMenu(container);
+    expect(within(menu).getByRole('button', { name: 'Live, 1 match now', hidden: true })).toHaveAttribute('aria-current', 'page');
+    fireEvent.click(container.querySelector('.global-mobile-menu-close'));
     liveFeed = [];
     rerender(<MemoryRouter initialEntries={['/app']}><LocationProbe /><Design1Mono /></MemoryRouter>);
     expect(dock().querySelector('.kit-nav-live-dot')).toBeNull();
     expect(within(dock()).getByRole('button', { name: 'Live', hidden: true })).toHaveAttribute('aria-current', 'page');
     fireEvent.click(within(dock()).getByRole('button', { name: 'Home', hidden: true }));
-    await screen.findByText('App dashboard');
-    expect(within(dock()).getByRole('button', { name: 'Home', hidden: true })).toHaveAttribute('aria-current', 'page');
+    await screen.findByText('Public marketing');
+    expect(screen.getByLabelText('Current route').textContent).toBe('/');
+    expect(dock()).toBeNull();
   });
 
   it('marks the active tab consistently across header and bottom navigation', async () => {

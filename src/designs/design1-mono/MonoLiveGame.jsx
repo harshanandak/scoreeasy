@@ -1,3 +1,5 @@
+import { useAuth } from '../../hooks/useAuth';
+import { getHomePath } from '../../utils/appEntry';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameSession } from '../../hooks/useGameSession';
@@ -8,6 +10,7 @@ const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 export default function MonoLiveGame() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const {
     session,
     updateScore,
@@ -99,8 +102,8 @@ export default function MonoLiveGame() {
   }, [session, pauseGame, resumeGame, timer]);
 
   const handleBackToHome = useCallback(() => {
-    navigate('/app');
-  }, [navigate]);
+    navigate(getHomePath(isAuthenticated));
+  }, [navigate, isAuthenticated]);
 
   if (!session) {
     return (

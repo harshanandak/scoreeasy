@@ -1,3 +1,5 @@
+import { useAuth } from '../../../hooks/useAuth';
+import { getHomePath } from '../../../utils/appEntry';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import finalTheme, { MONO } from './landingTheme';
@@ -34,13 +36,14 @@ const pages = {
 };
 
 export default function LegalPage({ type }) {
+  const { isAuthenticated } = useAuth();
   const t = finalTheme;
   const page = pages[type] || pages.privacy;
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, color: t.text }}>
       <main style={{ maxWidth: 860, margin: '0 auto', padding: '48px 24px 72px' }}>
-        <Link to="/app" style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted, textDecoration: 'none' }}>
+        <Link to={getHomePath(isAuthenticated)} style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted, textDecoration: 'none' }}>
           SCORE EASY
         </Link>
         <p style={{ fontFamily: MONO, fontSize: '0.75rem', letterSpacing: '0.12em', color: t.textFaint, margin: '48px 0 12px' }}>

@@ -1,3 +1,5 @@
+import { useAuth } from '../../hooks/useAuth';
+import { getHomePath } from '../../utils/appEntry';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameSession } from '../../hooks/useGameSession';
@@ -6,6 +8,7 @@ import { createParticipant } from '../../models/types';
 
 export default function MonoSetup() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const { startGame } = useGameSession();
   const { templates } = useGameTemplates();
 
@@ -59,7 +62,7 @@ export default function MonoSetup() {
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 mb-10 text-sm" aria-label="Breadcrumb">
           <button
-            onClick={() => navigate('/app')}
+            onClick={() => navigate(getHomePath(isAuthenticated))}
             className="bg-transparent border-none cursor-pointer font-swiss mono-hit"
             style={{ color: '#888' }}
           >

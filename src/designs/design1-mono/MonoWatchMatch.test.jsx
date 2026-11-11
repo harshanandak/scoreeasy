@@ -347,7 +347,7 @@ describe('MonoWatchMatch', () => {
     renderAt();
 
     expect(screen.getByRole('heading', { name: 'This match is not being shared' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Go to Score Easy' })).toHaveAttribute('href', '/app');
+    expect(screen.getByRole('link', { name: 'Go to Score Easy' })).toHaveAttribute('href', '/');
     expect(screen.queryByRole('banner', { name: 'Match scorebug' })).not.toBeInTheDocument();
   });
 
@@ -373,7 +373,7 @@ describe('MonoWatchMatch', () => {
       expect(screen.queryByLabelText('Loading match')).not.toBeInTheDocument();
       expect(screen.getByRole('heading', { name: "Can't load this match" })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Go to Score Easy' })).toHaveAttribute('href', '/app');
+      expect(screen.getByRole('link', { name: 'Go to Score Easy' })).toHaveAttribute('href', '/');
     });
 
     it('Try again goes back to loading, then shows the match when the snapshot arrives', () => {
@@ -442,7 +442,7 @@ describe('MonoWatchMatch', () => {
 
     const siteNav = screen.getByRole('navigation', { name: 'Site' });
     const home = within(siteNav).getByRole('link', { name: 'Score Easy home' });
-    expect(home).toHaveAttribute('href', '/app');
+    expect(home).toHaveAttribute('href', '/');
     const cta = within(siteNav).getByRole('link', { name: /open app/i });
     expect(cta).toHaveAttribute('href', '/app');
   });

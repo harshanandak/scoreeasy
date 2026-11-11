@@ -17,18 +17,17 @@ export function useHomeMedia(query) {
 export default function useHomeStory(stageRef, reduced, ctaHeld) {
   const [position, setPosition] = useState({ index: 0, step: -1 });
   const [paused, setPaused] = useState(false);
-  const [held, setHeld] = useState(false);
   const [visible, setVisible] = useState(true);
   const [hidden, setHidden] = useState(document.hidden);
   const clock = useRef({ index: 0, elapsed: 0, step: -1 });
   const pointer = useRef(null);
-  const holdTimer = useRef(null);
-  const playing = !reduced && !paused && !held && !ctaHeld && visible && !hidden;
+  const playing = !paused && !ctaHeld && visible && !hidden;
 
   const navigate = useCallback((direction) => {
     const index = (clock.current.index + direction + STORIES.length) % STORIES.length;
     clock.current = { index, elapsed: 0, step: -1 };
     setPosition({ index, step: -1 });
+    setPaused(false);
   }, []);
 
   useEffect(() => {
@@ -42,45 +41,46 @@ export default function useHomeStory(stageRef, reduced, ctaHeld) {
     return () => {
       observer?.disconnect();
       document.removeEventListener('visibilitychange', visibility);
-      clearTimeout(holdTimer.current);
     };
   }, [stageRef]);
 
   useEffect(() => {
     if (!playing) return undefined;
     let last = performance.now();
-    let frameId;
-    const tick = (now) => {
-      const current = clock.current;
-      current.elapsed += (now - last) / 1000;
+    let timer;
+    const current = clock.current;
+    const duration = (index) => reduced ? 6000 : STORIES[index].duration * 1000;
+    const tick = () => {
+      const now = performance.now();
+      current.elapsed += now - last;
       last = now;
-      if (current.elapsed >= STORIES[current.index].duration) navigate(1);
-      else {
-        const { step } = storyFrame(current.index, current.elapsed);
-        if (step !== current.step) {
-          current.step = step;
-          setPosition({ index: current.index, step });
-        }
+      while (current.elapsed >= duration(current.index)) {
+        current.elapsed -= duration(current.index);
+        current.index = (current.index + 1) % STORIES.length;
       }
-      frameId = requestAnimationFrame(tick);
+      const step = reduced ? -1 : storyFrame(current.index, current.elapsed / 1000).step;
+      if (current.index !== position.index || step !== current.step) {
+        current.step = step;
+        setPosition({ index: current.index, step });
+      }
+      const nextStep = !reduced && STORIES[current.index].steps.find(([at]) => at * 1000 > current.elapsed);
+      const boundary = nextStep ? nextStep[0] * 1000 : duration(current.index);
+      timer = setTimeout(tick, Math.max(1, boundary - current.elapsed));
     };
-    frameId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameId);
-  }, [playing, navigate]);
+    tick();
+    return () => {
+      clearTimeout(timer);
+      // Preserve the partial step when a hold or user pause interrupts a boundary timer.
+      if (clock.current === current) current.elapsed += performance.now() - last;
+    };
+  }, [playing, position.index, reduced]);
 
-  const cancelPointer = () => {
-    clearTimeout(holdTimer.current);
-    pointer.current = null;
-    setHeld(false);
-  };
+  const cancelPointer = () => { pointer.current = null; };
   const handlers = {
     onPointerDown(event) {
       if (event.target.closest('button') || (event.button != null && event.button !== 0)) return;
       event.currentTarget.setPointerCapture?.(event.pointerId);
-      pointer.current = { x: event.clientX, y: event.clientY, held: false, moved: false };
-      holdTimer.current = setTimeout(() => {
-        if (pointer.current) { pointer.current.held = true; setHeld(true); }
-      }, 220);
+      pointer.current = { x: event.clientX, y: event.clientY, moved: false };
     },
     onPointerMove(event) {
       if (pointer.current && Math.hypot(event.clientX - pointer.current.x, event.clientY - pointer.current.y) > 12) {
@@ -94,10 +94,7 @@ export default function useHomeStory(stageRef, reduced, ctaHeld) {
       const dx = event.clientX - down.x;
       const dy = event.clientY - down.y;
       if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) navigate(dx < 0 ? 1 : -1);
-      else if (!down.held && !down.moved && Math.hypot(dx, dy) <= 12) {
-        const rect = event.currentTarget.getBoundingClientRect();
-        navigate(event.clientX - rect.left < rect.width / 3 ? -1 : 1);
-      }
+      else if (!down.moved && Math.hypot(dx, dy) <= 12) setPaused((value) => !value);
     },
     onPointerCancel: cancelPointer,
     onLostPointerCapture: cancelPointer,

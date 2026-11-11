@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { matchStorageKey } from '../../utils/accountStorage';
 import { confirmEarlyFinish } from '../../test/confirmEarlyFinish';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -143,6 +144,13 @@ function expectBoardDock(hidden) {
   expect(document.body.classList.contains('has-mobile-bottom-nav')).toBe(!hidden);
 }
 
+async function openGuestMatchesFromHome() {
+  await waitFor(() => expect(currentRoute()).toBe('/'));
+  expectBoardDock(true);
+  fireEvent.click(await screen.findByRole('link', { name: 'My matches' }));
+  await waitFor(() => expect(currentRoute()).toBe('/app'));
+}
+
 describe('board dock visibility', () => {
   it('keeps guided cricket lineup setup in the app shell', async () => {
     const entries = cricketFinishSeed('guided');
@@ -194,7 +202,7 @@ describe('board dock visibility', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it.each(['volleyball', 'cricket', 'kabaddi'])('%s stays dock-free after a point, Undo and scored draft restore, then restores the dock on leave', async sport => {
+  it.each(['volleyball', 'cricket', 'kabaddi'])('%s stays dock-free after a point, Undo and scored draft restore, then restores the dock through My matches on leave', async sport => {
     const path = `/${sport}/quick`;
     seed(`se_quickmatch_draft_${sport}`, {
       sport, phase: 'scoring', team1Name: 'Red', team2Name: 'Blue', updatedAt: NOW_ISO,
@@ -216,7 +224,7 @@ describe('board dock visibility', () => {
     fireEvent.click(document.querySelector('.global-nav-brand'));
     expect(await screen.findByRole('dialog')).toHaveTextContent('Leave this page?');
     fireEvent.click(screen.getByRole('button', { name: 'Leave page' }));
-    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    await openGuestMatchesFromHome();
     expectBoardDock(false);
   });
 
@@ -238,7 +246,7 @@ describe('board dock visibility', () => {
     expectBoardDock(false);
   });
 
-  it('keeps a tournament board dock-free after a point, Undo and draft restore, then restores the dock on leave', async () => {
+  it('keeps a tournament board dock-free after a point, Undo and draft restore, then restores the dock through My matches on leave', async () => {
     const tournament = footballTournament();
     tournament.format = { sets: 3, pointsPerSet: 25 };
     seed('se_volleyball', [tournament]);
@@ -256,7 +264,7 @@ describe('board dock visibility', () => {
     fireEvent.click(document.querySelector('.global-nav-brand'));
     expect(await screen.findByRole('dialog')).toHaveTextContent('Leave this page?');
     fireEvent.click(screen.getByRole('button', { name: 'Leave page' }));
-    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    await openGuestMatchesFromHome();
     expectBoardDock(false);
   });
 });
@@ -268,6 +276,7 @@ beforeEach(() => {
   convexState.useQuery = () => [];
   nativeBack.install.mockReset();
   nativeBack.install.mockImplementation(() => () => {});
+  vi.spyOn(Capacitor, 'isNativePlatform').mockReturnValue(false);
   vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
   vi.stubGlobal('matchMedia', vi.fn(() => ({
     addEventListener: vi.fn(),
@@ -279,6 +288,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe('route contracts: already correct (pinned)', () => {
@@ -351,7 +361,8 @@ describe('route contracts: already correct (pinned)', () => {
     expect(await screen.findByRole('heading', { name: 'This Volleyball screen is not available' })).toBeInTheDocument();
   });
 
-  it('auto-resumes the single in-progress draft from the app entry route', async () => {
+  it('native auto-resumes the single in-progress draft from the app entry route', async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
     seed(`se_tennis_quick_draft_${TENNIS_ID}`, {
       id: TENNIS_ID, sport: 'tennis', team1Name: 'Ana', team2Name: 'Bea',
       format: { sets: 3 }, status: 'in-progress', updatedAt: NOW_ISO, createdAt: NOW_ISO,
@@ -673,8 +684,8 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
       seed('se_quickmatches', [{ id: 123, sport: 'cricket', team1: 'Red', team2: 'Blue', status: 'in-progress', format: { totalInnings: 4 }, updatedAt: NOW_ISO }]);
       seed('se_football', [footballTournament()]);
       renderApp(['/']);
+      await openGuestMatchesFromHome();
       await settleRoute();
-      expect(currentRoute()).toBe('/app');
       expect(screen.getAllByRole('button', { name: /resume/i })).toHaveLength(3);
       fireEvent.click(screen.getByRole('button', { name: entry.name }));
       await waitFor(() => expect(currentRoute()).toBe(entry.path));
@@ -774,14 +785,14 @@ describe('route contracts: audit findings (open findings retain it.fails)', () =
 });
 
 describe('navigation decisions (2026-10-21)', () => {
-  it.each(['brand', 'header', 'bottom'])('%s Home goes to /app even with one resumable draft', async surface => {
+  it.each(['brand', 'header', 'bottom'])('guest %s Home opens marketing even with one resumable draft', async surface => {
     seed('se_quickmatch_draft_football', { sport: 'football', phase: 'scoring', gScore1: 1, updatedAt: NOW_ISO });
     renderApp(['/history']);
     await settleRoute();
     const target = surface === 'brand' ? document.querySelector('.global-nav-brand')
       : within(document.querySelector(surface === 'header' ? '.global-nav-links' : '.global-bottom-nav')).getByRole('button', { name: 'Home', hidden: surface === 'bottom' });
     fireEvent.click(target);
-    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    await waitFor(() => expect(currentRoute()).toBe('/'));
   });
 
   it('quick cricket arms on a dot ball', async () => {
@@ -840,7 +851,7 @@ describe('navigation decisions (2026-10-21)', () => {
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('Your match is saved. Resume it from Home or History.');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Leave page' }));
-    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    await openGuestMatchesFromHome();
     expect(JSON.parse(localStorage.getItem(matchStorageKey(key)))).toEqual(saved);
     fireEvent.click(screen.getByRole('button', { name: /Resume Volleyball/ }));
     await settleRoute();
@@ -872,12 +883,12 @@ describe('navigation decisions (2026-10-21)', () => {
     expect(JSON.parse(localStorage.getItem(matchStorageKey(key))).scoringStarted).toBe(true);
   });
 
-  it.each(['privacy', 'terms', 'contact'])('Round 2: legal %s brand opens /app with one resumable draft', async page => {
+  it.each(['privacy', 'terms', 'contact'])('Round 2: guest legal %s brand opens marketing with one resumable draft', async page => {
     seed('se_quickmatch_draft_football', { sport: 'football', phase: 'scoring', gScore1: 1, updatedAt: NOW_ISO });
     renderApp([`/${page}`]);
     await settleRoute();
     fireEvent.click(screen.getByRole('link', { name: 'SCORE EASY' }));
-    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    await waitFor(() => expect(currentRoute()).toBe('/'));
   });
 
   async function remountAndCheckGuard(view, path) {
@@ -984,7 +995,7 @@ describe('navigation decisions (2026-10-21)', () => {
     renderApp([nextPath]);
     await settleRoute();
     fireEvent.click(document.querySelector('.global-nav-brand'));
-    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    await waitFor(() => expect(currentRoute()).toBe('/'));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -1030,13 +1041,13 @@ describe('navigation decisions (2026-10-21)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Stay here' }));
   });
 
-  it.each(['/history', '/volleyball/tournament', '/volleyball/tournament/new', '/this/does/not/exist'])('Home from %s opens the dashboard even with one resumable draft', async (path) => {
+  it.each(['/history', '/volleyball/tournament', '/volleyball/tournament/new', '/this/does/not/exist'])('guest Home from %s opens marketing even with one resumable draft', async (path) => {
     seed('se_quickmatch_draft_football', { sport: 'football', phase: 'scoring', gScore1: 1, updatedAt: NOW_ISO });
     renderApp([path]);
     await settleRoute();
     const home = screen.getAllByRole('button', { name: /^(Home|Go back to home)$/i });
     fireEvent.click(home[home.length - 1]);
-    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    await waitFor(() => expect(currentRoute()).toBe('/'));
   });
 
   it.each(['volleyball', 'badminton', 'tabletennis', 'football', 'basketball', 'hockey', 'kabaddi', 'cricket', 'tennis'])('%s setup leaves without a guard and hides the bottom navigation (a sub-screen with its own Back)', async (sport) => {
@@ -1070,7 +1081,7 @@ describe('navigation decisions (2026-10-21)', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Rematch' }));
     expectBoardDock(true);
     fireEvent.click(document.querySelector('.global-nav-brand'));
-    await waitFor(() => expect(currentRoute()).toBe('/app'));
+    await waitFor(() => expect(currentRoute()).toBe('/'));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
