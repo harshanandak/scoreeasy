@@ -127,6 +127,18 @@ describe('app entry contract', () => {
     expect(migratingView).not.toHaveBeenCalled();
   });
 
+  it.each(['se_', 'gamescore_'])('counts raw %s guest drafts without rewriting storage', prefix => {
+    const raw = '{ "sport": "volleyball", "phase": "scoring", "vScore1": 12 }';
+    localStorage.setItem(`${prefix}quickmatch_draft_volleyball`, raw);
+    const before = storageSnapshot();
+    const write = vi.spyOn(Storage.prototype, 'setItem');
+    const remove = vi.spyOn(Storage.prototype, 'removeItem');
+    expect(loadReturningPlayerState()).toBe(true);
+    expect(storageSnapshot()).toEqual(before);
+    expect(write).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+  });
+
   it('returning-player scan isolates guest and account keys without migrations', () => {
     localStorage.setItem(matchStorageKey('se_quickmatches', 'scorer'), '[{"id":"private"}]');
     localStorage.setItem('se_local_migration:se_quickmatches', '[{"id":"backup"}]');

@@ -195,7 +195,7 @@ export function loadAppEntryState() {
 
 export function loadReturningPlayerState() {
   try {
-    const storage = readOnlyMatchStorage(globalThis.localStorage);
+    const storage = readOnlyMatchStorage(globalThis.localStorage, { includeLegacy: true });
     const read = (key) => {
       try { return JSON.parse(storage.getItem(key)); } catch { return null; }
     };

@@ -93,7 +93,11 @@ async function openMobileMenu(container) {
   Object.defineProperty(prototype, 'showModal', { configurable: true, value() { this.open = true; } });
   try {
     fireEvent.click(container.querySelector('.global-mobile-menu-button'));
-    return await screen.findByRole('navigation', { name: 'Navigation menu' });
+    const dialog = container.querySelector('#global-mobile-menu');
+    expect(dialog).toHaveAttribute('open');
+    expect(dialog).toHaveAttribute('aria-label', 'Navigation menu');
+    // JSDOM retains desktop display:none for the mounted mobile sheet.
+    return await within(dialog).findByRole('navigation', { name: 'Navigation menu', hidden: true });
   } finally {
     if (original) Object.defineProperty(prototype, 'showModal', original);
     else delete prototype.showModal;
@@ -275,8 +279,7 @@ describe('app entry route contract', () => {
     realMarketing = true;
     renderApp('/');
     await screen.findByRole('link', { name: 'Sign in' });
-    if (scoped) expect(screen.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
-    else expect(screen.queryByRole('link', { name: 'My matches' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
     expect({ ...localStorage }).toEqual(before);
     expect(localStorage.getItem(key)).toBe(draft);
   });

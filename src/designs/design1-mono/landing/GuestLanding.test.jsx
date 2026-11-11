@@ -1,3 +1,4 @@
+import { registerPendingOwnershipReader, resolveMatchStorageOwnership } from '../../../utils/accountStorage';
 import { readFileSync } from 'node:fs';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -95,6 +96,33 @@ describe('Home stage', () => {
     const top = within(document.querySelector('.top'));
     expect(top.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
     expect(top.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
+  });
+
+  it.each(['se_', 'gamescore_'])('shows My matches at mount for a raw %s guest draft without writes', prefix => {
+    localStorage.setItem(`${prefix}quickmatch_draft_volleyball`, '{ "sport": "volleyball", "phase": "scoring", "vScore1": 12 }');
+    const before = { ...localStorage };
+    renderLanding();
+    expect(screen.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
+    expect({ ...localStorage }).toEqual(before);
+  });
+
+  it('refreshes My matches after delayed ownership resolves without rewriting legacy storage', async () => {
+    vi.stubGlobal('indexedDB', {});
+    localStorage.setItem('se_quickmatch_draft_volleyball', '{ "sport": "volleyball", "phase": "scoring", "vScore1": 12 }');
+    const before = { ...localStorage };
+    let finish;
+    const pending = new Promise(resolve => { finish = resolve; });
+    registerPendingOwnershipReader(() => pending);
+    const ownership = resolveMatchStorageOwnership();
+    try {
+      renderLanding();
+      expect(screen.queryByRole('link', { name: 'My matches' })).toBeNull();
+      await act(async () => { finish(new Map()); await ownership; });
+      expect(screen.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
+      expect({ ...localStorage }).toEqual(before);
+    } finally {
+      registerPendingOwnershipReader(null);
+    }
   });
 
   it.each([[899, 'on your phone'], [900, 'from the sideline'], [1280, 'from the sideline']])('uses the approved headline at %ipx', (width, phrase) => {

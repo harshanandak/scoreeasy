@@ -9,7 +9,7 @@ beforeEach(async () => {
   Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
   Object.defineProperty(navigator, 'locks', { configurable: true, value: { request: (_name, run) => Promise.resolve().then(run) } });
 });
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 const full = () => new DOMException('Full', 'QuotaExceededError');
 
 describe('account namespaces', () => {
@@ -65,6 +65,68 @@ describe('account namespaces', () => {
     expect(storage.listDataKeys()).not.toContain(key);
     scope.setMatchStorageScope('clerk-X');
     expect(storage.loadData(key)).toEqual({ score: 12 });
+  });
+});
+
+const snapshot = () => Object.fromEntries(Object.keys(localStorage).map(key => [key, localStorage.getItem(key)]));
+const legacyView = () => scope.readOnlyMatchStorage(localStorage, { includeLegacy: true });
+
+describe('read-only legacy projection', () => {
+  it.each(['se_', 'gamescore_'])('shows a raw %s guest draft without touching any stored bytes', prefix => {
+    const raw = '{ "sport": "volleyball", "phase": "scoring", "vScore1": 12 }';
+    localStorage.setItem(`${prefix}quickmatch_draft_volleyball`, raw);
+    const before = snapshot();
+    const write = vi.spyOn(Storage.prototype, 'setItem');
+    const remove = vi.spyOn(Storage.prototype, 'removeItem');
+    const view = legacyView();
+    expect(JSON.parse(view.getItem('se_quickmatch_draft_volleyball'))).toEqual(JSON.parse(raw));
+    expect(Array.from({ length: view.length }, (_, index) => view.key(index))).toContain('se_quickmatch_draft_volleyball');
+    expect(snapshot()).toEqual(before);
+    expect(write).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+  });
+
+  it('uses se_ before gamescore_ and scoped values before either raw source', () => {
+    const key = 'se_quickmatch_draft_volleyball';
+    localStorage.setItem('gamescore_quickmatch_draft_volleyball', '{"sport":"volleyball","vScore1":1}');
+    localStorage.setItem(key, '{"sport":"volleyball","vScore1":8}');
+    const before = snapshot();
+    expect(JSON.parse(legacyView().getItem(key)).vScore1).toBe(8);
+    expect(snapshot()).toEqual(before);
+    localStorage.setItem(scope.matchStorageKey(key), '{"sport":"volleyball","vScore1":12}');
+    const withScoped = snapshot();
+    expect(JSON.parse(legacyView().getItem(key)).vScore1).toBe(12);
+    expect(snapshot()).toEqual(withScoped);
+  });
+
+  it('projects mixed legacy rows only to their resolved owners', () => {
+    localStorage.setItem('se_quickmatches', JSON.stringify([match, { ...match, id: 'owned', syncOwnerId: 'scorer' },
+      { ...match, id: 'queued', clientMatchId: 'quick:queued' }]));
+    localStorage.setItem('se_pending_match:queued', JSON.stringify({ clientMatchId: 'quick:queued', ownerId: 'scorer' }));
+    localStorage.setItem('se_local_migration:backup', JSON.stringify([{ ...match, id: 'backup' }]));
+    const before = snapshot();
+    expect(JSON.parse(legacyView().getItem('se_quickmatches')).map(row => row.id)).toEqual(['offline']);
+    expect(scope.withMatchStorageScope('scorer', () => JSON.parse(legacyView().getItem('se_quickmatches')).map(row => row.id))).toEqual(['owned', 'queued']);
+    expect(scope.withMatchStorageScope('another-scorer', () => legacyView().getItem('se_quickmatches'))).toBeNull();
+    expect(snapshot()).toEqual(before);
+  });
+
+  it('quarantines unresolved and ambiguous ownership until the read resolves, without migrating', async () => {
+    vi.stubGlobal('indexedDB', {});
+    const raw = JSON.stringify([match]);
+    localStorage.setItem('se_quickmatches', raw);
+    let finish;
+    const pending = new Promise(resolve => { finish = resolve; });
+    scope.registerPendingOwnershipReader(() => pending);
+    const before = snapshot();
+    expect(legacyView().getItem('se_quickmatches')).toBeNull();
+    finish(new Map());
+    await scope.resolveMatchStorageOwnership();
+    expect(JSON.parse(legacyView().getItem('se_quickmatches'))).toEqual([match]);
+    scope.registerPendingOwnershipReader(async () => new Map([['quick:football:offline', new Set(['one', 'two'])]]));
+    await scope.resolveMatchStorageOwnership();
+    expect(legacyView().getItem('se_quickmatches')).toBeNull();
+    expect(snapshot()).toEqual(before);
   });
 });
 

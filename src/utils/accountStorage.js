@@ -4,6 +4,7 @@ import { markSaveFailed, markSaveOk } from './saveHealth';
 const ROOT = 'se_local:';
 const BACKUP = 'se_local_migration:';
 export const MATCH_STORAGE_CHANGED = 'se-match-storage-changed';
+export const MATCH_STORAGE_OWNERSHIP_RESOLVED = 'se-match-storage-ownership-resolved';
 const matchKeys = new Set(['se_setup_prefs_v1', 'se_custom_setup_v1', 'se_quickmatches', 'se_tournaments', 'se_statistics', 'gs_history', 'gs_sessions', 'gs_templates',
   'se_matches_pending_undo', 'se_stats_pending_undo', ...getSportsList().map(sport => sport.storageKey)]);
 let activeOwner = null;
@@ -22,7 +23,11 @@ export async function resolveMatchStorageOwnership() {
   if (!ownershipRead) {
     durableOwnership = null;
     ownershipRead = Promise.resolve().then(pendingOwnershipReader)
-      .then(owners => { durableOwnership = owners; return owners; })
+      .then(owners => {
+        durableOwnership = owners;
+        globalThis.dispatchEvent(new Event(MATCH_STORAGE_OWNERSHIP_RESOLVED));
+        return owners;
+      })
       .finally(() => { ownershipRead = null; });
   }
   return ownershipRead;
@@ -114,51 +119,65 @@ function split(value, key, ownership) {
   return new Map([...groups].map(([owner, rows]) => [owner, Array.isArray(value) ? rows : rows[0]]));
 }
 
+function legacyStorageOwnership(storage) {
+  if (globalThis.indexedDB) return durableOwnership;
+  const ownership = new Map();
+  for (const key of keys(storage).filter(key => key.startsWith('se_pending_match:'))) {
+    const record = JSON.parse(storage.getItem(key));
+    const id = record?.clientMatchId || record?.payload?.clientMatchId;
+    if (!id || !record.ownerId) continue;
+    if (!ownership.has(id)) ownership.set(id, new Set());
+    ownership.get(id).add(record.ownerId);
+  }
+  return ownership;
+}
+
+function legacySource(storage, source) {
+  const key = logicalKey(source);
+  const aliasPrefix = legacyOwner && prefix(legacyOwner);
+  const alias = aliasPrefix && source.startsWith(aliasPrefix);
+  if (!alias && !scoped(key)) return null;
+  const logical = alias ? source.slice(aliasPrefix.length) : key;
+  const raw = storage.getItem(source);
+  let value = JSON.parse(raw);
+  const counterpart = !alias && source.startsWith('gamescore_') ? key : null;
+  const preferred = counterpart && storage.getItem(counterpart);
+  if (preferred != null) value = merge(value, JSON.parse(preferred));
+  if (undoJournal(logical) && !undoJournalOwner(value)) return null;
+  return { logical, raw, value, alias };
+}
+
+function legacyCopies({ logical, value, alias }, ownership) {
+  return [...(alias ? [[activeOwner, value]] : split(value, logical, ownership))].map(([owner, data]) => {
+    if (alias) data = canonicalize(data);
+    if (owner === legacyOwner && legacyOwner) { owner = activeOwner; data = canonicalize(data); }
+    if (undoJournal(logical) && (!owner || undoJournalOwner(data) !== owner)) throw new Error('Undo journal owner does not match destination');
+    return [matchStorageKey(logical, owner), data];
+  });
+}
+
 /** Recovery copies are deliberately outside both guest and account enumeration. */
 export function migrateMatchStorage(storage = globalThis.localStorage) {
   let changed = false;
   try {
     const sources = keys(storage);
-    let ownership = durableOwnership;
-    if (!globalThis.indexedDB) {
-      ownership = new Map();
-      for (const key of keys(storage).filter(key => key.startsWith('se_pending_match:'))) {
-        const record = JSON.parse(storage.getItem(key));
-        const id = record?.clientMatchId || record?.payload?.clientMatchId;
-        if (!id || !record.ownerId) continue;
-        if (!ownership.has(id)) ownership.set(id, new Set());
-        ownership.get(id).add(record.ownerId);
-      }
-    } else if (!ownership && sources.some(source => scoped(logicalKey(source)))) {
+    const ownership = legacyStorageOwnership(storage);
+    if (globalThis.indexedDB && !ownership && sources.some(source => scoped(logicalKey(source)))) {
       resolveMatchStorageOwnership().then(() => {
         if (migrateMatchStorage(storage)) globalThis.dispatchEvent(new Event(MATCH_STORAGE_CHANGED));
       }).catch(() => { /* Keep shared rows quarantined until ownership can be read. */ });
     }
     // Coalesce both prefixes before touching destinations; existing destinations still win retries.
     for (const source of sources) {
-      const key = logicalKey(source);
-      const aliasPrefix = legacyOwner && prefix(legacyOwner);
-      const alias = aliasPrefix && source.startsWith(aliasPrefix);
-      if (!alias && !scoped(key)) continue;
-      const logical = alias ? source.slice(aliasPrefix.length) : key;
-      const raw = storage.getItem(source);
-      let value;
-      try { value = JSON.parse(raw); } catch { continue; }
-      const counterpart = !alias && source.startsWith('gamescore_') ? key : null;
-      const preferred = counterpart && storage.getItem(counterpart);
-      if (preferred != null) {
-        try { value = merge(value, JSON.parse(preferred)); } catch { continue; }
-      }
-      if (undoJournal(logical) && !undoJournalOwner(value)) continue;
+      let entry;
+      try { entry = legacySource(storage, source); } catch { continue; }
+      if (!entry) continue;
+      const { raw } = entry;
       const backup = `${BACKUP}${encodeURIComponent(source)}`;
       try {
         if (storage.getItem(backup) === null) storage.setItem(backup, raw);
         if (storage.getItem(backup) !== raw) throw new Error('Migration source changed; retain both versions');
-        for (let [owner, data] of alias ? [[activeOwner, value]] : split(value, logical, ownership)) {
-          if (alias) data = canonicalize(data);
-          if (owner === legacyOwner && legacyOwner) { owner = activeOwner; data = canonicalize(data); }
-          if (undoJournal(logical) && (!owner || undoJournalOwner(data) !== owner)) throw new Error('Undo journal owner does not match destination');
-          const target = matchStorageKey(logical, owner);
+        for (const [target, data] of legacyCopies(entry, ownership)) {
           writeVerified(storage, target, merge(data, JSON.parse(storage.getItem(target))));
         }
         if (storage.getItem(source) === raw) storage.removeItem(source);
@@ -170,8 +189,35 @@ export function migrateMatchStorage(storage = globalThis.localStorage) {
   return changed;
 }
 
+function projectedLegacyStorage(storage) {
+  const sources = keys(storage);
+  const projected = new Map(sources.map(key => [key, storage.getItem(key)]));
+  const view = {
+    getItem: key => projected.get(key) ?? null,
+    get length() { return projected.size; },
+    key: index => [...projected.keys()][index] ?? null,
+  };
+  let ownership;
+  try { ownership = legacyStorageOwnership(storage); } catch { ownership = null; }
+  if (!ownership && pendingOwnershipReader && sources.some(source => scoped(logicalKey(source)))) {
+    resolveMatchStorageOwnership().catch(() => { /* Leave unresolved legacy rows quarantined. */ });
+  }
+  for (const source of sources) {
+    try {
+      const entry = legacySource(view, source);
+      if (!entry) continue;
+      for (const [target, data] of legacyCopies(entry, ownership)) {
+        projected.set(target, JSON.stringify(merge(data, JSON.parse(view.getItem(target)))));
+      }
+      projected.delete(source);
+    } catch { /* Unresolved or damaged legacy data never grants access to another namespace. */ }
+  }
+  return view;
+}
+
 /** The same namespace view as app storage, without migrations or write operations. */
-export function readOnlyMatchStorage(storage) {
+export function readOnlyMatchStorage(storage, { includeLegacy = false } = {}) {
+  if (includeLegacy) storage = projectedLegacyStorage(storage);
   const visible = () => keys(storage).flatMap(key => key.startsWith(prefix(activeOwner)) ? [key.slice(prefix(activeOwner).length)]
     : !key.startsWith(ROOT) && !key.startsWith(BACKUP) && !scoped(logicalKey(key)) ? [key] : []);
   return {

@@ -1,3 +1,4 @@
+import { MATCH_STORAGE_CHANGED, MATCH_STORAGE_OWNERSHIP_RESOLVED } from '../../../utils/accountStorage';
 import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link, useNavigate } from 'react-router-dom';
@@ -21,7 +22,7 @@ ColourLayers.propTypes = { index: PropTypes.number.isRequired };
 export default function GuestLanding() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [returningPlayer] = useState(loadReturningPlayerState);
+  const [returningPlayer, setReturningPlayer] = useState(loadReturningPlayerState);
   const ctaPointer = useRef(false);
   const wide = useHomeMedia('(min-width: 900px)');
   const reduced = useHomeMedia('(prefers-reduced-motion: reduce)');
@@ -35,6 +36,16 @@ export default function GuestLanding() {
   const [pickerKeyboardFocus, setPickerKeyboardFocus] = useState(false);
   const themeMeta = useRef(null);
 
+  useEffect(() => {
+    const refresh = () => setReturningPlayer(loadReturningPlayerState());
+    window.addEventListener(MATCH_STORAGE_CHANGED, refresh);
+    window.addEventListener(MATCH_STORAGE_OWNERSHIP_RESOLVED, refresh);
+    refresh();
+    return () => {
+      window.removeEventListener(MATCH_STORAGE_CHANGED, refresh);
+      window.removeEventListener(MATCH_STORAGE_OWNERSHIP_RESOLVED, refresh);
+    };
+  }, []);
   useEffect(() => { if (!ctaHeld) setLabelIndex(story.index); }, [story.index, ctaHeld]);
   useEffect(() => {
     const existing = document.querySelector('meta[name="theme-color"]');
