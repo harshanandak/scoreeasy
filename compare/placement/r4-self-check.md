@@ -1,5 +1,7 @@
 Decisions needed: none.
 
+Historical evidence for head a57eedd. The r5-self-check.md report supersedes these layout measurements and first-screen placement claims.
+
 The rebuild is implemented on design/home-v3 for draft PR #280. This is the implementation self-check, not independent approval. No local tests were run. Lint, type-check and agent-config checks passed through the commit hooks; tests and builds are left to CI.
 
 Evidence levels: browser observations below are rung 5 on the local dev app; CI execution is rung 4; code-only items are explicitly marked. Production first paint, real-phone browser chrome, native touch and OS-level reduced motion were not verified.
