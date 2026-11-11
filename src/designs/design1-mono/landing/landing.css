@@ -118,11 +118,12 @@
 /* ---------- Start, on the same surface ---------- */
 .home-stage-page .act{margin-top:6px}
 /* The nudge is hand-placed: the note leans left of the arrow and sits right of centre, and the hooked arrow
-   lands over the Go disc. Offsets are measured from the centre of the Start button, because the label is
-   centred and the disc trails it (disc centre is about 76px to 103px right of centre across the four labels). */
+   lands over the Go disc. Offsets are measured from the centre of the Start button. The four labels share
+   one grid cell, so the label box is always as wide as the widest label and the disc sits at a fixed point,
+   about 100px right of centre, whichever label shows. */
 .home-stage-page .nudge{position:relative;height:var(--nudge-h,46px);pointer-events:none;transition:opacity .7s var(--ease),transform .7s var(--ease)}
 .home-stage-page .nudge.gone{opacity:0;transform:translateY(-6px)}
-.home-stage-page .note{position:absolute;right:calc(50% - 72px);bottom:9px;font-family:var(--hand);font-weight:700;font-size:24px;line-height:1;white-space:nowrap;color:var(--home-white);opacity:0;transform:translateY(16px) rotate(-5deg);transform-origin:100% 100%;animation:home-rise .6s .7s var(--spring) forwards}
+.home-stage-page .note{position:absolute;right:calc(50% - 72px);bottom:16px;font-family:var(--hand);font-weight:700;font-size:24px;line-height:1;white-space:nowrap;color:var(--home-white);opacity:0;transform:translateY(16px) rotate(-5deg);transform-origin:100% 100%;animation:home-rise .6s .7s var(--spring) forwards}
 @keyframes home-rise{to{opacity:1;transform:rotate(-5deg)}}
 .home-stage-page .arrow{position:absolute;left:calc(50% + 76px);bottom:3px;width:36px;height:28px;overflow:visible}
 .home-stage-page .arrow path{fill:none;stroke:var(--home-white);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
@@ -237,9 +238,9 @@
   .home-stage-page .scene { position: relative; inset: auto; grid-area: 1 / 1; }
   .home-stage-page .body { padding: 12px 0; }
   .home-stage-page .caption { max-width: min(26ch, calc(100% - 40px)); }
-  .home-stage-page .act { margin-top: 24px; }
-  .home-stage-page .nudge { --nudge-h: 32px; }
-  .home-stage-page .acct { margin-top: 12px; }
+  .home-stage-page .act { margin-top: 16px; }
+  .home-stage-page .nudge { --nudge-h: 40px; }
+  .home-stage-page .acct { margin-top: 16px; }
   .home-stage-page .hero { padding-bottom: 32px; }
 }
 @media (min-width: 1024px) {
