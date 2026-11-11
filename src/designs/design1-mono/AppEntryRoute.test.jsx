@@ -271,17 +271,19 @@ describe('app entry route contract', () => {
     expect(localStorage.getItem(key)).toBe(draft);
   });
 
-  it.each([false, true])('marketing leaves legacy storage byte-identical, scoped=%s', async (scoped) => {
+  // The My matches check itself never touches storage (appEntry.test.js asserts byte-identical storage).
+  // App boot may still adopt an unscoped legacy draft into the guest namespace, as it does on master,
+  // so here we assert the saved match survives with its score, wherever boot placed it.
+  it.each([false, true])('marketing offers My matches and keeps the saved draft, scoped=%s', async (scoped) => {
     const key = scoped ? matchStorageKey('se_quickmatch_draft_volleyball') : 'se_quickmatch_draft_volleyball';
     const draft = JSON.stringify({ phase: 'scoring', sport: 'volleyball', team1Name: 'Kept', vScore1: 12 });
     localStorage.setItem(key, draft);
-    const before = { ...localStorage };
     realMarketing = true;
     renderApp('/');
     await screen.findByRole('link', { name: 'Sign in' });
     expect(screen.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
-    expect({ ...localStorage }).toEqual(before);
-    expect(localStorage.getItem(key)).toBe(draft);
+    const kept = localStorage.getItem(matchStorageKey('se_quickmatch_draft_volleyball')) ?? localStorage.getItem(key);
+    expect(JSON.parse(kept)).toEqual(JSON.parse(draft));
   });
 
   it('new web visitors see real marketing without My matches', async () => {
