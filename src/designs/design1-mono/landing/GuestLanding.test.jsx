@@ -73,7 +73,8 @@ class FakeObserver {
   disconnect() { this.targets.clear(); }
 }
 
-function see(el, { visible, top = 0 }) {
+function see(el, { visible, top = visible ? 0 : window.innerHeight + 10 }) {
+  el.getBoundingClientRect = () => ({ top, bottom: top + 10, height: 10 });
   act(() => {
     FakeObserver.all.forEach((observer) => {
       if (observer.targets.has(el)) {
@@ -203,7 +204,7 @@ describe('Home', () => {
     });
 
     it('starts the tapped sport quick match from a tile', () => {
-      for (const id of ['cricket', 'tennis', 'hockey']) {
+      for (const { id } of Object.values(getSportsByCategory()).flat()) {
         const { container } = renderLanding();
         fireEvent.click(container.querySelector(`.kit-tile[data-sport="${id}"]`));
         expect(screen.getByLabelText('Current route')).toHaveTextContent(new RegExp(`^/${id}/quick$`));
@@ -262,6 +263,16 @@ describe('Home', () => {
       fireEvent.click(within(bar()).getByRole('button', { name: 'Start a match' }));
       expect(scrolled).toEqual([container.querySelector('.home-picker')]);
       expect(screen.getByRole('heading', { name: 'Pick your sport' })).toHaveFocus();
+    });
+
+    it('updates after a fast scroll skips Start and the picker without an observer transition', () => {
+      const { container } = renderLanding();
+      const { start, picker, end } = els(container);
+      start.getBoundingClientRect = () => ({ top: -300, bottom: -250, height: 50 });
+      picker.getBoundingClientRect = () => ({ top: -200, bottom: -20, height: 180 });
+      end.getBoundingClientRect = () => ({ top: window.innerHeight + 50, bottom: window.innerHeight + 150, height: 100 });
+      fireEvent.scroll(window);
+      expect(bar()).not.toBeNull();
     });
 
     it.each([[800], [1280]])('is only for phones: none at %ipx', (width) => {
@@ -482,8 +493,8 @@ describe('Home', () => {
       ]);
       act(() => { vi.advanceTimersByTime(2000); });
       // Both cards on show are playing: the tap card is past its opening and so is the undo card.
-      expect(slides()[0].querySelector('.home-tap-call .home-r:not(.is-out)')).not.toHaveTextContent('Love all');
-      expect(slides()[1].textContent).not.toContain('New over');
+      expect(slides()[0].querySelector('.home-tap-call .home-r:not(.is-out)')).toHaveTextContent('15 all');
+      expect(slides()[1].querySelector('.home-undo-status .home-r:not(.is-out)')).toHaveTextContent('Four');
       act(() => { vi.advanceTimersByTime(Math.max(loopOf(0), loopOf(1)) - 2000 + 50); });
       expect(root).toHaveAttribute('data-start', '2');
       expect(slides()).toHaveLength(2);

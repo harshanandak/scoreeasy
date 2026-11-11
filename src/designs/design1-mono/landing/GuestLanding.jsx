@@ -53,21 +53,29 @@ export default function GuestLanding() {
   /* The sticky bar (phone only): on once the in-flow Start is above the top of the screen, off while
      the picker or the closing block (closing Start + footer) is on screen. */
   useEffect(() => {
-    if (size !== 'phone' || typeof IntersectionObserver === 'undefined') {
+    if (size !== 'phone') {
       setShowBar(false);
       return undefined;
     }
-    const seen = { gone: false, picker: false, end: false };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.target === startRef.current) seen.gone = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-        else if (entry.target === pickerRef.current) seen.picker = entry.isIntersecting;
-        else seen.end = entry.isIntersecting;
-      });
-      setShowBar(seen.gone && !seen.picker && !seen.end);
-    });
-    [startRef, pickerRef, endRef].forEach((ref) => { if (ref.current) observer.observe(ref.current); });
-    return () => observer.disconnect();
+    const update = () => {
+      const start = startRef.current?.getBoundingClientRect();
+      const visible = (ref) => {
+        const rect = ref.current?.getBoundingClientRect();
+        return rect?.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+      };
+      setShowBar(Boolean(start?.height > 0 && start.bottom <= 0 && !visible(pickerRef) && !visible(endRef)));
+    };
+    const observer = typeof IntersectionObserver === 'undefined' ? null : new IntersectionObserver(update);
+    [startRef, pickerRef, endRef].forEach((ref) => { if (ref.current) observer?.observe(ref.current); });
+    // A fast jump can skip an observed element without changing its intersection state.
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
   }, [size]);
 
   const startButton = (
