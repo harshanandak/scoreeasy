@@ -1,3 +1,5 @@
+import { useAuth } from '../../hooks/useAuth';
+import { getHomePath } from '../../utils/appEntry';
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -13,6 +15,7 @@ import "./kit/auth.css";
    scorer who just wants to score is never pushed to sign in first. */
 export default function MonoAuthPageFrame({ children, helperText, subtitle, title }) {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const [visible, setVisible] = useState(false);
   const guestTarget = getAuthReturnToFromSearch(location.search, DEFAULT_GUEST_SCORING_PATH);
@@ -49,7 +52,7 @@ export default function MonoAuthPageFrame({ children, helperText, subtitle, titl
         <button type="button" onClick={() => navigate(guestTarget)} className="se-ctl">
           Continue as guest
         </button>
-        <button type="button" onClick={() => navigate("/app")} className="kit-auth-back">
+        <button type="button" onClick={() => navigate(getHomePath(isAuthenticated))} className="kit-auth-back">
           <BackArrow /> Back to home
         </button>
       </div>

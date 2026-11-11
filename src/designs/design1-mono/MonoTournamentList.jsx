@@ -1,3 +1,5 @@
+import { useAuth } from '../../hooks/useAuth';
+import { getHomePath } from '../../utils/appEntry';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, deleteSportTournament, saveData } from '../../utils/storage';
@@ -43,6 +45,7 @@ function getNextScorableMatch(tournament, sportConfig) {
 
 export default function MonoTournamentList() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const { sport } = useParams();
   const sportConfig = getSportById(sport);
   const [tournaments, setTournaments] = useState([]);
@@ -108,7 +111,7 @@ export default function MonoTournamentList() {
       {/* Header */}
       <nav aria-label="Breadcrumb">
         <button
-          onClick={() => navigate('/app')}
+          onClick={() => navigate(getHomePath(isAuthenticated))}
           className="kit-back mono-hit"
           aria-label="Go back to home"
         >
