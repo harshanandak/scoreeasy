@@ -8,6 +8,7 @@ import SportPicker from '../kit/SportPicker';
 import StoryScenes from './StoryScenes';
 import { STORIES } from './storyTimelines';
 import useHomeStory, { useHomeMedia } from './useHomeStory';
+import { homeStoryTokens } from '../theme/sportsTokens';
 import './landing.css';
 
 function ColourLayers({ index }) {
@@ -67,7 +68,7 @@ export default function GuestLanding() {
   };
 
   return (
-    <div className="home-stage-page" data-screen="guest-landing" style={{ '--accent': story.index === 0 ? '#c6e83a' : '#fff' }}>
+    <div className="home-stage-page" data-screen="guest-landing" style={{ ...homeStoryTokens.cssVariables, '--accent': story.index === 0 ? 'var(--home-tennis-accent)' : 'var(--home-white)' }}>
       <header className="hero">
         <ColourLayers index={story.index} />
         <div className="in">

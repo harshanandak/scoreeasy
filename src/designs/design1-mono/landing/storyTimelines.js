@@ -1,8 +1,10 @@
+import { homeStoryTokens } from '../theme/sportsTokens';
+
 // The approved M1 story timelines, in seconds. These illustrate rules, not persisted matches.
 export const STORIES = [
   {
-    sport: 'tennis', label: 'Start a tennis match', theme: '#1b2a63',
-    gradient: 'linear-gradient(170deg,#25377d 0%,#16205a 55%,#0f1740 100%)',
+    sport: 'tennis', label: 'Start a tennis match', theme: homeStoryTokens.themes[0],
+    gradient: homeStoryTokens.gradients[0],
     duration: 9.2,
     initial: { call: 'Love all', pa: '0', pb: '0', ga: '0', gb: '0', gameNo: '1', srv: 'a' },
     steps: [
@@ -17,8 +19,8 @@ export const STORIES = [
     ],
   },
   {
-    sport: 'cricket', label: 'Start a cricket match', theme: '#2f62f2',
-    gradient: 'linear-gradient(170deg,#3a6bf5 0%,#2148d6 55%,#14309e 100%)',
+    sport: 'cricket', label: 'Start a cricket match', theme: homeStoryTokens.themes[1],
+    gradient: homeStoryTokens.gradients[1],
     duration: 8.4, initial: { runs: '0', balls: [], slots: 6 },
     steps: [
       [0.9, { runs: '1', balls: ['1'] }],
@@ -33,8 +35,8 @@ export const STORIES = [
     ],
   },
   {
-    sport: 'football', label: 'Start a football match', theme: '#0f8a45',
-    gradient: 'linear-gradient(170deg,#139a4e 0%,#0b7a3c 55%,#06502a 100%)',
+    sport: 'football', label: 'Start a football match', theme: homeStoryTokens.themes[2],
+    gradient: homeStoryTokens.gradients[2],
     duration: 8, initial: { you: '0', riya: '0', youChip: 'online', riyaChip: 'live' },
     steps: [
       [1, { you: '1' }], [1.5, { riya: '1' }], [2.7, { youChip: 'nosignal' }],
@@ -43,8 +45,8 @@ export const STORIES = [
     ],
   },
   {
-    label: 'Pick your sport', theme: '#7447e0',
-    gradient: 'linear-gradient(170deg,#7d52e8 0%,#5a30c8 55%,#3f1c9c 100%)',
+    label: 'Pick your sport', theme: homeStoryTokens.themes[3],
+    gradient: homeStoryTokens.gradients[3],
     duration: 6, initial: { moms: 0 },
     steps: [[0.5, { moms: 1 }], [1.6, { moms: 2 }], [2.7, { moms: 3 }]],
   },

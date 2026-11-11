@@ -254,3 +254,49 @@ export const landingTokenBridge = {
   cardShadow: sportsTokens.shadow.card,
   r: sportsTokens.radius.lg,
 };
+
+// Fixed colours from the approved M1 Home design; canvas roles still follow the root theme.
+export const homeStoryTokens = {
+  "themes": [
+    "#1b2a63",
+    "#2f62f2",
+    "#0f8a45",
+    "#7447e0"
+  ],
+  "gradients": [
+    "linear-gradient(170deg,#25377d 0%,#16205a 55%,#0f1740 100%)",
+    "linear-gradient(170deg,#3a6bf5 0%,#2148d6 55%,#14309e 100%)",
+    "linear-gradient(170deg,#139a4e 0%,#0b7a3c 55%,#06502a 100%)",
+    "linear-gradient(170deg,#7d52e8 0%,#5a30c8 55%,#3f1c9c 100%)"
+  ],
+  "cssVariables": {
+    "--home-ink": "#0b0b0d",
+    "--home-white": "#fff",
+    "--home-go-hi": "#007c34",
+    "--home-go": "#00662a",
+    "--home-go-lo": "#004720",
+    "--home-tennis-accent": "#c6e83a",
+    "--home-cricket-ink": "#1840c4",
+    "--home-gold": "#ffd34d",
+    "--home-on-gold": "#4a3300",
+    "--home-wicket": "#e5484d",
+    "--home-arrived-ink": "#0a6b34",
+    "--home-tennis-ink": "#16205a",
+    "--home-football-ink": "#06502a",
+    "--home-rules-ink": "#3f1c9c",
+    "--home-glow": "rgba(255,255,255,.16)",
+    "--home-hero-shade": "rgba(0,0,0,.22)",
+    "--home-tennis-row": "rgba(255,255,255,.11)",
+    "--home-ripple": "rgba(255,255,255,.55)",
+    "--home-ball-line": "rgba(255,255,255,.45)",
+    "--home-panel": "rgba(255,255,255,.12)",
+    "--home-chip": "rgba(255,255,255,.2)",
+    "--home-copy": "rgba(255,255,255,.86)",
+    "--home-cta-shadow": "rgba(0,0,0,.55)",
+    "--home-footer-shade": "rgba(0,0,0,.25)",
+    "--home-footer-line": "rgba(255,255,255,.22)",
+    "--home-footer-copy": "rgba(255,255,255,.78)",
+    "--home-undo-ripple": "rgba(24,64,196,.35)",
+    "--home-step-line": "rgba(11,11,13,.22)"
+  }
+};
