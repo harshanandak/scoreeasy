@@ -847,7 +847,7 @@
 
 /* ---- the desktop marquee: two identical groups slide left by one group's width, then start over,
    so the loop has no seam. The band's left edge is the headline column's right edge plus a gap; a
-   mask fades it to nothing over its first 180px, so a card has vanished before it could cross the
+   mask keeps its first 112px clear and fades over the next 288px, before cards could cross the
    text. Pause, hover, focus, a hidden tab and the band leaving the screen all set .is-paused. ---- */
 .home-marquee {
   position: relative;
@@ -858,10 +858,11 @@
 }
 
 .home-band {
+  --fade-end: 400px;
   width: 100%;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0 112px, color-mix(in srgb, var(--se-color-ink) 12%, transparent) 208px, color-mix(in srgb, var(--se-color-ink) 55%, transparent) 304px, var(--se-color-ink) 400px);
-  mask-image: linear-gradient(90deg, transparent 0 112px, color-mix(in srgb, var(--se-color-ink) 12%, transparent) 208px, color-mix(in srgb, var(--se-color-ink) 55%, transparent) 304px, var(--se-color-ink) 400px);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0 112px, color-mix(in srgb, var(--se-color-ink) 12%, transparent) 208px, color-mix(in srgb, var(--se-color-ink) 55%, transparent) 304px, var(--se-color-ink) var(--fade-end));
+  mask-image: linear-gradient(90deg, transparent 0 112px, color-mix(in srgb, var(--se-color-ink) 12%, transparent) 208px, color-mix(in srgb, var(--se-color-ink) 55%, transparent) 304px, var(--se-color-ink) var(--fade-end));
 }
 
 .home-track {
@@ -881,6 +882,12 @@
   flex: none;
   width: 320px;
   height: 352px;
+  opacity: var(--card-opacity, 0);
+  transition: opacity 300ms linear;
+}
+
+.home-marquee.is-still .home-card {
+  opacity: 1;
 }
 
 @keyframes home-travel {

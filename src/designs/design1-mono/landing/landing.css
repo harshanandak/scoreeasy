@@ -7,7 +7,7 @@
    sport picker, the FAQ and the footer. A slim bar with Start sticks to the bottom once the in-flow
    Start has scrolled away, and goes while the picker or the closing block is on screen.
    Tablet (768-1023): the same order, the copy held to 560px, two cards in the rail.
-   Desktop (1024 up): headline, Start and the account line left, vertically centred with a marquee
+   Desktop (1024 up): headline, Start and the account line left, with a compact marquee
    of the cards that comes in from the right edge of the window and fades out before the headline.
    Everything lines up to one content width (1120px). */
 

@@ -1,7 +1,8 @@
 import PropTypes from 'prop-types';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CardPlayer } from './HomeCards';
 import { CARDS } from './cardTimelines';
+import { MARQUEE_FADE_END, marqueeCardOpacity } from './railLoop';
 import { useHold, useInView, useReducedMotion, useTabHidden, usingKeyboard } from './railHooks';
 
 /* Home's card rail on desktop: the five animation cards slide by themselves, right to left, in a band
@@ -17,14 +18,39 @@ import { useHold, useInView, useReducedMotion, useTabHidden, usingKeyboard } fro
 
 const COUNT = CARDS.length;
 
-function MarqueeCard({ card, index, clone, running, still }) {
+function MarqueeCard({ card, index, clone, running, still, bandRef }) {
   const ref = useRef(null);
   const onScreen = useInView(ref, 0);
+  const [inBand, setInBand] = useState(false);
+  useEffect(() => {
+    const element = ref.current;
+    const band = bandRef.current;
+    if (!element || !band || still) return undefined;
+    if (typeof IntersectionObserver === 'undefined') {
+      element.style.setProperty('--card-opacity', '1');
+      setInBand(true);
+      return undefined;
+    }
+    // Fade the whole card before the mask can cut individual letters or controls into fragments.
+    const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
+      const bandLeft = entry.rootBounds ? entry.rootBounds.left - MARQUEE_FADE_END : band.getBoundingClientRect().left;
+      const opacity = marqueeCardOpacity(entry.boundingClientRect.left - bandLeft);
+      element.style.setProperty('--card-opacity', String(opacity));
+      setInBand(opacity > 0);
+    }), {
+      root: band,
+      rootMargin: `0px 320px 0px -${MARQUEE_FADE_END}px`,
+      threshold: Array.from({ length: 33 }, (_, i) => i / 32),
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [bandRef, still]);
   return (
     <CardPlayer
       cardRef={ref}
       card={card}
-      running={running && onScreen}
+      running={running && onScreen && inBand}
+      visualsRunning={running}
       still={still}
       loop
       hidden={clone}
@@ -38,10 +64,12 @@ MarqueeCard.propTypes = {
   clone: PropTypes.bool.isRequired,
   running: PropTypes.bool.isRequired,
   still: PropTypes.bool.isRequired,
+  bandRef: PropTypes.shape({ current: PropTypes.any }).isRequired,
 };
 
 export default function HomeMarquee() {
   const rootRef = useRef(null);
+  const bandRef = useRef(null);
   const [userPaused, setUserPaused] = useState(false);
   const reduced = useReducedMotion();
   const hidden = useTabHidden();
@@ -62,7 +90,7 @@ export default function HomeMarquee() {
       onFocus={() => { if (usingKeyboard()) set('focus', true); }}
       onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) set('focus', false); }}
     >
-      <div className="home-band">
+      <div ref={bandRef} className="home-band">
         <div className="home-track">
           {[false, true].map((clone) => (
             (!clone || !reduced) && (
@@ -74,7 +102,7 @@ export default function HomeMarquee() {
                 data-clone={clone ? 'true' : undefined}
               >
                 {CARDS.map((card, index) => (
-                  <MarqueeCard key={card.id} card={card} index={index} clone={clone} running={running} still={reduced} />
+                  <MarqueeCard key={card.id} card={card} index={index} clone={clone} running={running} still={reduced} bandRef={bandRef} />
                 ))}
               </div>
             )

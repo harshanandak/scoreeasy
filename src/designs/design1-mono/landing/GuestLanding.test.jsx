@@ -78,7 +78,7 @@ function see(el, { visible, top = visible ? 0 : window.innerHeight + 10 }) {
   act(() => {
     FakeObserver.all.forEach((observer) => {
       if (observer.targets.has(el)) {
-        observer.callback([{ target: el, isIntersecting: visible, intersectionRatio: visible ? 1 : 0, boundingClientRect: { top, bottom: top + 10 } }]);
+        observer.callback([{ target: el, isIntersecting: visible, intersectionRatio: visible ? 1 : 0, boundingClientRect: { top, bottom: top + 10, left: visible ? 800 : -1000 }, rootBounds: { left: 400 } }]);
       }
     });
   });

@@ -236,14 +236,14 @@ CardFace.propTypes = {
  *  `onEnd` fires once at its end. Under reduced motion (`still`) nothing plays and it shows the one
  *  frame that says what it is about. `hidden` marks a clone the rail repeats for the marquee (no
  *  name, out of the accessibility tree). */
-export function CardPlayer({ card, running, still = false, loop = false, onEnd, resetKey = 0, slideLabel, hidden = false, cardRef }) {
+export function CardPlayer({ card, running, visualsRunning = running, still = false, loop = false, onEnd, resetKey = 0, slideLabel, hidden = false, cardRef }) {
   const element = useRef(null);
   useLayoutEffect(() => {
     element.current?.getAnimations?.({ subtree: true }).forEach((animation) => {
-      if (running && !still) animation.play();
+      if (visualsRunning && !still) animation.play();
       else animation.pause();
     });
-  }, [running, still]);
+  }, [visualsRunning, still]);
   const index = useTimeline(card.timeline, running && !still, { loop, onEnd, resetKey });
   const state = still ? card.timeline.still : card.timeline.states[index];
   return (
@@ -265,6 +265,7 @@ export function CardPlayer({ card, running, still = false, loop = false, onEnd, 
 CardPlayer.propTypes = {
   card: CardFace.propTypes.card,
   running: PropTypes.bool.isRequired,
+  visualsRunning: PropTypes.bool,
   still: PropTypes.bool,
   loop: PropTypes.bool,
   onEnd: PropTypes.func,
