@@ -297,6 +297,19 @@ describe('app entry route contract', () => {
     expect(screen.getByLabelText('Current route').textContent).toBe(signedIn ? '/app' : '/');
   });
 
+  it.each([false, true].flatMap((signedIn) => ['/volleyball/tournament', '/volleyball/tournament/new'].map(path => [signedIn, path])))('tournament Home auth=%s on %s uses the shared destination', async (signedIn, path) => {
+    authState = { ...authState, isAuthenticated: signedIn, user: signedIn ? { username: 'harsha' } : null };
+    renderApp(path);
+    const button = await waitFor(() => {
+      const surface = document.querySelector(path.endsWith('/new') ? '[data-screen="tournament-setup"]' : '[data-screen="tournaments"]');
+      expect(surface).not.toBeNull();
+      return within(surface).getByRole('button', { name: path.endsWith('/new') ? 'Home' : 'Go back to home', hidden: true });
+    });
+    fireEvent.click(button);
+    await screen.findByText(signedIn ? 'App dashboard' : 'Public marketing');
+    expect(screen.getByLabelText('Current route').textContent).toBe(signedIn ? '/app' : '/');
+  });
+
   it('maps legacy dashboard links to the app dashboard route', async () => {
     renderApp('/dashboard');
 

@@ -1,3 +1,5 @@
+import { AuthContext } from '../auth/AuthContext';
+import { getHomePath } from '../utils/appEntry';
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as Sentry from '@sentry/react';
@@ -9,6 +11,7 @@ import '../designs/design1-mono/kit/history.css';
 import './ErrorBoundary.css';
 
 class ErrorBoundary extends React.Component {
+  static contextType = AuthContext;
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null, reloading: false, confirmingDiscard: false, discardFailed: false };
@@ -54,7 +57,7 @@ class ErrorBoundary extends React.Component {
   };
 
   handleHome = () => {
-    globalThis.location.assign('/app');
+    globalThis.location.assign(getHomePath(this.context?.isAuthenticated));
   };
 
   // The kept match behind a crashed scoring board, if there is one. Looked up only when the crash
