@@ -3,8 +3,8 @@ import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { LocalAuthProvider } from '../../../auth/AuthContext';
-import { getSportById } from '../../../models/sportRegistry';
+import { AuthContext, LocalAuthProvider } from '../../../auth/AuthContext';
+import { getSportById, getSportsByCategory } from '../../../models/sportRegistry';
 import GuestLanding from './GuestLanding';
 import { buildDemo } from './landingDemo';
 import { LANDING_FAQ } from './landingFaq';
@@ -12,7 +12,7 @@ import { SLIDES } from './ScoreSlides';
 
 function LocationProbe() {
   const location = useLocation();
-  return <output aria-label="Current route">{`${location.pathname}${location.search}`}</output>;
+  return <output aria-label="Current route" data-new-match={String(location.state?.newMatch === true)}>{`${location.pathname}${location.search}`}</output>;
 }
 
 function renderLanding({ cloudAuthAvailable = false } = {}) {
@@ -25,6 +25,18 @@ function renderLanding({ cloudAuthAvailable = false } = {}) {
         </Routes>
       </MemoryRouter>
     </LocalAuthProvider>,
+  );
+}
+
+function renderSignedIn() {
+  return render(
+    <AuthContext.Provider value={{ cloudAuthAvailable: true, isAuthenticated: true, isLoading: false }}>
+      <MemoryRouter>
+        <Routes>
+          <Route path="*" element={<GuestLanding />} />
+        </Routes>
+      </MemoryRouter>
+    </AuthContext.Provider>,
   );
 }
 
@@ -46,6 +58,48 @@ describe('Home', () => {
     expect(start[0]).toHaveAttribute('href', '/play');
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
     expect(screen.getByRole('link', { name: 'Create a free account' })).toBeInTheDocument();
+  });
+
+  it('puts Sign in in the top bar, not the headline block, and hides it from a signed-in visitor', () => {
+    const { container, unmount } = renderLanding();
+    const signIn = screen.getByRole('link', { name: 'Sign in' });
+    expect(container.querySelector('.kit-top')).toContainElement(signIn);
+    expect(container.querySelector('.kit-landing-hero')).not.toContainElement(signIn);
+    unmount();
+    renderSignedIn();
+    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'Start a match' })).toBeInTheDocument();
+  });
+
+  it('shows every sport as a full tile in registry order, between the headline and Start', () => {
+    const { container } = renderLanding();
+    const expected = Object.values(getSportsByCategory()).flat().map((sport) => sport.id);
+    const tiles = [...container.querySelectorAll('.kit-landing-rail .kit-tile')];
+    expect(tiles.map((tile) => tile.dataset.sport)).toEqual(expected);
+    for (const tile of tiles) {
+      expect(tile).not.toHaveClass('kit-tile-mini');
+      expect(tile.querySelector('.kit-tile-hint')).not.toBeNull();
+    }
+    const hero = container.querySelector('.kit-landing-hero');
+    const start = screen.getByRole('link', { name: 'Start a match' });
+    const example = screen.getByTestId('landing-example');
+    expect(hero.compareDocumentPosition(tiles[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(tiles.at(-1).compareDocumentPosition(start) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(start.compareDocumentPosition(example) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('starts the tapped sport quick match from a tile, and See all opens the Play hub', () => {
+    const { container } = renderLanding();
+    const ids = ['cricket', 'tennis'];
+    for (const id of ids) {
+      fireEvent.click(container.querySelector(`.kit-tile[data-sport="${id}"]`));
+      expect(screen.getByLabelText('Current route')).toHaveTextContent(new RegExp(`^/${id}/quick$`));
+      expect(screen.getByLabelText('Current route')).toHaveAttribute('data-new-match', 'true');
+      cleanup();
+      renderLanding();
+    }
+    fireEvent.click(screen.getByRole('link', { name: 'See all' }));
+    expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
   });
 
   it('shows a labelled carousel of sport boards with no sport tabs and no hint list', () => {

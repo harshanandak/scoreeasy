@@ -1,8 +1,9 @@
 /* Home (/), Kit. Composes Kit parts (kit.css, history.css chips, the .se-go / .se-ctl buttons);
    only layout and the scoreboard live here. Colour comes from --se-color-* tokens and the engine
    vars (--sport-*, --team-a-*, --team-b-*), so a dark theme is a token swap.
-   Phone: headline, one sentence, Start and Sign in, then the scoreboard, a short FAQ and the footer.
-   Desktop: the same, with the headline left and the scoreboard right, both starting at the top. */
+   Phone: top bar (logo, Sign in), headline, one sentence, a swipe rail of the app's own sport tiles,
+   Start, then the scoreboard, a short FAQ and the footer.
+   Desktop: the same, with headline, Start and a grid of sport tiles left and the scoreboard right. */
 
 .kit-landing {
   padding-bottom: 40px;
@@ -15,24 +16,71 @@
   text-wrap: balance;
 }
 
-.kit-landing-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 20px;
+/* ---- top bar: Sign in is a quiet text button on the right, a 48px target ---- */
+.kit-top-signin {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 48px;
+  margin-right: -12px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: var(--se-color-ink);
+  font-size: 1rem;
+  font-weight: 750;
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.kit-landing-actions .se-go,
-.kit-landing-actions .se-ctl {
+.kit-top-signin:hover {
+  text-decoration: underline;
+}
+
+/* ---- sport picker: a snap rail on phones, the next tile peeking ---- */
+.kit-landing-picker .kit-sec {
+  margin: 20px 2px 10px;
+}
+
+.kit-landing-rail {
+  display: flex;
+  gap: 10px;
+  margin: 0 -16px -10px;
+  padding: 4px 16px 14px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 16px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.kit-landing-rail::-webkit-scrollbar {
+  display: none;
+}
+
+/* 82% of the row leaves about a quarter of the next tile showing, so the rail reads as swipeable. */
+.kit-landing-rail .kit-tile {
+  flex: 0 0 82%;
+  min-height: 148px;
+  scroll-snap-align: start;
+}
+
+.kit-landing-rail .kit-tile:focus-visible {
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: 3px;
+}
+
+.kit-landing-start {
+  margin-top: 4px;
+}
+
+.kit-landing-start .se-go {
   box-sizing: border-box;
   width: 100%;
   min-height: 56px;
   text-decoration: none;
   white-space: nowrap;
-}
-
-.kit-landing-actions .se-ctl {
-  font-size: 1rem;
 }
 
 /* ---- the scoreboard: a slideshow of real sport boards ----
@@ -473,9 +521,31 @@
   .kit-landing-top {
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-    gap: 56px;
+    grid-template-areas:
+      'hero example'
+      'start example'
+      'picker example';
+    grid-template-rows: auto auto 1fr;
+    column-gap: 56px;
     align-items: start;
     padding-top: 36px;
+  }
+
+  .kit-landing-hero {
+    grid-area: hero;
+  }
+
+  .kit-landing-start {
+    grid-area: start;
+    margin-top: 28px;
+  }
+
+  .kit-landing-picker {
+    grid-area: picker;
+  }
+
+  .kit-landing-example {
+    grid-area: example;
   }
 
   .kit-landing-hero .kit-title {
@@ -488,15 +558,23 @@
     font-size: 1.12rem;
   }
 
-  .kit-landing-actions {
-    flex-direction: row;
-    margin-top: 28px;
-  }
-
-  .kit-landing-actions .se-go,
-  .kit-landing-actions .se-ctl {
+  .kit-landing-start .se-go {
     width: auto;
     padding: 0 28px;
+  }
+
+  /* No slider on desktop: the same full tiles in a grid. */
+  .kit-landing-rail {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding: 4px 0 0;
+    overflow: visible;
+  }
+
+  .kit-landing-rail .kit-tile {
+    flex: none;
+    min-height: 132px;
   }
 
   /* The scoreboard's top lines up with the headline's, so its section title is for screen readers. */
