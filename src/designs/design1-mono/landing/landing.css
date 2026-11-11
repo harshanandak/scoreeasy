@@ -1,9 +1,9 @@
 /* Home (/), Kit. Composes Kit parts (kit.css, history.css chips, the .se-go / .se-ctl buttons);
    only layout and the scoreboard live here. Colour comes from --se-color-* tokens and the engine
    vars (--sport-*, --team-a-*, --team-b-*), so a dark theme is a token swap.
-   Phone: top bar (logo, Sign in), headline, one sentence, a swipe rail of the app's own sport tiles,
-   Start, then the scoreboard, a short FAQ and the footer.
-   Desktop: the same, with headline, Start and a grid of sport tiles left and the scoreboard right. */
+   Phone: top bar (logo, Sign in), headline, one sentence, Start, a full-bleed swipe rail of real
+   sport boards, the app's own sport tiles in two columns, a short FAQ and the footer.
+   Desktop: headline and Start left, the board rail right, then the sport tiles in four columns. */
 
 .kit-landing {
   padding-bottom: 40px;
@@ -37,42 +37,9 @@
   text-decoration: underline;
 }
 
-/* ---- sport picker: a snap rail on phones, the next tile peeking ---- */
-.kit-landing-picker .kit-sec {
-  margin: 20px 2px 10px;
-}
-
-.kit-landing-rail {
-  display: flex;
-  gap: 10px;
-  margin: 0 -16px -10px;
-  padding: 4px 16px 14px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scroll-padding-inline: 16px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.kit-landing-rail::-webkit-scrollbar {
-  display: none;
-}
-
-/* 82% of the row leaves about a quarter of the next tile showing, so the rail reads as swipeable. */
-.kit-landing-rail .kit-tile {
-  flex: 0 0 82%;
-  min-height: 148px;
-  scroll-snap-align: start;
-}
-
-.kit-landing-rail .kit-tile:focus-visible {
-  outline: 3px solid var(--se-color-focus-ring);
-  outline-offset: 3px;
-}
-
+/* ---- Start: one full-width primary right under the headline ---- */
 .kit-landing-start {
-  margin-top: 4px;
+  margin-top: 20px;
 }
 
 .kit-landing-start .se-go {
@@ -83,57 +50,78 @@
   white-space: nowrap;
 }
 
-/* ---- the scoreboard: a slideshow of real sport boards ----
-   Motion rules: transform and opacity only, ease-out, no scale and no bounce. Every slide sits in
-   the same grid cell, so the card is as tall as the tallest board and never changes height. */
-.kit-landing-example .kit-sec {
+/* ---- sport picker: the app's own full tiles, two columns (4 rows of the 8 on Home) ---- */
+.kit-landing-picker .kit-sec {
   margin: 24px 2px 10px;
+}
+
+.kit-landing-grid .kit-tile {
+  min-height: 132px;
+}
+
+/* ---- the boards: a looping swipe rail of real sport boards ----
+   Full-bleed on phones (it runs under the page gutter to both screen edges; the first card starts
+   at the gutter), each card 82% wide so the next one peeks. Every card is as tall as the tallest
+   board, so the page below never moves. The section title is for screen readers only. */
+.kit-landing-example .kit-sec {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 
 .home-slides {
   --se-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --shift: 8px;
+  margin-top: 24px;
 }
 
-.home-slides[data-dir='back'] {
-  --shift: -8px;
+.home-rail {
+  position: relative;
+  display: flex;
+  /* 16px gutter + the 4px card shadow: the card before the first one ends just off screen. */
+  gap: 20px;
+  margin: 0 -16px;
+  padding: 4px 16px 10px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 16px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
-.home-slides-card {
-  display: grid;
+.home-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.home-rail:focus-visible {
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: -3px;
+}
+
+.home-slide {
+  position: relative;
+  display: flex;
+  flex: 0 0 82%;
+  flex-direction: column;
+  min-width: 0;
   overflow: hidden;
   border: 2px solid var(--se-color-ink);
   border-radius: 18px;
   background: var(--se-color-surface);
   box-shadow: 4px 4px 0 var(--se-color-ink);
-  touch-action: pan-y;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
   user-select: none;
   -webkit-user-select: none;
 }
 
-.home-slide {
-  display: flex;
-  flex-direction: column;
-  grid-area: 1 / 1;
-  min-width: 0;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateX(var(--shift));
-  transition:
-    opacity 520ms var(--se-ease-out),
-    transform 520ms var(--se-ease-out),
-    visibility 0s linear 520ms;
-}
-
-.home-slide.is-leaving {
-  transform: translateX(calc(var(--shift) * -1));
-}
-
-.home-slide.is-active {
-  opacity: 1;
-  visibility: visible;
-  transform: none;
-  transition-delay: 0s;
+/* Arrow buttons are for a mouse on desktop; phones swipe. */
+.home-rail-nav {
+  display: none;
 }
 
 /* The engine steps are timed by these invisible animations, so they pause with the rest. */
@@ -151,7 +139,7 @@
 }
 
 .home-board {
-  padding: 14px 14px 0;
+  padding: 14px 12px 0;
 }
 
 .home-board-head {
@@ -249,7 +237,7 @@
 .home-board-team {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   min-height: 56px;
   font-size: 1.05rem;
@@ -312,11 +300,26 @@
 }
 
 .home-board-foot {
-  margin: 4px -14px 0;
-  padding: 10px 14px;
+  margin: 4px -12px 0;
+  padding: 10px 12px;
   border-top: 1px solid var(--se-color-line-soft);
   font: 750 0.9rem/1.3 var(--se-font-display);
   font-variant-numeric: tabular-nums;
+}
+
+/* The narrowest phones (about 360 wide): a smaller score so a team name like "Australia" stays whole. */
+@media (max-width: 380px) {
+  .home-board-num {
+    font-size: 2.3rem;
+  }
+
+  .home-board-suffix {
+    font-size: 1.25rem;
+  }
+
+  .home-board-team {
+    font-size: 1rem;
+  }
 }
 
 /* A number that changed rises 0.2em into place while it fades in. */
@@ -332,7 +335,7 @@
 }
 
 .home-slide-tag {
-  margin: 0;
+  margin: auto 0 0;
   padding: 14px 14px 16px;
   border-top: 2px solid var(--se-color-ink);
   font: 800 1.2rem/1.2 var(--se-font-display);
@@ -340,69 +343,20 @@
   text-wrap: balance;
 }
 
-/* Progress: one short track per slide; the current one fills over the hold time. */
-.home-slides-dots {
-  display: flex;
-  justify-content: center;
-  margin-top: 6px;
-}
-
-.home-dot {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.home-dot-track {
-  position: relative;
-  overflow: hidden;
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--se-color-ink) 22%, transparent);
-}
-
-.home-dot[aria-current='true'] .home-dot-track {
-  width: 28px;
-}
-
-.home-dot-fill {
-  position: absolute;
-  inset: 0;
-  background: var(--se-color-ink);
-  transform-origin: left center;
-  animation: home-dot-fill 4600ms linear forwards;
-}
-
-@keyframes home-dot-fill {
-  from {
-    transform: scaleX(0);
-  }
-}
-
-.home-slides.is-paused .home-dot-fill,
 .home-slides.is-paused .home-tick,
 .home-slides.is-paused .home-board-live i {
   animation-play-state: paused;
 }
 
-/* No autoplay and no motion: the first slide shows, and a dot switches at once. */
+/* Reduced motion: the boards stay at their opening state and nothing moves on its own. The rail
+   can still be swiped. */
 @media (prefers-reduced-motion: reduce) {
-  .home-slide,
   .home-board-undo > span,
   .home-board-serve {
     transition: none;
   }
 
   .home-tick,
-  .home-dot-fill,
   .home-roll,
   .home-board-live i {
     animation: none;
@@ -414,9 +368,9 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0 6px;
-  margin: 10px 2px 0;
+  margin: 6px 2px 0;
   color: var(--se-color-ink-soft);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 550;
 }
 
@@ -505,7 +459,7 @@
   text-decoration: underline;
 }
 
-/* ---- desktop: headline left, scoreboard right, both from the top ---- */
+/* ---- desktop: headline and Start left, the board rail right, then four columns of tiles ---- */
 @media (min-width: 900px) {
   .kit-landing {
     max-width: 1120px;
@@ -524,8 +478,8 @@
     grid-template-areas:
       'hero example'
       'start example'
-      'picker example';
-    grid-template-rows: auto auto 1fr;
+      'picker picker';
+    grid-template-rows: auto 1fr auto;
     column-gap: 56px;
     align-items: start;
     padding-top: 36px;
@@ -540,12 +494,13 @@
     margin-top: 28px;
   }
 
-  .kit-landing-picker {
-    grid-area: picker;
-  }
-
   .kit-landing-example {
     grid-area: example;
+  }
+
+  .kit-landing-picker {
+    grid-area: picker;
+    margin-top: 16px;
   }
 
   .kit-landing-hero .kit-title {
@@ -563,29 +518,44 @@
     padding: 0 28px;
   }
 
-  /* No slider on desktop: the same full tiles in a grid. */
-  .kit-landing-rail {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* The rail's top lines up with the headline's. It stays inside its column: a card is 88% wide
+     so the next one peeks at the column edge. */
+  .home-slides {
+    margin-top: 0;
+  }
+
+  .home-rail {
+    gap: 12px;
     margin: 0;
-    padding: 4px 0 0;
-    overflow: visible;
+    padding: 4px 4px 10px 0;
+    scroll-padding-inline: 0;
   }
 
-  .kit-landing-rail .kit-tile {
-    flex: none;
-    min-height: 132px;
+  .home-slide {
+    flex-basis: 88%;
   }
 
-  /* The scoreboard's top lines up with the headline's, so its section title is for screen readers. */
-  .kit-landing-example .kit-sec {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
+  .home-rail-nav {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 2px;
+  }
+
+  .home-rail-btn {
+    width: 48px;
+    padding: 0;
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+
+  .kit-landing-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .kit-landing-grid .kit-tile {
+    min-height: 148px;
   }
 
   .home-board {

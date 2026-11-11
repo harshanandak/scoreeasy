@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthContext, LocalAuthProvider } from '../../../auth/AuthContext';
-import { getSportById, getSportsByCategory } from '../../../models/sportRegistry';
+import { getSportsByCategory } from '../../../models/sportRegistry';
 import GuestLanding from './GuestLanding';
 import { buildDemo } from './landingDemo';
 import { LANDING_FAQ } from './landingFaq';
@@ -44,11 +44,43 @@ function slides(container) {
   return [...container.querySelectorAll('[aria-roledescription="slide"]')];
 }
 
+const COUNT = SLIDES.length;
+const PITCH = 300;
+
+/* jsdom has no layout. This gives every rail card a width of PITCH (card 0 sits at the 16px
+   gutter) and a scrollTo that moves the rail and fires its scroll event, as a browser does. */
+function installRailLayout() {
+  const offset = vi.spyOn(HTMLElement.prototype, 'offsetLeft', 'get').mockImplementation(function offsetLeft() {
+    const rail = this.parentElement;
+    return rail?.classList.contains('home-rail') ? 16 + [...rail.children].indexOf(this) * PITCH : 0;
+  });
+  Element.prototype.scrollTo = function scrollTo({ left }) {
+    this.scrollLeft = left;
+    this.dispatchEvent(new Event('scroll'));
+  };
+  return () => {
+    offset.mockRestore();
+    delete Element.prototype.scrollTo;
+  };
+}
+
+function reducedMotion() {
+  window.matchMedia = vi.fn().mockImplementation((query) => ({
+    matches: query.includes('prefers-reduced-motion'),
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }));
+}
+
+const follows = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
 describe('Home', () => {
   beforeEach(() => { localStorage.clear(); });
 
   afterEach(() => {
     cleanup();
+    delete window.matchMedia;
   });
 
   it('has one fixed Start that opens the sport picker, plus Sign in and sign up', () => {
@@ -71,11 +103,16 @@ describe('Home', () => {
     expect(screen.getByRole('link', { name: 'Start a match' })).toBeInTheDocument();
   });
 
-  it('shows every sport as a full tile in registry order, between the headline and Start', () => {
+  it('shows 8 sports as full tiles in registry order, after the headline, Start and the board rail', () => {
     const { container } = renderLanding();
-    const expected = Object.values(getSportsByCategory()).flat().map((sport) => sport.id);
-    const tiles = [...container.querySelectorAll('.kit-landing-rail .kit-tile')];
-    expect(tiles.map((tile) => tile.dataset.sport)).toEqual(expected);
+    const registry = Object.values(getSportsByCategory()).flat().map((sport) => sport.id);
+    const tiles = [...container.querySelectorAll('.kit-landing-grid .kit-tile')];
+    expect(tiles).toHaveLength(8);
+    expect(tiles.map((tile) => tile.dataset.sport)).toEqual(registry.slice(0, 8));
+    // Hockey is in the registry and on /play, but Home stops at an even 8 so no tile sits alone.
+    expect(registry).toContain('hockey');
+    expect(tiles.map((tile) => tile.dataset.sport)).not.toContain('hockey');
+    expect(container.querySelector('.kit-landing-rail')).toBeNull();
     for (const tile of tiles) {
       expect(tile).not.toHaveClass('kit-tile-mini');
       expect(tile.querySelector('.kit-tile-hint')).not.toBeNull();
@@ -83,9 +120,10 @@ describe('Home', () => {
     const hero = container.querySelector('.kit-landing-hero');
     const start = screen.getByRole('link', { name: 'Start a match' });
     const example = screen.getByTestId('landing-example');
-    expect(hero.compareDocumentPosition(tiles[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(tiles.at(-1).compareDocumentPosition(start) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(start.compareDocumentPosition(example) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(follows(hero, start)).toBe(true);
+    expect(follows(start, example)).toBe(true);
+    expect(follows(example, tiles[0])).toBe(true);
+    expect(screen.getByRole('heading', { name: 'Pick your sport' })).toBeInTheDocument();
   });
 
   it('starts the tapped sport quick match from a tile, and See all opens the Play hub', () => {
@@ -110,8 +148,12 @@ describe('Home', () => {
     expect(within(carousel).queryByRole('group', { name: 'Pick a sport' })).toBeNull();
     expect(within(carousel).queryAllByRole('listitem')).toHaveLength(0);
     const all = slides(container);
-    expect(all).toHaveLength(SLIDES.length);
-    expect(all.filter((slide) => slide.getAttribute('aria-hidden') !== 'true')).toHaveLength(1);
+    expect(all).toHaveLength(COUNT);
+    expect(all.filter((slide) => slide.getAttribute('aria-hidden') === 'true')).toHaveLength(0);
+    // The loop's two extra copies are for the eye only: hidden from assistive tech.
+    const clones = [...container.querySelectorAll('[data-clone="true"]')];
+    expect(clones).toHaveLength(COUNT * 2);
+    for (const clone of clones) expect(clone).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('draws every slide from its sport engine, with a short calm tagline', () => {
@@ -124,18 +166,8 @@ describe('Home', () => {
       }
       expect(SLIDES[i].tagline.split(/\s+/).length).toBeLessThanOrEqual(8);
       expect(SLIDES[i].tagline).not.toMatch(/!/);
+      expect(slide.textContent).toContain(SLIDES[i].tagline);
     });
-  });
-
-  it('moves between slides with the dots and never changes the Start label', () => {
-    const { container } = renderLanding();
-    for (const [i, slide] of SLIDES.entries()) {
-      const dot = screen.getByRole('button', { name: `Show ${getSportById(slide.sportId).name}` });
-      fireEvent.click(dot);
-      expect(dot).toHaveAttribute('aria-current', 'true');
-      expect(slides(container)[i]).not.toHaveAttribute('aria-hidden');
-      expect(screen.getByRole('link', { name: 'Start a match' })).toHaveAttribute('href', '/play');
-    }
   });
 
   it('keeps FAQs collapsed and the structured data consistent', () => {
@@ -152,5 +184,89 @@ describe('Home', () => {
     renderLanding();
     fireEvent.click(screen.getByRole('link', { name: 'Sign in' }));
     expect(localStorage.getItem('se_entered_app')).toBeNull();
+  });
+
+  describe('board rail', () => {
+    let restoreLayout;
+    beforeEach(() => { restoreLayout = installRailLayout(); });
+    afterEach(() => { restoreLayout(); });
+
+    // The layout effect parks the rail on the first real board: card index COUNT.
+    function renderRail() {
+      const { container } = renderLanding();
+      const rail = container.querySelector('.home-rail');
+      expect(rail.scrollLeft).toBe(COUNT * PITCH);
+      return { container, rail, root: screen.getByTestId('landing-example') };
+    }
+
+    it('moves between boards with the arrow keys and never changes the Start label', () => {
+      const { rail, root } = renderRail();
+      expect(rail).toHaveAttribute('tabindex', '0');
+      for (let i = 1; i <= COUNT; i += 1) {
+        fireEvent.keyDown(rail, { key: 'ArrowRight' });
+        expect(root).toHaveAttribute('data-active', String(i % COUNT));
+        expect(screen.getByRole('link', { name: 'Start a match' })).toHaveAttribute('href', '/play');
+      }
+    });
+
+    it('plays through every board by itself, then wraps from the last board to the first', () => {
+      const { container, rail, root } = renderRail();
+      expect(root).toHaveAttribute('data-active', '0');
+      for (let i = 1; i < COUNT; i += 1) {
+        fireEvent.animationEnd(container.querySelector('.home-advance'));
+        expect(root).toHaveAttribute('data-active', String(i));
+      }
+      expect(rail.scrollLeft).toBe((COUNT * 2 - 1) * PITCH);
+      // Past the last board is the first board's copy in the third copy ...
+      fireEvent.animationEnd(container.querySelector('.home-advance'));
+      expect(rail.scrollLeft).toBe(COUNT * 2 * PITCH);
+      expect(root).toHaveAttribute('data-active', '0');
+      // ... and when the rail comes to rest it steps back into the middle copy, unseen.
+      fireEvent(rail, new Event('scrollend'));
+      expect(rail.scrollLeft).toBe(COUNT * PITCH);
+      expect(root).toHaveAttribute('data-active', '0');
+    });
+
+    it('wraps from the first board to the last on a swipe back, and on round again', () => {
+      const { rail, root } = renderRail();
+      // One board back from the first board is the last board's copy in the first copy.
+      rail.scrollLeft = (COUNT - 1) * PITCH;
+      fireEvent.scroll(rail);
+      expect(root).toHaveAttribute('data-active', String(COUNT - 1));
+      fireEvent(rail, new Event('scrollend'));
+      expect(rail.scrollLeft).toBe((COUNT * 2 - 1) * PITCH);
+      expect(root).toHaveAttribute('data-active', String(COUNT - 1));
+      fireEvent.keyDown(rail, { key: 'ArrowRight' });
+      fireEvent(rail, new Event('scrollend'));
+      expect(rail.scrollLeft).toBe(COUNT * PITCH);
+      expect(root).toHaveAttribute('data-active', '0');
+    });
+
+    it('holds auto-advance while touched, hovered or focused, and resumes after', () => {
+      const { rail, root } = renderRail();
+      expect(root).not.toHaveClass('is-paused');
+      fireEvent.pointerDown(rail, { pointerType: 'touch' });
+      expect(root).toHaveClass('is-paused');
+      fireEvent.pointerUp(rail, { pointerType: 'touch' });
+      expect(root).not.toHaveClass('is-paused');
+      fireEvent.mouseEnter(root);
+      expect(root).toHaveClass('is-paused');
+      fireEvent.mouseLeave(root);
+      expect(root).not.toHaveClass('is-paused');
+      fireEvent.focus(rail);
+      expect(root).toHaveClass('is-paused');
+      fireEvent.blur(rail);
+      expect(root).not.toHaveClass('is-paused');
+    });
+
+    it('does not auto-advance or animate under reduced motion, and can still be moved by hand', () => {
+      reducedMotion();
+      const { container, rail, root } = renderRail();
+      expect(container.querySelector('.home-advance')).toBeNull();
+      expect(container.querySelector('.home-tick')).toBeNull();
+      expect(root).toHaveAttribute('data-active', '0');
+      fireEvent.keyDown(rail, { key: 'ArrowRight' });
+      expect(root).toHaveAttribute('data-active', '1');
+    });
   });
 });

@@ -9,11 +9,17 @@ import './landing.css';
 import { LANDING_FAQ } from './landingFaq';
 import ScoreSlides from './ScoreSlides';
 
-/* Home (/). A headline and one sentence, the app's own sport tiles (picking a sport IS starting a
-   match), one Start, and a slideshow of real sport boards whose taglines carry the features.
-   Phone order: top bar (logo, Sign in), headline, sport rail, Start, slideshow, FAQ. A tile starts
-   that sport's quick match, as on the Play hub; Start has one fixed label and opens the full picker
-   (/play); it never follows the slide, which changes on its own. Sign in lives in the top bar. */
+/* Home (/). A headline and one sentence, Start, a swipe rail of real sport boards being scored
+   (it loops forever and moves on by itself), then the app's own sport tiles and the FAQ.
+   Phone order: top bar (logo, Sign in), headline, Start, board rail, "Pick your sport" grid, FAQ.
+   A tile starts that sport's quick match, as on the Play hub; Start has one fixed label and opens
+   the full picker (/play); it never follows the board, which changes on its own. */
+
+/* Home shows the first 8 sports of the registry order, not all 9: an even count fills the
+   2-column phone grid and the 4-column desktop grid with no sport alone on the last row. The one
+   left out (Hockey, the last in LATER_SPORT_IDS) runs on the same goals board as Football and is
+   still one tap away under See all (/play). */
+const HOME_SPORT_COUNT = 8;
 
 const FOOTER_LINKS = [
   { label: 'Privacy', to: '/privacy' },
@@ -25,7 +31,7 @@ export default function GuestLanding() {
   const { cloudAuthAvailable, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const groups = getSportsByCategory();
-  const sports = Object.values(groups).flat();
+  const sports = Object.values(groups).flat().slice(0, HOME_SPORT_COUNT);
   const startSport = (sport) => {
     markAppEntered();
     navigate(`/${sport.id}/quick`, { state: { newMatch: true } });
@@ -48,19 +54,6 @@ export default function GuestLanding() {
           </p>
         </header>
 
-        <section className="kit-landing-picker" aria-labelledby="landing-pick-title">
-          <KitSection
-            id="landing-pick-title"
-            title="Pick your sport"
-            aside={<Link className="kit-link" to="/play" onClick={markAppEntered}>See all</Link>}
-          />
-          <div className="kit-landing-rail">
-            {sports.map((sport) => (
-              <SportTile key={sport.id} sport={sport} onSelect={startSport} />
-            ))}
-          </div>
-        </section>
-
         <div className="kit-landing-start">
           <Link className="se-go" to="/play" onClick={markAppEntered}>
             Start a match <GoArrow />
@@ -74,6 +67,19 @@ export default function GuestLanding() {
             Your matches on every phone?{' '}
             <Link to={cloudAuthAvailable ? '/signup' : 'https://scoreeasy.app/signup'} onClick={markAppEntered}>Create a free account</Link>
           </p>
+        </section>
+
+        <section className="kit-landing-picker" aria-labelledby="landing-pick-title">
+          <KitSection
+            id="landing-pick-title"
+            title="Pick your sport"
+            aside={<Link className="kit-link" to="/play" onClick={markAppEntered}>See all</Link>}
+          />
+          <div className="kit-grid2 kit-landing-grid">
+            {sports.map((sport) => (
+              <SportTile key={sport.id} sport={sport} onSelect={startSport} />
+            ))}
+          </div>
         </section>
       </div>
 
