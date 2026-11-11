@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&family=Barlow+Condensed:wght@700;800&family=Bricolage+Grotesque:opsz,wght@12..96,700..800&family=Figtree:wght@400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Merriweather:wght@400;700;900&family=Barlow+Condensed:wght@700;800&family=Bricolage+Grotesque:opsz,wght@12..96,700..800&family=Figtree:wght@400..900&family=Caveat:wght@700&display=swap');
 @import "tailwindcss";
 @import "./mobile/safeArea.css";
 
@@ -448,10 +448,6 @@ body {
   gap: 10px;
 }
 
-.app-loading-compact .app-loading-board {
-  display: none;
-}
-
 /* Mirrors the static boot splash in index.html — boot and app loading are one continuous screen. */
 .app-loading-panel {
   width: min(100%, 320px);
@@ -473,46 +469,9 @@ body {
   text-transform: uppercase;
 }
 
-.app-loading-board {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 12px;
-  margin-top: 18px;
-  font-family: var(--se-font-mono);
-}
-
-.app-loading-team {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.app-loading-team:last-child {
-  text-align: right;
-}
-
-.app-loading-team span {
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--se-color-ink-muted);
-}
-
-.app-loading-team strong {
-  font-size: 28px;
-  line-height: 1;
-}
-
-.app-loading-divider {
-  width: 1px;
-  height: 44px;
-  background: color-mix(in oklch, var(--se-color-line) 16%, transparent);
-}
-
 .app-loading-progress {
   height: 4px;
-  margin-top: 18px;
+  margin-top: 20px;
   overflow: hidden;
   border-radius: 999px;
   background: var(--se-color-surface-warm);
@@ -543,7 +502,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .app-loading-team strong,
   .app-loading-progress span {
     animation: none;
   }

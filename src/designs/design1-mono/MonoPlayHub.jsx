@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getSportById, getSportsByCategory } from '../../models/sportRegistry';
-import { LATER_GROUP_LABEL, PRIORITY_GROUP_LABEL } from '../../models/sportFocus';
+import { getSportById } from '../../models/sportRegistry';
 import { sportIdentity } from '../../lib/sportIdentity';
-import { KitSection, KitTop, KitWash, SportTile } from './kit/KitParts';
+import { KitTop, KitWash } from './kit/KitParts';
+import SportPicker from './kit/SportPicker';
 
 /* Play hub (Kit, plan 2026-10-22 §9 S1): every registered sport as an engine-gated identity tile,
    in sportFocus order. Popular is two columns with the hint line; More sports is three, name only.
@@ -14,9 +14,6 @@ export default function MonoPlayHub() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedId = getSportById(searchParams.get('sport')?.toLowerCase())?.id ?? null;
-  const groups = getSportsByCategory();
-  const popular = groups[PRIORITY_GROUP_LABEL];
-  const more = groups[LATER_GROUP_LABEL];
   const start = (sport) => navigate(`/${sport.id}/quick`, { state: { newMatch: true } });
 
   useEffect(() => {
@@ -31,25 +28,7 @@ export default function MonoPlayHub() {
       <h1 className="kit-title">What are we scoring?</h1>
       <p className="kit-sub">Tap a sport to set up a quick match</p>
 
-      <section aria-labelledby="play-popular">
-        <KitSection id="play-popular" title={PRIORITY_GROUP_LABEL} aside={<span>{popular.length} sports</span>} />
-        <div className="kit-grid2">
-          {popular.map((sport) => (
-            <SportTile key={sport.id} sport={sport} selected={sport.id === requestedId} onSelect={start} />
-          ))}
-        </div>
-      </section>
-
-      {more.length > 0 && (
-        <section aria-labelledby="play-more">
-          <KitSection id="play-more" title={LATER_GROUP_LABEL} />
-          <div className="kit-grid3">
-            {more.map((sport) => (
-              <SportTile key={sport.id} sport={sport} mini selected={sport.id === requestedId} onSelect={start} />
-            ))}
-          </div>
-        </section>
-      )}
+      <SportPicker onSelect={start} selectedId={requestedId} idPrefix="play" />
     </div>
   );
 }

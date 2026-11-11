@@ -1,167 +1,146 @@
+import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 import { markAppEntered } from '../../../utils/appEntry';
-import { getSportById, getSportsList } from '../../../models/sportRegistry';
-import { deriveTeamColours, teamColourVars } from '../../../lib/teamColour';
-import { sportIdentity, sportIdentityVars } from '../../../lib/sportIdentity';
-import { GoArrow, HandUnderline, KitSection, KitTop, KitWash, SportBadge } from '../kit/KitParts';
-import '../kit/history.css';
+import { BrandMark, GoArrow } from '../kit/KitParts';
+import SportPicker from '../kit/SportPicker';
+import StoryScenes from './StoryScenes';
+import { STORIES } from './storyTimelines';
+import useHomeStory, { useHomeMedia } from './useHomeStory';
+import { homeStoryTokens } from '../theme/sportsTokens';
 import './landing.css';
-import { buildDemo } from './landingDemo';
-import { LANDING_FAQ } from './landingFaq';
 
-const sports = getSportsList();
-
-function sportPlayPath(sportId) {
-  return sportId ? `/play?sport=${sportId}` : '/play';
+function ColourLayers({ index }) {
+  return <div className="hero-bg" aria-hidden="true">{STORIES.map((story, i) => (
+    <i key={story.theme} className={i === index ? 'on' : ''} style={{ background: story.gradient }} />
+  ))}</div>;
 }
-
-const FOOTER_LINKS = [
-  { label: 'Privacy', to: '/privacy' },
-  { label: 'Terms', to: '/terms' },
-  { label: 'Contact', to: '/contact' },
-];
-
-/* The sport picker: a 3 x 3 grid of the real sport tiles (the row badge from the Kit and the
-   sport's own doodle). Nothing scrolls and nothing is cut off; the chosen sport is an ink fill. */
-function SportPicker({ selectedId, onSelect }) {
-  return (
-    <div className="kit-landing-picker" role="group" aria-label="Pick a sport">
-      {sports.map((sport) => {
-        const selected = sport.id === selectedId;
-        return (
-          <button
-            key={sport.id}
-            type="button"
-            className={`kit-pick${selected ? ' is-selected' : ''}`}
-            aria-pressed={selected ? 'true' : 'false'}
-            onClick={() => onSelect(sport.id)}
-          >
-            <SportBadge sportId={sport.id} />
-            <span className="kit-pick-name">{sport.name}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-SportPicker.propTypes = { selectedId: PropTypes.string.isRequired, onSelect: PropTypes.func.isRequired };
-
-function ExampleCard({ demo, onPoint, onUndo, canUndo, touched, revision }) {
-  const sport = getSportById(demo.sportId);
-  const colours = teamColourVars(deriveTeamColours(...demo.colours));
-  const [teamA, teamB] = demo.teams;
-  const label = `${teamA.name} ${teamA.score}, ${teamB.name} ${teamB.score}. ${demo.context}`;
-  const team = (side, row) => (
-    <button type="button" className="kit-last-team" onClick={() => onPoint(side === 'a' ? 'A' : 'B')} disabled={demo.over || (demo.sportId === 'cricket' && side === 'a')} aria-label={`Score for ${row.name}`}>
-      <span className={`kit-last-bar kit-last-bar-${side}`} aria-hidden="true" />
-      <span className="kit-last-name">
-        {row.name}
-        {row.meta && <small className="kit-landing-meta">{row.meta}</small>}
-      </span>
-      <span key={revision} className={`kit-last-score${touched ? ' home-score-bump' : ''}`}>{row.score}{row.suffix && <small>{row.suffix}</small>}</span>
-    </button>
-  );
-
-  return (
-    <div className="kit-last kit-landing-card" style={colours} data-testid="landing-example">
-      <div className="kit-last-meta">
-        <span className="kit-sport-chip" style={sportIdentityVars(sport.id)}>
-          <i aria-hidden="true" />{sport.name}
-        </span>
-        <span className="kit-chip">Example match</span>
-      </div>
-      <div className="kit-last-teams" role="group" aria-label={label}>
-        {team('a', teamA)}
-        {team('b', teamB)}
-      </div>
-      <p className="kit-last-detail" aria-live="polite">{demo.context}</p>
-      <div className="home-demo-tools"><span className="home-demo-hint" hidden={touched}>{demo.sportId === 'cricket' ? 'Tap Australia for a single' : 'Tap a team to score'}</span><button type="button" className="se-ctl home-undo" onClick={onUndo} disabled={!canUndo}>Undo</button></div>
-    </div>
-  );
-}
-
-ExampleCard.propTypes = {
-  touched: PropTypes.bool.isRequired, revision: PropTypes.number.isRequired,
-  onPoint: PropTypes.func.isRequired, onUndo: PropTypes.func.isRequired, canUndo: PropTypes.bool.isRequired,
-  demo: PropTypes.shape({
-    over: PropTypes.bool,
-    sportId: PropTypes.string.isRequired,
-    colours: PropTypes.arrayOf(PropTypes.string).isRequired,
-    context: PropTypes.string.isRequired,
-    teams: PropTypes.arrayOf(PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      score: PropTypes.string.isRequired,
-      meta: PropTypes.string,
-    })).isRequired,
-  }).isRequired,
-};
+ColourLayers.propTypes = { index: PropTypes.number.isRequired };
 
 export default function GuestLanding() {
-  const { cloudAuthAvailable } = useAuth();
-  const [selectedId, setSelectedId] = useState(sports[0].id);
-  const selected = getSportById(selectedId);
-  const [touched, setTouched] = useState(false);
-  const [revision, setRevision] = useState(0);
-  const [points, setPoints] = useState([]);
-  const demo = useMemo(() => buildDemo(selectedId, points), [selectedId, points]);
-  const nextSport = sports[(sports.findIndex((sport) => sport.id === selectedId) + 1) % sports.length];
-  const startPath = sportPlayPath(selectedId);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const wide = useHomeMedia('(min-width: 900px)');
+  const reduced = useHomeMedia('(prefers-reduced-motion: reduce)');
+  const stageRef = useRef(null);
+  const pickerHeading = useRef(null);
+  const [hold, setHold] = useState({ hover: false, focus: false, press: false });
+  const ctaHeld = Object.values(hold).some(Boolean);
+  const story = useHomeStory(stageRef, reduced, ctaHeld);
+  const [labelIndex, setLabelIndex] = useState(0);
+  const [nudgeGone, setNudgeGone] = useState(false);
+  const [pickerKeyboardFocus, setPickerKeyboardFocus] = useState(false);
+  const themeMeta = useRef(null);
+
+  useEffect(() => { if (!ctaHeld) setLabelIndex(story.index); }, [story.index, ctaHeld]);
+  useEffect(() => {
+    const existing = document.querySelector('meta[name="theme-color"]');
+    const meta = existing ?? document.createElement('meta');
+    const previous = meta.getAttribute('content');
+    if (!existing) { meta.name = 'theme-color'; document.head.appendChild(meta); }
+    themeMeta.current = meta;
+    return () => {
+      if (!existing) meta.remove();
+      else if (previous === null) meta.removeAttribute('content');
+      else meta.setAttribute('content', previous);
+    };
+  }, []);
+  useEffect(() => { themeMeta.current?.setAttribute('content', STORIES[story.index].theme); }, [story.index]);
+  useEffect(() => {
+    const timer = setTimeout(() => setNudgeGone(true), 5200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const setReason = (reason, value) => setHold((current) => ({ ...current, [reason]: value }));
+  const startSport = (sport) => {
+    markAppEntered();
+    navigate(`/${sport.id}/quick`, { state: { newMatch: true } });
+  };
+  const start = (event) => {
+    const selected = STORIES[labelIndex];
+    if (selected.sport) startSport({ id: selected.sport });
+    else {
+      setPickerKeyboardFocus(event.detail === 0 && event.currentTarget.matches(':focus-visible'));
+      pickerHeading.current?.scrollIntoView?.({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+      pickerHeading.current?.focus({ preventScroll: true });
+    }
+  };
 
   return (
-    <div className="kit-screen kit-landing" data-screen="guest-landing" style={sportIdentityVars(selectedId)}>
-      <KitWash from={sportIdentity(selectedId)?.tint} to={sportIdentity(nextSport.id)?.tint} />
-      <KitTop title="Score Easy" />
-
-      <div className="kit-landing-top">
-        <header className="kit-landing-hero">
-          <p className="kit-landing-eyebrow">Pick a sport. Start scoring.</p>
-          <h1 className="kit-title">
-            Score your next match <HandUnderline>on your phone</HandUnderline>.
-          </h1>
-          <p className="kit-sub">
-            No account needed. Your score saves on this phone, even offline.
-          </p>
-          <div className="kit-landing-actions">
-            <Link className="se-go" to={startPath} onClick={markAppEntered}>
-              {`Start ${selected.name}`} <GoArrow />
-            </Link>
-            <Link className="se-ctl" to="/login">Sign in</Link>
+    <div className="home-stage-page" data-screen="guest-landing" style={{ ...homeStoryTokens.cssVariables, '--accent': story.index === 0 ? 'var(--home-tennis-accent)' : 'var(--home-white)' }}>
+      <header className="hero">
+        <ColourLayers index={story.index} />
+        <div className="in">
+          <nav className="top" aria-label="Main">
+            <Link className="brand" to="/" aria-label="Score Easy home"><BrandMark />Score Easy</Link>
+            {!isAuthenticated && <Link className="signin se-ctl" to="/login">Sign in</Link>}
+          </nav>
+          <div className="grid">
+            <div className="lead">
+              <h1>Score your <br />next match <br /><span className="ul">{wide ? 'from the sideline' : 'on your phone'}<svg viewBox="0 0 120 16" preserveAspectRatio="none" aria-hidden="true"><path d="M2.5 9.6C26 6.4 58 5 117 6.6C96 7.6 70 9.4 48 12.6" vectorEffect="non-scaling-stroke" /></svg></span>.</h1>
+            </div>
+            <section
+              ref={stageRef} className="stage" tabIndex={0} aria-roledescription="carousel"
+              aria-label="How scoring works. Tap the right side for next, left side for back. Press and hold to pause. Use arrow keys to navigate and Space to pause or play."
+              data-story={story.index} data-playing={story.playing} {...story.handlers}
+            >
+              <StoryScenes index={story.index} state={story.state} reduced={reduced} />
+              <button className="story-pause" type="button" onClick={story.togglePaused} disabled={reduced}
+                aria-label={reduced ? 'Automatic playback disabled for reduced motion' : story.paused ? 'Play stories' : 'Pause stories'}>
+                {story.paused ? 'Play stories' : 'Pause stories'}
+              </button>
+            </section>
+            <div className="act">
+              <div className={`nudge${nudgeGone ? ' gone' : ''}`} aria-hidden="true">
+                <span className="note">Go on, try one</span>
+                <svg className="arrow" viewBox="0 0 28 30"><path className="shaft" d="M2 5C16 1 25 9 19 27" /><path className="head" d="M13 21.5L19 28l6.5-5.5" /></svg>
+              </div>
+              <button type="button" className="cta" onClick={start} aria-label={STORIES[labelIndex].label}
+                onPointerEnter={() => setReason('hover', true)} onPointerLeave={() => setReason('hover', false)}
+                onFocus={() => setReason('focus', true)} onBlur={() => setReason('focus', false)}
+                onPointerDown={(event) => { event.currentTarget.setPointerCapture?.(event.pointerId); setReason('press', true); }}
+                onPointerUp={() => setReason('press', false)} onPointerCancel={() => setReason('press', false)}
+                onLostPointerCapture={() => setReason('press', false)}>
+                <span className="lbls" aria-hidden="true">{STORIES.map((item, i) => (
+                  <span key={item.label} className={`lbl${i === labelIndex ? '' : i < labelIndex ? ' above' : ' below'}`}>{item.label}</span>
+                ))}</span><span className="go"><GoArrow /></span>
+              </button>
+              <p className="acct">or <Link to="/signup">create a free account</Link></p>
+            </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <section className="kit-landing-example" aria-labelledby="landing-example-title">
-          <KitSection id="landing-example-title" title="See a match being scored" />
-          <SportPicker selectedId={selectedId} onSelect={id => { setSelectedId(id); setPoints([]); setTouched(false); setRevision(0); }} />
-          <ExampleCard demo={demo} onPoint={team => { if (demo.over) return; setTouched(true); setRevision(value => value + 1); setPoints(previous => [...previous, team]); }} touched={touched} revision={revision} onUndo={() => setPoints(previous => previous.slice(0, -1))} canUndo={points.length > 0} />
-
-
-          <Link className="se-ctl" to={cloudAuthAvailable ? '/signup' : 'https://scoreeasy.app/signup'} onClick={markAppEntered}>Create a free account</Link>
+      <div className="in canvas">
+        <section className="steps" aria-labelledby="home-how">
+          <p className="eyebrow" id="home-how">3 steps to the first point</p>
+          <ol>
+            <li><b>1</b><span>Pick a sport<small>9 ready</small></span></li>
+            <li><b>2</b><span>Add teams<small>or just names</small></span></li>
+            <li><b>3</b><span>Tap to score<small>rules do the rest</small></span></li>
+          </ol>
+        </section>
+        <section className="sports" aria-labelledby="home-pick" data-keyboard-focus={pickerKeyboardFocus}>
+          <div className="sec-h"><h2 id="home-pick" ref={pickerHeading} tabIndex={-1}>Pick your sport</h2><Link to="/play" onClick={markAppEntered}>See all</Link></div>
+          <SportPicker onSelect={startSport} idPrefix="home" showPopularHeading={false} showMoreHeading={false} />
         </section>
       </div>
 
-
-
-      <section className="home-faq" aria-labelledby="landing-faq-title">
-        <h2 id="landing-faq-title">Questions</h2>
-        {LANDING_FAQ.map(item => (
-          <details key={item.question} name="home-faq">
-            <summary>{item.question}</summary>
-            <p>{item.answer}</p>
-          </details>
-        ))}
-      </section>
-
-      <footer className="kit-landing-foot">
-        <span className="kit-landing-foot-brand">Score Easy &copy; 2026</span>
-        <nav aria-label="Legal">
-          {FOOTER_LINKS.map(({ label, to }) => (
-            <Link key={label} to={to}>{label}</Link>
-          ))}
-        </nav>
+      <footer className="end" aria-labelledby="home-keep">
+        <ColourLayers index={story.index} />
+        <div className="in">
+          <div className="end-grid">
+            <div><h2 id="home-keep">Keep every match.</h2><p>Save your matches and stats to a free account, and pick them up on any phone.</p></div>
+            <div className="end-act">
+              <Link className="cta" to="/signup">Create a free account<span className="go"><GoArrow /></span></Link>
+              <p className="end-login">Have an account? <Link to="/login">Log in</Link></p>
+            </div>
+          </div>
+          <div className="end-foot"><span>© 2026 Score Easy</span><nav aria-label="Legal">
+            <Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/contact">Contact</Link>
+          </nav></div>
+        </div>
       </footer>
     </div>
   );

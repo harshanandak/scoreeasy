@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en" data-nudge="a">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b2a63">
+<title>Score Easy Home - M1 Stage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&family=Figtree:wght@400..900&family=Barlow+Condensed:wght@700;800&family=JetBrains+Mono:wght@600;700&family=Caveat:wght@700&display=swap">
+<style>
+/* M1 "Stage" v3: ONE hero surface. The top bar, headline, the playing moment and Start all sit on a
+   single colour field that takes the colour of the moment being played and crossfades with it.
+   Everything shares one left edge (the gutter). Below the hero, the light canvas holds the sports. */
+:root{
+  --ink:#0b0b0d;--soft:#4a4b52;--muted:#6b6d76;--canvas:#f4f5f7;--surface:#fff;
+  --go-hi:#007c34;--go:#00662a;--go-lo:#004720;
+  --ctl-shadow:3px 3px 0 var(--ink);--ctl-press:1px 1px 0 var(--ink);
+  --ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.34,1.4,.5,1);
+  --display:'Bricolage Grotesque',Figtree,system-ui,sans-serif;--sans:Figtree,ui-sans-serif,system-ui,sans-serif;
+  --num:'Barlow Condensed',Figtree,system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
+  --hand:'Caveat','Bradley Hand',cursive;
+  --gutter:20px;--stage-h:300px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+
+/* ---------- the one hero surface ---------- */
+.hero{position:relative;isolation:isolate;color:#fff;border-radius:0 0 30px 30px;overflow:hidden;padding-bottom:26px}
+.hero-bg{position:absolute;inset:0;z-index:-2}
+.hero-bg i{position:absolute;inset:0;opacity:0;transition:opacity 1.1s var(--ease)}
+.hero-bg i.on{opacity:1}
+/* one shared light: a soft top-right glow and a bottom-left shade, so the colours read as one lit surface */
+.hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(110% 55% at 100% 0%,rgba(255,255,255,.16),transparent 60%),radial-gradient(90% 50% at 0% 100%,rgba(0,0,0,.22),transparent 65%)}
+.in{max-width:1120px;margin:0 auto;padding:0 var(--gutter)}
+
+.top{display:flex;align-items:center;justify-content:space-between;height:68px;padding-top:6px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.01em;text-decoration:none}
+/* Kit .se-ctl: white surface, 2px ink edge, 14px radius, 3px ink offset shadow, 2px press */
+.signin{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border:2px solid var(--ink);border-radius:14px;
+  background:#fff;color:var(--ink);box-shadow:var(--ctl-shadow);font-weight:750;font-size:15px;text-decoration:none;transition:transform 60ms ease,box-shadow 60ms ease}
+.signin:active{transform:translate(2px,2px);box-shadow:var(--ctl-press)}
+:where(.signin,.cta,.stage,.acct a,.tile):focus-visible{outline:3px solid #fff;outline-offset:3px}
+.tile:focus-visible{outline-color:var(--ink)}
+
+h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,10.4vw,48px);line-height:1.02;letter-spacing:-.035em;margin:10px 0 0}
+.ul{position:relative;white-space:nowrap}
+.ul svg{position:absolute;left:-2%;bottom:-.16em;width:104%;height:.3em;overflow:visible}
+.ul path{fill:none;stroke:var(--accent,#fff);stroke-width:3;stroke-linecap:round;transition:stroke .9s var(--ease)}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* ---------- the playing moment: no frame, it sits on the hero colour ---------- */
+.stage{position:relative;height:var(--stage-h);margin-top:22px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer}
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;
+  opacity:0;transform:translateY(16px);transition:opacity .5s var(--ease),transform .7s var(--ease);pointer-events:none}
+.scene.on{opacity:1;transform:none;transition-delay:.12s}
+.scene.off{opacity:0;transform:translateY(-12px);transition-delay:0s}
+.k-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
+.kicker{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;display:flex;align-items:center;gap:8px;white-space:nowrap;min-width:0}
+.kicker i{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor}
+.perk{display:inline-flex;align-items:center;gap:5px;flex:none;height:28px;padding:0 11px 0 8px;border-radius:999px;background:#fff;color:var(--pc);
+  font-size:13px;font-weight:800;white-space:nowrap;opacity:0;transform:translateY(-8px) scale(.9);transition:opacity .35s var(--ease),transform .5s var(--spring)}
+.scene.on .perk{opacity:1;transform:none;transition-delay:.45s}
+.perk svg{flex:none}
+.body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;padding:10px 0}
+.caption{font-family:var(--display);font-weight:800;font-size:19px;line-height:1.18;letter-spacing:-.015em;margin:0;max-width:26ch;text-wrap:balance;opacity:.96}
+
+.call{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;letter-spacing:-.03em;margin:0 0 12px;min-height:34px}
+.call span{display:inline-block}
+.pop{animation:pop .5s var(--spring)}
+@keyframes pop{0%{opacity:0;transform:translateY(40%) scale(.92)}100%{opacity:1;transform:none}}
+.roll{animation:roll .42s var(--ease)}
+@keyframes roll{0%{opacity:0;transform:translateY(55%)}100%{opacity:1;transform:none}}
+.tap{position:absolute;left:50%;top:50%;width:24px;height:24px;margin:-12px;border-radius:50%;background:rgba(255,255,255,.55);transform:scale(0);opacity:0;pointer-events:none}
+.tap.go{animation:tap .6s var(--ease)}
+@keyframes tap{0%{transform:scale(.2);opacity:.9}100%{transform:scale(9);opacity:0}}
+
+/* tennis */
+.t-rows{display:grid;gap:8px}
+.t-row{position:relative;display:flex;align-items:center;justify-content:space-between;height:58px;padding:0 16px;border-radius:16px;background:rgba(255,255,255,.11);overflow:hidden}
+.t-row .who{display:flex;flex-direction:column;gap:2px}
+.t-row .nm{font-weight:800;font-size:17px}
+.t-row .gm{font-size:13px;font-weight:600;opacity:.75}
+.t-row .pt{font-family:var(--num);font-weight:800;font-size:40px;line-height:1;min-width:2ch;text-align:right}
+.t-row .srv[hidden]{display:none}
+.t-row .srv{width:8px;height:8px;border-radius:50%;background:#c6e83a;display:inline-block;margin-left:8px;vertical-align:middle}
+
+/* cricket */
+.c-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
+.c-runs{font-family:var(--num);font-weight:800;font-size:84px;line-height:.85}
+.c-lbl{font-size:13px;font-weight:700;opacity:.8;margin-top:6px}
+.undo{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:999px;background:#fff;color:#1840c4;font-weight:800;font-size:15px;position:relative;overflow:hidden;transition:transform .2s var(--ease)}
+.undo.press{transform:scale(.94)}
+.balls{display:flex;gap:8px}
+.ball{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--num);font-weight:800;font-size:20px;border:2px dashed rgba(255,255,255,.45);transition:background .25s,border-color .25s,color .25s,transform .35s var(--spring),opacity .3s}
+.ball.f{border:0;background:#fff;color:#1840c4}
+.ball.six{background:#ffd34d;color:#4a3300}
+.ball.w{background:#e5484d;color:#fff}
+.ball.gone{transform:translateY(-36px) scale(.6);opacity:0}
+
+/* live */
+.l-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ph{border-radius:18px;background:rgba(255,255,255,.12);padding:14px 14px 14px;display:flex;flex-direction:column;gap:6px;min-height:146px}
+.ph .who{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.ph .sc{font-family:var(--num);font-weight:800;font-size:56px;line-height:.9;margin-top:2px}
+.ph .tm{font-size:14px;font-weight:700;opacity:.85}
+.chip{align-self:flex-start;margin-top:auto;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:800;background:rgba(255,255,255,.2)}
+.chip.warn{background:#ffd34d;color:#4a3300}
+.chip.ok{background:#fff;color:#0a6b34}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.dot.pulse{animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.25}}
+
+/* moments */
+.m-list{display:flex;flex-direction:column;gap:8px}
+.mom{display:flex;align-items:center;gap:12px;height:48px;padding:0 14px;border-radius:14px;background:rgba(255,255,255,.12);opacity:0;transform:translateY(16px);transition:opacity .45s var(--ease),transform .55s var(--spring)}
+.mom.shown{opacity:1;transform:none}
+.mom .sp{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;width:86px;flex:none}
+.mom .w{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.01em}
+
+/* ---------- Start, on the same surface ---------- */
+.act{margin-top:6px}
+.nudge{display:flex;justify-content:center;align-items:flex-start;gap:4px;height:46px;pointer-events:none;transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.nudge.gone{opacity:0;transform:translateY(-6px)}
+.note{margin-top:4px;font-family:var(--hand);font-weight:700;font-size:24px;line-height:1;color:#fff;opacity:0;transform:translateY(16px);animation:rise .6s .7s var(--spring) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.arrow{flex:none;width:28px;height:32px;margin-top:10px;overflow:visible}
+.arrow path{fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.arrow .shaft{stroke-dasharray:40;stroke-dashoffset:40;animation:draw .45s 1.15s var(--ease) forwards}
+.arrow .head{stroke-dasharray:18;stroke-dashoffset:18;animation:draw .2s 1.55s var(--ease) forwards}
+/* variant c: no note, the button itself invites: one light sweep, and the green disc steps forward when the label changes */
+[data-nudge="c"] .nudge{display:none}
+[data-nudge="c"] .act{margin-top:24px}
+.cta{position:relative;overflow:hidden}
+.cta::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(0,140,60,.16) 50%,transparent 65%);transform:translateX(-110%)}
+.cta.shine::after{animation:shine 1.2s var(--ease)}
+@keyframes shine{to{transform:translateX(110%)}}
+.cta.step .go{animation:step .7s var(--ease)}
+@keyframes step{0%,100%{transform:none}35%{transform:translateX(6px)}60%{transform:translateX(-1px)}80%{transform:translateX(3px)}}
+/* On a coloured surface the one forward action is the white Kit button: ink edge, offset shadow, 2px press,
+   with the Go green carried by the arrow disc so it never disappears on the green moment. */
+.cta{display:flex;align-items:center;justify-content:center;gap:12px;min-height:58px;border:2px solid var(--ink);border-radius:14px;text-decoration:none;
+  background:#fff;color:var(--ink);font-weight:800;font-size:18px;box-shadow:3px 3px 0 var(--ink),0 14px 30px -14px rgba(0,0,0,.55);transition:transform 60ms ease,box-shadow 60ms ease}
+.cta:active{transform:translate(2px,2px);box-shadow:var(--ctl-press)}
+.lbls{display:inline-grid;overflow:hidden;height:1.3em;line-height:1.3em}
+.lbl{grid-area:1/1;white-space:nowrap;transition:transform .5s var(--ease),opacity .35s var(--ease)}
+.lbl.below{transform:translateY(100%);opacity:0}
+.lbl.above{transform:translateY(-100%);opacity:0}
+.cta .go{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:linear-gradient(168deg,var(--go-hi),var(--go) 55%,var(--go-lo));color:#fff;transition:transform .25s var(--ease)}
+.cta:hover .go{transform:translateX(3px)}
+.acct{margin:16px 0 0;text-align:center;font-size:15px;color:rgba(255,255,255,.86)}
+.acct a{display:inline-block;font-weight:800;color:#fff;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;padding:10px 2px;margin:-10px 0}
+
+/* ---------- canvas below the hero ---------- */
+.steps{padding-top:30px}
+.eyebrow{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.steps ol{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0;padding:0;list-style:none}
+.steps ol::before{content:"";position:absolute;left:16%;right:16%;top:15px;border-top:2px dashed rgba(11,11,13,.22)}
+.steps li{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-weight:800;font-size:14px;line-height:1.2}
+.steps b{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--num);font-size:18px;box-shadow:0 0 0 5px var(--canvas)}
+.steps small{display:block;font-weight:600;font-size:13px;color:var(--soft);margin-top:2px}
+
+.sports{padding-top:34px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 14px}
+.sec-h h2{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.02em;margin:0;outline:none}
+.sec-h a{font-weight:700;font-size:15px;color:var(--soft);text-decoration:none;padding:12px 0}
+.kit-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.kit-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+/* the app's own SportTile (kit.css .kit-tile), with the engine's identity colours and marks */
+.kit-tile{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:10px;min-width:0;min-height:116px;
+  padding:14px 14px 12px;border-radius:20px;text-decoration:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 40%),linear-gradient(168deg,var(--sport-hi),var(--sport-core) 52%,var(--sport-lo));
+  box-shadow:inset 0 0 0 1px rgba(11,11,13,.1),0 1px 2px rgba(11,11,13,.06),0 12px 24px -16px rgba(11,11,13,.35);color:var(--sport-on);
+  transition:transform 180ms cubic-bezier(.34,1.56,.64,1)}
+.kit-tile:active{transform:scale(.965)}
+.kit-tile-mark{position:absolute;z-index:-1;right:-16%;bottom:-10%;width:min(82%,170px);aspect-ratio:140/100;background:var(--sport-motif);
+  -webkit-mask:var(--sport-mark) right bottom/contain no-repeat;mask:var(--sport-mark) right bottom/contain no-repeat;pointer-events:none}
+.kit-tile-name{font:800 1.22rem/1.02 var(--display);letter-spacing:-.02em;overflow-wrap:anywhere}
+.kit-tile-hint{max-width:92%;font-size:.8rem;font-weight:650;line-height:1.25}
+.kit-tile-mini{min-height:92px;padding:14px 12px 12px}
+.kit-tile-mini .kit-tile-name{font-size:clamp(.84rem,3.9vw,1.02rem)}
+:where(.kit-tile,.btn-go,.btn-ctl,.foot a):focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+
+/* closing band: the hero's colour comes back to close the page, so it opens and ends on the same surface */
+.end{position:relative;isolation:isolate;overflow:hidden;color:#fff;border-radius:30px 30px 0 0;margin-top:48px}
+.end::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(110% 60% at 100% 0%,rgba(255,255,255,.16),transparent 60%),radial-gradient(90% 60% at 0% 100%,rgba(0,0,0,.25),transparent 65%)}
+.end .in{padding-top:40px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.end h2{font-family:var(--display);font-weight:800;font-size:34px;line-height:1.02;letter-spacing:-.03em;margin:0}
+.end p{margin:10px 0 0;font-size:16px;line-height:1.45;color:rgba(255,255,255,.86);max-width:32ch}
+.end-act{margin-top:24px}
+.end-login{margin:16px 0 0;text-align:center;font-size:15px;color:rgba(255,255,255,.86)}
+.end-login a{display:inline-block;font-weight:800;color:#fff;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;padding:10px 2px;margin:-10px 0}
+.end-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 16px;margin-top:36px;padding-top:14px;border-top:1px solid rgba(255,255,255,.22);font-size:13px;color:rgba(255,255,255,.78)}
+.end-foot nav{display:flex;gap:18px}
+.end-foot nav a{color:#fff;font-weight:700;text-decoration:none;padding:12px 0}
+.end-foot nav a:hover{text-decoration:underline}
+:where(.end a):focus-visible{outline:3px solid #fff;outline-offset:3px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:700;transition:all .3s var(--ease);pointer-events:none;z-index:9}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- desktop: same single surface, two columns inside it ---------- */
+@media (min-width:1024px){
+  :root{--gutter:40px;--stage-h:360px}
+  .caption{font-size:23px}
+  .hero{border-radius:0 0 40px 40px;padding-bottom:56px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;margin-top:28px}
+  h1{font-size:64px;margin:0}
+  .stage{margin-top:0}
+  .act{max-width:400px;margin-top:22px}
+  .acct{text-align:left}
+  .sports{padding-top:44px}
+  .kit-grid2,.kit-grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .steps{padding-top:44px}
+  .steps ol{max-width:760px}
+  .steps li{flex-direction:row;text-align:left;align-items:center;gap:12px}
+  .steps ol::before{display:none}
+  .end{border-radius:40px 40px 0 0;margin-top:72px}
+  .end .in{padding-top:56px}
+  .end-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:56px;align-items:center}
+  .end h2{font-size:48px}
+  .end-act{margin-top:0}
+  .end-login{text-align:left}
+  .end-foot{margin-top:48px}
+}
+@media (prefers-reduced-motion:reduce){
+  .scene,.mom,.ball,.perk,.hero-bg i,.ul path{transition:none}
+  .pop,.roll,.tap.go{animation:none}
+  .arrow .shaft,.arrow .head,.note{animation:none;stroke-dashoffset:0;opacity:1}
+  .nudge.gone{opacity:1;transform:none}
+  .cta.shine::after,.cta.step .go{animation:none}
+}
+</style>
+</head>
+<body>
+<header class="hero" id="hero">
+  <div class="hero-bg" aria-hidden="true">
+    <i style="background:linear-gradient(170deg,#25377d 0%,#16205a 55%,#0f1740 100%)"></i>
+    <i style="background:linear-gradient(170deg,#3a6bf5 0%,#2148d6 55%,#14309e 100%)"></i>
+    <i style="background:linear-gradient(170deg,#139a4e 0%,#0b7a3c 55%,#06502a 100%)"></i>
+    <i style="background:linear-gradient(170deg,#7d52e8 0%,#5a30c8 55%,#3f1c9c 100%)"></i>
+  </div>
+  <div class="in">
+    <nav class="top" aria-label="Main">
+      <a class="brand" href="/" aria-label="Score Easy home">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="16" cy="16" r="13.5"/><path d="M16 2.5c0 0-1.2 6.8 3.5 12.5s11.2 5.8 11.2 5.8"/><path d="M4.2 8.5c0 0 6.2 2.2 12.8 0s9-7.2 9-7.2"/><path d="M4 22c0 0 5.5-4.5 4.8-12S3.5 3 3.5 3"/><path d="M16 29.5c0 0 1-7-3.8-12.5S1.5 11.5 1.5 11.5"/><path d="M28 22.5c0 0-6 2-12.5-.5s-8.8-7.5-8.8-7.5"/><path d="M28.5 9c0 0-5.8 4.2-5 12s5 8.5 5 8.5"/></svg>
+        Score Easy
+      </a>
+      <a class="signin" href="/login">Sign in</a>
+    </nav>
+
+    <div class="grid">
+      <div class="lead">
+        <h1>Score your<br>next match<br><span class="ul">on your phone<svg viewBox="0 0 120 16" preserveAspectRatio="none" aria-hidden="true"><path d="M2.5 9.6C26 6.4 58 5 117 6.6C96 7.6 70 9.4 48 12.6" vector-effect="non-scaling-stroke"/></svg></span>.</h1>
+        <div class="act desk-act" hidden></div>
+      </div>
+
+      <section class="stage" id="stage" tabindex="0" aria-roledescription="carousel" aria-label="How scoring works. Tap the right side for next, left side for back. Press and hold to pause.">
+        <article class="scene" aria-roledescription="slide" aria-label="1 of 4: Tap who won the point. Deuce, advantage and game are called for you.">
+          <div class="k-row"><div class="kicker" style="color:#c6e83a"><i></i>Tennis · Game <span data-k="gameNo">1</span></div><span class="perk" style="--pc:#16205a"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No sign-up</span></div>
+          <div class="body">
+            <p class="call" style="color:#c6e83a"><span data-k="call">Love all</span></p>
+            <div class="t-rows">
+              <div class="t-row" data-row="a"><span class="tap"></span><div class="who"><span class="nm">Asha<span class="srv" data-srv="a"></span></span><span class="gm">Games <span data-k="ga">0</span></span></div><span class="pt" data-k="pa">0</span></div>
+              <div class="t-row" data-row="b"><span class="tap"></span><div class="who"><span class="nm">Meera<span class="srv" data-srv="b" hidden></span></span><span class="gm">Games <span data-k="gb">0</span></span></div><span class="pt" data-k="pb">0</span></div>
+            </div>
+          </div>
+          <p class="caption">Tap who won the point. The rules call the rest.</p>
+        </article>
+
+        <article class="scene" aria-roledescription="slide" aria-label="2 of 4: A wrong tap is fixed with one Undo.">
+          <div class="k-row"><div class="kicker"><i></i>Cricket · Over 19</div><span class="perk" style="--pc:#1840c4"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Free</span></div>
+          <div class="body">
+            <div class="c-top">
+              <div><div class="c-runs" data-k="runs">0</div><div class="c-lbl">Runs this over</div></div>
+              <span class="undo" data-undo><span class="tap" style="background:rgba(24,64,196,.35)"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg>Undo</span>
+            </div>
+            <div class="balls" data-balls></div>
+          </div>
+          <p class="caption">Wrong tap? One Undo fixes the over.</p>
+        </article>
+
+        <article class="scene" aria-roledescription="slide" aria-label="3 of 4: Friends follow live. With no signal, goals are saved and arrive later.">
+          <div class="k-row"><div class="kicker"><i></i>Football · Live</div><span class="perk" style="--pc:#06502a"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Works offline</span></div>
+          <div class="body">
+            <div class="l-pair">
+              <div class="ph"><span class="who">You score</span><span class="sc" data-k="you">0</span><span class="tm">City</span><span class="chip" data-k="youChip"><span class="dot"></span>Online</span></div>
+              <div class="ph"><span class="who">Riya watches</span><span class="sc" data-k="riya">0</span><span class="tm">City</span><span class="chip" data-k="riyaChip"><span class="dot pulse"></span>Live</span></div>
+            </div>
+          </div>
+          <p class="caption">Friends follow live. No signal? Goals wait, then land.</p>
+        </article>
+
+        <article class="scene" aria-roledescription="slide" aria-label="4 of 4: Nine sports. Set point, all out and win by 2 are called for you.">
+          <div class="k-row"><div class="kicker"><i></i>9 sports</div><span class="perk" style="--pc:#3f1c9c"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Rules built in</span></div>
+          <div class="body">
+            <div class="m-list">
+              <div class="mom"><span class="sp">Volleyball</span><span class="w">Set point · 24–22</span></div>
+              <div class="mom"><span class="sp">Kabaddi</span><span class="w">All out · +2</span></div>
+              <div class="mom"><span class="sp">Badminton</span><span class="w">20 all · win by 2</span></div>
+            </div>
+          </div>
+          <p class="caption">Set point, all out, win by 2. Called for you.</p>
+        </article>
+      </section>
+    </div>
+
+    <div class="act mob-act">
+      <div class="nudge" aria-hidden="true">
+        <span class="note">Go on, try one</span>
+        <svg class="arrow" viewBox="0 0 28 30"><path class="shaft" d="M2 5C16 1 25 9 19 27"/><path class="head" d="M13 21.5L19 28l6.5-5.5"/></svg>
+      </div>
+      <a class="cta" href="/tennis/quick" data-cta><span class="lbls" aria-live="polite"><span class="lbl">Start a tennis match</span></span><span class="go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+      <p class="acct">or <a href="/signup">create a free account</a></p>
+    </div>
+  </div>
+</header>
+
+<main class="in">
+  <section class="steps" aria-labelledby="how">
+    <p class="eyebrow" id="how">3 steps to the first point</p>
+    <ol>
+      <li><b>1</b><span>Pick a sport<small>9 ready</small></span></li>
+      <li><b>2</b><span>Add teams<small>or just names</small></span></li>
+      <li><b>3</b><span>Tap to score<small>rules do the rest</small></span></li>
+    </ol>
+  </section>
+
+  <section class="sports" id="sports" aria-labelledby="pick">
+    <div class="sec-h"><h2 id="pick" tabindex="-1">Pick your sport</h2><a href="/play">See all</a></div>
+    <div class="kit-grid2">
+      <a class="kit-tile" href="/cricket/quick" style="--sport-hi:#2863e4;--sport-core:#154ecd;--sport-lo:#122da5;--sport-on:#ffffff;--sport-scrim:rgba(0, 0, 0, 0.31);--sport-tint:#e4edff;--sport-line:#386ad2;--sport-motif:rgba(0, 0, 0, 0.17);--sport-mark:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20140%20100%27%3E%3Cdefs%3E%3Cmask%20id%3D%27m%27%20maskUnits%3D%27userSpaceOnUse%27%20x%3D%270%27%20y%3D%270%27%20width%3D%27140%27%20height%3D%27100%27%3E%3Crect%20width%3D%27140%27%20height%3D%27100%27%20fill%3D%27%23fff%27%2F%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%273.6%27%20stroke-linecap%3D%27round%27%3E%3Cpath%20d%3D%27M72%2012C90%2034%20100%2060%20112%2090%27%2F%3E%3Cpath%20d%3D%27M60%2018C78%2040%2088%2066%20100%2094%27%20stroke-dasharray%3D%270.1%207%27%2F%3E%3Cpath%20d%3D%27M84%208C102%2030%20112%2056%20124%2084%27%20stroke-dasharray%3D%270.1%207%27%2F%3E%3C%2Fg%3E%3C%2Fmask%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2794%27%20cy%3D%2750%27%20r%3D%2744%27%20mask%3D%27url(%23m)%27%2F%3E%3Cpath%20d%3D%27M16%2030H34M4%2050H36M16%2070H34%27%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E&quot;)" aria-label="Quick match: Cricket"><span class="kit-tile-mark" aria-hidden="true"></span><span class="kit-tile-name">Cricket</span><span class="kit-tile-hint">Overs, wickets, NRR</span></a>
+      <a class="kit-tile" href="/kabaddi/quick" style="--sport-hi:#ce276c;--sport-core:#b6005a;--sport-lo:#87003c;--sport-on:#ffffff;--sport-scrim:rgba(0, 0, 0, 0.3);--sport-tint:#ffe5eb;--sport-line:#cc4977;--sport-motif:rgba(0, 0, 0, 0.17);--sport-mark:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20140%20100%27%3E%3Ccircle%20cx%3D%2798%27%20cy%3D%2717%27%20r%3D%2711%27%2F%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M90%2033L70%2058%27%20stroke-width%3D%2714%27%2F%3E%3Cpath%20d%3D%27M86%2038L124%2046%27%20stroke-width%3D%2710%27%2F%3E%3Cpath%20d%3D%27M82%2041L60%2030%27%20stroke-width%3D%2710%27%2F%3E%3Cpath%20d%3D%27M70%2058L98%2070L102%2094%27%20stroke-width%3D%2712%27%2F%3E%3Cpath%20d%3D%27M70%2058L46%2076L20%2086%27%20stroke-width%3D%2712%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E&quot;)" aria-label="Quick match: Kabaddi"><span class="kit-tile-mark" aria-hidden="true"></span><span class="kit-tile-name">Kabaddi</span><span class="kit-tile-hint">Raids, tackles, all-out</span></a>
+      <a class="kit-tile" href="/volleyball/quick" style="--sport-hi:#ffd170;--sport-core:#fbbf24;--sport-lo:#e3b21f;--sport-on:#0b0b0d;--sport-scrim:rgba(255, 255, 255, 0);--sport-tint:#fbebcb;--sport-line:#ad8100;--sport-motif:rgba(11, 11, 13, 0.11);--sport-mark:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20140%20100%27%3E%3Cdefs%3E%3Cmask%20id%3D%27m%27%20maskUnits%3D%27userSpaceOnUse%27%20x%3D%270%27%20y%3D%270%27%20width%3D%27140%27%20height%3D%27100%27%3E%3Crect%20width%3D%27140%27%20height%3D%27100%27%20fill%3D%27%23fff%27%2F%3E%3Cg%20transform%3D%27translate(92%2050)%20scale(4.6)%20translate(-12%20-12)%27%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%271.15%27%20stroke-linecap%3D%27round%27%3E%3Cpath%20d%3D%27M11.1%207.1a16.55%2016.55%200%200%201%2010.9%204%27%2F%3E%3Cpath%20d%3D%27M12%2012a12.6%2012.6%200%200%201-8.7%205%27%2F%3E%3Cpath%20d%3D%27M16.8%2013.6a16.55%2016.55%200%200%201-9%207.5%27%2F%3E%3Cpath%20d%3D%27M20.7%2017a12.8%2012.8%200%200%200-8.7-5%2013.3%2013.3%200%200%201%200-10%27%2F%3E%3Cpath%20d%3D%27M6.3%203.8a16.55%2016.55%200%200%200%201.9%2011.5%27%2F%3E%3C%2Fg%3E%3C%2Fmask%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2792%27%20cy%3D%2750%27%20r%3D%2746%27%20mask%3D%27url(%23m)%27%2F%3E%3Cpath%20d%3D%27M16%2030H34M4%2050H36M16%2070H34%27%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E&quot;)" aria-label="Quick match: Volleyball"><span class="kit-tile-mark" aria-hidden="true"></span><span class="kit-tile-name">Volleyball</span><span class="kit-tile-hint">Sets, rally scoring, deuce</span></a>
+      <a class="kit-tile" href="/badminton/quick" style="--sport-hi:#7b4edc;--sport-core:#6938c6;--sport-lo:#52159c;--sport-on:#ffffff;--sport-scrim:rgba(0, 0, 0, 0.31);--sport-tint:#edeaff;--sport-line:#7655c7;--sport-motif:rgba(0, 0, 0, 0.17);--sport-mark:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20140%20100%27%3E%3Cdefs%3E%3Cmask%20id%3D%27m%27%20maskUnits%3D%27userSpaceOnUse%27%20x%3D%270%27%20y%3D%270%27%20width%3D%27140%27%20height%3D%27100%27%3E%3Crect%20width%3D%27140%27%20height%3D%27100%27%20fill%3D%27%23fff%27%2F%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%273.2%27%20stroke-linecap%3D%27round%27%3E%3Cpath%20d%3D%27M102%2045L46%2028M102%2050H46M102%2055L46%2072M82%2032.5V67.5%27%2F%3E%3C%2Fg%3E%3C%2Fmask%3E%3C%2Fdefs%3E%3Cg%20mask%3D%27url(%23m)%27%3E%3Cpolygon%20points%3D%27104%2C40%20104%2C60%2044%2C84%2044%2C16%27%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%27114%27%20cy%3D%2750%27%20r%3D%2715%27%2F%3E%3Cpath%20d%3D%27M8%2030H30M2%2050H32M8%2070H30%27%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E&quot;)" aria-label="Quick match: Badminton"><span class="kit-tile-mark" aria-hidden="true"></span><span class="kit-tile-name">Badminton</span><span class="kit-tile-hint">Rally points, best of 3</span></a>
+      <a class="kit-tile" href="/football/quick" style="--sport-hi:#007c34;--sport-core:#00662a;--sport-lo:#004720;--sport-on:#ffffff;--sport-scrim:rgba(0, 0, 0, 0.3);--sport-tint:#d9f6dd;--sport-line:#029d44;--sport-motif:rgba(0, 0, 0, 0.17);--sport-mark:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20140%20100%27%3E%3Cdefs%3E%3Cmask%20id%3D%27m%27%20maskUnits%3D%27userSpaceOnUse%27%20x%3D%270%27%20y%3D%270%27%20width%3D%27140%27%20height%3D%27100%27%3E%3Crect%20width%3D%27140%27%20height%3D%27100%27%20fill%3D%27%23fff%27%2F%3E%3Cg%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%273.6%27%20stroke-linecap%3D%27round%27%3E%3Cpolygon%20points%3D%2794%2C36%20107.3%2C45.7%20102.2%2C61.3%2085.8%2C61.3%2080.7%2C45.7%27%2F%3E%3Ccircle%20cx%3D%2794%27%20cy%3D%276%27%20r%3D%2711%27%2F%3E%3Ccircle%20cx%3D%27135%27%20cy%3D%2737%27%20r%3D%2711%27%2F%3E%3Ccircle%20cx%3D%27119%27%20cy%3D%2786%27%20r%3D%2711%27%2F%3E%3Ccircle%20cx%3D%2769%27%20cy%3D%2786%27%20r%3D%2711%27%2F%3E%3Ccircle%20cx%3D%2753%27%20cy%3D%2737%27%20r%3D%2711%27%2F%3E%3Cpath%20d%3D%27M94%2036V14M107.3%2045.7L126%2039.6M102.2%2061.3L113.7%2077M85.8%2061.3L74.3%2077M80.7%2045.7L62%2039.6%27%20fill%3D%27none%27%2F%3E%3C%2Fg%3E%3C%2Fmask%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2794%27%20cy%3D%2750%27%20r%3D%2744%27%20mask%3D%27url(%23m)%27%2F%3E%3Cpath%20d%3D%27M16%2030H34M4%2050H36M16%2070H34%27%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E&quot;)" aria-label="Quick match: Football"><span class="kit-tile-mark" aria-hidden="true"></span><span class="kit-tile-name">Football</span><span class="kit-tile-hint">Goals, draws, goal difference</span></a>
+      <a class="kit-tile" href="/basketball/quick" style="--sport-hi:#ff9a64;--sport-core:#ff8136;--sport-lo:#ec730f;--sport-on:#0b0b0d;--sport-scrim:rgba(255, 255, 255, 0.3);--sport-tint:#ffe7dc;--sport-line:#dd6614;--sport-motif:rgba(11, 11, 13, 0.11);--sport-mark:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20140%20100%27%3E%3Cdefs%3E%3Cmask%20id%3D%27m%27%20maskUnits%3D%27userSpaceOnUse%27%20x%3D%270%27%20y%3D%270%27%20width%3D%27140%27%20height%3D%27100%27%3E%3Crect%20width%3D%27140%27%20height%3D%27100%27%20fill%3D%27%23fff%27%2F%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%273.6%27%20stroke-linecap%3D%27round%27%3E%3Cpath%20d%3D%27M94%206V94M50%2050H138%27%2F%3E%3Cpath%20d%3D%27M64%2016Q84%2050%2064%2084%27%2F%3E%3Cpath%20d%3D%27M124%2016Q104%2050%20124%2084%27%2F%3E%3C%2Fg%3E%3C%2Fmask%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2794%27%20cy%3D%2750%27%20r%3D%2744%27%20mask%3D%27url(%23m)%27%2F%3E%3Cpath%20d%3D%27M16%2030H34M4%2050H36M16%2070H34%27%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E&quot;)" aria-label="Quick match: Basketball"><span class="kit-tile-mark" aria-hidden="true"></span><span class="kit-tile-name">Basketball</span><span class="kit-tile-hint">Points, no draws</span></a>
+    </div>
+    <div class="kit-grid3">
+      <a class="kit-tile kit-tile-mini" href="/tennis/quick" style="--sport-hi:#d5f750;--sport-core:#c6e83d;--sport-lo:#b0d841;--sport-on:#0b0b0d;--sport-scrim:rgba(255, 255, 255, 0);--sport-tint:#e8f2d1;--sport-line:#7b9200;--sport-motif:rgba(11, 11, 13, 0.11);--sport-mark:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20140%20100%27%3E%3Cdefs%3E%3Cmask%20id%3D%27m%27%20maskUnits%3D%27userSpaceOnUse%27%20x%3D%270%27%20y%3D%270%27%20width%3D%27140%27%20height%3D%27100%27%3E%3Crect%20width%3D%27140%27%20height%3D%27100%27%20fill%3D%27%23fff%27%2F%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23000%27%20stroke-width%3D%273.6%27%20stroke-linecap%3D%27round%27%3E%3Cpath%20d%3D%27M60%2022C80%2036%2080%2064%2060%2078%27%2F%3E%3Cpath%20d%3D%27M128%2022C108%2036%20108%2064%20128%2078%27%2F%3E%3C%2Fg%3E%3C%2Fmask%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2794%27%20cy%3D%2750%27%20r%3D%2742%27%20mask%3D%27url(%23m)%27%2F%3E%3Cpath%20d%3D%27M16%2030H34M4%2050H36M16%2070H34%27%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E&quot;)" aria-label="Quick match: Tennis"><span class="kit-tile-mark" aria-hidden="true"></span><span class="kit-tile-name">Tennis</span></a>
+      <a class="kit-tile kit-tile-mini" href="/tabletennis/quick" style="--sport-hi:#007a70;--sport-core:#00655c;--sport-lo:#004642;--sport-on:#ffffff;--sport-scrim:rgba(0, 0, 0, 0.31);--sport-tint:#ccf7f0;--sport-line:#0d9488;--sport-motif:rgba(0, 0, 0, 0.17);--sport-mark:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20140%20100%27%3E%3Ccircle%20cx%3D%2774%27%20cy%3D%2744%27%20r%3D%2732%27%2F%3E%3Cpath%20d%3D%27M94%2066L114%2090%27%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-width%3D%2715%27%20stroke-linecap%3D%27round%27%2F%3E%3Ccircle%20cx%3D%27124%27%20cy%3D%2722%27%20r%3D%2710%27%2F%3E%3Cpath%20d%3D%27M14%2030H32M6%2048H30%27%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E&quot;)" aria-label="Quick match: Table Tennis"><span class="kit-tile-mark" aria-hidden="true"></span><span class="kit-tile-name">Table Tennis</span></a>
+      <a class="kit-tile kit-tile-mini" href="/hockey/quick" style="--sport-hi:#60cbff;--sport-core:#38bdf8;--sport-lo:#39abe5;--sport-on:#0b0b0d;--sport-scrim:rgba(255, 255, 255, 0.22);--sport-tint:#d9f1ff;--sport-line:#0092c6;--sport-motif:rgba(11, 11, 13, 0.11);--sport-mark:url(&quot;data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20140%20100%27%3E%3Cpath%20d%3D%27M38%204L58%2074Q62%2090%2078%2087L96%2082%27%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-width%3D%2713%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%2F%3E%3Ccircle%20cx%3D%27122%27%20cy%3D%2778%27%20r%3D%2712%27%2F%3E%3Cpath%20d%3D%27M100%2058H116M106%2044H126%27%20fill%3D%27none%27%20stroke%3D%27currentColor%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E&quot;)" aria-label="Quick match: Hockey"><span class="kit-tile-mark" aria-hidden="true"></span><span class="kit-tile-name">Hockey</span></a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="end" aria-labelledby="keep">
+  <div class="hero-bg" aria-hidden="true">
+    <i style="background:linear-gradient(170deg,#25377d 0%,#16205a 55%,#0f1740 100%)"></i>
+    <i style="background:linear-gradient(170deg,#3a6bf5 0%,#2148d6 55%,#14309e 100%)"></i>
+    <i style="background:linear-gradient(170deg,#139a4e 0%,#0b7a3c 55%,#06502a 100%)"></i>
+    <i style="background:linear-gradient(170deg,#7d52e8 0%,#5a30c8 55%,#3f1c9c 100%)"></i>
+  </div>
+  <div class="in">
+    <div class="end-grid">
+      <div>
+        <h2 id="keep">Keep every match.</h2>
+        <p>Save your matches and stats to a free account, and pick them up on any phone.</p>
+      </div>
+      <div class="end-act">
+        <a class="cta" href="/signup">Create a free account<span class="go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+        <p class="end-login">Have an account? <a href="/login">Log in</a></p>
+      </div>
+    </div>
+    <div class="end-foot">
+      <span>© 2026 Score Easy</span>
+      <nav aria-label="Legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/contact">Contact</a></nav>
+    </div>
+  </div>
+</footer>
+<div class="toast" role="status"></div>
+
+<script>
+(() => {
+  const hero = document.getElementById('hero');
+  const stage = document.getElementById('stage');
+  const scenes = [...stage.querySelectorAll('.scene')];
+  const bgs = [...document.querySelectorAll('.hero-bg i')];
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  const THEME = ['#1b2a63', '#2f62f2', '#0f8a45', '#7447e0'];
+  const ACCENT = ['#c6e83a', '#ffffff', '#ffffff', '#ffffff'];
+  const params = new URLSearchParams(location.search);
+  const CTA = [['Start a tennis match', '/tennis/quick'], ['Start a cricket match', '/cricket/quick'], ['Start a football match', '/football/quick'], ['Pick your sport', '#sports']];
+  const cta = document.querySelector('[data-cta]'); const lbls = cta.querySelector('.lbls');
+  function setCta(i, animate) {
+    const [text, href] = CTA[i]; cta.setAttribute('href', href);
+    const old = lbls.querySelector('.lbl:not(.above)');
+    if (old && old.textContent === text) return;
+    if (!animate || reduce || !old) { lbls.innerHTML = ''; const n = document.createElement('span'); n.className = 'lbl'; n.textContent = text; lbls.appendChild(n); return; }
+    const n = document.createElement('span'); n.className = 'lbl below'; n.textContent = text; lbls.appendChild(n);
+    void n.offsetWidth; old.classList.add('above'); n.classList.remove('below');
+    setTimeout(() => old.remove(), 520);
+    kick('step');
+  }
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Each scene: duration (s) + steps [time, patch]. State at t = initial folded with every step at or before t.
+     Patch keys starting with "!" are one-shot effects. Every frame obeys the sport's rules. */
+  const T = [
+    { dur: 9.2, init: { call: 'Love all', pa: '0', pb: '0', ga: '0', gb: '0', gameNo: '1', srv: 'a' }, steps: [
+      [1.0, { pa: '15', call: '15–love', '!tap': 'a' }],
+      [1.8, { pb: '15', call: '15 all', '!tap': 'b' }],
+      [2.6, { pa: '30', call: '30–15', '!tap': 'a' }],
+      [3.4, { pb: '30', call: '30 all', '!tap': 'b' }],
+      [4.2, { pa: '40', call: '40–30', '!tap': 'a' }],
+      [5.0, { pb: '40', call: 'Deuce', '!tap': 'b' }],
+      [6.2, { pa: 'AD', call: 'Advantage Asha', '!tap': 'a' }],
+      [7.4, { pa: '0', pb: '0', ga: '1', call: 'Game Asha', srv: 'b', '!tap': 'a' }],
+    ]},
+    { dur: 8.4, init: { runs: '0', balls: [] }, steps: [
+      [0.9, { runs: '1', balls: ['1'] }],
+      [1.7, { runs: '5', balls: ['1', '4'] }],
+      [2.5, { runs: '11', balls: ['1', '4', '6'] }],
+      [3.6, { runs: '5', balls: ['1', '4'], gone: true, '!undo': 1 }],
+      [4.7, { runs: '7', balls: ['1', '4', '2'], gone: false }],
+      [5.5, { runs: '7', balls: ['1', '4', '2', 'W'] }],
+      [6.3, { runs: '8', balls: ['1', '4', '2', 'W', '1'] }],
+    ]},
+    { dur: 8.0, init: { you: '0', riya: '0', youChip: 'online', riyaChip: 'live' }, steps: [
+      [1.0, { you: '1' }],
+      [1.5, { riya: '1' }],
+      [2.7, { youChip: 'nosignal' }],
+      [3.5, { you: '2', youChip: 'saved' }],
+      [5.0, { youChip: 'online' }],
+      [5.5, { riya: '2', riyaChip: 'synced' }],
+      [6.9, { riyaChip: 'live' }],
+    ]},
+    { dur: 6.0, init: { moms: 0 }, steps: [[0.5, { moms: 1 }], [1.6, { moms: 2 }], [2.7, { moms: 3 }]] },
+  ];
+  const CHIPS = {
+    online: ['', '<span class="dot"></span>Online'],
+    nosignal: ['warn', '<span class="dot"></span>No signal'],
+    saved: ['warn', '<span class="dot"></span>Saved here'],
+    live: ['', '<span class="dot pulse"></span>Live'],
+    synced: ['ok', '<span class="dot"></span>Arrived'],
+  };
+
+  const stateAt = (i, t) => { const s = { ...T[i].init }; for (const [at, p] of T[i].steps) if (at <= t) Object.assign(s, p); return s; };
+  const shown = scenes.map(() => ({}));
+  const firedFx = scenes.map(() => new Set());
+
+  function setText(sc, key, val, anim) {
+    const el = sc.querySelector(`[data-k="${key}"]`); if (!el || el.textContent === val) return;
+    el.textContent = val;
+    if (anim && !reduce) { el.classList.remove(anim); void el.offsetWidth; el.classList.add(anim); }
+  }
+  function ripple(el) { if (!el || reduce) return; el.classList.remove('go'); void el.offsetWidth; el.classList.add('go'); }
+
+  function render(i, t, animate = true) {
+    const sc = scenes[i]; const s = stateAt(i, t); const prev = shown[i]; const a = animate ? 'roll' : null;
+    if (i === 0) {
+      setText(sc, 'call', s.call, animate ? 'pop' : null);
+      ['pa', 'pb', 'ga', 'gb', 'gameNo'].forEach(k => setText(sc, k, s[k], a));
+      sc.querySelectorAll('[data-srv]').forEach(d => { d.hidden = d.dataset.srv !== s.srv; });
+    }
+    if (i === 1) {
+      setText(sc, 'runs', s.runs, a);
+      const host = sc.querySelector('[data-balls]'); const key = s.balls.join(',') + (s.gone ? '|g' : '');
+      if (prev.balls !== key) {
+        const list = s.gone ? ['1', '4', '6'] : s.balls; host.innerHTML = '';
+        for (let n = 0; n < 6; n++) {
+          const v = list[n]; const b = document.createElement('span');
+          b.className = 'ball' + (v ? ' f' : '') + (v === '6' ? ' six' : '') + (v === 'W' ? ' w' : '');
+          b.textContent = v || ''; host.appendChild(b);
+          if (s.gone && n === 2) {
+            if (!animate) { b.className = 'ball'; b.textContent = ''; }
+            else requestAnimationFrame(() => requestAnimationFrame(() => { b.classList.add('gone');
+              setTimeout(() => { b.style.transition = 'none'; b.className = 'ball'; b.textContent = ''; requestAnimationFrame(() => { b.style.transition = ''; }); }, 420); }));
+          }
+        }
+        prev.balls = key;
+      }
+    }
+    if (i === 2) {
+      setText(sc, 'you', s.you, a); setText(sc, 'riya', s.riya, a);
+      for (const k of ['youChip', 'riyaChip']) {
+        if (prev[k] === s[k]) continue;
+        const el = sc.querySelector(`[data-k="${k}"]`); const [cls, html] = CHIPS[s[k]];
+        el.className = 'chip' + (cls ? ' ' + cls : ''); el.innerHTML = html; prev[k] = s[k];
+      }
+    }
+    if (i === 3) sc.querySelectorAll('.mom').forEach((m, n) => m.classList.toggle('shown', n < s.moms));
+    if (!animate) return;
+    for (const [at, patch] of T[i].steps) {
+      if (at > t || firedFx[i].has(at)) continue;
+      firedFx[i].add(at);
+      if (patch['!tap']) ripple(sc.querySelector(`[data-row="${patch['!tap']}"] .tap`));
+      if (patch['!undo']) { const u = sc.querySelector('[data-undo]'); ripple(u.querySelector('.tap')); u.classList.add('press'); setTimeout(() => u.classList.remove('press'), 220); }
+    }
+  }
+
+  let cur = 0, t0 = performance.now(), elapsed = 0, playing = !reduce, held = false, inView = true, started = false, ctaHold = false;
+  function show(i) {
+    const n = scenes.length; i = (i + n) % n;
+    scenes.forEach((sc, k) => { sc.classList.toggle('on', k === i); sc.classList.toggle('off', k !== i && k === cur); sc.setAttribute('aria-hidden', k === i ? 'false' : 'true'); });
+    bgs.forEach((b, k) => b.classList.toggle('on', k % 4 === i));
+    hero.style.setProperty('--accent', ACCENT[i]);
+    if (themeMeta) themeMeta.content = THEME[i];
+    setCta(i, i !== cur || started); started = true;
+    cur = i; elapsed = 0; t0 = performance.now(); firedFx[i] = new Set(); shown[i] = {};
+    render(i, reduce ? T[i].dur : 0, false);
+  }
+  function tick(now) {
+    requestAnimationFrame(tick);
+    if (!playing || held || ctaHold || !inView || document.hidden) { t0 = now - elapsed * 1000; return; }
+    elapsed = (now - t0) / 1000;
+    render(cur, elapsed, true);
+    if (elapsed >= T[cur].dur) show(cur + 1);
+  }
+  new IntersectionObserver(([e]) => { inView = e.isIntersecting; }, { threshold: 0.3 }).observe(stage);
+  const nudge = document.querySelector('.nudge');
+  const variant = params.get('nudge') || document.documentElement.dataset.nudge || 'a';
+  document.documentElement.dataset.nudge = variant;
+  if (variant === 'a' && !reduce) setTimeout(() => nudge.classList.add('gone'), 5200);
+  const kick = cls => { if (reduce || variant !== 'c') return; cta.classList.remove(cls); void cta.offsetWidth; cta.classList.add(cls); };
+  if (variant === 'c') setTimeout(() => kick('shine'), 1200);
+
+  // tap zones: left third = back, rest = next; press and hold pauses; swipe navigates
+  let downAt = 0, downX = 0, moved = false, holdTimer = 0;
+  stage.addEventListener('pointerdown', e => { downAt = performance.now(); downX = e.clientX; moved = false; holdTimer = setTimeout(() => { held = true; }, 220); });
+  stage.addEventListener('pointermove', e => { if (Math.abs(e.clientX - downX) > 12) moved = true; });
+  stage.addEventListener('pointerup', e => {
+    clearTimeout(holdTimer); const wasHold = held; held = false;
+    if (!downAt) return; const dx = e.clientX - downX; downAt = 0;
+    if (Math.abs(dx) > 40) { show(cur + (dx < 0 ? 1 : -1)); return; }
+    if (wasHold || moved) return;
+    const r = stage.getBoundingClientRect(); show(cur + (e.clientX - r.left < r.width / 3 ? -1 : 1));
+  });
+  stage.addEventListener('pointercancel', () => { clearTimeout(holdTimer); held = false; downAt = 0; });
+  stage.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); show(cur + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); show(cur - 1); }
+    if (e.key === ' ' && e.target === stage) { e.preventDefault(); playing = !playing; }
+  });
+
+  // Start: the label never changes under a finger or cursor; a sport label opens that sport's quick start,
+  // the last story's 'Pick your sport' scrolls to the grid and focuses its heading
+  ['pointerenter', 'focus'].forEach(ev => cta.addEventListener(ev, () => { ctaHold = true; }));
+  ['pointerleave', 'blur'].forEach(ev => cta.addEventListener(ev, () => { ctaHold = false; }));
+  const toast = document.querySelector('.toast');
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href]'); if (!a) return;
+    const href = a.getAttribute('href');
+    if (href === '#sports') { e.preventDefault(); const h = document.getElementById('pick'); h.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); h.focus({ preventScroll: true }); return; }
+    e.preventDefault(); toast.textContent = 'Prototype: opens ' + href; toast.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => toast.classList.remove('on'), 1600);
+  });
+
+  // desktop: Start sits under the headline in the left column
+  const mq = matchMedia('(min-width:1024px)');
+  const act = document.querySelector('.mob-act'); const deskSlot = document.querySelector('.desk-act');
+  const place = () => {
+    if (mq.matches) { deskSlot.hidden = false; deskSlot.append(...act.childNodes); act.hidden = true; }
+    else { act.hidden = false; act.append(...deskSlot.childNodes); deskSlot.hidden = true; }
+  };
+  mq.addEventListener('change', place); place();
+
+  // ?frame=N:S (or <html data-freeze="N:S">) freezes scene N at S seconds for review screenshots
+  const frame = params.get('frame') || document.documentElement.dataset.freeze;
+  if (frame) {
+    const [sn, st] = frame.split(':'); const i = Math.max(0, Math.min(3, Number(sn) - 1));
+    playing = false;
+    document.querySelectorAll('.scene,.hero-bg i,.perk,.note,.arrow path,.ul path').forEach(el => { el.style.transition = 'none'; el.style.animation = 'none'; });
+    show(i); lbls.innerHTML = '<span class="lbl">' + CTA[i][0] + '</span>'; render(i, Number(st || 0), false);
+    document.querySelectorAll('.note,.arrow path').forEach(el => { el.style.opacity = 1; el.style.strokeDashoffset = 0; });
+    return;
+  }
+  show(0); requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

@@ -1,280 +1,249 @@
-/* Home (/), Kit. Everything here composes Kit parts (kit.css, history.css chips);
-   only layout and the few landing-only rules live in this file. Colour comes from --se-color-*
-   tokens and the engine vars (--sport-*, --team-a-*, --team-b-*), so a dark theme is a token swap.
-   Hierarchy: sport picker, interactive scorecard, compact FAQ. */
-
-.kit-landing {
-  padding-bottom: 40px;
-  background: transparent;
+.home-stage-page {
+  --ink: var(--se-color-ink); --soft: var(--se-color-ink-soft); --muted: var(--se-color-ink-muted);
+  --canvas: var(--se-color-canvas); --display: var(--se-font-display); --sans: var(--se-font-sans);
+  --num: var(--se-font-num); --mono: var(--se-font-mono); --hand: 'Caveat', cursive;
+  --go-hi: var(--home-go-hi); --go: var(--home-go); --go-lo: var(--home-go-lo);
+  --ctl-shadow: 3px 3px 0 var(--ink); --ctl-press: 1px 1px 0 var(--ink);
+  --ease: cubic-bezier(.2,.8,.2,1); --spring: cubic-bezier(.34,1.4,.5,1);
+  --gutter: 20px; --stage-h: clamp(300px, 42svh, 356px);
+  background: var(--canvas); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased;
+}
+.home-stage-page *, .home-stage-page *::before, .home-stage-page *::after { box-sizing: border-box; }
+.home-stage-page .hero, .home-stage-page .end {
+  --ink: var(--home-ink);
+  --ctl-shadow: 3px 3px 0 var(--home-ink);
+  --ctl-press: 1px 1px 0 var(--home-ink);
 }
 
-.kit-landing-hero .kit-title {
-  margin-top: 10px;
+/* M1 "Stage" v3: ONE hero surface. The top bar, headline, the playing moment and Start all sit on a
+   single colour field that takes the colour of the moment being played and crossfades with it.
+   Everything shares one left edge (the gutter). Below the hero, the light canvas holds the sports. */
+
+/* ---------- the one hero surface ---------- */
+.home-stage-page .hero{position:relative;isolation:isolate;color:var(--home-white);border-radius:0 0 30px 30px;overflow:hidden;padding-bottom:26px}
+.home-stage-page .hero-bg{position:absolute;inset:0;z-index:-2}
+.home-stage-page .hero-bg i{position:absolute;inset:0;opacity:0;transition:opacity 1.1s var(--ease)}
+.home-stage-page .hero-bg i.on{opacity:1}
+/* one shared light: a soft top-right glow and a bottom-left shade, so the colours read as one lit surface */
+.home-stage-page .hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(110% 55% at 100% 0%,var(--home-glow),transparent 60%),radial-gradient(90% 50% at 0% 100%,var(--home-hero-shade),transparent 65%)}
+.home-stage-page .in{max-width:1120px;margin:0 auto;padding:0 var(--gutter)}
+
+.home-stage-page .top{display:flex;align-items:center;justify-content:space-between;height:68px;padding-top:6px}
+.home-stage-page .brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.01em;text-decoration:none}
+/* the shared Kit mark defaults to theme ink; on the colour band it is white like the name */
+.home-stage-page .brand .kit-brand-mark{color:inherit}
+/* Kit .se-ctl: white surface, 2px ink edge, 14px radius, 3px ink offset shadow, 2px press */
+.home-stage-page .signin{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border:2px solid var(--ink);border-radius:14px;
+  background:var(--home-white);color:var(--ink);box-shadow:var(--ctl-shadow);font-weight:750;font-size:15px;text-decoration:none;transition:transform 60ms ease,box-shadow 60ms ease}
+.home-stage-page .signin:active{transform:translate(2px,2px);box-shadow:var(--ctl-press)}
+.home-stage-page :where(.signin,.cta,.stage,.acct a,.tile):focus-visible{outline:3px solid var(--home-white);outline-offset:3px}
+.home-stage-page .tile:focus-visible{outline-color:var(--ink)}
+
+.home-stage-page h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,10.4vw,48px);line-height:1.02;letter-spacing:-.035em;margin:10px 0 0}
+.home-stage-page .ul{position:relative;white-space:nowrap}
+.home-stage-page .ul svg{position:absolute;left:-2%;bottom:-.16em;width:104%;height:.3em;overflow:visible}
+.home-stage-page .ul path{fill:none;stroke:var(--accent,var(--home-white));stroke-width:3;stroke-linecap:round;transition:stroke .9s var(--ease)}
+@keyframes home-draw{to{stroke-dashoffset:0}}
+
+/* ---------- the playing moment: no frame, it sits on the hero colour ---------- */
+.home-stage-page .stage{position:relative;height:var(--stage-h);margin-top:22px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer}
+.home-stage-page .scene{position:absolute;inset:0;display:flex;flex-direction:column;
+  opacity:0;transform:translateY(16px);transition:opacity .5s var(--ease),transform .7s var(--ease);pointer-events:none}
+.home-stage-page .scene.on{opacity:1;transform:none;transition-delay:.12s}
+.home-stage-page .scene.off{opacity:0;transform:translateY(-12px);transition-delay:0s}
+.home-stage-page .k-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:28px}
+.home-stage-page .kicker{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;display:flex;align-items:center;gap:8px;white-space:nowrap;min-width:0}
+.home-stage-page .kicker i{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor}
+.home-stage-page .perk{display:inline-flex;align-items:center;gap:5px;flex:none;height:28px;padding:0 11px 0 8px;border-radius:999px;background:var(--home-white);color:var(--pc);
+  font-size:13px;font-weight:800;white-space:nowrap;opacity:0;transform:translateY(-8px) scale(.9);transition:opacity .35s var(--ease),transform .5s var(--spring)}
+.home-stage-page .scene.on .perk{opacity:1;transform:none;transition-delay:.45s}
+.home-stage-page .perk svg{flex:none}
+.home-stage-page .body{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:0;padding:10px 0}
+.home-stage-page .caption{font-family:var(--display);font-weight:800;font-size:19px;line-height:1.18;letter-spacing:-.015em;margin:0;max-width:26ch;text-wrap:balance;opacity:.96}
+
+.home-stage-page .call{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;letter-spacing:-.03em;margin:0 0 12px;min-height:34px}
+.home-stage-page .call span{display:inline-block}
+.home-stage-page .pop{animation:home-pop .5s var(--spring)}
+@keyframes home-pop{0%{opacity:0;transform:translateY(40%) scale(.92)}100%{opacity:1;transform:none}}
+.home-stage-page .roll{animation:home-roll .42s var(--ease)}
+@keyframes home-roll{0%{opacity:0;transform:translateY(55%)}100%{opacity:1;transform:none}}
+.home-stage-page .tap{position:absolute;left:50%;top:50%;width:24px;height:24px;margin:-12px;border-radius:50%;background:var(--home-ripple);transform:scale(0);opacity:0;pointer-events:none}
+.home-stage-page .tap.go{animation:home-tap .6s var(--ease)}
+@keyframes home-tap{0%{transform:scale(.2);opacity:.9}100%{transform:scale(9);opacity:0}}
+
+/* tennis */
+.home-stage-page .t-rows{display:grid;gap:8px}
+.home-stage-page .t-row{position:relative;display:flex;align-items:center;justify-content:space-between;height:58px;padding:0 16px;border-radius:16px;background:var(--home-tennis-row);overflow:hidden}
+.home-stage-page .t-row .who{display:flex;flex-direction:column;gap:2px}
+.home-stage-page .t-row .nm{font-weight:800;font-size:17px}
+.home-stage-page .t-row .gm{font-size:13px;font-weight:600;opacity:.75}
+.home-stage-page .t-row .pt{font-family:var(--num);font-weight:800;font-size:40px;line-height:1;min-width:2ch;text-align:right}
+.home-stage-page .t-row .srv[hidden]{display:none}
+.home-stage-page .t-row .srv{width:8px;height:8px;border-radius:50%;background:var(--home-tennis-accent);display:inline-block;margin-left:8px;vertical-align:middle}
+
+/* cricket */
+.home-stage-page .c-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
+.home-stage-page .c-runs{font-family:var(--num);font-weight:800;font-size:84px;line-height:.85}
+.home-stage-page .c-lbl{font-size:13px;font-weight:700;opacity:.8;margin-top:6px}
+.home-stage-page .undo{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:999px;background:var(--home-white);color:var(--home-cricket-ink);font-weight:800;font-size:15px;position:relative;overflow:hidden;transition:transform .2s var(--ease)}
+.home-stage-page .undo.press{transform:scale(.94)}
+.home-stage-page .balls{display:flex;gap:8px}
+.home-stage-page .ball{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--num);font-weight:800;font-size:20px;border:2px dashed var(--home-ball-line);transition:background .25s,border-color .25s,color .25s,transform .35s var(--spring),opacity .3s}
+.home-stage-page .ball.f{border:0;background:var(--home-white);color:var(--home-cricket-ink)}
+.home-stage-page .ball.six{background:var(--home-gold);color:var(--home-on-gold)}
+.home-stage-page .ball.w{background:var(--home-wicket);color:var(--home-white)}
+.home-stage-page .ball.gone{transform:translateY(-36px) scale(.6);opacity:0}
+
+/* live */
+.home-stage-page .l-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.home-stage-page .ph{border-radius:18px;background:var(--home-live-panel);padding:14px 14px 14px;display:flex;flex-direction:column;gap:6px;min-height:146px}
+.home-stage-page .ph .who{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.home-stage-page .ph .sc{font-family:var(--num);font-weight:800;font-size:56px;line-height:.9;margin-top:2px}
+.home-stage-page .ph .tm{font-size:14px;font-weight:700;opacity:.85}
+.home-stage-page .chip{align-self:flex-start;margin-top:auto;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:800;background:var(--home-chip)}
+.home-stage-page .chip.warn{background:var(--home-gold);color:var(--home-on-gold)}
+.home-stage-page .chip.ok{background:var(--home-white);color:var(--home-arrived-ink)}
+.home-stage-page .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.home-stage-page .dot.pulse{animation:home-pulse 1.2s infinite}
+@keyframes home-pulse{50%{opacity:.25}}
+
+/* moments */
+.home-stage-page .m-list{display:flex;flex-direction:column;gap:8px}
+.home-stage-page .mom{display:flex;align-items:center;gap:12px;height:48px;padding:0 14px;border-radius:14px;background:var(--home-panel);opacity:0;transform:translateY(16px);transition:opacity .45s var(--ease),transform .55s var(--spring)}
+.home-stage-page .mom.shown{opacity:1;transform:none}
+.home-stage-page .mom .sp{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;width:86px;flex:none}
+.home-stage-page .mom .w{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.01em}
+
+/* ---------- Start, on the same surface ---------- */
+.home-stage-page .act{margin-top:6px}
+.home-stage-page .nudge{display:flex;justify-content:center;align-items:flex-start;gap:4px;height:46px;pointer-events:none;transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.home-stage-page .nudge.gone{opacity:0;transform:translateY(-6px)}
+.home-stage-page .note{margin-top:4px;font-family:var(--hand);font-weight:700;font-size:24px;line-height:1;color:var(--home-white);opacity:0;transform:translateY(16px);animation:home-rise .6s .7s var(--spring) forwards}
+@keyframes home-rise{to{opacity:1;transform:none}}
+.home-stage-page .arrow{flex:none;width:28px;height:32px;margin-top:10px;overflow:visible}
+.home-stage-page .arrow path{fill:none;stroke:var(--home-white);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.home-stage-page .arrow .shaft{stroke-dasharray:40;stroke-dashoffset:40;animation:home-draw .45s 1.15s var(--ease) forwards}
+.home-stage-page .arrow .head{stroke-dasharray:18;stroke-dashoffset:18;animation:home-draw .2s 1.55s var(--ease) forwards}
+.home-stage-page .cta{position:relative;overflow:hidden}
+/* On a coloured surface the one forward action is the white Kit button: ink edge, offset shadow, 2px press,
+   with the Go green carried by the arrow disc so it never disappears on the green moment. */
+.home-stage-page .cta{display:flex;align-items:center;justify-content:center;gap:12px;min-height:58px;border:2px solid var(--ink);border-radius:14px;text-decoration:none;
+  background:var(--home-white);color:var(--ink);font-weight:800;font-size:18px;box-shadow:3px 3px 0 var(--ink),0 14px 30px -14px var(--home-cta-shadow);transition:transform 60ms ease,box-shadow 60ms ease}
+.home-stage-page .cta:active{transform:translate(2px,2px);box-shadow:var(--ctl-press)}
+.home-stage-page .lbls{display:inline-grid;overflow:hidden;height:1.3em;line-height:1.3em}
+.home-stage-page .lbl{grid-area:1/1;white-space:nowrap;transition:transform .5s var(--ease),opacity .35s var(--ease)}
+.home-stage-page .lbl.below{transform:translateY(100%);opacity:0}
+.home-stage-page .lbl.above{transform:translateY(-100%);opacity:0}
+.home-stage-page .cta .go{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:linear-gradient(168deg,var(--go-hi),var(--go) 55%,var(--go-lo));color:var(--home-white);transition:transform .25s var(--ease)}
+.home-stage-page .cta:hover .go{transform:translateX(3px)}
+.home-stage-page .acct{margin:16px 0 0;text-align:center;font-size:15px;color:var(--home-copy)}
+.home-stage-page .acct a{display:inline-block;font-weight:800;color:var(--home-white);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;padding:10px 2px;margin:-10px 0}
+
+/* ---------- canvas below the hero ---------- */
+.home-stage-page .steps{padding-top:30px}
+.home-stage-page .eyebrow{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.home-stage-page .steps ol{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0;padding:0;list-style:none}
+.home-stage-page .steps ol::before{content:"";position:absolute;left:16%;right:16%;top:15px;border-top:2px dashed var(--home-step-line)}
+.home-stage-page .steps li{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-weight:800;font-size:14px;line-height:1.2}
+.home-stage-page .steps b{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--home-white);font-family:var(--num);font-size:18px;box-shadow:0 0 0 5px var(--canvas)}
+.home-stage-page .steps small{display:block;font-weight:600;font-size:13px;color:var(--soft);margin-top:2px}
+
+.home-stage-page .sports{padding-top:34px}
+.home-stage-page .sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 14px}
+.home-stage-page .sec-h h2{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:-.02em;margin:0;outline:none}
+.home-stage-page .sec-h a{font-weight:700;font-size:15px;color:var(--soft);text-decoration:none;padding:12px 0}
+.home-stage-page .kit-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.home-stage-page .kit-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+/* the app's own SportTile (kit.css .kit-tile), with the engine's identity colours and marks */
+
+/* closing band: the hero's colour comes back to close the page, so it opens and ends on the same surface */
+.home-stage-page .end{position:relative;isolation:isolate;overflow:hidden;color:var(--home-white);border-radius:30px 30px 0 0;margin-top:48px}
+.home-stage-page .end::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(110% 60% at 100% 0%,var(--home-glow),transparent 60%),radial-gradient(90% 60% at 0% 100%,var(--home-footer-shade),transparent 65%)}
+.home-stage-page .end .in{padding-top:40px;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.home-stage-page .end h2{font-family:var(--display);font-weight:800;font-size:34px;line-height:1.02;letter-spacing:-.03em;margin:0}
+.home-stage-page .end p{margin:10px 0 0;font-size:16px;line-height:1.45;color:var(--home-copy);max-width:32ch}
+.home-stage-page .end-act{margin-top:24px}
+.home-stage-page .end-login{margin:16px 0 0;text-align:center;font-size:15px;color:var(--home-copy)}
+.home-stage-page .end-login a{display:inline-block;font-weight:800;color:var(--home-white);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;padding:10px 2px;margin:-10px 0}
+.home-stage-page .end-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 16px;margin-top:36px;padding-top:14px;border-top:1px solid var(--home-footer-line);font-size:13px;color:var(--home-footer-copy)}
+.home-stage-page .end-foot nav{display:flex;gap:18px}
+.home-stage-page .end-foot nav a{color:var(--home-white);font-weight:700;text-decoration:none;padding:12px 0}
+.home-stage-page .end-foot nav a:hover{text-decoration:underline}
+.home-stage-page :where(.end a):focus-visible{outline:3px solid var(--home-white);outline-offset:3px}
+
+/* ---------- desktop: same single surface, two columns inside it ---------- */
+@media (min-width:1024px){
+  .home-stage-page{--gutter:40px;--stage-h:360px}
+  .home-stage-page .caption{font-size:23px}
+  .home-stage-page .hero{border-radius:0 0 40px 40px;padding-bottom:56px}
+  .home-stage-page .grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;margin-top:28px}
+  .home-stage-page h1{font-size:64px;margin:0}
+  .home-stage-page .stage{margin-top:0}
+  .home-stage-page .act{max-width:400px;margin-top:22px}
+  .home-stage-page .acct{text-align:left}
+  .home-stage-page .sports{padding-top:44px}
+  .home-stage-page .kit-grid2,.home-stage-page .kit-grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .home-stage-page .steps{padding-top:44px}
+  .home-stage-page .steps ol{max-width:760px}
+  .home-stage-page .steps li{flex-direction:row;text-align:left;align-items:center;gap:12px}
+  .home-stage-page .steps ol::before{display:none}
+  .home-stage-page .end{border-radius:40px 40px 0 0;margin-top:72px}
+  .home-stage-page .end .in{padding-top:56px}
+  .home-stage-page .end-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:56px;align-items:center}
+  .home-stage-page .end h2{font-size:48px}
+  .home-stage-page .end-act{margin-top:0}
+  .home-stage-page .end-login{text-align:left}
+  .home-stage-page .end-foot{margin-top:48px}
+}
+@media (prefers-reduced-motion:reduce){
+  .home-stage-page .scene,.home-stage-page .mom,.home-stage-page .ball,.home-stage-page .perk,.home-stage-page .hero-bg i,.home-stage-page .ul path{transition:none}
+  .home-stage-page .pop,.home-stage-page .roll,.home-stage-page .tap.go{animation:none}
+  .home-stage-page .arrow .shaft,.home-stage-page .arrow .head,.home-stage-page .note{animation:none;stroke-dashoffset:0;opacity:1}
+  .home-stage-page .nudge.gone{opacity:1;transform:none}
 }
 
-.kit-landing-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 22px;
+/* The Kit tiles stay shared; only Home's grouping and responsive placement differ. */
+.home-stage-page .sports > section + section { margin-top: 12px; }
+.home-stage-page .kit-grid3 { margin-top: 0; }
+.home-stage-page .steps ol::before { border-color: color-mix(in srgb, var(--se-color-ink) 22%, transparent); }
+.home-stage-page .steps b { color: var(--se-color-canvas); }
+.home-stage-page .kit-tile:focus-visible, .home-stage-page .sec-h a:focus-visible,
+.home-stage-page .sports[data-keyboard-focus='true'] h2:focus { outline: 3px solid var(--se-color-ink); outline-offset: 3px; }
+.home-stage-page .brand { min-height: 44px; }
+.home-stage-page .brand:focus-visible { outline: 3px solid var(--home-white); outline-offset: 3px; }
+.home-stage-page .signin { font-family: var(--sans); }
+.home-stage-page .cta { width: 100%; font-family: var(--sans); cursor: pointer; }
+.home-stage-page .acct a, .home-stage-page .end-login a { min-height: 44px; }
+.home-stage-page .end .end-login { margin-top: 16px; font-size: 15px; }
+.home-stage-page .balls { position: relative; }
+.home-stage-page .removed-six { position: absolute; left: 92px; top: 0; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--home-gold); color: var(--home-on-gold); font: 800 20px var(--num); animation: home-remove-six .42s var(--ease) forwards; }
+@keyframes home-remove-six { to { transform: translateY(-36px) scale(.6); opacity: 0; } }
+.home-stage-page .story-pause { position: absolute; top: 36px; right: 0; z-index: 2; min-height: 44px; padding: 8px 14px; border: 2px solid var(--home-ink); border-radius: 14px; background: var(--home-white); color: var(--home-ink); font: 750 15px var(--sans); clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; }
+.home-stage-page .story-pause:focus-visible { clip-path: none; width: auto; height: auto; outline: 3px solid var(--home-white); outline-offset: 3px; }
+.home-stage-page .stage[data-playing='false'] *, .home-stage-page .stage[data-playing='false'] *::after { animation-play-state: paused; }
+/* Preserve the specified stage height while keeping all hero actions in a short phone viewport. */
+@media (max-width: 1023px) {
+  .home-stage-page .top { height: 64px; }
+  .home-stage-page h1 { margin-top: 4px; }
+  .home-stage-page .stage { margin-top: 14px; }
+  .home-stage-page .act { margin-top: 0; }
+  .home-stage-page .nudge { height: 38px; }
+  .home-stage-page .acct { margin-top: 12px; line-height: 18px; }
+  .home-stage-page .hero { padding-bottom: 20px; }
+}
+@media (min-width: 1024px) {
+  .home-stage-page .grid { grid-template-areas: 'lead stage' 'act stage'; row-gap: 0; }
+  .home-stage-page .lead { grid-area: lead; align-self: end; }
+  .home-stage-page .stage { grid-area: stage; }
+  .home-stage-page .act { grid-area: act; align-self: start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-stage-page *, .home-stage-page *::before, .home-stage-page *::after { animation: none !important; transition: none !important; }
+  .home-stage-page .note { transform: none; }
+  .home-stage-page .nudge.gone { opacity: 0; }
 }
 
-.kit-landing-actions .se-go,
-.kit-landing-actions .se-ctl {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 56px;
-  text-decoration: none;
-}
-
-.kit-landing-actions .se-ctl {
-  min-height: 52px;
-  font-size: 1rem;
-}
-
-/* The inside of the closing card brings its own padding. */
-.kit-landing-ready .kit-landing-actions {
-  margin-top: 0;
-}
-
-/* ---- numbered mono eyebrows and heavy headlines (the original page's voice, in Kit tokens) ---- */
-.kit-landing-eyebrow,
-.kit-landing-label {
-  margin: 0;
-  color: var(--se-color-ink-soft);
-  font: 700 0.72rem/1.2 var(--se-font-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.kit-landing-hero .kit-landing-eyebrow {
-  margin-top: 6px;
-}
-
-.kit-landing-head {
-  margin: 48px 2px 16px;
-}
-
-/* A short bar in the picked sport's colour leads every section eyebrow. */
-.kit-landing-head .kit-landing-eyebrow::before {
-  content: '';
-  display: inline-block;
-  width: 22px;
-  height: 4px;
-  margin-right: 8px;
-  border-radius: 2px;
-  background: var(--sport-core, var(--se-color-ink));
-  vertical-align: middle;
-}
-
-.kit-landing-head h2 {
-  margin: 10px 0 0;
-  font: 800 clamp(1.9rem, 9vw, 2.5rem)/0.98 var(--se-font-display);
-  letter-spacing: -0.025em;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
-}
-
-/* ---- the sport picker: a 3 x 3 grid of real sport tiles, nothing scrolls ---- */
-.kit-landing-picker {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0 0 14px;
-}
-
-.kit-pick {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  box-sizing: border-box;
-  min-height: 92px;
-  padding: 10px 6px;
-  border: 0;
-  border-radius: 20px;
-  background: var(--se-color-surface);
-  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
-  color: var(--se-color-ink);
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.kit-pick:active {
-  transform: scale(0.97);
-}
-
-.kit-pick-name {
-  font: 750 0.84rem/1.1 var(--se-font-sans);
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-/* Selected is an ink fill with a ring round the badge: Kit's chip treatment, so it never rests on
-   colour alone and reads in sunlight. */
-.kit-pick.is-selected {
-  background: var(--se-color-ink);
-  box-shadow: none;
-  color: var(--se-color-on-ink);
-}
-
-.kit-pick.is-selected .kit-pick-name {
-  font-weight: 850;
-}
-
-.kit-pick.is-selected .kit-badge {
-  box-shadow: 0 0 0 2px var(--se-color-on-ink);
-}
-
-.kit-landing-note {
-  margin: 12px 2px 0;
-  color: var(--se-color-ink-soft);
-  font-size: 0.85rem;
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-/* ---- footer: every link a 48px target ---- */
-.kit-landing-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px 16px;
-  margin-top: 20px;
-  padding-top: 8px;
-  border-top: 1px solid var(--se-color-line-soft);
-  color: var(--se-color-ink-soft);
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.kit-landing-foot nav {
-  display: flex;
-  flex-wrap: wrap;
-  margin: 0 -12px;
-}
-
-.kit-landing-foot a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 48px;
-  padding: 0 12px;
-  color: var(--se-color-ink);
-  font-weight: 650;
-  text-decoration: none;
-}
-
-.kit-landing-foot a:hover {
-  text-decoration: underline;
-}
-
-/* ---- desktop: hero left, example right, steps in a row, list and FAQ in a readable column ---- */
-@media (min-width: 900px) {
-  .kit-landing {
-    max-width: 1080px;
-    padding: 0 32px 56px;
-  }
-
-  /* The tint would end in a hard edge at the 1080px column, so its sides fade out.
-     (A 100vw-wide wash was tried first; it froze the page in the preview browser.) */
-  .kit-landing > .kit-wash {
-    -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
-    mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
-  }
-
-  .kit-landing-top {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 48px;
-    align-items: center;
-    padding-top: 20px;
-  }
-
-  .kit-landing-hero .kit-title {
-    font-size: 3.6rem;
-  }
-
-  .kit-landing-hero .kit-sub {
-    max-width: 40ch;
-    font-size: 1.12rem;
-  }
-
-  .kit-landing-actions {
-    max-width: 360px;
-  }
-
-  .kit-landing-example .kit-sec:first-child {
-    margin-top: 0;
-  }
-
-  .kit-landing-head {
-    margin-top: 72px;
-  }
-
-  .kit-landing-head h2 {
-    font-size: 3rem;
-  }
-
-    .home-faq {
-    max-width: 760px;
-  }
-
-
-}
-
-/* Home keeps the original row scorecard and the app's team identity bars. */
-.kit-landing-card { margin-top: 12px; }
-.kit-landing-card .kit-last-score { font-variant-numeric: tabular-nums; }
-.kit-last-score small { font-size: .5em; }
-.home-faq { max-width:760px; margin-top:24px; }
-.home-faq h2 { font:700 1rem var(--se-font-sans); }
-.home-faq details { border-bottom:1px solid var(--se-color-line-soft); }
-.home-faq summary { min-height:48px; display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer; font-size:.8rem; font-weight:650; }
-.home-faq summary::after { content:'+'; font-size:1.2rem; }
-.home-faq details[open] summary::after { content:'-'; }
-.home-faq p { margin:0 0 12px; font-size:.85rem; line-height:1.5; max-width:65ch; }
-
-.kit-landing-card button.kit-last-team { width:100%; min-height:64px; border:0; background:transparent; color:var(--se-color-ink); text-align:left; cursor:pointer; }
-.kit-landing-card button:disabled { cursor:default; }
-.home-demo-tools { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:.8rem; }
-.home-demo-tools button { min-height:48px; }
-
-.kit-landing-meta { display:block; margin-top:3px; font:500 .75rem/1.3 var(--se-font-sans); color:var(--se-color-ink-soft); }
-.home-demo-hint { padding:6px 8px; border-radius:12px; background:var(--se-color-surface-warm); }
-.home-demo-hint[hidden] { display:none; }
-.home-demo-tools { min-height:48px; }
-.home-demo-tools .home-undo { margin-left:auto; border:2px solid var(--se-color-ink); border-radius:14px; background:var(--se-color-surface); box-shadow:2px 2px 0 var(--se-color-ink); }
-.home-undo:disabled { opacity:.45; border-style:solid; }
-.kit-landing-card button.kit-last-team:active { background:var(--se-color-surface-warm); transform:scale(.98); }
-.home-score-bump { animation:home-score-bump 180ms ease-out; }
-@keyframes home-score-bump { 50% { transform:scale(1.15); } }
-@media(prefers-reduced-motion:reduce) { .home-score-bump { animation:none; } .kit-landing-card button.kit-last-team:active { transform:none; } }
-@media(max-width:899px) {
- .kit-landing { padding-bottom:calc(88px + env(safe-area-inset-bottom)); }
- .kit-landing .kit-title { font-size:1.8rem; line-height:1.05; margin:8px 0; }
- .kit-landing .kit-sub { font-size:.85rem; line-height:1.35; margin:8px 0; }
- .kit-landing-hero .kit-landing-eyebrow { display:none; }
- .kit-landing-example .kit-sec { margin:12px 0 8px; }
- .kit-pick { min-height:56px; padding:6px; gap:4px; border-radius:14px; }
- .kit-pick .kit-badge { width:24px; height:24px; border-radius:8px; }
- .kit-pick .kit-badge svg { width:20px; height:20px; }
- .kit-pick-name { font-size:.7rem; }
- .kit-landing-picker { gap:6px; margin-bottom:8px; }
- .kit-landing-card { margin-top:8px; padding:12px; }
- .kit-landing-card button.kit-last-team { min-height:52px; }
- .kit-screen.kit-landing .kit-landing-actions { position:fixed; z-index:50; bottom:0; left:0; right:0; background:var(--se-color-surface); padding:4px 16px calc(4px + env(safe-area-inset-bottom)); margin:0; display:grid; grid-template-columns:2fr 1fr; gap:8px; align-items:center; border-top:1px solid var(--se-color-line-soft); }
- .kit-landing-actions .se-go,.kit-landing-actions .se-ctl { width:100%; white-space:nowrap; min-height:56px; padding:8px; }
- .kit-landing-example > .se-ctl { display:flex; width:fit-content; margin-top:12px; min-height:48px; }
-}
-
-/* Let the phone action bar sit above sibling sections without a parent stacking context. */
-.kit-screen.kit-landing > .kit-landing-top { position:static; z-index:auto; }
-@media(min-width:900px) {
- .kit-landing-top { align-items:start; }
- .kit-landing-hero .kit-landing-actions { margin-top:22px; }
- .kit-landing .home-faq { max-width:none; }
-}
+.home-stage-page .roll { display: inline-block; }
+.home-stage-page .end-foot nav a { display: inline-flex; align-items: center; min-height: 44px; }
