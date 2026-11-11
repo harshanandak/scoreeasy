@@ -223,16 +223,17 @@
 .home-stage-page .story-pause { position: absolute; top: 36px; right: 0; z-index: 2; min-height: 44px; padding: 8px 14px; border: 2px solid var(--home-ink); border-radius: 14px; background: var(--home-white); color: var(--home-ink); font: 750 15px var(--sans); clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; }
 .home-stage-page .story-pause:focus-visible { clip-path: none; width: auto; height: auto; outline: 3px solid var(--home-white); outline-offset: 3px; }
 .home-stage-page .stage[data-playing='false'] *, .home-stage-page .stage[data-playing='false'] *::after { animation-play-state: paused; }
-/* Recover stage space for the notch inset without shrinking text or touch targets. */
+/* Phones: clear the notch and give the hero room to breathe. The hero may run past the first
+   screen; the arrow's 42px (10px offset + 32px drawing) needs the nudge row to stay taller than it. */
 @media (max-width: 1023px) {
-  .home-stage-page { --stage-h: clamp(270px, 35svh, 300px); }
+  .home-stage-page { --stage-h: clamp(320px, 44svh, 380px); }
   .home-stage-page .top { height: calc(64px + env(safe-area-inset-top, 0px) + 14px); padding-top: calc(6px + env(safe-area-inset-top, 0px) + 14px); }
-  .home-stage-page h1 { margin-top: 4px; }
-  .home-stage-page .stage { margin-top: 14px; }
-  .home-stage-page .act { margin-top: 0; }
-  .home-stage-page .nudge { height: 38px; }
-  .home-stage-page .acct { margin-top: 12px; line-height: 18px; }
-  .home-stage-page .hero { padding-bottom: 20px; }
+  .home-stage-page h1 { margin-top: 12px; }
+  .home-stage-page .stage { margin-top: 26px; }
+  .home-stage-page .act { margin-top: 10px; }
+  .home-stage-page .nudge { height: 54px; }
+  .home-stage-page .acct { margin-top: 18px; }
+  .home-stage-page .hero { padding-bottom: 36px; }
 }
 @media (min-width: 1024px) {
   .home-stage-page .grid { grid-template-areas: 'lead stage' 'act stage'; row-gap: 0; }
