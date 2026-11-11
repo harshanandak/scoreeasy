@@ -7,7 +7,7 @@ import { KitSection, SportTile } from './KitParts';
    identity tile, in sportFocus order. Popular is full tiles, two columns, with the hint line; More
    sports is mini tiles, three columns, name only. Nothing here navigates: `onSelect(sport)` does.
    `idPrefix` keeps the two group headings' ids unique per screen (play-popular / home-popular). */
-export default function SportPicker({ onSelect, selectedId = null, idPrefix = 'play', showPopularHeading = true }) {
+export default function SportPicker({ onSelect, selectedId = null, idPrefix = 'play', showPopularHeading = true, showMoreHeading = true }) {
   const groups = getSportsByCategory();
   const popular = groups[PRIORITY_GROUP_LABEL];
   const more = groups[LATER_GROUP_LABEL];
@@ -24,8 +24,8 @@ export default function SportPicker({ onSelect, selectedId = null, idPrefix = 'p
       </section>
 
       {more.length > 0 && (
-        <section aria-labelledby={`${idPrefix}-more`}>
-          <KitSection id={`${idPrefix}-more`} title={LATER_GROUP_LABEL} />
+        <section aria-labelledby={showMoreHeading ? `${idPrefix}-more` : undefined} aria-label={showMoreHeading ? undefined : LATER_GROUP_LABEL}>
+          {showMoreHeading && <KitSection id={`${idPrefix}-more`} title={LATER_GROUP_LABEL} />}
           <div className="kit-grid3">
             {more.map((sport) => (
               <SportTile key={sport.id} sport={sport} mini selected={sport.id === selectedId} onSelect={onSelect} />
@@ -41,4 +41,5 @@ SportPicker.propTypes = {
   selectedId: PropTypes.string,
   idPrefix: PropTypes.string,
   showPopularHeading: PropTypes.bool,
+  showMoreHeading: PropTypes.bool,
 };

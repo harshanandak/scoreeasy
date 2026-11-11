@@ -1,598 +1,324 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AuthContext, LocalAuthProvider } from '../../../auth/AuthContext';
-import { LATER_GROUP_LABEL, PRIORITY_GROUP_LABEL } from '../../../models/sportFocus';
+import { AuthContext } from '../../../auth/AuthContext';
 import { getSportsByCategory } from '../../../models/sportRegistry';
 import GuestLanding from './GuestLanding';
-import { CARDS } from './cardTimelines';
-import { LANDING_FAQ } from './landingFaq';
+import { STORIES } from './storyTimelines';
 
 function LocationProbe() {
   const location = useLocation();
-  return <output aria-label="Current route" data-new-match={String(location.state?.newMatch === true)}>{`${location.pathname}${location.search}`}</output>;
+  return <output aria-label="Current route" data-new-match={String(location.state?.newMatch === true)}>{location.pathname}</output>;
 }
-
-function renderLanding({ cloudAuthAvailable = false } = {}) {
-  return render(
-    <LocalAuthProvider reason="missing-config" cloudAuthAvailable={cloudAuthAvailable}>
-      <MemoryRouter>
-        <LocationProbe />
-        <Routes>
-          <Route path="*" element={<GuestLanding />} />
-        </Routes>
-      </MemoryRouter>
-    </LocalAuthProvider>,
-  );
+function renderLanding({ signedIn = false } = {}) {
+  return render(<AuthContext.Provider value={{ isAuthenticated: signedIn, cloudAuthAvailable: true, isLoading: false }}>
+    <MemoryRouter><LocationProbe /><GuestLanding /></MemoryRouter>
+  </AuthContext.Provider>);
 }
-
-function renderSignedIn() {
-  return render(
-    <AuthContext.Provider value={{ cloudAuthAvailable: true, isAuthenticated: true, isLoading: false }}>
-      <MemoryRouter>
-        <Routes>
-          <Route path="*" element={<GuestLanding />} />
-        </Routes>
-      </MemoryRouter>
-    </AuthContext.Provider>,
-  );
-}
-
-const COUNT = CARDS.length;
-const loopOf = (card) => CARDS[card].timeline.loopMs;
-const follows = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
-
-/* jsdom has no layout and no media: this answers (min-width: N) and prefers-reduced-motion for a window
-   `width` px wide. With no call at all there is no matchMedia, which Home reads as a phone. */
 function setScreen({ width = 390, reduced = false } = {}) {
-  window.matchMedia = vi.fn().mockImplementation((query) => {
-    const min = /min-width:\s*(\d+)px/.exec(query);
-    let matches = false;
-    if (query.includes('prefers-reduced-motion')) matches = reduced;
-    else if (min) matches = width >= Number(min[1]);
-    return { matches, media: query, addEventListener: () => {}, removeEventListener: () => {} };
-  });
+  vi.stubGlobal('matchMedia', vi.fn((query) => ({
+    matches: query.includes('prefers-reduced-motion') ? reduced : width >= Number(/min-width:\s*(\d+)px/.exec(query)?.[1]),
+    addEventListener: vi.fn(), removeEventListener: vi.fn(),
+  })));
 }
-
-/* An IntersectionObserver the test drives by hand. */
 class FakeObserver {
   static all = [];
-
-  constructor(callback) {
-    this.callback = callback;
-    this.targets = new Set();
-    FakeObserver.all.push(this);
-  }
-
-  observe(el) { this.targets.add(el); }
-
-  unobserve(el) { this.targets.delete(el); }
-
-  disconnect() { this.targets.clear(); }
+  constructor(callback) { this.callback = callback; this.disconnect = vi.fn(); FakeObserver.all.push(this); }
+  observe = vi.fn();
 }
+const advance = (ms) => act(() => vi.advanceTimersByTime(ms));
+const stage = () => document.querySelector('.stage');
+const scene = () => document.querySelector('.scene[aria-hidden="false"]');
+const next = () => fireEvent.keyDown(stage(), { key: 'ArrowRight' });
+const previous = () => fireEvent.keyDown(stage(), { key: 'ArrowLeft' });
+const start = () => within(document.querySelector('.act')).getByRole('button');
+const follows = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
-function see(el, { visible, top = visible ? 0 : window.innerHeight + 10 }) {
-  el.getBoundingClientRect = () => ({ top, bottom: top + 10, height: 10 });
-  act(() => {
-    FakeObserver.all.forEach((observer) => {
-      if (observer.targets.has(el)) {
-        observer.callback([{ target: el, isIntersecting: visible, intersectionRatio: visible ? 1 : 0, boundingClientRect: { top, bottom: top + 10, left: visible ? 800 : -1000 }, rootBounds: { left: 400 } }]);
-      }
-    });
+describe('Home stage', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    localStorage.clear();
+    setScreen();
+    vi.stubGlobal('IntersectionObserver', FakeObserver);
+    vi.stubGlobal('PointerEvent', MouseEvent);
+    vi.stubGlobal('requestAnimationFrame', (callback) => setTimeout(() => callback(performance.now()), 20));
+    vi.stubGlobal('cancelAnimationFrame', clearTimeout);
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
+    Element.prototype.scrollIntoView = vi.fn();
   });
-}
-
-describe('Home', () => {
-  beforeEach(() => { localStorage.clear(); });
-
   afterEach(() => {
     cleanup();
-    delete window.matchMedia;
-    delete Element.prototype.scrollIntoView;
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    vi.useRealTimers();
+    delete Element.prototype.scrollIntoView;
     FakeObserver.all = [];
   });
 
-  describe('first screen and page order', () => {
-    it('is, on a phone, the top bar, the headline, one reassurance line and the rail: Start comes after', () => {
-      const { container } = renderLanding();
-      const first = container.querySelector('.home-first');
-      expect(first.querySelector('.kit-top')).not.toBeNull();
-      const headline = within(first).getByRole('heading', { level: 1 });
-      expect(headline).toHaveTextContent('Score your next match on your phone.');
-      const assure = within(first).getByText('Free · No account · Works offline');
-      const rail = within(first).getByTestId('landing-example');
-      expect(follows(headline, assure)).toBe(true);
-      expect(follows(assure, rail)).toBe(true);
-      // Start stays after the animation in document order; browser checks cover its first-screen fit.
-      expect(within(first).queryByRole('button', { name: 'Start a match' })).toBeNull();
-      expect(within(first).queryByRole('heading', { name: 'Pick your sport' })).toBeNull();
-      const start = container.querySelector('.home-start').querySelector('.se-go');
-      expect(follows(rail, start)).toBe(true);
-      expect(follows(start, container.querySelector('.home-picker'))).toBe(true);
-    });
-
-    it('puts Sign in in the top bar for a signed-out visitor only', () => {
-      const { container, unmount } = renderLanding();
-      const signIn = screen.getByRole('link', { name: 'Sign in' });
-      expect(signIn).toHaveAttribute('href', '/login');
-      expect(container.querySelector('.kit-top')).toContainElement(signIn);
-      expect(container.querySelector('.home-copy')).not.toContainElement(signIn);
-      expect(screen.getByRole('link', { name: 'Create a free account' })).toBeInTheDocument();
-      unmount();
-      renderSignedIn();
-      expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
-      expect(screen.queryByRole('link', { name: 'Create a free account' })).toBeNull();
-      expect(screen.getAllByRole('button', { name: 'Start a match' }).length).toBeGreaterThan(0);
-    });
-
-    it('does not remember an unfinished Sign in attempt', () => {
-      renderLanding();
-      fireEvent.click(screen.getByRole('link', { name: 'Sign in' }));
-      expect(localStorage.getItem('se_entered_app')).toBeNull();
-    });
-
-    it('says phone below 900px and device or sideline from 900px', () => {
-      setScreen({ width: 390 });
-      const phone = renderLanding();
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score your next match on your phone.');
-      expect(screen.getAllByText('Free · No account · Works offline')).toHaveLength(1);
-      expect(document.querySelector('.home-start')).not.toHaveTextContent(/offline|No account/);
-      expect(screen.getByText(/Save across phones\?/)).toBeInTheDocument();
-      phone.unmount();
-      setScreen({ width: 900 });
-      renderLanding();
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score your next match from the sideline.');
-      expect(document.querySelector('.home-start')).not.toHaveTextContent(/offline|No account/);
-      expect(screen.getByText(/Save across devices\?/)).toBeInTheDocument();
-      expect(screen.queryByText(/phone/i, { selector: 'h1, .home-account' })).toBeNull();
-    });
-
-    it('keeps FAQs collapsed and the structured data consistent', () => {
-      const { container } = renderLanding();
-      const rows = [...container.querySelectorAll('details')];
-      expect(rows).toHaveLength(4);
-      for (const row of rows) expect(row).not.toHaveAttribute('open');
-      const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
-      const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => JSON.parse(match[1]));
-      expect(blocks.find((block) => block['@type'] === 'FAQPage').mainEntity.map((item) => [item.name, item.acceptedAnswer.text])).toEqual(LANDING_FAQ.map((item) => [item.question, item.answer]));
-    });
-
-    it('ends with a closing Start above the footer', () => {
-      const { container } = renderLanding();
-      const close = container.querySelector('.home-close');
-      expect(within(close).getByRole('button', { name: 'Start a match' })).toBeInTheDocument();
-      expect(follows(container.querySelector('.home-faq'), close)).toBe(true);
-      expect(follows(close, container.querySelector('.kit-landing-foot'))).toBe(true);
-    });
+  it('orders the top bar, headline, playing stage, Start, account link, steps, picker, closing band and legal footer', () => {
+    const { container } = renderLanding();
+    const elements = ['.top', 'h1', '.stage', '.act .cta', '.acct', '.steps', '.sports', '.end-grid', '.end-foot'].map((selector) => container.querySelector(selector));
+    elements.forEach((el) => expect(el).not.toBeNull());
+    elements.slice(1).forEach((el, i) => expect(follows(elements[i], el)).toBe(true));
+    expect(container.querySelector('header.hero')).toContainElement(stage());
+    expect(container.querySelector('header.hero')).toContainElement(start());
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score your next match on your phone.');
+    expect(screen.getByText('3 steps to the first point')).toBeInTheDocument();
+    expect(within(container.querySelector('.steps')).getAllByRole('listitem')).toHaveLength(3);
+    expect(container.querySelector('.acct')).toHaveTextContent(/^or create a free account$/);
+    expect(container.querySelector('footer.end')).toContainElement(screen.getByRole('heading', { name: 'Keep every match.' }));
+    expect(container.querySelector('details, .home-sticky, .home-rail')).toBeNull();
+    expect(readFileSync('index.html', 'utf8')).not.toContain('"FAQPage"');
   });
 
-  describe('Start and the sport picker', () => {
-    it('has Start as a button that scrolls to the picker and moves focus to its heading, without leaving the page', () => {
-      const scrolled = [];
-      Element.prototype.scrollIntoView = vi.fn(function scrollIntoView() { scrolled.push(this); });
-      const { container } = renderLanding();
-      const start = container.querySelector('.home-start').querySelector('.se-go');
-      expect(start.tagName).toBe('BUTTON');
-      fireEvent.click(start, { detail: 1 });
-      expect(scrolled).toEqual([container.querySelector('.home-picker')]);
-      expect(screen.getByRole('heading', { name: 'Pick your sport' })).toHaveFocus();
-      expect(screen.getByRole('heading', { name: 'Pick your sport' })).toHaveAttribute('tabindex', '-1');
-      expect(container.querySelector('.home-picker')).toHaveAttribute('data-keyboard-focus', 'false');
-      expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
-    });
-
-    it('shows Play\'s picker: Popular as 6 full tiles, More sports as 3 mini tiles with Hockey, in registry order', () => {
-      const { container } = renderLanding();
-      const groups = getSportsByCategory();
-      const popularIds = groups[PRIORITY_GROUP_LABEL].map((sport) => sport.id);
-      const moreIds = groups[LATER_GROUP_LABEL].map((sport) => sport.id);
-      const popular = [...container.querySelectorAll('.home-picker .kit-grid2 .kit-tile')];
-      const more = [...container.querySelectorAll('.home-picker .kit-grid3 .kit-tile')];
-      expect(popular.map((tile) => tile.dataset.sport)).toEqual(popularIds);
-      expect(popular).toHaveLength(6);
-      expect(more.map((tile) => tile.dataset.sport)).toEqual(moreIds);
-      expect(more).toHaveLength(3);
-      expect(more.map((tile) => tile.dataset.sport)).toContain('hockey');
-      for (const tile of popular) {
-        expect(tile).not.toHaveClass('kit-tile-mini');
-        expect(tile.querySelector('.kit-tile-hint')).not.toBeNull();
-      }
-      for (const tile of more) expect(tile).toHaveClass('kit-tile-mini');
-      expect(screen.queryByRole('heading', { name: PRIORITY_GROUP_LABEL })).toBeNull();
-      expect(screen.getByRole('region', { name: PRIORITY_GROUP_LABEL })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: LATER_GROUP_LABEL })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'See all' })).toHaveAttribute('href', '/play');
-    });
-
-    it('starts the tapped sport quick match from a tile', () => {
-      for (const { id } of Object.values(getSportsByCategory()).flat()) {
-        const { container } = renderLanding();
-        fireEvent.click(container.querySelector(`.kit-tile[data-sport="${id}"]`));
-        expect(screen.getByLabelText('Current route')).toHaveTextContent(new RegExp(`^/${id}/quick$`));
-        expect(screen.getByLabelText('Current route')).toHaveAttribute('data-new-match', 'true');
-        cleanup();
-      }
-    });
-
-    it('moves Start into the hero column on a desktop, beside the headline and the account line', () => {
-      setScreen({ width: 1280 });
-      const { container } = renderLanding();
-      const copy = container.querySelector('.home-copy');
-      expect(within(copy).getByRole('button', { name: 'Start a match' })).toBeInTheDocument();
-      expect(within(copy).getByRole('link', { name: 'Create a free account' })).toBeInTheDocument();
-    });
+  it('shows Sign in only when signed out and does not mark an unfinished sign-in as entering the app', () => {
+    const { unmount } = renderLanding();
+    const link = screen.getByRole('link', { name: 'Sign in' });
+    expect(document.querySelector('.top')).toContainElement(link);
+    expect(link).toHaveAttribute('href', '/login');
+    fireEvent.click(link);
+    expect(localStorage.getItem('se_entered_app')).toBeNull();
+    unmount();
+    renderLanding({ signedIn: true });
+    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+    expect(start()).toHaveAccessibleName('Start a tennis match');
   });
 
-  describe('sticky Start bar', () => {
-    beforeEach(() => { vi.stubGlobal('IntersectionObserver', FakeObserver); });
-
-    const els = (container) => ({
-      start: container.querySelector('.home-start'),
-      picker: container.querySelector('.home-picker'),
-      end: container.querySelector('.home-close').parentElement,
-    });
-    const bar = () => screen.queryByTestId('sticky-start');
-
-    it('is off at first, comes on once the in-flow Start is above the top of the screen, and goes while the picker or the closing block is on screen', () => {
-      const { container } = renderLanding();
-      const { start, picker, end } = els(container);
-      expect(bar()).toBeNull();
-      // Start is still below the fold (not scrolled off the top): no bar.
-      see(start, { visible: false, top: 600 });
-      expect(bar()).toBeNull();
-      see(start, { visible: false, top: -80 });
-      expect(bar()).not.toBeNull();
-      expect(within(bar()).getByRole('button', { name: 'Start a match' })).toBeInTheDocument();
-      see(picker, { visible: true });
-      expect(bar()).toBeNull();
-      see(picker, { visible: false });
-      expect(bar()).not.toBeNull();
-      see(end, { visible: true });
-      expect(bar()).toBeNull();
-      see(end, { visible: false });
-      expect(bar()).not.toBeNull();
-      // Back up the page, the in-flow Start is on screen again.
-      see(start, { visible: true });
-      expect(bar()).toBeNull();
-    });
-
-    it('scrolls to the picker and focuses its heading, like the in-flow Start', () => {
-      const scrolled = [];
-      Element.prototype.scrollIntoView = vi.fn(function scrollIntoView() { scrolled.push(this); });
-      const { container } = renderLanding();
-      see(els(container).start, { visible: false, top: -80 });
-      fireEvent.click(within(bar()).getByRole('button', { name: 'Start a match' }));
-      expect(scrolled).toEqual([container.querySelector('.home-picker')]);
-      expect(screen.getByRole('heading', { name: 'Pick your sport' })).toHaveFocus();
-    });
-
-    it('updates after a fast scroll skips Start and the picker without an observer transition', () => {
-      const { container } = renderLanding();
-      const { start, picker, end } = els(container);
-      start.getBoundingClientRect = () => ({ top: -300, bottom: -250, height: 50 });
-      picker.getBoundingClientRect = () => ({ top: -200, bottom: -20, height: 180 });
-      end.getBoundingClientRect = () => ({ top: window.innerHeight + 50, bottom: window.innerHeight + 150, height: 100 });
-      fireEvent.scroll(window);
-      expect(bar()).not.toBeNull();
-    });
-
-    it.each([[800], [1280]])('is only for phones: none at %ipx', (width) => {
-      setScreen({ width });
-      const { container } = renderLanding();
-      see(els(container).start, { visible: false, top: -80 });
-      expect(bar()).toBeNull();
-    });
+  it.each([[899, 'on your phone'], [900, 'from the sideline'], [1280, 'from the sideline']])('uses the approved headline at %ipx', (width, phrase) => {
+    setScreen({ width }); renderLanding();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(phrase);
   });
 
-  describe('card rail on a phone', () => {
-    beforeEach(() => { vi.useFakeTimers(); });
-    afterEach(() => { vi.useRealTimers(); });
-
-    const advance = (ms) => act(() => { vi.advanceTimersByTime(ms); });
-    const root = () => screen.getByTestId('landing-example');
-    const stage = () => root().querySelector('.home-stage');
-    const slides = () => [...root().querySelectorAll('[aria-roledescription="slide"]')];
-    const dots = () => within(within(root()).getByRole('group', { name: 'Choose a card' })).getAllByRole('button');
-    const pressKey = () => fireEvent.keyDown(document.body, { key: 'Tab' });
-    const pressPointer = () => fireEvent.pointerDown(document.body);
-
-    it('is a labelled carousel with one card on show and one dot for each of the five cards', () => {
-      renderLanding();
-      expect(root()).toHaveAttribute('aria-roledescription', 'carousel');
-      expect(root()).toHaveAccessibleName();
-      expect(slides()).toHaveLength(1);
-      expect(root().querySelectorAll('[data-clone]')).toHaveLength(0);
-      expect(CARDS.map((card) => card.id)).toEqual(['tap', 'undo', 'live', 'moments', 'paper']);
-      expect(dots()).toHaveLength(COUNT);
-      expect(dots()[0]).toHaveAttribute('aria-current', 'true');
-      expect(within(root()).queryByRole('button', { name: /Previous card|Next card/ })).toBeNull();
-      expect(root().querySelector('.home-board, .home-slide-tag')).toBeNull();
+  it('shows all four story captions and promise chips with one accessible scene at a time', () => {
+    renderLanding();
+    const perks = ['No sign-up', 'Free', 'Works offline', 'Rules built in'];
+    const captions = ['Tap who won the point. The rules call the rest.', 'Wrong tap? One Undo fixes the over.', 'Friends follow live. No signal? Goals wait, then land.', 'Set point, all out, win by 2. Called for you.'];
+    perks.forEach((perk, i) => {
+      expect(document.querySelectorAll('.scene[aria-hidden="false"]')).toHaveLength(1);
+      expect(scene()).toHaveTextContent(perk);
+      expect(scene()).toHaveTextContent(captions[i]);
+      expect(stage()).toHaveAttribute('aria-roledescription', 'carousel');
+      next();
     });
-
-    it('gives every card a heading and a picture named for what happens in it, reached by the dots', () => {
-      renderLanding();
-      CARDS.forEach((card, i) => {
-        fireEvent.click(dots()[i]);
-        expect(dots()[i]).toHaveAttribute('aria-current', 'true');
-        expect(within(root()).getByRole('group', { name: `${i + 1} of ${COUNT}: ${card.title}` })).toBeInTheDocument();
-        expect(within(root()).getByRole('heading', { level: 3, name: card.title })).toBeInTheDocument();
-        expect(within(root()).getByRole('img', { name: card.label })).toBeInTheDocument();
-      });
-    });
-
-    it('plays each card through, moves to the next, and wraps from the last card to the first', () => {
-      renderLanding();
-      for (let i = 0; i < COUNT; i += 1) {
-        expect(root()).toHaveAttribute('data-start', String(i));
-        expect(dots()[i]).toHaveAttribute('aria-current', 'true');
-        advance(loopOf(i) - 50);
-        expect(root()).toHaveAttribute('data-start', String(i));
-        advance(100);
-      }
-      expect(root()).toHaveAttribute('data-start', '0');
-    });
-
-    it('wraps from the first card to the last on a swipe or an arrow key, and round again', () => {
-      renderLanding();
-      fireEvent.keyDown(stage(), { key: 'ArrowLeft' });
-      expect(root()).toHaveAttribute('data-start', String(COUNT - 1));
-      fireEvent.keyDown(stage(), { key: 'ArrowRight' });
-      expect(root()).toHaveAttribute('data-start', '0');
-      // A swipe: the finger moves left to go on, right to go back.
-      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 260, clientY: 300 });
-      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 120, clientY: 305 });
-      expect(root()).toHaveAttribute('data-start', '1');
-      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 100, clientY: 300 });
-      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 240, clientY: 300 });
-      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 100, clientY: 300 });
-      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 240, clientY: 300 });
-      expect(root()).toHaveAttribute('data-start', String(COUNT - 1));
-      // A short or mostly vertical drag is not a swipe.
-      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 100, clientY: 100 });
-      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 130, clientY: 100 });
-      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 100, clientY: 100 });
-      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 190, clientY: 260 });
-      expect(root()).toHaveAttribute('data-start', String(COUNT - 1));
-    });
-
-    it('starts every card from its opening frame and plays only the card on show', () => {
-      renderLanding();
-      expect(slides()[0].textContent).toContain('Love all');
-      expect(slides()[0].textContent).not.toContain('Deuce');
-      advance(4500);
-      expect(slides()[0].textContent).toContain('Deuce');
-      fireEvent.click(dots()[1]);
-      expect(slides()[0].textContent).toContain('New over');
-      expect(slides()[0].textContent).not.toContain('A single');
-    });
-
-    it('stops the advance and the animation on Pause, and carries on from where it stopped on Play', () => {
-      renderLanding();
-      const pause = screen.getByRole('button', { name: 'Pause animations' });
-      expect(root()).toHaveAttribute('data-playing', 'true');
-      advance(3000);
-      const before = slides()[0].textContent;
-      fireEvent.click(pause);
-      expect(screen.getByRole('button', { name: 'Play animations' })).toBeInTheDocument();
-      expect(root()).toHaveAttribute('data-playing', 'false');
-      advance(loopOf(0) * 2);
-      expect(root()).toHaveAttribute('data-start', '0');
-      expect(slides()[0].textContent).toBe(before);
-      fireEvent.click(screen.getByRole('button', { name: 'Play animations' }));
-      expect(root()).toHaveAttribute('data-playing', 'true');
-      // 3 s were already played, so only the rest of the loop is left.
-      advance(loopOf(0) - 3000 - 100);
-      expect(root()).toHaveAttribute('data-start', '0');
-      advance(200);
-      expect(root()).toHaveAttribute('data-start', '1');
-    });
-
-    it.each([
-      ['a finger', () => fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 10, clientY: 10 }), () => fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 10, clientY: 10 })],
-      ['the pointer', () => fireEvent.mouseEnter(root()), () => fireEvent.mouseLeave(root())],
-      ['keyboard focus', () => { pressKey(); fireEvent.focus(stage()); }, () => fireEvent.blur(stage())],
-    ])('holds while %s is on it, and carries on after', (_name, hold, release) => {
-      renderLanding();
-      advance(3000);
-      hold();
-      expect(root()).toHaveAttribute('data-playing', 'false');
-      const held = slides()[0].textContent;
-      advance(loopOf(0) * 2);
-      expect(root()).toHaveAttribute('data-start', '0');
-      expect(slides()[0].textContent).toBe(held);
-      release();
-      expect(root()).toHaveAttribute('data-playing', 'true');
-      advance(loopOf(0) - 3000 + 100);
-      expect(root()).toHaveAttribute('data-start', '1');
-    });
-
-    it('does not hold for the focus a tap leaves behind', () => {
-      renderLanding();
-      pressPointer();
-      fireEvent.focus(stage());
-      expect(root()).toHaveAttribute('data-playing', 'true');
-    });
-
-    it('holds while the tab is hidden and while less than half of it is on screen', () => {
-      vi.stubGlobal('IntersectionObserver', FakeObserver);
-      renderLanding();
-      expect(root()).toHaveAttribute('data-playing', 'true');
-      see(root(), { visible: false });
-      expect(root()).toHaveAttribute('data-playing', 'false');
-      see(root(), { visible: true });
-      expect(root()).toHaveAttribute('data-playing', 'true');
-      Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
-      act(() => { document.dispatchEvent(new Event('visibilitychange')); });
-      expect(root()).toHaveAttribute('data-playing', 'false');
-      delete document.hidden;
-      act(() => { document.dispatchEvent(new Event('visibilitychange')); });
-      expect(root()).toHaveAttribute('data-playing', 'true');
-    });
-
-    it('never stalls: a touch let go just after the card ended still moves on', () => {
-      renderLanding();
-      advance(loopOf(0) - 100);
-      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 10, clientY: 10 });
-      advance(5000);
-      expect(root()).toHaveAttribute('data-start', '0');
-      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 10, clientY: 10 });
-      advance(200);
-      expect(root()).toHaveAttribute('data-start', '1');
-    });
-
-    it('never stalls: if the end timer is lost, the next check sees the deadline has passed and moves on', () => {
-      renderLanding();
-      advance(1000);
-      // The page's clock is throttled: the wall clock moves on but the end timer does not fire.
-      vi.setSystemTime(Date.now() + loopOf(0) + 5000);
-      advance(500);
-      expect(root()).toHaveAttribute('data-start', '1');
-    });
-
-    it('never shows a letter as a tennis score while the tap card plays', () => {
-      renderLanding();
-      const seen = new Set();
-      for (let t = 0; t <= loopOf(0) - 100; t += 100) {
-        root().querySelectorAll('.home-tap-pt .home-r').forEach((el) => seen.add(el.textContent));
-        advance(100);
-      }
-      expect([...seen].sort()).toEqual(['0', '15', '30', '40', 'AD']);
-      expect(root().textContent).not.toMatch(/\bG\b/);
-    });
-
-    it('does not advance or animate under reduced motion, shows each card as one still frame, and can still be moved by hand', () => {
-      setScreen({ width: 390, reduced: true });
-      renderLanding();
-      expect(root()).toHaveAttribute('data-playing', 'false');
-      expect(screen.queryByRole('button', { name: /animations/ })).toBeNull();
-      expect(slides()[0].textContent).toContain('Deuce');
-      advance(loopOf(0) * 3);
-      expect(root()).toHaveAttribute('data-start', '0');
-      expect(slides()[0].textContent).toContain('Deuce');
-      const still = ['A six tapped by mistake is gone. Back to 5.', 'Sharing live', 'Need 12 off 8'];
-      still.forEach((text, i) => {
-        fireEvent.keyDown(stage(), { key: 'ArrowRight' });
-        expect(root()).toHaveAttribute('data-start', String(i + 1));
-        expect(slides()[0].textContent).toContain(text);
-      });
-      fireEvent.click(dots()[4]);
-      expect(slides()[0].querySelector('.home-paper')).toHaveClass('is-app');
-    });
+    expect(stage()).toHaveAttribute('data-story', '0');
+    expect(stage().querySelectorAll('button')).toHaveLength(1);
   });
 
-  describe('card rail on a tablet', () => {
-    beforeEach(() => { vi.useFakeTimers(); setScreen({ width: 800 }); });
-    afterEach(() => { vi.useRealTimers(); });
-
-    it('shows two cards, plays both, and moves on two at a time without losing a card', () => {
-      renderLanding();
-      const root = screen.getByTestId('landing-example');
-      const slides = () => [...root.querySelectorAll('[aria-roledescription="slide"]')];
-      expect(slides()).toHaveLength(2);
-      expect(slides().map((slide) => slide.getAttribute('aria-label'))).toEqual([
-        `1 of ${COUNT}: ${CARDS[0].title}`, `2 of ${COUNT}: ${CARDS[1].title}`,
-      ]);
-      act(() => { vi.advanceTimersByTime(2000); });
-      // Both cards on show are playing: the tap card is past its opening and so is the undo card.
-      expect(slides()[0].querySelector('.home-tap-call .home-r:not(.is-out)')).toHaveTextContent('15 all');
-      expect(slides()[1].querySelector('.home-undo-status .home-r:not(.is-out)')).toHaveTextContent('Four');
-      act(() => { vi.advanceTimersByTime(Math.max(loopOf(0), loopOf(1)) - 2000 + 50); });
-      expect(root).toHaveAttribute('data-start', '2');
-      expect(slides()).toHaveLength(2);
-      expect(root.querySelectorAll('.home-dot.is-on')).toHaveLength(2);
-      // The last page wraps: card 5 then card 1.
-      act(() => { vi.advanceTimersByTime(Math.max(loopOf(2), loopOf(3)) + 50); });
-      expect(slides().map((slide) => slide.getAttribute('aria-label'))).toEqual([
-        `5 of ${COUNT}: ${CARDS[4].title}`, `1 of ${COUNT}: ${CARDS[0].title}`,
-      ]);
-    });
+  it.each([['tennis', 0], ['cricket', 1], ['football', 2]])('starts %s with the same newMatch state as a tile', (sport, index) => {
+    renderLanding();
+    for (let i = 0; i < index; i++) next();
+    expect(start()).toHaveAccessibleName(`Start a ${sport} match`);
+    fireEvent.click(start());
+    expect(screen.getByLabelText('Current route')).toHaveTextContent(`/${sport}/quick`);
+    expect(screen.getByLabelText('Current route')).toHaveAttribute('data-new-match', 'true');
+    expect(localStorage.getItem('se_entered_app')).toBe('true');
   });
 
-  describe('card marquee on a desktop', () => {
-    beforeEach(() => { vi.useFakeTimers(); setScreen({ width: 1280 }); });
-    afterEach(() => { vi.useRealTimers(); });
+  it('last story scrolls to and focuses the picker heading without a pointer focus ring', () => {
+    renderLanding(); previous();
+    expect(start()).toHaveAccessibleName('Pick your sport');
+    fireEvent.click(start(), { detail: 1 });
+    const heading = screen.getByRole('heading', { name: 'Pick your sport' });
+    expect(heading).toHaveAttribute('tabindex', '-1');
+    expect(heading.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(heading).toHaveFocus();
+    expect(document.querySelector('.sports')).toHaveAttribute('data-keyboard-focus', 'false');
+    expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
+  });
 
-    const advance = (ms) => act(() => { vi.advanceTimersByTime(ms); });
-    const root = () => screen.getByTestId('landing-example');
+  it('retains both Start label and target while hovered, focused or pressed, including overlapping holds', () => {
+    renderLanding();
+    const button = start();
+    fireEvent.pointerEnter(button); fireEvent.focus(button);
+    advance(20000);
+    expect(stage()).toHaveAttribute('data-story', '0');
+    next();
+    expect(stage()).toHaveAttribute('data-story', '1');
+    expect(button).toHaveAccessibleName('Start a tennis match');
+    fireEvent.pointerLeave(button);
+    expect(button).toHaveAccessibleName('Start a tennis match');
+    fireEvent.pointerDown(button, { clientX: 100 }); fireEvent.blur(button);
+    advance(10000);
+    expect(button).toHaveAccessibleName('Start a tennis match');
+    fireEvent.pointerUp(button, { clientX: 100 });
+    expect(button).toHaveAccessibleName('Start a cricket match');
+  });
 
-    it('slides two identical groups, the copy hidden from assistive tech and from the keyboard, with no arrow buttons', () => {
-      renderLanding();
-      expect(root()).toHaveClass('home-marquee');
-      const groups = [...root().querySelectorAll('.home-group')];
-      expect(groups).toHaveLength(2);
-      expect(groups[0]).not.toHaveAttribute('aria-hidden');
-      expect(groups[1]).toHaveAttribute('aria-hidden', 'true');
-      expect(groups[1]).toHaveAttribute('inert');
-      expect(groups[1].querySelectorAll('.home-card')).toHaveLength(COUNT);
-      expect(groups[1].querySelectorAll('[aria-roledescription="slide"]')).toHaveLength(0);
-      expect(within(root()).getAllByRole('group', { name: /of 5:/ })).toHaveLength(COUNT);
-      expect(within(root()).getAllByRole('img')).toHaveLength(COUNT);
-      expect(within(root()).queryByRole('button', { name: /Previous card|Next card/ })).toBeNull();
-      expect(root().querySelectorAll('.home-dot')).toHaveLength(0);
+  it('shows the real Popular 6 full tiles and More 3 mini tiles, including Hockey, without group headings', () => {
+    renderLanding();
+    const groups = getSportsByCategory();
+    const popular = within(screen.getByRole('region', { name: 'Popular' })).getAllByRole('button');
+    const more = within(screen.getByRole('region', { name: 'More sports' })).getAllByRole('button');
+    expect(popular.map((tile) => tile.dataset.sport)).toEqual(groups.Popular.map((sport) => sport.id));
+    expect(more.map((tile) => tile.dataset.sport)).toEqual(['tennis', 'tabletennis', 'hockey']);
+    expect(popular).toHaveLength(6); expect(more).toHaveLength(3);
+    popular.forEach((tile) => { expect(tile).not.toHaveClass('kit-tile-mini'); expect(tile.querySelector('.kit-tile-hint')).not.toBeNull(); });
+    more.forEach((tile) => expect(tile).toHaveClass('kit-tile-mini'));
+    expect(screen.queryByRole('heading', { name: 'Popular' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'More sports' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'See all' })).toHaveAttribute('href', '/play');
+  });
+
+  it.each(Object.values(getSportsByCategory()).flat().map((sport) => [sport.id, sport.name]))('starts %s from its tile', (id, name) => {
+    renderLanding(); fireEvent.click(screen.getByRole('button', { name: `Quick match: ${name}` }));
+    expect(screen.getByLabelText('Current route')).toHaveTextContent(`/${id}/quick`);
+    expect(screen.getByLabelText('Current route')).toHaveAttribute('data-new-match', 'true');
+  });
+
+  it('wraps tap zones, arrow keys and horizontal swipes in both directions, ignoring drags and cancellation', () => {
+    renderLanding();
+    stage().getBoundingClientRect = () => ({ left: 20, width: 300 });
+    const tap = (x) => { fireEvent.pointerDown(stage(), { clientX: x, clientY: 100 }); fireEvent.pointerUp(stage(), { clientX: x, clientY: 100 }); };
+    tap(30); expect(stage()).toHaveAttribute('data-story', '3');
+    tap(250); expect(stage()).toHaveAttribute('data-story', '0');
+    previous(); expect(stage()).toHaveAttribute('data-story', '3');
+    next(); expect(stage()).toHaveAttribute('data-story', '0');
+    fireEvent.pointerDown(stage(), { clientX: 250, clientY: 100 });
+    fireEvent.pointerUp(stage(), { clientX: 100, clientY: 105 });
+    expect(stage()).toHaveAttribute('data-story', '1');
+    fireEvent.pointerDown(stage(), { clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(stage(), { clientX: 250, clientY: 100 });
+    expect(stage()).toHaveAttribute('data-story', '0');
+    fireEvent.pointerDown(stage(), { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(stage(), { clientX: 120, clientY: 100 });
+    fireEvent.pointerUp(stage(), { clientX: 120, clientY: 100 });
+    fireEvent.pointerDown(stage(), { clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(stage(), { clientX: 190, clientY: 260 });
+    fireEvent.pointerDown(stage(), { clientX: 100, clientY: 100 });
+    fireEvent.pointerCancel(stage()); fireEvent.pointerUp(stage(), { clientX: 100, clientY: 100 });
+    expect(stage()).toHaveAttribute('data-story', '0');
+  });
+
+  it('plays each complete timeline and loops from the fourth story to the first', () => {
+    renderLanding();
+    STORIES.forEach((story, i) => {
+      expect(stage()).toHaveAttribute('data-story', String(i));
+      advance(story.duration * 1000 + 30);
     });
+    expect(stage()).toHaveAttribute('data-story', '0');
+  });
 
-    it('plays every card on show by itself, and starts each over when its loop ends', () => {
-      renderLanding();
-      const [tap, undo] = within(root()).getAllByRole('group', { name: /of 5:/ });
-      expect(tap.textContent).toContain('Love all');
-      advance(1200);
-      expect(undo.textContent).toContain('A single');
-      advance(800);
-      expect(tap.querySelector('.home-tap-call .home-r:not(.is-out)')).not.toHaveTextContent('Love all');
-      advance(loopOf(0) - 2000 + 300);
-      expect(tap.textContent).toContain('Love all');
-    });
+  it('pauses after a 220ms hold and resumes from the same frame without navigating on release', () => {
+    renderLanding(); advance(2000);
+    fireEvent.pointerDown(stage(), { clientX: 100, clientY: 100 }); advance(230);
+    const before = scene().textContent;
+    expect(stage()).toHaveAttribute('data-playing', 'false');
+    advance(15000); expect(scene().textContent).toBe(before);
+    fireEvent.pointerUp(stage(), { clientX: 100, clientY: 100 });
+    expect(stage()).toHaveAttribute('data-story', '0');
+    advance(1000); expect(scene().textContent).not.toBe(before);
+  });
 
-    it('stands a card still while it is off screen and plays it again when it comes back', () => {
-      vi.stubGlobal('IntersectionObserver', FakeObserver);
-      renderLanding();
-      const [tap] = within(root()).getAllByRole('group', { name: /of 5:/ });
-      see(tap, { visible: false });
-      advance(4000);
-      expect(tap.textContent).toContain('Love all');
-      see(tap, { visible: true });
-      advance(2000);
-      expect(tap.querySelector('.home-tap-call .home-r:not(.is-out)')).not.toHaveTextContent('Love all');
-    });
+  it('toggles the keyboard-only pause control and Space on the stage without intercepting button keys', () => {
+    renderLanding(); advance(2000);
+    const before = scene().textContent;
+    const pause = screen.getByRole('button', { name: 'Pause stories' });
+    expect(pause).toHaveClass('story-pause');
+    fireEvent.click(pause);
+    expect(screen.getByRole('button', { name: 'Play stories' })).toBeInTheDocument();
+    advance(15000); expect(scene().textContent).toBe(before);
+    fireEvent.keyDown(pause, { key: 'ArrowRight' });
+    expect(stage()).toHaveAttribute('data-story', '0');
+    fireEvent.keyDown(stage(), { key: ' ' });
+    expect(screen.getByRole('button', { name: 'Pause stories' })).toBeInTheDocument();
+    advance(1000); expect(scene().textContent).not.toBe(before);
+    fireEvent.keyDown(stage(), { key: ' ' });
+    expect(stage()).toHaveAttribute('data-playing', 'false');
+  });
 
-    it('has a visible Pause that stops the track and every animation, and Play carries on; hover and keyboard focus pause too', () => {
-      renderLanding();
-      const [tap] = within(root()).getAllByRole('group', { name: /of 5:/ });
-      advance(2000);
-      const before = tap.textContent;
-      fireEvent.click(screen.getByRole('button', { name: 'Pause animations' }));
-      expect(root()).toHaveClass('is-paused');
-      expect(root()).toHaveAttribute('data-playing', 'false');
-      advance(5000);
-      expect(tap.textContent).toBe(before);
-      fireEvent.click(screen.getByRole('button', { name: 'Play animations' }));
-      expect(root()).not.toHaveClass('is-paused');
-      advance(2000);
-      expect(tap.textContent).not.toBe(before);
-      fireEvent.mouseEnter(root());
-      expect(root()).toHaveClass('is-paused');
-      fireEvent.mouseLeave(root());
-      expect(root()).not.toHaveClass('is-paused');
-      fireEvent.keyDown(document.body, { key: 'Tab' });
-      fireEvent.focus(screen.getByRole('button', { name: 'Pause animations' }));
-      expect(root()).toHaveClass('is-paused');
-      fireEvent.blur(screen.getByRole('button', { name: 'Pause animations' }));
-      expect(root()).not.toHaveClass('is-paused');
-    });
+  it('pauses off screen and in a hidden tab and cleans up observers, timers and animation frames', () => {
+    const { unmount } = renderLanding(); advance(2000);
+    const observer = FakeObserver.all[0];
+    act(() => observer.callback([{ isIntersecting: false, intersectionRatio: 0 }]));
+    const before = scene().textContent; advance(15000); expect(scene().textContent).toBe(before);
+    act(() => observer.callback([{ isIntersecting: true, intersectionRatio: 1 }]));
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+    fireEvent(document, new Event('visibilitychange'));
+    advance(15000); expect(scene().textContent).toBe(before);
+    vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
+    fireEvent(document, new Event('visibilitychange'));
+    advance(1000); expect(scene().textContent).not.toBe(before);
+    unmount(); expect(observer.disconnect).toHaveBeenCalled(); expect(vi.getTimerCount()).toBe(0);
+  });
 
-    it('has no marquee under reduced motion: one static row of cards on their still frames, no copy, no Pause', () => {
-      setScreen({ width: 1280, reduced: true });
-      renderLanding();
-      expect(root()).toHaveClass('is-still');
-      expect(root().querySelectorAll('.home-group')).toHaveLength(1);
-      expect(screen.queryByRole('button', { name: /animations/ })).toBeNull();
-      const [tap] = within(root()).getAllByRole('group', { name: /of 5:/ });
-      expect(tap.textContent).toContain('Deuce');
-      advance(loopOf(0) * 2);
-      expect(tap.textContent).toContain('Deuce');
+  it('calls deuce and advantage, then resets points to 0–0, games to 1–0 and serve to Meera after the game', () => {
+    renderLanding(); advance(5050); expect(scene()).toHaveTextContent('Deuce');
+    advance(1200); expect(scene()).toHaveTextContent('Advantage Asha');
+    advance(1200); expect(scene()).toHaveTextContent('Game Asha');
+    const asha = scene().querySelector('[data-player="Asha"]');
+    const meera = scene().querySelector('[data-player="Meera"]');
+    expect(asha.querySelector('.pt')).toHaveTextContent(/^0$/);
+    expect(meera.querySelector('.pt')).toHaveTextContent(/^0$/);
+    expect(asha.querySelector('.gm')).toHaveTextContent('Games 1');
+    expect(meera.querySelector('.gm')).toHaveTextContent('Games 0');
+    expect(within(scene()).getByRole('img', { name: 'Meera serving' })).toBeInTheDocument();
+    expect(within(scene()).queryByRole('img', { name: 'Asha serving' })).toBeNull();
+    expect(scene().querySelector('.kicker')).toHaveTextContent('Tennis · Game 2');
+    expect([...scene().querySelectorAll('.pt')].map((el) => el.textContent)).not.toContain('G');
+  });
+
+  it('Undo removes the six and recounts 11 to 5 before the remaining legal deliveries', () => {
+    renderLanding(); next(); advance(2550);
+    expect(scene().querySelector('.c-runs')).toHaveTextContent(/^11$/);
+    expect([...scene().querySelectorAll('.ball.f')].map((el) => el.textContent)).toEqual(['1', '4', '6']);
+    advance(1100);
+    expect(scene().querySelector('.c-runs')).toHaveTextContent(/^5$/);
+    expect([...scene().querySelectorAll('.ball.f')].map((el) => el.textContent)).toEqual(['1', '4']);
+    advance(500); expect(scene().querySelector('.removed-six')).toBeNull();
+    expect(scene().querySelectorAll('.ball')).toHaveLength(5);
+    advance(2200);
+    expect([...scene().querySelectorAll('.ball.f')].map((el) => el.textContent)).toEqual(['1', '4', '2', 'W', '1']);
+    expect(scene().querySelector('.c-runs')).toHaveTextContent(/^8$/);
+  });
+
+  it('shows football goals saved without signal then arriving on the live link', () => {
+    renderLanding(); next(); next(); advance(3600);
+    expect(scene()).toHaveTextContent('Saved here');
+    const phones = scene().querySelectorAll('.ph');
+    expect(phones[0].querySelector('.sc')).toHaveTextContent('2');
+    expect(phones[1].querySelector('.sc')).toHaveTextContent('1');
+    advance(2000); expect(phones[1]).toHaveTextContent('Arrived');
+    expect(phones[1].querySelector('.sc')).toHaveTextContent('2');
+  });
+
+  it('uses final truthful frames for reduced motion, never auto advances, and still navigates', () => {
+    setScreen({ reduced: true }); renderLanding();
+    expect(scene()).toHaveTextContent('Game Asha');
+    expect(scene().querySelector('[data-player="Asha"] .pt')).toHaveTextContent(/^0$/);
+    expect(within(scene()).getByRole('img', { name: 'Meera serving' })).toBeInTheDocument();
+    advance(60000); expect(stage()).toHaveAttribute('data-story', '0');
+    next(); expect(scene().querySelector('.c-runs')).toHaveTextContent(/^8$/);
+    expect(scene().querySelectorAll('.ball.f')).toHaveLength(5);
+    next(); expect([...scene().querySelectorAll('.sc')].map((el) => el.textContent)).toEqual(['2', '2']);
+    next(); expect(scene().querySelectorAll('.mom.shown')).toHaveLength(3);
+    expect(stage()).toHaveAttribute('data-playing', 'false');
+    fireEvent.click(start());
+    expect(screen.getByRole('heading', { name: 'Pick your sport' }).scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+  });
+
+  it('syncs all four hero/footer gradients and theme colours, restoring the prior meta value on unmount', () => {
+    const meta = document.createElement('meta'); meta.name = 'theme-color'; meta.content = '#123456'; document.head.appendChild(meta);
+    const { unmount } = renderLanding();
+    STORIES.forEach((story) => {
+      expect(meta.content).toBe(story.theme);
+      const layers = document.querySelectorAll('.hero-bg i.on');
+      expect(layers).toHaveLength(2);
+      layers.forEach((layer) => expect(layer).toHaveStyle({ background: story.gradient }));
+      next();
     });
+    unmount(); expect(meta.content).toBe('#123456'); meta.remove();
+  });
+
+  it('runs only nudge A once and keeps the account, closing and legal routes', () => {
+    renderLanding();
+    const nudge = document.querySelector('.nudge'); expect(nudge).toHaveAttribute('aria-hidden', 'true');
+    expect(nudge).toHaveTextContent('Go on, try one'); advance(5250); expect(nudge).toHaveClass('gone');
+    next(); previous(); advance(10000); expect(nudge).toHaveClass('gone');
+    expect(screen.getByRole('link', { name: 'create a free account' })).toHaveAttribute('href', '/signup');
+    expect(screen.getByRole('link', { name: 'Create a free account' })).toHaveAttribute('href', '/signup');
+    expect(screen.getByRole('link', { name: 'Log in' })).toHaveAttribute('href', '/login');
+    for (const label of ['Privacy', 'Terms', 'Contact']) expect(screen.getByRole('link', { name: label })).toHaveAttribute('href', `/${label.toLowerCase()}`);
+    expect(document.querySelector('.end-foot')).toHaveTextContent('© 2026 Score Easy');
   });
 });

@@ -31,6 +31,8 @@ describe('MonoPlayHub (Kit S1)', () => {
     const { container } = renderPlayHub();
 
     expect(screen.getByRole('heading', { level: 1, name: 'What are we scoring?' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Popular' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'More sports' })).toBeInTheDocument();
     const popular = tilesIn('Popular');
     const more = tilesIn('More sports');
     expect(popular).toHaveLength(6);
