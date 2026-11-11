@@ -124,46 +124,9 @@
         text-transform: uppercase;
       }
 
-      .boot-scoreboard {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        align-items: center;
-        gap: 12px;
-        margin-top: 18px;
-        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
-      }
-
-      .boot-team {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .boot-team:last-child {
-        text-align: right;
-      }
-
-      .boot-team span {
-        color: #666666;
-        font-size: 11px;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-
-      .boot-team strong {
-        font-size: 28px;
-        line-height: 1;
-      }
-
-      .boot-divider {
-        width: 1px;
-        height: 44px;
-        background: #d7ddd7;
-      }
-
       .boot-progress {
         height: 4px;
-        margin-top: 18px;
+        margin-top: 20px;
         overflow: hidden;
         border-radius: 999px;
         background: #e4e8e4;
@@ -202,17 +165,6 @@
           <div class="boot-brand">
             <span>Score</span>
             <span>Easy</span>
-          </div>
-          <div class="boot-scoreboard" aria-hidden="true">
-            <div class="boot-team">
-              <span>Home</span>
-              <strong>08</strong>
-            </div>
-            <div class="boot-divider"></div>
-            <div class="boot-team">
-              <span>Away</span>
-              <strong>07</strong>
-            </div>
           </div>
           <div class="boot-progress" aria-hidden="true"><span></span></div>
           <p class="boot-status">Loading Score Easy</p>

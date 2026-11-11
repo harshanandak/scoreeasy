@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthContext, LocalAuthProvider } from '../../../auth/AuthContext';
+import { LATER_GROUP_LABEL, PRIORITY_GROUP_LABEL } from '../../../models/sportFocus';
 import { getSportsByCategory } from '../../../models/sportRegistry';
 import GuestLanding from './GuestLanding';
 import { CARDS } from './cardTimelines';
@@ -39,40 +40,48 @@ function renderSignedIn() {
   );
 }
 
-function slides(container) {
-  return [...container.querySelectorAll('[aria-roledescription="slide"]')];
-}
-
 const COUNT = CARDS.length;
-const PITCH = 300;
-
-/* jsdom has no layout. This gives every rail card a width of PITCH (card 0 sits at the 16px
-   gutter) and a scrollTo that moves the rail and fires its scroll event, as a browser does. */
-function installRailLayout() {
-  const offset = vi.spyOn(HTMLElement.prototype, 'offsetLeft', 'get').mockImplementation(function offsetLeft() {
-    const rail = this.parentElement;
-    return rail?.classList.contains('home-rail') ? 16 + [...rail.children].indexOf(this) * PITCH : 0;
-  });
-  Element.prototype.scrollTo = function scrollTo({ left }) {
-    this.scrollLeft = left;
-    this.dispatchEvent(new Event('scroll'));
-  };
-  return () => {
-    offset.mockRestore();
-    delete Element.prototype.scrollTo;
-  };
-}
-
-function reducedMotion() {
-  window.matchMedia = vi.fn().mockImplementation((query) => ({
-    matches: query.includes('prefers-reduced-motion'),
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  }));
-}
-
+const loopOf = (card) => CARDS[card].timeline.loopMs;
 const follows = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+/* jsdom has no layout and no media: this answers (min-width: N) and prefers-reduced-motion for a window
+   `width` px wide. With no call at all there is no matchMedia, which Home reads as a phone. */
+function setScreen({ width = 390, reduced = false } = {}) {
+  window.matchMedia = vi.fn().mockImplementation((query) => {
+    const min = /min-width:\s*(\d+)px/.exec(query);
+    let matches = false;
+    if (query.includes('prefers-reduced-motion')) matches = reduced;
+    else if (min) matches = width >= Number(min[1]);
+    return { matches, media: query, addEventListener: () => {}, removeEventListener: () => {} };
+  });
+}
+
+/* An IntersectionObserver the test drives by hand. */
+class FakeObserver {
+  static all = [];
+
+  constructor(callback) {
+    this.callback = callback;
+    this.targets = new Set();
+    FakeObserver.all.push(this);
+  }
+
+  observe(el) { this.targets.add(el); }
+
+  unobserve(el) { this.targets.delete(el); }
+
+  disconnect() { this.targets.clear(); }
+}
+
+function see(el, { visible, top = 0 }) {
+  act(() => {
+    FakeObserver.all.forEach((observer) => {
+      if (observer.targets.has(el)) {
+        observer.callback([{ target: el, isIntersecting: visible, intersectionRatio: visible ? 1 : 0, boundingClientRect: { top, bottom: top + 10 } }]);
+      }
+    });
+  });
+}
 
 describe('Home', () => {
   beforeEach(() => { localStorage.clear(); });
@@ -80,255 +89,495 @@ describe('Home', () => {
   afterEach(() => {
     cleanup();
     delete window.matchMedia;
+    delete Element.prototype.scrollIntoView;
+    vi.unstubAllGlobals();
+    FakeObserver.all = [];
   });
 
-  it('has one fixed Start that opens the sport picker, plus Sign in and sign up', () => {
-    renderLanding();
-    const start = screen.getAllByRole('link', { name: 'Start a match' });
-    expect(start).toHaveLength(1);
-    expect(start[0]).toHaveAttribute('href', '/play');
-    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login');
-    expect(screen.getByRole('link', { name: 'Create a free account' })).toBeInTheDocument();
-  });
+  describe('first screen and page order', () => {
+    it('is, on a phone, the top bar, the headline, one reassurance line and the rail: Start comes after', () => {
+      const { container } = renderLanding();
+      const first = container.querySelector('.home-first');
+      expect(first.querySelector('.kit-top')).not.toBeNull();
+      const headline = within(first).getByRole('heading', { level: 1 });
+      expect(headline).toHaveTextContent('Score your next match on your phone.');
+      const assure = within(first).getByText('Free · No account · Works offline');
+      const rail = within(first).getByTestId('landing-example');
+      expect(follows(headline, assure)).toBe(true);
+      expect(follows(assure, rail)).toBe(true);
+      // Nothing else is above the fold: Start and the sport picker come after the rail.
+      expect(within(first).queryByRole('button', { name: 'Start a match' })).toBeNull();
+      expect(within(first).queryByRole('heading', { name: 'Pick your sport' })).toBeNull();
+      const start = container.querySelector('.home-start').querySelector('.se-go');
+      expect(follows(rail, start)).toBe(true);
+      expect(follows(start, container.querySelector('.home-picker'))).toBe(true);
+    });
 
-  it('puts Sign in in the top bar, not the headline block, and hides it from a signed-in visitor', () => {
-    const { container, unmount } = renderLanding();
-    const signIn = screen.getByRole('link', { name: 'Sign in' });
-    expect(container.querySelector('.kit-top')).toContainElement(signIn);
-    expect(container.querySelector('.kit-landing-hero')).not.toContainElement(signIn);
-    unmount();
-    renderSignedIn();
-    expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
-    expect(screen.getByRole('link', { name: 'Start a match' })).toBeInTheDocument();
-  });
+    it('puts Sign in in the top bar for a signed-out visitor only', () => {
+      const { container, unmount } = renderLanding();
+      const signIn = screen.getByRole('link', { name: 'Sign in' });
+      expect(signIn).toHaveAttribute('href', '/login');
+      expect(container.querySelector('.kit-top')).toContainElement(signIn);
+      expect(container.querySelector('.home-copy')).not.toContainElement(signIn);
+      expect(screen.getByRole('link', { name: 'Create a free account' })).toBeInTheDocument();
+      unmount();
+      renderSignedIn();
+      expect(screen.queryByRole('link', { name: 'Sign in' })).toBeNull();
+      expect(screen.queryByRole('link', { name: 'Create a free account' })).toBeNull();
+      expect(screen.getAllByRole('button', { name: 'Start a match' }).length).toBeGreaterThan(0);
+    });
 
-  it('shows 8 sports as full tiles in registry order, after the headline, Start and the card rail', () => {
-    const { container } = renderLanding();
-    const registry = Object.values(getSportsByCategory()).flat().map((sport) => sport.id);
-    const tiles = [...container.querySelectorAll('.kit-landing-grid .kit-tile')];
-    expect(tiles).toHaveLength(8);
-    expect(tiles.map((tile) => tile.dataset.sport)).toEqual(registry.slice(0, 8));
-    // Hockey is in the registry and on /play, but Home stops at an even 8 so no tile sits alone.
-    expect(registry).toContain('hockey');
-    expect(tiles.map((tile) => tile.dataset.sport)).not.toContain('hockey');
-    expect(container.querySelector('.kit-landing-rail')).toBeNull();
-    for (const tile of tiles) {
-      expect(tile).not.toHaveClass('kit-tile-mini');
-      expect(tile.querySelector('.kit-tile-hint')).not.toBeNull();
-    }
-    const hero = container.querySelector('.kit-landing-hero');
-    const start = screen.getByRole('link', { name: 'Start a match' });
-    const example = screen.getByTestId('landing-example');
-    expect(follows(hero, start)).toBe(true);
-    expect(follows(start, example)).toBe(true);
-    expect(follows(example, tiles[0])).toBe(true);
-    expect(screen.getByRole('heading', { name: 'Pick your sport' })).toBeInTheDocument();
-  });
-
-  it('starts the tapped sport quick match from a tile, and See all opens the Play hub', () => {
-    const { container } = renderLanding();
-    const ids = ['cricket', 'tennis'];
-    for (const id of ids) {
-      fireEvent.click(container.querySelector(`.kit-tile[data-sport="${id}"]`));
-      expect(screen.getByLabelText('Current route')).toHaveTextContent(new RegExp(`^/${id}/quick$`));
-      expect(screen.getByLabelText('Current route')).toHaveAttribute('data-new-match', 'true');
-      cleanup();
+    it('does not remember an unfinished Sign in attempt', () => {
       renderLanding();
-    }
-    fireEvent.click(screen.getByRole('link', { name: 'See all' }));
-    expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
-  });
+      fireEvent.click(screen.getByRole('link', { name: 'Sign in' }));
+      expect(localStorage.getItem('se_entered_app')).toBeNull();
+    });
 
-  it('shows a labelled carousel of animation cards with no sport tabs and no hint list', () => {
-    const { container } = renderLanding();
-    const carousel = screen.getByTestId('landing-example');
-    expect(carousel).toHaveAttribute('aria-roledescription', 'carousel');
-    expect(carousel).toHaveAccessibleName();
-    expect(within(carousel).queryByRole('group', { name: 'Pick a sport' })).toBeNull();
-    expect(within(carousel).queryAllByRole('listitem')).toHaveLength(0);
-    const all = slides(container);
-    expect(all).toHaveLength(COUNT);
-    expect(all.filter((slide) => slide.getAttribute('aria-hidden') === 'true')).toHaveLength(0);
-    // The loop's two extra copies are for the eye only: hidden from assistive tech.
-    const clones = [...container.querySelectorAll('[data-clone="true"]')];
-    expect(clones).toHaveLength(COUNT * 2);
-    for (const clone of clones) expect(clone).toHaveAttribute('aria-hidden', 'true');
-  });
+    it('says phone below 900px and device or sideline from 900px', () => {
+      setScreen({ width: 390 });
+      const phone = renderLanding();
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score your next match on your phone.');
+      expect(screen.getByText('No account needed. Your score saves on this phone, even offline.')).toBeInTheDocument();
+      expect(screen.getByText(/Save across phones\?/)).toBeInTheDocument();
+      phone.unmount();
+      setScreen({ width: 900 });
+      renderLanding();
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Score your next match from the sideline.');
+      expect(screen.getByText('No account needed. Your score saves on this device, even offline.')).toBeInTheDocument();
+      expect(screen.getByText(/Save across devices\?/)).toBeInTheDocument();
+      expect(screen.queryByText(/phone/i, { selector: 'h1, .home-saves, .home-account' })).toBeNull();
+    });
 
-  it('shows the concept animations, not sport scoreboards', () => {
-    const { container } = renderLanding();
-    expect(container.querySelector('.home-board, .home-slide-tag')).toBeNull();
-    const carousel = screen.getByTestId('landing-example');
-    expect(within(carousel).queryByText(/Every ball counted/)).toBeNull();
-    expect(CARDS.map((card) => card.id)).toEqual(['tap', 'undo', 'live', 'moments', 'paper']);
-  });
+    it('keeps FAQs collapsed and the structured data consistent', () => {
+      const { container } = renderLanding();
+      const rows = [...container.querySelectorAll('details')];
+      expect(rows).toHaveLength(4);
+      for (const row of rows) expect(row).not.toHaveAttribute('open');
+      const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+      const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => JSON.parse(match[1]));
+      expect(blocks.find((block) => block['@type'] === 'FAQPage').mainEntity.map((item) => [item.name, item.acceptedAnswer.text])).toEqual(LANDING_FAQ.map((item) => [item.question, item.answer]));
+    });
 
-  it('gives every card a heading and a picture named for what happens in it', () => {
-    renderLanding();
-    const carousel = screen.getByTestId('landing-example');
-    // Only the real copy is exposed: the clones are aria-hidden, so each name is found once.
-    expect(within(carousel).getAllByRole('img')).toHaveLength(COUNT);
-    CARDS.forEach((card, i) => {
-      expect(within(carousel).getByRole('group', { name: `${i + 1} of ${COUNT}: ${card.title}` })).toBeInTheDocument();
-      expect(within(carousel).getByRole('heading', { level: 3, name: card.title })).toBeInTheDocument();
-      expect(within(carousel).getByRole('img', { name: card.label })).toBeInTheDocument();
-      expect(card.title.split(/\s+/).length).toBeLessThanOrEqual(5);
+    it('ends with a closing Start above the footer', () => {
+      const { container } = renderLanding();
+      const close = container.querySelector('.home-close');
+      expect(within(close).getByRole('button', { name: 'Start a match' })).toBeInTheDocument();
+      expect(follows(container.querySelector('.home-faq'), close)).toBe(true);
+      expect(follows(close, container.querySelector('.kit-landing-foot'))).toBe(true);
     });
   });
 
-  it('keeps FAQs collapsed and the structured data consistent', () => {
-    const { container } = renderLanding();
-    const rows = [...container.querySelectorAll('details')];
-    expect(rows).toHaveLength(4);
-    for (const row of rows) expect(row).not.toHaveAttribute('open');
-    const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
-    const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(match => JSON.parse(match[1]));
-    expect(blocks.find(block => block['@type'] === 'FAQPage').mainEntity.map(item => [item.name, item.acceptedAnswer.text])).toEqual(LANDING_FAQ.map(item => [item.question, item.answer]));
-  });
-
-  it('does not remember an unfinished Sign in attempt', () => {
-    renderLanding();
-    fireEvent.click(screen.getByRole('link', { name: 'Sign in' }));
-    expect(localStorage.getItem('se_entered_app')).toBeNull();
-  });
-
-  describe('card rail', () => {
-    let restoreLayout;
-    beforeEach(() => { vi.useFakeTimers(); restoreLayout = installRailLayout(); });
-    afterEach(() => { restoreLayout(); vi.useRealTimers(); });
-
-    // The layout effect parks the rail on the first real card: card index COUNT.
-    function renderRail() {
+  describe('Start and the sport picker', () => {
+    it('has Start as a button that scrolls to the picker and moves focus to its heading, without leaving the page', () => {
+      const scrolled = [];
+      Element.prototype.scrollIntoView = vi.fn(function scrollIntoView() { scrolled.push(this); });
       const { container } = renderLanding();
-      const rail = container.querySelector('.home-rail');
-      expect(rail.scrollLeft).toBe(COUNT * PITCH);
-      return { container, rail, root: screen.getByTestId('landing-example') };
-    }
+      const start = container.querySelector('.home-start').querySelector('.se-go');
+      expect(start.tagName).toBe('BUTTON');
+      fireEvent.click(start);
+      expect(scrolled).toEqual([container.querySelector('.home-picker')]);
+      expect(screen.getByRole('heading', { name: 'Pick your sport' })).toHaveFocus();
+      expect(screen.getByLabelText('Current route')).toHaveTextContent(/^\/$/);
+    });
+
+    it('shows Play\'s picker: Popular as 6 full tiles, More sports as 3 mini tiles with Hockey, in registry order', () => {
+      const { container } = renderLanding();
+      const groups = getSportsByCategory();
+      const popularIds = groups[PRIORITY_GROUP_LABEL].map((sport) => sport.id);
+      const moreIds = groups[LATER_GROUP_LABEL].map((sport) => sport.id);
+      const popular = [...container.querySelectorAll('.home-picker .kit-grid2 .kit-tile')];
+      const more = [...container.querySelectorAll('.home-picker .kit-grid3 .kit-tile')];
+      expect(popular.map((tile) => tile.dataset.sport)).toEqual(popularIds);
+      expect(popular).toHaveLength(6);
+      expect(more.map((tile) => tile.dataset.sport)).toEqual(moreIds);
+      expect(more).toHaveLength(3);
+      expect(more.map((tile) => tile.dataset.sport)).toContain('hockey');
+      for (const tile of popular) {
+        expect(tile).not.toHaveClass('kit-tile-mini');
+        expect(tile.querySelector('.kit-tile-hint')).not.toBeNull();
+      }
+      for (const tile of more) expect(tile).toHaveClass('kit-tile-mini');
+      expect(screen.getByRole('heading', { name: PRIORITY_GROUP_LABEL })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: LATER_GROUP_LABEL })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'See all' })).toBeNull();
+    });
+
+    it('starts the tapped sport quick match from a tile', () => {
+      for (const id of ['cricket', 'tennis', 'hockey']) {
+        const { container } = renderLanding();
+        fireEvent.click(container.querySelector(`.kit-tile[data-sport="${id}"]`));
+        expect(screen.getByLabelText('Current route')).toHaveTextContent(new RegExp(`^/${id}/quick$`));
+        expect(screen.getByLabelText('Current route')).toHaveAttribute('data-new-match', 'true');
+        cleanup();
+      }
+    });
+
+    it('moves Start into the hero column on a desktop, beside the headline and the account line', () => {
+      setScreen({ width: 1280 });
+      const { container } = renderLanding();
+      const copy = container.querySelector('.home-copy');
+      expect(within(copy).getByRole('button', { name: 'Start a match' })).toBeInTheDocument();
+      expect(within(copy).getByRole('link', { name: 'Create a free account' })).toBeInTheDocument();
+    });
+  });
+
+  describe('sticky Start bar', () => {
+    beforeEach(() => { vi.stubGlobal('IntersectionObserver', FakeObserver); });
+
+    const els = (container) => ({
+      start: container.querySelector('.home-start'),
+      picker: container.querySelector('.home-picker'),
+      end: container.querySelector('.home-close').parentElement,
+    });
+    const bar = () => screen.queryByTestId('sticky-start');
+
+    it('is off at first, comes on once the in-flow Start is above the top of the screen, and goes while the picker or the closing block is on screen', () => {
+      const { container } = renderLanding();
+      const { start, picker, end } = els(container);
+      expect(bar()).toBeNull();
+      // Start is still below the fold (not scrolled off the top): no bar.
+      see(start, { visible: false, top: 600 });
+      expect(bar()).toBeNull();
+      see(start, { visible: false, top: -80 });
+      expect(bar()).not.toBeNull();
+      expect(within(bar()).getByRole('button', { name: 'Start a match' })).toBeInTheDocument();
+      see(picker, { visible: true });
+      expect(bar()).toBeNull();
+      see(picker, { visible: false });
+      expect(bar()).not.toBeNull();
+      see(end, { visible: true });
+      expect(bar()).toBeNull();
+      see(end, { visible: false });
+      expect(bar()).not.toBeNull();
+      // Back up the page, the in-flow Start is on screen again.
+      see(start, { visible: true });
+      expect(bar()).toBeNull();
+    });
+
+    it('scrolls to the picker and focuses its heading, like the in-flow Start', () => {
+      const scrolled = [];
+      Element.prototype.scrollIntoView = vi.fn(function scrollIntoView() { scrolled.push(this); });
+      const { container } = renderLanding();
+      see(els(container).start, { visible: false, top: -80 });
+      fireEvent.click(within(bar()).getByRole('button', { name: 'Start a match' }));
+      expect(scrolled).toEqual([container.querySelector('.home-picker')]);
+      expect(screen.getByRole('heading', { name: 'Pick your sport' })).toHaveFocus();
+    });
+
+    it.each([[800], [1280]])('is only for phones: none at %ipx', (width) => {
+      setScreen({ width });
+      const { container } = renderLanding();
+      see(els(container).start, { visible: false, top: -80 });
+      expect(bar()).toBeNull();
+    });
+  });
+
+  describe('card rail on a phone', () => {
+    beforeEach(() => { vi.useFakeTimers(); });
+    afterEach(() => { vi.useRealTimers(); });
 
     const advance = (ms) => act(() => { vi.advanceTimersByTime(ms); });
-    const rest = (rail) => fireEvent(rail, new Event('scrollend'));
-    const loopOf = (card) => CARDS[card].timeline.loopMs;
+    const root = () => screen.getByTestId('landing-example');
+    const stage = () => root().querySelector('.home-stage');
+    const slides = () => [...root().querySelectorAll('[aria-roledescription="slide"]')];
+    const dots = () => within(within(root()).getByRole('group', { name: 'Choose a card' })).getAllByRole('button');
+    const pressKey = () => fireEvent.keyDown(document.body, { key: 'Tab' });
+    const pressPointer = () => fireEvent.pointerDown(document.body);
 
-    it('moves between cards with the arrow keys and never changes the Start label', () => {
-      const { rail, root } = renderRail();
-      expect(rail).toHaveAttribute('tabindex', '0');
-      for (let i = 1; i <= COUNT; i += 1) {
-        fireEvent.keyDown(rail, { key: 'ArrowRight' });
-        expect(root).toHaveAttribute('data-active', String(i % COUNT));
-        expect(screen.getByRole('link', { name: 'Start a match' })).toHaveAttribute('href', '/play');
+    it('is a labelled carousel with one card on show and one dot for each of the five cards', () => {
+      renderLanding();
+      expect(root()).toHaveAttribute('aria-roledescription', 'carousel');
+      expect(root()).toHaveAccessibleName();
+      expect(slides()).toHaveLength(1);
+      expect(root().querySelectorAll('[data-clone]')).toHaveLength(0);
+      expect(CARDS.map((card) => card.id)).toEqual(['tap', 'undo', 'live', 'moments', 'paper']);
+      expect(dots()).toHaveLength(COUNT);
+      expect(dots()[0]).toHaveAttribute('aria-current', 'true');
+      expect(within(root()).queryByRole('button', { name: /Previous card|Next card/ })).toBeNull();
+      expect(root().querySelector('.home-board, .home-slide-tag')).toBeNull();
+    });
+
+    it('gives every card a heading and a picture named for what happens in it, reached by the dots', () => {
+      renderLanding();
+      CARDS.forEach((card, i) => {
+        fireEvent.click(dots()[i]);
+        expect(dots()[i]).toHaveAttribute('aria-current', 'true');
+        expect(within(root()).getByRole('group', { name: `${i + 1} of ${COUNT}: ${card.title}` })).toBeInTheDocument();
+        expect(within(root()).getByRole('heading', { level: 3, name: card.title })).toBeInTheDocument();
+        expect(within(root()).getByRole('img', { name: card.label })).toBeInTheDocument();
+      });
+    });
+
+    it('plays each card through, moves to the next, and wraps from the last card to the first', () => {
+      renderLanding();
+      for (let i = 0; i < COUNT; i += 1) {
+        expect(root()).toHaveAttribute('data-start', String(i));
+        expect(dots()[i]).toHaveAttribute('aria-current', 'true');
+        advance(loopOf(i) - 50);
+        expect(root()).toHaveAttribute('data-start', String(i));
+        advance(100);
       }
+      expect(root()).toHaveAttribute('data-start', '0');
     });
 
-    it('plays each card through by itself, then wraps from the last card to the first', () => {
-      const { rail, root } = renderRail();
-      expect(root).toHaveAttribute('data-active', '0');
-      for (let i = 1; i < COUNT; i += 1) {
-        advance(loopOf(i - 1));
-        expect(root).toHaveAttribute('data-active', String(i));
-        rest(rail);
-      }
-      expect(rail.scrollLeft).toBe((COUNT * 2 - 1) * PITCH);
-      // Past the last card is the first card's copy in the third copy ...
-      advance(loopOf(COUNT - 1));
-      expect(rail.scrollLeft).toBe(COUNT * 2 * PITCH);
-      expect(root).toHaveAttribute('data-active', '0');
-      // ... and when the rail comes to rest it steps back into the middle copy, unseen.
-      rest(rail);
-      expect(rail.scrollLeft).toBe(COUNT * PITCH);
-      expect(root).toHaveAttribute('data-active', '0');
+    it('wraps from the first card to the last on a swipe or an arrow key, and round again', () => {
+      renderLanding();
+      fireEvent.keyDown(stage(), { key: 'ArrowLeft' });
+      expect(root()).toHaveAttribute('data-start', String(COUNT - 1));
+      fireEvent.keyDown(stage(), { key: 'ArrowRight' });
+      expect(root()).toHaveAttribute('data-start', '0');
+      // A swipe: the finger moves left to go on, right to go back.
+      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 260, clientY: 300 });
+      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 120, clientY: 305 });
+      expect(root()).toHaveAttribute('data-start', '1');
+      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 100, clientY: 300 });
+      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 240, clientY: 300 });
+      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 100, clientY: 300 });
+      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 240, clientY: 300 });
+      expect(root()).toHaveAttribute('data-start', String(COUNT - 1));
+      // A short or mostly vertical drag is not a swipe.
+      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 100, clientY: 100 });
+      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 130, clientY: 100 });
+      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 100, clientY: 100 });
+      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 190, clientY: 260 });
+      expect(root()).toHaveAttribute('data-start', String(COUNT - 1));
     });
 
-    it('wraps from the first card to the last on a swipe back, and on round again', () => {
-      const { rail, root } = renderRail();
-      // One card back from the first card is the last card's copy in the first copy.
-      rail.scrollLeft = (COUNT - 1) * PITCH;
-      fireEvent.scroll(rail);
-      expect(root).toHaveAttribute('data-active', String(COUNT - 1));
-      rest(rail);
-      expect(rail.scrollLeft).toBe((COUNT * 2 - 1) * PITCH);
-      expect(root).toHaveAttribute('data-active', String(COUNT - 1));
-      fireEvent.keyDown(rail, { key: 'ArrowRight' });
-      rest(rail);
-      expect(rail.scrollLeft).toBe(COUNT * PITCH);
-      expect(root).toHaveAttribute('data-active', '0');
+    it('starts every card from its opening frame and plays only the card on show', () => {
+      renderLanding();
+      expect(slides()[0].textContent).toContain('Love all');
+      expect(slides()[0].textContent).not.toContain('Deuce');
+      advance(4500);
+      expect(slides()[0].textContent).toContain('Deuce');
+      fireEvent.click(dots()[1]);
+      expect(slides()[0].textContent).toContain('New over');
+      expect(slides()[0].textContent).not.toContain('A single');
     });
 
-    it('animates only the visible card, and every card starts from its opening frame', () => {
-      const { container } = renderRail();
-      const [tap, undo] = slides(container);
-      expect(tap.textContent).toContain('Love all');
-      expect(tap.textContent).not.toContain('Deuce');
-      advance(6000);
-      // Deuce lands at 5.84 s: the tap at 5.7 s, then the answer 140 ms later.
-      expect(tap.textContent).toContain('Deuce');
-      expect(undo.textContent).toContain('New over');
-      expect(undo.textContent).not.toContain('A single');
-    });
-
-    it('plays every copy of the visible card, so the copy on screen is the one that moves', () => {
-      const { container } = renderRail();
-      const clones = [...container.querySelectorAll('[data-clone="true"]')];
-      const cloneOfTap = clones.filter((clone) => clone.textContent.includes('Tap. The rule answers.'));
-      expect(cloneOfTap).toHaveLength(2);
-      advance(6000);
-      for (const clone of cloneOfTap) expect(clone.textContent).toContain('Deuce');
-    });
-
-    it('holds auto-advance while touched, hovered or focused, and resumes after', () => {
-      const { rail, root } = renderRail();
-      expect(root).not.toHaveClass('is-paused');
-      fireEvent.pointerDown(rail, { pointerType: 'touch' });
-      expect(root).toHaveClass('is-paused');
-      fireEvent.pointerUp(rail, { pointerType: 'touch' });
-      expect(root).not.toHaveClass('is-paused');
-      fireEvent.mouseEnter(root);
-      expect(root).toHaveClass('is-paused');
-      fireEvent.mouseLeave(root);
-      expect(root).not.toHaveClass('is-paused');
-      fireEvent.focus(rail);
-      expect(root).toHaveClass('is-paused');
-      fireEvent.blur(rail);
-      expect(root).not.toHaveClass('is-paused');
+    it('stops the advance and the animation on Pause, and carries on from where it stopped on Play', () => {
+      renderLanding();
+      const pause = screen.getByRole('button', { name: 'Pause animations' });
+      expect(root()).toHaveAttribute('data-playing', 'true');
+      advance(3000);
+      const before = slides()[0].textContent;
+      fireEvent.click(pause);
+      expect(screen.getByRole('button', { name: 'Play animations' })).toBeInTheDocument();
+      expect(root()).toHaveAttribute('data-playing', 'false');
+      advance(loopOf(0) * 2);
+      expect(root()).toHaveAttribute('data-start', '0');
+      expect(slides()[0].textContent).toBe(before);
+      fireEvent.click(screen.getByRole('button', { name: 'Play animations' }));
+      expect(root()).toHaveAttribute('data-playing', 'true');
+      // 3 s were already played, so only the rest of the loop is left.
+      advance(loopOf(0) - 3000 - 100);
+      expect(root()).toHaveAttribute('data-start', '0');
+      advance(200);
+      expect(root()).toHaveAttribute('data-start', '1');
     });
 
     it.each([
-      ['touch', (rail) => fireEvent.pointerDown(rail, { pointerType: 'touch' }), (rail) => fireEvent.pointerUp(rail, { pointerType: 'touch' })],
-      ['hover', (rail, root) => fireEvent.mouseEnter(root), (rail, root) => fireEvent.mouseLeave(root)],
-      ['focus', (rail) => fireEvent.focus(rail), (rail) => fireEvent.blur(rail)],
-    ])('stops the animation and the advance while held by %s, and carries on from where it stopped', (_name, hold, release) => {
-      const { container, rail, root } = renderRail();
-      const [tap] = slides(container);
+      ['a finger', () => fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 10, clientY: 10 }), () => fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 10, clientY: 10 })],
+      ['the pointer', () => fireEvent.mouseEnter(root()), () => fireEvent.mouseLeave(root())],
+      ['keyboard focus', () => { pressKey(); fireEvent.focus(stage()); }, () => fireEvent.blur(stage())],
+    ])('holds while %s is on it, and carries on after', (_name, hold, release) => {
+      renderLanding();
       advance(3000);
-      hold(rail, root);
-      // Far past the end of the loop: nothing changes while held.
+      hold();
+      expect(root()).toHaveAttribute('data-playing', 'false');
+      const held = slides()[0].textContent;
       advance(loopOf(0) * 2);
-      expect(root).toHaveAttribute('data-active', '0');
-      expect(tap.textContent).not.toContain('Deuce');
-      release(rail, root);
-      // 3 s were already played, so only the rest of the loop is left.
-      advance(loopOf(0) - 3000 - 100);
-      expect(root).toHaveAttribute('data-active', '0');
-      advance(200);
-      expect(root).toHaveAttribute('data-active', '1');
+      expect(root()).toHaveAttribute('data-start', '0');
+      expect(slides()[0].textContent).toBe(held);
+      release();
+      expect(root()).toHaveAttribute('data-playing', 'true');
+      advance(loopOf(0) - 3000 + 100);
+      expect(root()).toHaveAttribute('data-start', '1');
     });
 
-    it('does not auto-advance or animate under reduced motion, and can still be moved by hand', () => {
-      reducedMotion();
-      const { container, rail, root } = renderRail();
-      expect(root).toHaveAttribute('data-playing', 'false');
-      const [tap, undo, live, moments, paper] = slides(container);
-      // Each card shows its one still frame, the one that says what it is about.
-      expect(tap.textContent).toContain('Deuce');
-      expect(undo.textContent).toContain('A six tapped by mistake is gone. Back to 5.');
-      expect(live.textContent).toContain('Sharing live');
-      expect(moments.textContent).toContain('Need 12 off 8');
-      expect(paper.querySelector('.home-paper')).toHaveClass('is-app');
+    it('does not hold for the focus a tap leaves behind', () => {
+      renderLanding();
+      pressPointer();
+      fireEvent.focus(stage());
+      expect(root()).toHaveAttribute('data-playing', 'true');
+    });
+
+    it('holds while the tab is hidden and while less than half of it is on screen', () => {
+      vi.stubGlobal('IntersectionObserver', FakeObserver);
+      renderLanding();
+      expect(root()).toHaveAttribute('data-playing', 'true');
+      see(root(), { visible: false });
+      expect(root()).toHaveAttribute('data-playing', 'false');
+      see(root(), { visible: true });
+      expect(root()).toHaveAttribute('data-playing', 'true');
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+      act(() => { document.dispatchEvent(new Event('visibilitychange')); });
+      expect(root()).toHaveAttribute('data-playing', 'false');
+      delete document.hidden;
+      act(() => { document.dispatchEvent(new Event('visibilitychange')); });
+      expect(root()).toHaveAttribute('data-playing', 'true');
+    });
+
+    it('never stalls: a touch let go just after the card ended still moves on', () => {
+      renderLanding();
+      advance(loopOf(0) - 100);
+      fireEvent.pointerDown(stage(), { pointerType: 'touch', clientX: 10, clientY: 10 });
+      advance(5000);
+      expect(root()).toHaveAttribute('data-start', '0');
+      fireEvent.pointerUp(stage(), { pointerType: 'touch', clientX: 10, clientY: 10 });
+      advance(200);
+      expect(root()).toHaveAttribute('data-start', '1');
+    });
+
+    it('never stalls: if the end timer is lost, the next check sees the deadline has passed and moves on', () => {
+      renderLanding();
+      advance(1000);
+      // The page's clock is throttled: the wall clock moves on but the end timer does not fire.
+      vi.setSystemTime(Date.now() + loopOf(0) + 5000);
+      advance(500);
+      expect(root()).toHaveAttribute('data-start', '1');
+    });
+
+    it('never shows a letter as a tennis score while the tap card plays', () => {
+      renderLanding();
+      const seen = new Set();
+      for (let t = 0; t <= loopOf(0) - 100; t += 100) {
+        root().querySelectorAll('.home-tap-pt .home-r').forEach((el) => seen.add(el.textContent));
+        advance(100);
+      }
+      expect([...seen].sort()).toEqual(['0', '15', '30', '40', 'AD']);
+      expect(root().textContent).not.toMatch(/\bG\b/);
+    });
+
+    it('does not advance or animate under reduced motion, shows each card as one still frame, and can still be moved by hand', () => {
+      setScreen({ width: 390, reduced: true });
+      renderLanding();
+      expect(root()).toHaveAttribute('data-playing', 'false');
+      expect(screen.queryByRole('button', { name: /animations/ })).toBeNull();
+      expect(slides()[0].textContent).toContain('Deuce');
       advance(loopOf(0) * 3);
-      expect(root).toHaveAttribute('data-active', '0');
+      expect(root()).toHaveAttribute('data-start', '0');
+      expect(slides()[0].textContent).toContain('Deuce');
+      const still = ['A six tapped by mistake is gone. Back to 5.', 'Sharing live', 'Need 12 off 8'];
+      still.forEach((text, i) => {
+        fireEvent.keyDown(stage(), { key: 'ArrowRight' });
+        expect(root()).toHaveAttribute('data-start', String(i + 1));
+        expect(slides()[0].textContent).toContain(text);
+      });
+      fireEvent.click(dots()[4]);
+      expect(slides()[0].querySelector('.home-paper')).toHaveClass('is-app');
+    });
+  });
+
+  describe('card rail on a tablet', () => {
+    beforeEach(() => { vi.useFakeTimers(); setScreen({ width: 800 }); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('shows two cards, plays both, and moves on two at a time without losing a card', () => {
+      renderLanding();
+      const root = screen.getByTestId('landing-example');
+      const slides = () => [...root.querySelectorAll('[aria-roledescription="slide"]')];
+      expect(slides()).toHaveLength(2);
+      expect(slides().map((slide) => slide.getAttribute('aria-label'))).toEqual([
+        `1 of ${COUNT}: ${CARDS[0].title}`, `2 of ${COUNT}: ${CARDS[1].title}`,
+      ]);
+      act(() => { vi.advanceTimersByTime(2000); });
+      // Both cards on show are playing: the tap card is past its opening and so is the undo card.
+      expect(slides()[0].textContent).not.toContain('Love all');
+      expect(slides()[1].textContent).not.toContain('New over');
+      act(() => { vi.advanceTimersByTime(Math.max(loopOf(0), loopOf(1)) - 2000 + 50); });
+      expect(root).toHaveAttribute('data-start', '2');
+      expect(slides()).toHaveLength(2);
+      expect(root.querySelectorAll('.home-dot.is-on')).toHaveLength(2);
+      // The last page wraps: card 5 then card 1.
+      act(() => { vi.advanceTimersByTime(Math.max(loopOf(2), loopOf(3)) + 50); });
+      expect(slides().map((slide) => slide.getAttribute('aria-label'))).toEqual([
+        `5 of ${COUNT}: ${CARDS[4].title}`, `1 of ${COUNT}: ${CARDS[0].title}`,
+      ]);
+    });
+  });
+
+  describe('card marquee on a desktop', () => {
+    beforeEach(() => { vi.useFakeTimers(); setScreen({ width: 1280 }); });
+    afterEach(() => { vi.useRealTimers(); });
+
+    const advance = (ms) => act(() => { vi.advanceTimersByTime(ms); });
+    const root = () => screen.getByTestId('landing-example');
+
+    it('slides two identical groups, the copy hidden from assistive tech and from the keyboard, with no arrow buttons', () => {
+      renderLanding();
+      expect(root()).toHaveClass('home-marquee');
+      const groups = [...root().querySelectorAll('.home-group')];
+      expect(groups).toHaveLength(2);
+      expect(groups[0]).not.toHaveAttribute('aria-hidden');
+      expect(groups[1]).toHaveAttribute('aria-hidden', 'true');
+      expect(groups[1]).toHaveAttribute('inert');
+      expect(groups[1].querySelectorAll('.home-card')).toHaveLength(COUNT);
+      expect(groups[1].querySelectorAll('[aria-roledescription="slide"]')).toHaveLength(0);
+      expect(within(root()).getAllByRole('group', { name: /of 5:/ })).toHaveLength(COUNT);
+      expect(within(root()).getAllByRole('img')).toHaveLength(COUNT);
+      expect(within(root()).queryByRole('button', { name: /Previous card|Next card/ })).toBeNull();
+      expect(root().querySelectorAll('.home-dot')).toHaveLength(0);
+    });
+
+    it('plays every card on show by itself, and starts each over when its loop ends', () => {
+      renderLanding();
+      const [tap, undo] = within(root()).getAllByRole('group', { name: /of 5:/ });
+      expect(tap.textContent).toContain('Love all');
+      advance(1200);
+      expect(undo.textContent).toContain('A single');
+      advance(800);
+      expect(tap.textContent).not.toContain('Love all');
+      advance(loopOf(0) - 2000 + 300);
+      expect(tap.textContent).toContain('Love all');
+    });
+
+    it('stands a card still while it is off screen and plays it again when it comes back', () => {
+      vi.stubGlobal('IntersectionObserver', FakeObserver);
+      renderLanding();
+      const [tap] = within(root()).getAllByRole('group', { name: /of 5:/ });
+      see(tap, { visible: false });
+      advance(4000);
+      expect(tap.textContent).toContain('Love all');
+      see(tap, { visible: true });
+      advance(2000);
+      expect(tap.textContent).not.toContain('Love all');
+    });
+
+    it('has a visible Pause that stops the track and every animation, and Play carries on; hover and keyboard focus pause too', () => {
+      renderLanding();
+      const [tap] = within(root()).getAllByRole('group', { name: /of 5:/ });
+      advance(2000);
+      const before = tap.textContent;
+      fireEvent.click(screen.getByRole('button', { name: 'Pause animations' }));
+      expect(root()).toHaveClass('is-paused');
+      expect(root()).toHaveAttribute('data-playing', 'false');
+      advance(5000);
+      expect(tap.textContent).toBe(before);
+      fireEvent.click(screen.getByRole('button', { name: 'Play animations' }));
+      expect(root()).not.toHaveClass('is-paused');
+      advance(2000);
+      expect(tap.textContent).not.toBe(before);
+      fireEvent.mouseEnter(root());
+      expect(root()).toHaveClass('is-paused');
+      fireEvent.mouseLeave(root());
+      expect(root()).not.toHaveClass('is-paused');
+      fireEvent.keyDown(document.body, { key: 'Tab' });
+      fireEvent.focus(screen.getByRole('button', { name: 'Pause animations' }));
+      expect(root()).toHaveClass('is-paused');
+      fireEvent.blur(screen.getByRole('button', { name: 'Pause animations' }));
+      expect(root()).not.toHaveClass('is-paused');
+    });
+
+    it('has no marquee under reduced motion: one static row of cards on their still frames, no copy, no Pause', () => {
+      setScreen({ width: 1280, reduced: true });
+      renderLanding();
+      expect(root()).toHaveClass('is-still');
+      expect(root().querySelectorAll('.home-group')).toHaveLength(1);
+      expect(screen.queryByRole('button', { name: /animations/ })).toBeNull();
+      const [tap] = within(root()).getAllByRole('group', { name: /of 5:/ });
       expect(tap.textContent).toContain('Deuce');
-      expect(container.querySelector('.is-idle')).toBeNull();
-      fireEvent.keyDown(rail, { key: 'ArrowRight' });
-      expect(root).toHaveAttribute('data-active', '1');
+      advance(loopOf(0) * 2);
+      expect(tap.textContent).toContain('Deuce');
     });
   });
 });

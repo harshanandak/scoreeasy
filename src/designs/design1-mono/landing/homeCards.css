@@ -1,47 +1,65 @@
-/* The art inside Home's rail cards (HomeCards.jsx). Ported from compare/concepts/k1-rail.html and
-   c4-paper-to-app.html: same sizes, timings and copy, with the mockups' hex values swapped for
-   --se-color-* tokens (so `.dark` re-colours every card) and the sport / team colour vars the card's
-   slide sets (--sport-*, --team-a-*, --team-b-*). The one exception is the paper scoresheet: a sheet
-   of paper stays cream and blue-ruled in dark mode, so its colours are local --paper-* values.
-   `--u` scales the big text on desktop (1 on phones, 1.1 on desktop). */
+/* The animation cards on Home (HomeCards.jsx) and the desktop marquee that carries them.
+   Ported from compare/concepts/k1-rail.html and c4-paper-to-app.html (same story, timing and copy),
+   restyled to the Play tiles' family: a card is one surface with a 20px radius and the one soft
+   shadow (inset hairline + --se-lift); everything inside is flat (a tinted well or a plain fill, no
+   border, no hard offset shadow). Colour is --se-color-* tokens and the sport / team vars the card
+   sets (--sport-*, --team-a-*, --team-b-*), so `.dark` re-colours every card with no overrides. The
+   one exception is the paper scoresheet: paper stays cream and blue-ruled in dark mode, so its
+   colours are local --paper-* values. No text is smaller than 12px (0.75rem). */
 
-.home-slides {
+.home-demo {
   --u: 1;
   --se-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* ---- card head and art box ---- */
+/* ---- the card ---- */
+.home-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+  color: var(--se-color-ink);
+}
+
 .home-card-head {
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  height: 32px;
-  flex: none;
+  min-height: 32px;
 }
 
 .home-card-title {
   margin: 0;
-  font: 800 1.04rem/1.1 var(--se-font-display);
+  font: 800 1.08rem/1.15 var(--se-font-display);
   letter-spacing: -0.02em;
 }
 
 .home-card-head .kit-badge {
-  width: 30px;
-  height: 30px;
+  flex: none;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
 }
 
 .home-card-head .kit-badge svg {
-  width: 21px;
-  height: 21px;
+  width: 22px;
+  height: 22px;
 }
 
+/* The art fills what is left of the card; its height is the card's, so a card can be any height. */
 .home-card-art {
   position: relative;
   flex: 1;
   min-height: 0;
-  margin-top: 10px;
+  margin-top: 14px;
+  container-type: size;
 }
 
 /* ---- text that rolls ---- */
@@ -76,25 +94,14 @@
   }
 }
 
-/* A card that is not playing sits at its opening frame; changes into it are instant, not animated. */
-.home-slide.is-idle .home-card-art *,
-.home-slide.is-idle .home-card-art *::before {
-  transition: none !important;
-  animation: none !important;
-}
-
-.home-slide.is-idle .home-r.is-out {
-  display: none;
-}
-
 /* ---- a finger press on a key ---- */
 .home-touch {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 38px;
-  height: 38px;
-  margin: -19px;
+  width: 40px;
+  height: 40px;
+  margin: -20px;
   border-radius: 50%;
   background: color-mix(in srgb, currentColor 22%, transparent);
   box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 32%, transparent);
@@ -110,6 +117,7 @@
 .home-tap {
   display: flex;
   flex-direction: column;
+  gap: 12px;
   height: 100%;
 }
 
@@ -125,7 +133,7 @@
   position: relative;
   align-self: flex-start;
   height: 1.1em;
-  font: 800 calc(2.5rem * var(--u)) / 1.1 var(--se-font-display);
+  font: 800 calc(2.7rem * var(--u)) / 1.1 var(--se-font-display);
   letter-spacing: -0.04em;
   white-space: nowrap;
 }
@@ -138,7 +146,7 @@
   height: 0.2em;
   overflow: visible;
   fill: none;
-  stroke: var(--se-color-action);
+  stroke: var(--se-color-live);
   stroke-width: 3.5px;
   stroke-linecap: round;
   opacity: 0;
@@ -150,36 +158,33 @@
 }
 
 .home-tap-rule {
-  height: 2.6em;
-  margin-top: 10px;
-  font-size: calc(0.88rem * var(--u));
+  height: 2.7em;
+  margin-top: 14px;
+  font-size: calc(0.95rem * var(--u));
   font-weight: 650;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .home-tap-keys {
   display: grid;
+  flex: none;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  padding: 0 3px 3px 0;
+  height: clamp(104px, 36cqh, 168px);
 }
 
 .home-tap-key {
   position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   justify-content: space-between;
-  height: calc(62px * var(--u));
-  padding: 8px 11px;
-  border: 2px solid var(--se-color-ink);
-  border-radius: 15px;
-  box-shadow: 3px 3px 0 var(--se-color-ink);
-  transition: transform 160ms var(--se-ease-out), box-shadow 160ms var(--se-ease-out);
+  padding: 12px;
+  border-radius: 16px;
+  transition: transform 160ms var(--se-ease-out);
 }
 
 .home-tap-key.is-down {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--se-color-ink);
+  transform: scale(0.96);
 }
 
 .home-tap-key.is-a {
@@ -192,15 +197,28 @@
   color: var(--team-b-on);
 }
 
+.home-tap-who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .home-tap-name {
-  align-self: flex-start;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 800;
 }
 
+.home-tap-games {
+  height: 1.25em;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
 .home-tap-pt {
+  align-self: flex-end;
   min-width: 2ch;
-  font: 800 calc(2.1rem * var(--u)) / 1 var(--se-font-num);
+  height: 1em;
+  font: 800 calc(2.5rem * var(--u)) / 1 var(--se-font-num);
   text-align: right;
 }
 
@@ -215,7 +233,7 @@
   display: flex;
   flex: 1;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-height: 0;
 }
 
@@ -235,15 +253,15 @@
 
 .home-undo-label {
   color: var(--se-color-ink-soft);
-  font: 800 0.64rem/1 var(--se-font-mono);
-  letter-spacing: 0.1em;
+  font: 800 0.75rem/1 var(--se-font-mono);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .home-undo-status {
   height: 1.15em;
-  margin-top: 6px;
-  font: 800 calc(1.25rem * var(--u)) / 1.15 var(--se-font-display);
+  margin-top: 8px;
+  font: 800 calc(1.3rem * var(--u)) / 1.15 var(--se-font-display);
   letter-spacing: -0.025em;
   white-space: nowrap;
 }
@@ -252,7 +270,7 @@
   height: 3.9em;
   margin-top: 6px;
   color: var(--se-color-ink-soft);
-  font-size: calc(0.84rem * var(--u));
+  font-size: calc(0.9rem * var(--u));
   font-weight: 600;
   line-height: 1.3;
 }
@@ -262,42 +280,42 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 0 3px 3px 0;
 }
 
 .home-undo-balls {
   display: flex;
-  gap: 3px;
+  gap: 4px;
 }
 
 .home-undo-ball {
-  position: relative;
+  display: grid;
   flex: none;
-  width: 25px;
-  height: 25px;
-  border: 2px dashed color-mix(in srgb, var(--se-color-ink) 40%, transparent);
+  place-items: center;
+  box-sizing: border-box;
+  width: clamp(24px, 7vw, 28px);
+  height: clamp(24px, 7vw, 28px);
+  border: 2px dashed color-mix(in srgb, var(--se-color-ink) 35%, transparent);
   border-radius: 50%;
+  transition: background-color 320ms var(--se-ease-out), border-color 320ms var(--se-ease-out);
 }
 
 .home-undo-ball i {
-  position: absolute;
-  inset: -2px;
-  display: grid;
-  place-items: center;
-  border: 2px solid var(--se-color-ink);
-  border-radius: 50%;
-  background: var(--se-color-surface);
-  font: 800 1rem/1 var(--se-font-num);
+  font: 800 0.95rem/1 var(--se-font-num);
   font-style: normal;
   opacity: 0;
-  transition: opacity 420ms var(--se-ease-out);
+  transition: opacity 320ms var(--se-ease-out);
+}
+
+.home-undo-ball.is-on {
+  border-color: transparent;
+  background: var(--se-color-surface-warm);
 }
 
 .home-undo-ball.is-on i {
   opacity: 1;
 }
 
-.home-undo-ball.is-big i {
+.home-undo-ball.is-on.is-big {
   background: var(--se-color-ink);
   color: var(--se-color-on-ink);
 }
@@ -307,60 +325,60 @@
   flex: none;
   align-items: center;
   gap: 6px;
-  height: 40px;
-  padding: 0 11px;
-  border: 2px solid var(--se-color-ink);
-  border-radius: 12px;
-  background: var(--se-color-surface);
-  box-shadow: 3px 3px 0 var(--se-color-ink);
-  font-size: 0.88rem;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: var(--se-color-surface-warm);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+  font-size: 0.95rem;
   font-weight: 800;
-  transition: transform 160ms var(--se-ease-out), box-shadow 160ms var(--se-ease-out);
+  transition: transform 160ms var(--se-ease-out), background-color 160ms var(--se-ease-out), color 160ms var(--se-ease-out);
 }
 
 .home-undo-btn.is-down {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--se-color-ink);
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  transform: scale(0.96);
 }
 
 /* ---- live: a friend's phone, and goals scored with no signal ---- */
 .home-live {
-  --lane: 40px;
+  --lane: 68px;
+  --live-h: min(100cqh, 300px);
   position: absolute;
-  inset: 0;
+  top: calc((100cqh - var(--live-h)) / 2);
+  right: 0;
+  left: 0;
+  height: var(--live-h);
 }
 
 .home-live-phone {
   position: absolute;
+  top: 38px;
+  bottom: 0;
   display: flex;
   flex-direction: column;
-  width: calc((100% - var(--lane)) / 2 - 2px);
-  padding: 10px 9px 9px;
-  border: 2px solid var(--se-color-ink);
-  border-radius: 20px;
-  background: var(--se-color-surface);
-  box-shadow: 3px 3px 0 var(--se-color-ink);
+  box-sizing: border-box;
+  width: calc((100% - var(--lane)) / 2);
+  padding: 12px 10px 10px;
+  border-radius: 18px;
+  background: var(--se-color-surface-warm);
 }
 
 .home-live-phone.is-a {
-  top: 26px;
-  bottom: 3px;
   left: 0;
 }
 
 .home-live-phone.is-b {
-  top: 0;
-  right: 3px;
-  bottom: 29px;
+  right: 0;
 }
 
 .home-live-who {
   display: flex;
   align-items: center;
-  gap: 5px;
-  height: 12px;
-  font: 800 0.56rem/1 var(--se-font-mono);
-  letter-spacing: 0.08em;
+  height: 14px;
+  font: 800 0.75rem/1 var(--se-font-mono);
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -372,27 +390,27 @@
 }
 
 .home-live-team {
-  margin-top: 10px;
-  font-size: 0.84rem;
+  margin-top: 8px;
+  font-size: 0.9rem;
   font-weight: 800;
 }
 
 .home-live-num {
   height: 1em;
-  font: 800 calc(3.5rem * var(--u)) / 1 var(--se-font-num);
+  font: 800 calc(3.4rem * var(--u)) / 1 var(--se-font-num);
   font-variant-numeric: tabular-nums;
 }
 
 .home-live-chip {
   align-self: flex-start;
-  height: 22px;
-  margin-top: 4px;
-  padding: 0 8px;
+  height: 24px;
+  margin-top: 6px;
+  padding: 0 7px;
   border-radius: 999px;
-  background: var(--se-color-surface-warm);
-  font-size: 0.66rem;
+  background: var(--se-color-surface);
+  font-size: 0.75rem;
   font-weight: 750;
-  line-height: 22px;
+  line-height: 24px;
   white-space: nowrap;
 }
 
@@ -410,21 +428,18 @@
   position: relative;
   display: grid;
   place-items: center;
-  height: 40px;
+  height: 44px;
   margin-top: auto;
-  border: 2px solid var(--se-color-ink);
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(168deg, var(--sport-hi), var(--sport-core) 55%, var(--sport-lo));
-  box-shadow: 3px 3px 0 var(--se-color-ink);
   color: var(--sport-on);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  transition: transform 160ms var(--se-ease-out), box-shadow 160ms var(--se-ease-out);
+  transition: transform 160ms var(--se-ease-out);
 }
 
 .home-live-key.is-down {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--se-color-ink);
+  transform: scale(0.96);
 }
 
 .home-live-on,
@@ -446,8 +461,9 @@
   place-items: center;
   padding: 10px;
   color: var(--se-color-ink-soft);
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   font-weight: 650;
+  line-height: 1.3;
   text-align: center;
 }
 
@@ -462,14 +478,16 @@
 .home-live-foot {
   margin-top: auto;
   color: var(--se-color-ink-soft);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 650;
 }
 
+/* The lane between the phones: a dashed wire, the goals that travel along it, and the No signal pill
+   in the middle of the gap. */
 .home-live-lane {
   position: absolute;
-  top: 50%;
-  left: calc((100% - var(--lane)) / 2 - 2px);
+  top: calc(38px + (100% - 38px) / 2);
+  left: calc((100% - var(--lane)) / 2);
   width: var(--lane);
   height: 0;
 }
@@ -477,32 +495,28 @@
 .home-live-wire {
   position: absolute;
   top: -1px;
-  right: 0;
-  left: 4px;
-  border-top: 2px dashed var(--se-color-ink);
-  opacity: 0.5;
+  right: 6px;
+  left: 6px;
+  border-top: 2px dashed color-mix(in srgb, var(--se-color-ink) 45%, transparent);
   transition: opacity 500ms var(--se-ease-out);
 }
 
 .home-live.is-off .home-live-wire {
-  opacity: 0.14;
+  opacity: 0.3;
 }
 
 .home-live-nosig {
   position: absolute;
   z-index: 3;
-  top: 10px;
-  left: 50%;
-  width: 70px;
-  margin-left: -34px;
-  padding: 4px 0;
-  border: 2px solid var(--se-color-ink);
-  border-radius: 999px;
-  background: var(--se-color-surface);
-  font: 800 0.52rem/1 var(--se-font-mono);
-  letter-spacing: 0.04em;
+  top: 16px;
+  left: 0;
+  width: 100%;
+  color: var(--se-color-danger);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.2;
   text-align: center;
-  text-transform: uppercase;
+  white-space: nowrap;
   opacity: 0;
   transform: translateY(6px);
   transition: opacity 420ms var(--se-ease-out), transform 420ms var(--se-ease-out);
@@ -521,31 +535,30 @@
   left: 0;
   width: 12px;
   height: 12px;
-  border: 2px solid var(--se-color-ink);
   border-radius: 50%;
   background: var(--sport-core);
   opacity: 0;
-  transform: translate(-4px, var(--y, 0));
+  transform: translate(0, var(--y, 0));
   transition: opacity 300ms var(--se-ease-out), transform 640ms var(--se-ease-out);
 }
 
 .home-live-pkt.is-wait {
   opacity: 1;
-  transform: translate(6px, var(--y, 0));
+  transform: translate(8px, var(--y, 0));
 }
 
 .home-live-pkt.is-go {
   opacity: 1;
-  transform: translate(calc(var(--lane) - 10px), 0);
+  transform: translate(calc(var(--lane) - 14px), 0);
 }
 
 .home-live-pkt.is-gone {
   opacity: 0;
-  transform: translate(calc(var(--lane) - 2px), 0);
+  transform: translate(calc(var(--lane) - 4px), 0);
 }
 
-/* The "Live link" pill slides from your phone to the friend's: its centre is a quarter of the way
-   across, then three quarters, so it needs no measuring. */
+/* The "Live link" pill slides from your phone to the friend's along the row above the phones: its
+   centre is a quarter of the way across, then three quarters, so it needs no measuring. */
 .home-live-link {
   position: absolute;
   z-index: 4;
@@ -553,13 +566,13 @@
   left: calc((100% - var(--lane)) / 4);
   display: flex;
   align-items: center;
-  gap: 5px;
-  height: 26px;
-  padding: 0 9px;
+  gap: 6px;
+  height: 28px;
+  padding: 0 11px;
   border-radius: 999px;
   background: var(--se-color-ink);
   color: var(--se-color-on-ink);
-  font: 800 0.6rem/1 var(--se-font-mono);
+  font: 800 0.75rem/1 var(--se-font-mono);
   white-space: nowrap;
   opacity: 0;
   transform: translateX(-50%);
@@ -571,53 +584,53 @@
 }
 
 .home-live-link.is-moving {
-  left: calc(100% - (100% - var(--lane)) / 4 - 3px);
+  left: calc(100% - (100% - var(--lane)) / 4);
   opacity: 1;
 }
 
 .home-live-link.is-sent {
-  left: calc(100% - (100% - var(--lane)) / 4 - 3px);
+  left: calc(100% - (100% - var(--lane)) / 4);
   opacity: 0;
 }
 
 /* ---- moments: a stack of calls the app makes by itself ---- */
 .home-mom {
-  --pitch: 74px;
+  --pitch: max(82px, calc((100cqh - 8px) / 4.4));
   position: absolute;
-  inset: 0;
+  inset: 8px 0 0;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(180deg, #000 74%, transparent);
-  mask-image: linear-gradient(180deg, #000 74%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, var(--se-color-ink) 62%, transparent);
+  mask-image: linear-gradient(180deg, var(--se-color-ink) 62%, transparent);
 }
 
 .home-mom-card {
   position: absolute;
   top: 0;
-  right: 4px;
+  right: 0;
   left: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 66px;
-  padding: 0 10px;
-  border: 2px solid var(--se-color-ink);
-  border-radius: 15px;
-  background: var(--se-color-surface);
-  box-shadow: 3px 3px 0 var(--se-color-ink);
+  gap: 12px;
+  box-sizing: border-box;
+  height: calc(var(--pitch) - 8px);
+  padding: 0 12px;
+  border-radius: 16px;
+  background: var(--se-color-surface-warm);
   opacity: var(--op);
   transform: translateY(calc(var(--slot) * var(--pitch)));
   transition: transform 680ms var(--se-ease-out), opacity 680ms var(--se-ease-out);
 }
 
 .home-mom-card .kit-badge {
-  width: 38px;
-  height: 38px;
+  flex: none;
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
 }
 
 .home-mom-card .kit-badge svg {
-  width: 25px;
-  height: 25px;
+  width: 26px;
+  height: 26px;
 }
 
 .home-mom-text {
@@ -628,67 +641,51 @@
 .home-mom-title,
 .home-mom-sub {
   display: block;
-  white-space: nowrap;
 }
 
 .home-mom-sport {
   color: var(--se-color-ink-soft);
-  font: 800 0.56rem/1 var(--se-font-mono);
-  letter-spacing: 0.1em;
+  font: 800 0.75rem/1 var(--se-font-mono);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .home-mom-title {
   margin-top: 4px;
-  font: 800 1.1rem/1.05 var(--se-font-display);
+  font: 800 1.12rem/1.05 var(--se-font-display);
   letter-spacing: -0.025em;
 }
 
 .home-mom-sub {
   margin-top: 3px;
   color: var(--se-color-ink-soft);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 600;
+  line-height: 1.25;
 }
 
 /* ---- paper: the handwritten scoresheet wipes into the app ---- */
 .home-paper {
-  --paper: #fdf8e6;
-  --paper-ink: #1d2b5e;
-  --paper-rule: rgba(37, 99, 235, 0.22);
-  --paper-cross: #b42318;
+  --paper: color-mix(in srgb, var(--team-b-on) 92%, var(--se-color-gold));
+  --paper-ink: var(--team-b-core);
+  --paper-rule: color-mix(in srgb, var(--team-b-core) 22%, transparent);
+  --paper-cross: var(--se-color-danger);
   position: absolute;
-  inset: 0 3px 3px 0;
+  inset: 0;
   overflow: hidden;
-  border: 2px solid var(--se-color-ink);
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--paper);
-  box-shadow: 3px 3px 0 var(--se-color-ink);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
   isolation: isolate;
-}
-
-.home-paper-tag {
-  padding: 5px 9px;
-  border-radius: 999px;
-  font: 800 0.6rem/1 var(--se-font-mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .home-paper-sheet {
   position: absolute;
   inset: 0;
-  padding: 36px 12px 0;
-  background: repeating-linear-gradient(180deg, transparent 0 39px, var(--paper-rule) 39px 40px) 0 2px;
+  padding: 14px 14px 0;
+  background: repeating-linear-gradient(180deg, transparent 0 39px, var(--paper-rule) 39px 40px) 0 14px;
   color: var(--paper-ink);
   font-family: 'Segoe Print', 'Bradley Hand', 'Marker Felt', 'Comic Sans MS', cursive;
-}
-
-.home-paper-sheet .home-paper-tag {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(29, 43, 94, 0.1);
 }
 
 .home-paper-line {
@@ -696,13 +693,13 @@
   align-items: baseline;
   gap: 8px;
   height: 40px;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .home-paper-line small {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 400;
 }
 
@@ -745,7 +742,10 @@
 .home-paper-app {
   display: flex;
   flex-direction: column;
-  padding: 12px 12px 10px;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  padding: 14px;
   background: var(--se-color-surface);
   transform: translateX(101%);
 }
@@ -768,8 +768,8 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 3px;
-  background: var(--se-color-ink);
+  width: 2px;
+  background: color-mix(in srgb, var(--se-color-ink) 35%, transparent);
 }
 
 .home-paper-edge.is-left {
@@ -777,36 +777,9 @@
   left: 0;
 }
 
-.home-paper-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font: 800 0.72rem/1 var(--se-font-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.home-paper-head .kit-badge {
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-}
-
-.home-paper-head .kit-badge svg {
-  width: 21px;
-  height: 21px;
-}
-
-.home-paper-head .home-paper-tag {
-  margin-left: auto;
-  background: var(--se-color-live-soft);
-  color: var(--se-color-live);
-}
-
 .home-paper-balls {
   display: flex;
   gap: 6px;
-  margin-top: 12px;
 }
 
 .home-paper-ball {
@@ -814,22 +787,22 @@
   display: grid;
   flex: none;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border: 2px solid var(--se-color-ink);
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  font: 800 1.1rem/1 var(--se-font-num);
+  background: var(--se-color-surface-warm);
+  font: 800 1.15rem/1 var(--se-font-num);
 }
 
 .home-paper-ball.is-w {
-  border-color: var(--se-color-danger);
   background: var(--se-color-danger);
   color: var(--se-color-inverse);
 }
 
 .home-paper-ball.is-empty {
-  border-style: dashed;
-  border-color: color-mix(in srgb, var(--se-color-ink) 40%, transparent);
+  border: 2px dashed color-mix(in srgb, var(--se-color-ink) 35%, transparent);
+  background: transparent;
 }
 
 .home-paper-ball i {
@@ -837,7 +810,6 @@
   inset: -2px;
   display: grid;
   place-items: center;
-  border: 2px solid var(--se-color-ink);
   border-radius: 50%;
   background: var(--se-color-ink);
   color: var(--se-color-on-ink);
@@ -851,67 +823,108 @@
 }
 
 .home-paper-over {
-  margin-top: 6px;
   color: var(--se-color-ink-soft);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 650;
 }
 
 .home-paper-need {
   height: 1.1em;
-  margin-top: auto;
-  font: 800 1.95rem / 1.1 var(--se-font-display);
+  margin-top: 6px;
+  font: 800 2.3rem / 1.1 var(--se-font-display);
   letter-spacing: -0.035em;
   white-space: nowrap;
 }
 
 .home-paper-foot {
   height: 1.4em;
-  margin-top: 6px;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   white-space: nowrap;
 }
 
-/* ---- desktop: bigger cards and bigger text ---- */
-@media (min-width: 900px) {
-  .home-slides {
-    --u: 1.1;
-  }
+/* ---- the desktop marquee: two identical groups slide left by one group's width, then start over,
+   so the loop has no seam. The band's left edge is the headline column's right edge plus a gap; a
+   mask fades it to nothing over its first 180px, so a card has vanished before it could cross the
+   text. Pause, hover, focus, a hidden tab and the band leaving the screen all set .is-paused. ---- */
+.home-marquee {
+  position: relative;
+  width: 100%;
+}
 
-  .home-card-head .kit-badge {
-    width: 34px;
-    height: 34px;
-  }
+.home-band {
+  overflow: hidden;
+  padding: 12px 0 28px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, transparent 8px, var(--se-color-ink) 200px, var(--se-color-ink) 100%);
+  mask-image: linear-gradient(90deg, transparent 0, transparent 8px, var(--se-color-ink) 200px, var(--se-color-ink) 100%);
+}
 
-  .home-paper-sheet {
-    padding-top: 42px;
-  }
+.home-track {
+  display: flex;
+  width: max-content;
+  animation: home-travel 56s linear infinite;
+}
 
-  .home-paper-line {
-    font-size: 1.3rem;
-  }
+.home-group {
+  display: flex;
+  flex: none;
+  gap: 16px;
+  padding-right: 16px;
+}
 
-  .home-paper-need {
-    font-size: 2.4rem;
-  }
+.home-group .home-card {
+  flex: none;
+  width: 320px;
+  height: 352px;
+}
 
-  .home-paper-ball {
-    width: 36px;
-    height: 36px;
-  }
-
-  .home-paper-balls {
-    gap: 8px;
+@keyframes home-travel {
+  to {
+    transform: translateX(-50%);
   }
 }
 
-/* Reduced motion: each card shows its one still frame and nothing moves. */
+.home-marquee.is-paused .home-track {
+  animation-play-state: paused;
+}
+
+.home-rail[data-playing='false'] .home-card *,
+.home-marquee.is-paused .home-card * {
+  animation-play-state: paused;
+}
+
+.home-marquee .home-pause {
+  position: absolute;
+  right: var(--bleed, 32px);
+  bottom: -10px;
+}
+
+/* Reduced motion: no marquee, one static row of the five cards on their still frames. */
+.home-marquee.is-still .home-band {
+  overflow-x: auto;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.home-marquee.is-still .home-track {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .home-slide *,
-  .home-slide *::before {
+  .home-track {
+    animation: none;
+  }
+
+  .home-card *,
+  .home-card *::before,
+  .home-slot,
+  .home-dot b {
     transition: none !important;
     animation: none !important;
+  }
+
+  .home-dot.is-on i {
+    background: var(--se-color-ink);
   }
 }

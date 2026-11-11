@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import App from './App.jsx';
+import PublicHome from './designs/design1-mono/landing/PublicHome';
 import AppLoading from './components/AppLoading';
 import { LocalAuthProvider } from './auth/AuthContext';
 import {
@@ -331,7 +332,11 @@ function RootApp() {
 
   if (shouldRenderCloudAuthRoot) {
     return (
-      <Suspense fallback={null}>
+      <Suspense fallback={pathname === '/' ? (
+        <LocalAuthProvider cloudAuthAvailable>
+          <BrowserRouter><PublicHome /></BrowserRouter>
+        </LocalAuthProvider>
+      ) : null}>
         <CloudAuthRoot convexUrl={CONVEX_URL} publishableKey={PUBLISHABLE_KEY}>
           <BrowserRouter>
             <App />

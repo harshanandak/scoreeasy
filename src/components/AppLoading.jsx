@@ -12,18 +12,6 @@ export default function AppLoading({ message = 'Loading Score Easy', compact = f
           <span>EASY</span>
         </div>
 
-        <div className="app-loading-board" aria-hidden="true">
-          <div className="app-loading-team">
-            <span>HOME</span>
-            <strong>08</strong>
-          </div>
-          <div className="app-loading-divider" />
-          <div className="app-loading-team">
-            <span>AWAY</span>
-            <strong>07</strong>
-          </div>
-        </div>
-
         <div className="app-loading-progress" aria-hidden="true">
           <span />
         </div>

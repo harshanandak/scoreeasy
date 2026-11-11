@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { memo, useEffect, useState } from 'react';
+import { useTimeline } from './useTimeline';
 import { getSportById } from '../../../models/sportRegistry';
 import { PRESETS, deriveTeamColours, teamColourVars } from '../../../lib/teamColour';
 import { sportIdentityVars } from '../../../lib/sportIdentity';
@@ -55,12 +56,18 @@ function TapArt({ s }) {
       </div>
       <div className="home-tap-keys">
         <div className={`home-tap-key is-a${s.down === 'a' ? ' is-down' : ''}`}>
-          <span className="home-tap-name">Asha</span>
+          <span className="home-tap-who">
+            <span className="home-tap-name">Asha</span>
+            <Roll as="span" className="home-tap-games" value={`Games ${s.ga}`} />
+          </span>
           <Roll as="span" className="home-tap-pt" value={s.pa} />
           <Touch />
         </div>
         <div className={`home-tap-key is-b${s.down === 'b' ? ' is-down' : ''}`}>
-          <span className="home-tap-name">Meera</span>
+          <span className="home-tap-who">
+            <span className="home-tap-name">Meera</span>
+            <Roll as="span" className="home-tap-games" value={`Games ${s.gb}`} />
+          </span>
           <Roll as="span" className="home-tap-pt" value={s.pb} />
           <Touch />
         </div>
@@ -154,7 +161,6 @@ function PaperArt({ s }) {
   return (
     <div className={`home-paper${s.mode ? ` is-${s.mode}` : ''}`} aria-hidden="true">
       <div className="home-paper-sheet">
-        <span className="home-paper-tag">By hand</span>
         <div className="home-paper-line"><span className="home-paper-tilt">Over 19</span><small>Aus chasing 176</small></div>
         <div className="home-paper-line"><span>1</span><span>4</span><span>W</span><span>2</span></div>
         <div className="home-paper-line">
@@ -166,11 +172,6 @@ function PaperArt({ s }) {
       </div>
       <div className="home-paper-clip">
         <div className="home-paper-app">
-          <div className="home-paper-head">
-            <SportBadge sportId="cricket" />
-            <span>Cricket</span>
-            <span className="home-paper-tag">Score Easy</span>
-          </div>
           <div className="home-paper-balls">
             <span className="home-paper-ball">1</span><span className="home-paper-ball">4</span>
             <span className="home-paper-ball is-w">W</span><span className="home-paper-ball">2</span>
@@ -193,7 +194,7 @@ const ART = { tap: TapArt, undo: UndoArt, live: LiveArt, moments: MomentsArt, pa
    pair the tennis board uses), and the live card's Goal key is football's identity green. */
 const TAP_VARS = teamColourVars(deriveTeamColours(...PRESETS['Sky v Navy']));
 export const cardVars = (card) => {
-  if (card.id === 'tap') return TAP_VARS;
+  if (card.id === 'tap' || card.id === 'paper') return TAP_VARS;
   if (card.id === 'live') return sportIdentityVars('football');
   return undefined;
 };
@@ -221,4 +222,37 @@ CardFace.propTypes = {
     sportId: PropTypes.string,
   }).isRequired,
   state: PropTypes.shape({}).isRequired,
+};
+
+/** One card: its head and art, playing its own timeline while `running`. `loop` replays it; otherwise
+ *  `onEnd` fires once at its end. Under reduced motion (`still`) nothing plays and it shows the one
+ *  frame that says what it is about. `hidden` marks a clone the rail repeats for the marquee (no
+ *  name, out of the accessibility tree). */
+export function CardPlayer({ card, running, still = false, loop = false, onEnd, resetKey = 0, slideLabel, hidden = false, cardRef }) {
+  const index = useTimeline(card.timeline, running && !still, { loop, onEnd, resetKey });
+  const state = still ? card.timeline.still : card.timeline.states[index];
+  return (
+    <div
+      ref={cardRef}
+      className="home-card"
+      style={cardVars(card)}
+      role={hidden ? undefined : 'group'}
+      aria-roledescription={hidden ? undefined : 'slide'}
+      aria-label={hidden ? undefined : slideLabel}
+      aria-hidden={hidden ? 'true' : undefined}
+    >
+      <CardFace card={card} state={state} />
+    </div>
+  );
+}
+CardPlayer.propTypes = {
+  card: CardFace.propTypes.card,
+  running: PropTypes.bool.isRequired,
+  still: PropTypes.bool,
+  loop: PropTypes.bool,
+  onEnd: PropTypes.func,
+  resetKey: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  slideLabel: PropTypes.string,
+  hidden: PropTypes.bool,
+  cardRef: PropTypes.shape({ current: PropTypes.any }),
 };

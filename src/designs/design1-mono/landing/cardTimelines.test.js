@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CARDS, MOMENTS, MOMENT_OPACITY, buildTimeline, momentStack } from './cardTimelines';
+import { CARDS, MOMENTS, MOMENT_OPACITY, buildTimeline, longestLoop, momentStack } from './cardTimelines';
 
 const byId = (id) => CARDS.find((card) => card.id === id).timeline;
 const stateAt = ({ times, states }, ms) => states[times.filter((time) => time <= ms).length - 1];
@@ -26,14 +26,28 @@ describe('Home card timelines', () => {
     }
   });
 
-  it('plays a tennis game by the rules: deuce at 40 all, advantage, back to deuce, game', () => {
+  it('keeps every card to about 8 seconds', () => {
+    for (const card of CARDS) expect(card.timeline.loopMs).toBeLessThanOrEqual(8500);
+    expect(longestLoop(CARDS)).toBe(Math.max(...CARDS.map((card) => card.timeline.loopMs)));
+  });
+
+  it('plays a tennis game by the rules: deuce at 40 all, advantage, then game with the points back to 0-0', () => {
     const tap = byId('tap');
-    const calls = tap.states.map((state) => [state.call, state.pa, state.pb]).filter(([call], i, all) => call !== all[i - 1]?.[0]);
+    const calls = tap.states.map((state) => [state.call, state.pa, state.pb, state.ga, state.gb]).filter(([call], i, all) => call !== all[i - 1]?.[0]);
     expect(calls).toEqual([
-      ['Love all', '0', '0'], ['15–0', '15', '0'], ['15 all', '15', '15'], ['30–15', '30', '15'], ['30 all', '30', '30'],
-      ['40–30', '40', '30'], ['Deuce', '40', '40'], ['Advantage', 'AD', '40'], ['Deuce', '40', '40'], ['Advantage', '40', 'AD'], ['Game', '40', 'G'],
+      ['Love all', '0', '0', '0', '0'], ['15–0', '15', '0', '0', '0'], ['15 all', '15', '15', '0', '0'], ['30–15', '30', '15', '0', '0'], ['30 all', '30', '30', '0', '0'],
+      ['40–30', '40', '30', '0', '0'], ['Deuce', '40', '40', '0', '0'], ['Advantage', 'AD', '40', '0', '0'],
+      // The app's board: the game is counted and the points start again.
+      ['Game Asha', '0', '0', '1', '0'],
     ]);
     expect(tap.still.call).toBe('Deuce');
+  });
+
+  it('never shows a letter as a tennis score, in any frame', () => {
+    const tap = byId('tap');
+    for (const state of [...tap.states, tap.still]) {
+      for (const point of [state.pa, state.pb]) expect(['0', '15', '30', '40', 'AD']).toContain(point);
+    }
   });
 
   it('adds the over up: a six tapped by mistake is undone, and the over ends on 12', () => {
@@ -49,7 +63,10 @@ describe('Home card timelines', () => {
     const undone = undo.states.find((state) => state.status === 'Undone');
     expect(undone.num).toBe('5');
     expect(undone.dir).toBe(-1);
-    expect(undone.balls[2]).toEqual({ t: '6', on: false });
+    // The real over strip is built from the balls that are left, so the undone ball's slot is empty (not a ghost "6").
+    expect(undone.balls[2]).toEqual({ t: '', on: false });
+    for (const state of undo.states.filter((s) => s.status === 'Undone')) expect(state.balls.map((ball) => ball.t)).not.toContain('6');
+    expect(undo.still.balls[2]).toEqual({ t: '', on: false });
   });
 
   it('keeps two goals back while there is no signal, then delivers both', () => {
@@ -77,6 +94,15 @@ describe('Home card timelines', () => {
     }
     expect(momentStack(0).filter(({ slot }) => slot >= 0 && slot <= 3).sort((a, b) => b.slot - a.slot).map(({ moment }) => moment[1]))
       .toEqual(['Deuce', 'Need 12 off 8', 'Set point', '20 all']);
+  });
+
+  it('says what the page shows: nine sports, one moment each, and the all-out line names who scores', () => {
+    expect(CARDS.find((card) => card.id === 'moments').title).toBe('Nine sports. The rules built in.');
+    expect(new Set(MOMENTS.map(([sportId]) => sportId)).size).toBe(9);
+    expect(MOMENTS.find(([sportId]) => sportId === 'kabaddi').slice(1)).toEqual(['All out', 'Two bonus points to the raiding side.']);
+    const visibleSports = new Set(byId('moments').states.flatMap(({ tick }) => momentStack(tick)
+      .filter(({ slot }) => slot >= 0 && slot <= 3).map(({ moment }) => moment[0])));
+    expect(visibleSports.size).toBe(9);
   });
 
   it('has a card that comes back in at the top with the next moment, out of sight', () => {
