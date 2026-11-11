@@ -466,7 +466,7 @@
     flex: 1;
     flex-direction: column;
     min-height: 0;
-    padding-bottom: 8px;
+    padding-bottom: max(64px, env(safe-area-inset-bottom));
   }
 
   .home-demo {
@@ -584,9 +584,9 @@
   .home-demo {
     position: absolute;
     top: 0;
-    right: calc(-1 * var(--bleed));
+    right: calc(var(--gutter) - var(--bleed));
     bottom: 0;
-    left: 504px;
+    left: calc(504px + var(--gutter));
     display: flex;
     align-items: center;
     margin-top: 0;

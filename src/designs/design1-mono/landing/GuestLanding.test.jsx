@@ -482,7 +482,7 @@ describe('Home', () => {
       ]);
       act(() => { vi.advanceTimersByTime(2000); });
       // Both cards on show are playing: the tap card is past its opening and so is the undo card.
-      expect(slides()[0].textContent).not.toContain('Love all');
+      expect(slides()[0].querySelector('.home-tap-call .home-r:not(.is-out)')).not.toHaveTextContent('Love all');
       expect(slides()[1].textContent).not.toContain('New over');
       act(() => { vi.advanceTimersByTime(Math.max(loopOf(0), loopOf(1)) - 2000 + 50); });
       expect(root).toHaveAttribute('data-start', '2');
@@ -526,7 +526,7 @@ describe('Home', () => {
       advance(1200);
       expect(undo.textContent).toContain('A single');
       advance(800);
-      expect(tap.textContent).not.toContain('Love all');
+      expect(tap.querySelector('.home-tap-call .home-r:not(.is-out)')).not.toHaveTextContent('Love all');
       advance(loopOf(0) - 2000 + 300);
       expect(tap.textContent).toContain('Love all');
     });
@@ -540,7 +540,7 @@ describe('Home', () => {
       expect(tap.textContent).toContain('Love all');
       see(tap, { visible: true });
       advance(2000);
-      expect(tap.textContent).not.toContain('Love all');
+      expect(tap.querySelector('.home-tap-call .home-r:not(.is-out)')).not.toHaveTextContent('Love all');
     });
 
     it('has a visible Pause that stops the track and every animation, and Play carries on; hover and keyboard focus pause too', () => {

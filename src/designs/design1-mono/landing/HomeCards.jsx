@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { memo, useEffect, useState } from 'react';
+import { createContext, memo, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTimeline } from './useTimeline';
 import { getSportById } from '../../../models/sportRegistry';
 import { PRESETS, deriveTeamColours, teamColourVars } from '../../../lib/teamColour';
@@ -13,16 +13,24 @@ import './homeCards.css';
    carries one label that says what happens. */
 
 const ROLL_OUT_MS = 520;
+const AnimationRunning = createContext(true);
 
 /* Text that rolls (the old value fades up and out, the new one rises in) whenever `value` changes. */
 export function Roll({ value, dir = 1, as: Tag = 'div', className = '', children }) {
+  const running = useContext(AnimationRunning);
+  const remaining = useRef(ROLL_OUT_MS);
   const [shown, setShown] = useState({ now: value, old: null });
   if (shown.now !== value) setShown({ now: value, old: shown.now });
+  useEffect(() => { remaining.current = ROLL_OUT_MS; }, [shown.now]);
   useEffect(() => {
-    if (shown.old === null) return undefined;
-    const timer = window.setTimeout(() => setShown((current) => ({ ...current, old: null })), ROLL_OUT_MS);
-    return () => window.clearTimeout(timer);
-  }, [shown.now, shown.old]);
+    if (shown.old === null || !running) return undefined;
+    const started = Date.now();
+    const timer = window.setTimeout(() => setShown((current) => ({ ...current, old: null })), remaining.current);
+    return () => {
+      remaining.current = Math.max(0, remaining.current - (Date.now() - started));
+      window.clearTimeout(timer);
+    };
+  }, [shown.now, shown.old, running]);
   const changed = shown.old !== null;
   return (
     <Tag className={`home-roller ${className}`} style={{ '--dir': dir }}>
@@ -229,11 +237,18 @@ CardFace.propTypes = {
  *  frame that says what it is about. `hidden` marks a clone the rail repeats for the marquee (no
  *  name, out of the accessibility tree). */
 export function CardPlayer({ card, running, still = false, loop = false, onEnd, resetKey = 0, slideLabel, hidden = false, cardRef }) {
+  const element = useRef(null);
+  useLayoutEffect(() => {
+    element.current?.getAnimations?.({ subtree: true }).forEach((animation) => {
+      if (running && !still) animation.play();
+      else animation.pause();
+    });
+  }, [running, still]);
   const index = useTimeline(card.timeline, running && !still, { loop, onEnd, resetKey });
   const state = still ? card.timeline.still : card.timeline.states[index];
   return (
     <div
-      ref={cardRef}
+      ref={(node) => { element.current = node; if (cardRef) cardRef.current = node; }}
       className="home-card"
       style={cardVars(card)}
       role={hidden ? undefined : 'group'}
@@ -241,7 +256,9 @@ export function CardPlayer({ card, running, still = false, loop = false, onEnd, 
       aria-label={hidden ? undefined : slideLabel}
       aria-hidden={hidden ? 'true' : undefined}
     >
-      <CardFace card={card} state={state} />
+      <AnimationRunning.Provider value={running && !still}>
+        <CardFace card={card} state={state} />
+      </AnimationRunning.Provider>
     </div>
   );
 }
