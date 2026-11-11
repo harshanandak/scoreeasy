@@ -1,82 +1,82 @@
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import finalTheme, { MONO } from './landingTheme';
+import { BrandMark, GoArrow, KitSection } from '../kit/KitParts';
+import '../kit/history.css';
+import './landing.css';
+import './legal.css';
+import { CONTACT_EMAIL, LAST_UPDATED, pages } from './legalContent';
 
-const pages = {
-  privacy: {
-    title: 'Privacy',
-    eyebrow: 'Privacy notes',
-    sections: [
-      ['Local scoring first', 'Guest matches, drafts, preferences, and history can be stored in browser localStorage on your device so scoring does not require an account.'],
-      ['Cloud features', 'Sign-in and profile search use Clerk for authentication and Convex for user profiles, synced matches, and public profile data when you choose cloud features.'],
-      ['App services', 'Native app capabilities such as sharing use Capacitor plugins, and production error reports may be sent to Sentry so crashes can be diagnosed.'],
-      ['Control', 'You can keep using Score Easy without signing in, and you can clear local match history from the app.'],
-    ],
-  },
-  terms: {
-    title: 'Terms',
-    eyebrow: 'Use notes',
-    sections: [
-      ['Scorekeeping tool', 'Score Easy helps organize games, tournaments, and match history, but it is not an official referee record. Review scores before sharing or relying on them.'],
-      ['Fair use', 'Do not use the app to publish abusive, unlawful, or misleading content.'],
-      ['Availability', 'Local scoring is designed to keep working without cloud services, while sync and account features depend on connectivity.'],
-    ],
-  },
-  contact: {
-    title: 'Contact',
-    eyebrow: 'Support',
-    sections: [
-      ['Support email', 'For privacy, support, or store review questions, contact support@scoreeasy.app.'],
-      ['Useful details', 'Include your sport, device, browser or app version, and the route where the issue happened.'],
-      ['Fast path', 'For scoring bugs, include the match format and the last action before the issue.'],
-    ],
-  },
-};
+/* Privacy, Terms and Contact, in the Kit look of the guest landing. The words live in
+   legalContent.js; this file only lays them out. The contact address is turned into a mailto link
+   wherever it appears in a sentence. */
+
+const NAV = [
+  { type: 'privacy', label: 'Privacy', to: '/privacy' },
+  { type: 'terms', label: 'Terms', to: '/terms' },
+  { type: 'contact', label: 'Contact', to: '/contact' },
+];
+
+function Text({ children }) {
+  const parts = children.split(CONTACT_EMAIL);
+  return parts.flatMap((part, i) => (i === 0
+    ? [part]
+    : [<a key={`mail-${i}`} className="kit-legal-mail" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>, part]));
+}
+
+Text.propTypes = { children: PropTypes.string.isRequired };
+
+function headingId(type, index) {
+  return `legal-${type}-${index}`;
+}
 
 export default function LegalPage({ type }) {
-  const t = finalTheme;
   const page = pages[type] || pages.privacy;
+  const current = pages[type] ? type : 'privacy';
 
   return (
-    <div style={{ minHeight: '100vh', background: t.bg, color: t.text }}>
-      <main style={{ maxWidth: 860, margin: '0 auto', padding: '48px 24px 72px' }}>
-        <Link to="/app" style={{ fontFamily: MONO, fontSize: '0.75rem', color: t.textMuted, textDecoration: 'none' }}>
-          SCORE EASY
+    <div className="kit-screen kit-legal" data-screen={`legal-${current}`}>
+      <div className="kit-top">
+        <Link className="kit-brand kit-legal-brand" to="/app">
+          <BrandMark />
+          <span>Score Easy</span>
         </Link>
-        <p style={{ fontFamily: MONO, fontSize: '0.75rem', letterSpacing: '0.12em', color: t.textFaint, margin: '48px 0 12px' }}>
-          {page.eyebrow.toUpperCase()}
-        </p>
-        <h1 style={{ fontSize: 'clamp(2.5rem, 8vw, 5rem)', lineHeight: 0.95, margin: '0 0 28px', fontWeight: 900 }}>
-          {page.title}
-        </h1>
-        <div style={{ display: 'grid', gap: 2, borderTop: `2px solid ${t.borderStrong}` }}>
-          {page.sections.map(([heading, body]) => (
-            <section key={heading} style={{ padding: '22px 0', borderBottom: `1px solid ${t.border}` }}>
-              <h2 style={{ fontFamily: MONO, fontSize: '0.875rem', letterSpacing: '0.08em', margin: '0 0 8px' }}>
-                {heading.toUpperCase()}
-              </h2>
-              <p style={{ margin: 0, color: t.textSoft, lineHeight: 1.65 }}>
-                {body}
-              </p>
-            </section>
-          ))}
+      </div>
+
+      <header className="kit-legal-head">
+        <h1 className="kit-title">{page.title}</h1>
+        <p className="kit-sub">{page.lead}</p>
+        {current !== 'contact' && <p className="kit-legal-date">Last updated {LAST_UPDATED}</p>}
+      </header>
+
+      {page.blocks.map((block, index) => (
+        <section key={block.heading} aria-labelledby={headingId(current, index)}>
+          <KitSection id={headingId(current, index)} title={block.heading} />
+          <div className="kit-card kit-legal-card">
+            {block.paragraphs?.map((text) => <p key={text}><Text>{text}</Text></p>)}
+            {block.items && (
+              <ul>
+                {block.items.map((item) => <li key={item}><Text>{item}</Text></li>)}
+              </ul>
+            )}
+            {block.after?.map((text) => <p key={text}><Text>{text}</Text></p>)}
+          </div>
+        </section>
+      ))}
+
+      {current === 'contact' && (
+        <div className="kit-landing-actions kit-legal-actions">
+          <a className="se-go" href={`mailto:${CONTACT_EMAIL}`}>Email us <GoArrow /></a>
         </div>
-        <Link to="/play" style={{
-          display: 'inline-block',
-          marginTop: 28,
-          fontFamily: MONO,
-          fontSize: '0.8125rem',
-          fontWeight: 700,
-          padding: '12px 22px',
-          letterSpacing: '0.05em',
-          textDecoration: 'none',
-          background: t.text,
-          color: t.bg,
-          border: `2px solid ${t.text}`,
-        }}>
-          PLAY NOW
-        </Link>
-      </main>
+      )}
+
+      <footer className="kit-landing-foot">
+        <nav aria-label="Legal">
+          {NAV.filter((item) => item.type !== current).map(({ label, to }) => (
+            <Link key={label} to={to}>{label}</Link>
+          ))}
+        </nav>
+        <Link to="/play">Start scoring</Link>
+      </footer>
     </div>
   );
 }
