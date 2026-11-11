@@ -352,6 +352,13 @@
   pointer-events: none;
 }
 
+/* Wider screens show the 56px top navigation: sit below it so links stay visible and clickable. */
+@media (min-width: 768px) {
+  .kit-connection-status {
+    top: calc(64px + var(--se-safe-top, env(safe-area-inset-top, 0px)));
+  }
+}
+
 /* ---- match details sheet ---- */
 .kit-detail {
   color: var(--se-color-ink);
