@@ -7,13 +7,14 @@ import { GoArrow, HandUnderline, KitSection, KitTop, KitWash, SportTile } from '
 import '../kit/history.css';
 import './landing.css';
 import { LANDING_FAQ } from './landingFaq';
-import ScoreSlides from './ScoreSlides';
+import HomeRail from './HomeRail';
 
-/* Home (/). A headline and one sentence, Start, a swipe rail of real sport boards being scored
-   (it loops forever and moves on by itself), then the app's own sport tiles and the FAQ.
-   Phone order: top bar (logo, Sign in), headline, Start, board rail, "Pick your sport" grid, FAQ.
+/* Home (/). A headline and one sentence, Start, a swipe rail of animation cards (tap and the rule
+   answers, undo, a live link, the moments the app calls; it loops forever and moves on by itself),
+   then the app's own sport tiles and the FAQ.
+   Phone order: top bar (logo, Sign in), headline, Start, card rail, "Pick your sport" grid, FAQ.
    A tile starts that sport's quick match, as on the Play hub; Start has one fixed label and opens
-   the full picker (/play); it never follows the board, which changes on its own. */
+   the full picker (/play); it never follows the card on show, which changes on its own. */
 
 /* Home shows the first 8 sports of the registry order, not all 9: an even count fills the
    2-column phone grid and the 4-column desktop grid with no sport alone on the last row. The one
@@ -61,8 +62,8 @@ export default function GuestLanding() {
         </div>
 
         <section className="kit-landing-example" aria-labelledby="landing-example-title">
-          <KitSection id="landing-example-title" title="See a match being scored" />
-          <ScoreSlides />
+          <KitSection id="landing-example-title" title="See Score Easy in action" />
+          <HomeRail />
           <p className="kit-landing-signup">
             Save across phones?{' '}
             <Link to={cloudAuthAvailable ? '/signup' : 'https://scoreeasy.app/signup'} onClick={markAppEntered}>Create a free account</Link>

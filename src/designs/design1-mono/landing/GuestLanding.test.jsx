@@ -1,14 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthContext, LocalAuthProvider } from '../../../auth/AuthContext';
 import { getSportsByCategory } from '../../../models/sportRegistry';
 import GuestLanding from './GuestLanding';
-import { buildDemo } from './landingDemo';
+import { CARDS } from './cardTimelines';
 import { LANDING_FAQ } from './landingFaq';
-import { SLIDES } from './ScoreSlides';
 
 function LocationProbe() {
   const location = useLocation();
@@ -44,7 +43,7 @@ function slides(container) {
   return [...container.querySelectorAll('[aria-roledescription="slide"]')];
 }
 
-const COUNT = SLIDES.length;
+const COUNT = CARDS.length;
 const PITCH = 300;
 
 /* jsdom has no layout. This gives every rail card a width of PITCH (card 0 sits at the 16px
@@ -103,7 +102,7 @@ describe('Home', () => {
     expect(screen.getByRole('link', { name: 'Start a match' })).toBeInTheDocument();
   });
 
-  it('shows 8 sports as full tiles in registry order, after the headline, Start and the board rail', () => {
+  it('shows 8 sports as full tiles in registry order, after the headline, Start and the card rail', () => {
     const { container } = renderLanding();
     const registry = Object.values(getSportsByCategory()).flat().map((sport) => sport.id);
     const tiles = [...container.querySelectorAll('.kit-landing-grid .kit-tile')];
@@ -140,7 +139,7 @@ describe('Home', () => {
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/play');
   });
 
-  it('shows a labelled carousel of sport boards with no sport tabs and no hint list', () => {
+  it('shows a labelled carousel of animation cards with no sport tabs and no hint list', () => {
     const { container } = renderLanding();
     const carousel = screen.getByTestId('landing-example');
     expect(carousel).toHaveAttribute('aria-roledescription', 'carousel');
@@ -156,17 +155,24 @@ describe('Home', () => {
     for (const clone of clones) expect(clone).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('draws every slide from its sport engine, with a short calm tagline', () => {
+  it('shows the concept animations, not sport scoreboards', () => {
     const { container } = renderLanding();
-    slides(container).forEach((slide, i) => {
-      const demo = buildDemo(SLIDES[i].sportId);
-      for (const team of demo.teams) {
-        expect(slide.textContent).toContain(team.name);
-        expect(slide.textContent).toContain(team.score);
-      }
-      expect(SLIDES[i].tagline.split(/\s+/).length).toBeLessThanOrEqual(8);
-      expect(SLIDES[i].tagline).not.toMatch(/!/);
-      expect(slide.textContent).toContain(SLIDES[i].tagline);
+    expect(container.querySelector('.home-board, .home-slide-tag')).toBeNull();
+    const carousel = screen.getByTestId('landing-example');
+    expect(within(carousel).queryByText(/Every ball counted/)).toBeNull();
+    expect(CARDS.map((card) => card.id)).toEqual(['tap', 'undo', 'live', 'moments', 'paper']);
+  });
+
+  it('gives every card a heading and a picture named for what happens in it', () => {
+    renderLanding();
+    const carousel = screen.getByTestId('landing-example');
+    // Only the real copy is exposed: the clones are aria-hidden, so each name is found once.
+    expect(within(carousel).getAllByRole('img')).toHaveLength(COUNT);
+    CARDS.forEach((card, i) => {
+      expect(within(carousel).getByRole('group', { name: `${i + 1} of ${COUNT}: ${card.title}` })).toBeInTheDocument();
+      expect(within(carousel).getByRole('heading', { level: 3, name: card.title })).toBeInTheDocument();
+      expect(within(carousel).getByRole('img', { name: card.label })).toBeInTheDocument();
+      expect(card.title.split(/\s+/).length).toBeLessThanOrEqual(5);
     });
   });
 
@@ -186,12 +192,12 @@ describe('Home', () => {
     expect(localStorage.getItem('se_entered_app')).toBeNull();
   });
 
-  describe('board rail', () => {
+  describe('card rail', () => {
     let restoreLayout;
-    beforeEach(() => { restoreLayout = installRailLayout(); });
-    afterEach(() => { restoreLayout(); });
+    beforeEach(() => { vi.useFakeTimers(); restoreLayout = installRailLayout(); });
+    afterEach(() => { restoreLayout(); vi.useRealTimers(); });
 
-    // The layout effect parks the rail on the first real board: card index COUNT.
+    // The layout effect parks the rail on the first real card: card index COUNT.
     function renderRail() {
       const { container } = renderLanding();
       const rail = container.querySelector('.home-rail');
@@ -199,7 +205,11 @@ describe('Home', () => {
       return { container, rail, root: screen.getByTestId('landing-example') };
     }
 
-    it('moves between boards with the arrow keys and never changes the Start label', () => {
+    const advance = (ms) => act(() => { vi.advanceTimersByTime(ms); });
+    const rest = (rail) => fireEvent(rail, new Event('scrollend'));
+    const loopOf = (card) => CARDS[card].timeline.loopMs;
+
+    it('moves between cards with the arrow keys and never changes the Start label', () => {
       const { rail, root } = renderRail();
       expect(rail).toHaveAttribute('tabindex', '0');
       for (let i = 1; i <= COUNT; i += 1) {
@@ -209,37 +219,59 @@ describe('Home', () => {
       }
     });
 
-    it('plays through every board by itself, then wraps from the last board to the first', () => {
-      const { container, rail, root } = renderRail();
+    it('plays each card through by itself, then wraps from the last card to the first', () => {
+      const { rail, root } = renderRail();
       expect(root).toHaveAttribute('data-active', '0');
       for (let i = 1; i < COUNT; i += 1) {
-        fireEvent.animationEnd(container.querySelector('.home-advance'));
+        advance(loopOf(i - 1));
         expect(root).toHaveAttribute('data-active', String(i));
+        rest(rail);
       }
       expect(rail.scrollLeft).toBe((COUNT * 2 - 1) * PITCH);
-      // Past the last board is the first board's copy in the third copy ...
-      fireEvent.animationEnd(container.querySelector('.home-advance'));
+      // Past the last card is the first card's copy in the third copy ...
+      advance(loopOf(COUNT - 1));
       expect(rail.scrollLeft).toBe(COUNT * 2 * PITCH);
       expect(root).toHaveAttribute('data-active', '0');
       // ... and when the rail comes to rest it steps back into the middle copy, unseen.
-      fireEvent(rail, new Event('scrollend'));
+      rest(rail);
       expect(rail.scrollLeft).toBe(COUNT * PITCH);
       expect(root).toHaveAttribute('data-active', '0');
     });
 
-    it('wraps from the first board to the last on a swipe back, and on round again', () => {
+    it('wraps from the first card to the last on a swipe back, and on round again', () => {
       const { rail, root } = renderRail();
-      // One board back from the first board is the last board's copy in the first copy.
+      // One card back from the first card is the last card's copy in the first copy.
       rail.scrollLeft = (COUNT - 1) * PITCH;
       fireEvent.scroll(rail);
       expect(root).toHaveAttribute('data-active', String(COUNT - 1));
-      fireEvent(rail, new Event('scrollend'));
+      rest(rail);
       expect(rail.scrollLeft).toBe((COUNT * 2 - 1) * PITCH);
       expect(root).toHaveAttribute('data-active', String(COUNT - 1));
       fireEvent.keyDown(rail, { key: 'ArrowRight' });
-      fireEvent(rail, new Event('scrollend'));
+      rest(rail);
       expect(rail.scrollLeft).toBe(COUNT * PITCH);
       expect(root).toHaveAttribute('data-active', '0');
+    });
+
+    it('animates only the visible card, and every card starts from its opening frame', () => {
+      const { container } = renderRail();
+      const [tap, undo] = slides(container);
+      expect(tap.textContent).toContain('Love all');
+      expect(tap.textContent).not.toContain('Deuce');
+      advance(6000);
+      // Deuce lands at 5.84 s: the tap at 5.7 s, then the answer 140 ms later.
+      expect(tap.textContent).toContain('Deuce');
+      expect(undo.textContent).toContain('New over');
+      expect(undo.textContent).not.toContain('A single');
+    });
+
+    it('plays every copy of the visible card, so the copy on screen is the one that moves', () => {
+      const { container } = renderRail();
+      const clones = [...container.querySelectorAll('[data-clone="true"]')];
+      const cloneOfTap = clones.filter((clone) => clone.textContent.includes('Tap. The rule answers.'));
+      expect(cloneOfTap).toHaveLength(2);
+      advance(6000);
+      for (const clone of cloneOfTap) expect(clone.textContent).toContain('Deuce');
     });
 
     it('holds auto-advance while touched, hovered or focused, and resumes after', () => {
@@ -259,12 +291,42 @@ describe('Home', () => {
       expect(root).not.toHaveClass('is-paused');
     });
 
+    it.each([
+      ['touch', (rail) => fireEvent.pointerDown(rail, { pointerType: 'touch' }), (rail) => fireEvent.pointerUp(rail, { pointerType: 'touch' })],
+      ['hover', (rail, root) => fireEvent.mouseEnter(root), (rail, root) => fireEvent.mouseLeave(root)],
+      ['focus', (rail) => fireEvent.focus(rail), (rail) => fireEvent.blur(rail)],
+    ])('stops the animation and the advance while held by %s, and carries on from where it stopped', (_name, hold, release) => {
+      const { container, rail, root } = renderRail();
+      const [tap] = slides(container);
+      advance(3000);
+      hold(rail, root);
+      // Far past the end of the loop: nothing changes while held.
+      advance(loopOf(0) * 2);
+      expect(root).toHaveAttribute('data-active', '0');
+      expect(tap.textContent).not.toContain('Deuce');
+      release(rail, root);
+      // 3 s were already played, so only the rest of the loop is left.
+      advance(loopOf(0) - 3000 - 100);
+      expect(root).toHaveAttribute('data-active', '0');
+      advance(200);
+      expect(root).toHaveAttribute('data-active', '1');
+    });
+
     it('does not auto-advance or animate under reduced motion, and can still be moved by hand', () => {
       reducedMotion();
       const { container, rail, root } = renderRail();
-      expect(container.querySelector('.home-advance')).toBeNull();
-      expect(container.querySelector('.home-tick')).toBeNull();
+      expect(root).toHaveAttribute('data-playing', 'false');
+      const [tap, undo, live, moments, paper] = slides(container);
+      // Each card shows its one still frame, the one that says what it is about.
+      expect(tap.textContent).toContain('Deuce');
+      expect(undo.textContent).toContain('A six tapped by mistake is gone. Back to 5.');
+      expect(live.textContent).toContain('Sharing live');
+      expect(moments.textContent).toContain('Need 12 off 8');
+      expect(paper.querySelector('.home-paper')).toHaveClass('is-app');
+      advance(loopOf(0) * 3);
       expect(root).toHaveAttribute('data-active', '0');
+      expect(tap.textContent).toContain('Deuce');
+      expect(container.querySelector('.is-idle')).toBeNull();
       fireEvent.keyDown(rail, { key: 'ArrowRight' });
       expect(root).toHaveAttribute('data-active', '1');
     });

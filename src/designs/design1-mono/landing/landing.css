@@ -1,9 +1,10 @@
 /* Home (/), Kit. Composes Kit parts (kit.css, history.css chips, the .se-go / .se-ctl buttons);
-   only layout and the scoreboard live here. Colour comes from --se-color-* tokens and the engine
-   vars (--sport-*, --team-a-*, --team-b-*), so a dark theme is a token swap.
-   Phone: top bar (logo, Sign in), headline, one sentence, Start, a full-bleed swipe rail of real
-   sport boards, the app's own sport tiles in two columns, a short FAQ and the footer.
-   Desktop: headline and Start left, the board rail right, then the sport tiles in four columns. */
+   only layout lives here (the animation cards' art is in homeCards.css). Colour comes from
+   --se-color-* tokens and the engine vars (--sport-*, --team-a-*, --team-b-*), so a dark theme is a
+   token swap.
+   Phone: top bar (logo, Sign in), headline, one sentence, Start, a full-bleed swipe rail of
+   animation cards, the app's own sport tiles in two columns, a short FAQ and the footer.
+   Desktop: headline and Start left, the card rail right, then the sport tiles in four columns. */
 
 .kit-landing {
   padding-bottom: 40px;
@@ -59,10 +60,11 @@
   min-height: 132px;
 }
 
-/* ---- the boards: a looping swipe rail of real sport boards ----
+/* ---- the cards: a looping swipe rail of animation cards ----
    Full-bleed on phones (it runs under the page gutter to both screen edges; the first card starts
-   at the gutter), each card 82% wide so the next one peeks. Every card is as tall as the tallest
-   board, so the page below never moves. The section title is for screen readers only. */
+   at the gutter). A card is a medium 300px (80% of the screen at most) so the next one peeks, and
+   every card is the same height, so the page below never moves. The section title is for screen
+   readers only. */
 .kit-landing-example .kit-sec {
   position: absolute;
   width: 1px;
@@ -74,7 +76,6 @@
 }
 
 .home-slides {
-  --se-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   margin-top: 24px;
 }
 
@@ -105,14 +106,16 @@
 .home-slide {
   position: relative;
   display: flex;
-  flex: 0 0 82%;
+  flex: 0 0 min(300px, 80vw);
   flex-direction: column;
+  box-sizing: border-box;
   min-width: 0;
-  overflow: hidden;
+  height: 308px;
+  padding: 12px 14px 14px;
   border: 2px solid var(--se-color-ink);
   border-radius: 18px;
   background: var(--se-color-surface);
-  box-shadow: 4px 4px 0 var(--se-color-ink);
+  box-shadow: 3px 3px 0 var(--se-color-ink);
   scroll-snap-align: start;
   scroll-snap-stop: always;
   user-select: none;
@@ -122,245 +125,6 @@
 /* Arrow buttons are for a mouse on desktop; phones swipe. */
 .home-rail-nav {
   display: none;
-}
-
-/* The engine steps are timed by these invisible animations, so they pause with the rest. */
-.home-tick {
-  position: absolute;
-  width: 0;
-  height: 0;
-  animation: home-tick linear forwards;
-}
-
-@keyframes home-tick {
-  to {
-    transform: translateX(1px);
-  }
-}
-
-.home-board {
-  padding: 14px 12px 0;
-}
-
-.home-board-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 36px;
-}
-
-.home-board-head .kit-badge {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-}
-
-.home-board-head .kit-badge svg {
-  width: 24px;
-  height: 24px;
-}
-
-.home-board-sport {
-  font: 800 0.8rem/1 var(--se-font-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.home-board-live,
-.home-board-undo {
-  margin-left: auto;
-  font: 800 0.72rem/1 var(--se-font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.home-board-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--se-color-live);
-}
-
-.home-board-live i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: home-live 2s ease-in-out infinite;
-}
-
-@keyframes home-live {
-  50% {
-    opacity: 0.35;
-  }
-}
-
-/* "Undo" turns into "Undone" by a crossfade of two words in one cell. */
-.home-board-undo {
-  display: inline-grid;
-  padding: 6px 10px;
-  border: 2px solid var(--se-color-ink);
-  border-radius: 10px;
-  color: var(--se-color-ink);
-}
-
-.home-board-undo > span {
-  grid-area: 1 / 1;
-  text-align: center;
-  transition: opacity 300ms var(--se-ease-out);
-}
-
-.home-board-undo > span + span,
-.home-board-undo.is-done > span:first-child {
-  opacity: 0;
-}
-
-.home-board-undo.is-done > span + span {
-  opacity: 1;
-}
-
-.home-board-grid {
-  display: grid;
-  align-items: center;
-  column-gap: 6px;
-  margin-top: 10px;
-}
-
-.home-board-label {
-  color: var(--se-color-ink-soft);
-  font: 700 0.66rem/1 var(--se-font-mono);
-  letter-spacing: 0.08em;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.home-board-team {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  min-height: 56px;
-  font-size: 1.05rem;
-  font-weight: 750;
-  overflow-wrap: anywhere;
-}
-
-.home-board-bar {
-  flex: none;
-  width: 5px;
-  height: 30px;
-  border-radius: 3px;
-  background: var(--team-a-core, var(--se-color-ink));
-}
-
-.home-board-bar-b {
-  background: var(--team-b-core, var(--se-color-ink));
-}
-
-.home-board-serve {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--sport-core, var(--se-color-ink));
-  opacity: 0;
-  transition: opacity 300ms var(--se-ease-out);
-}
-
-.home-board-serve.is-on {
-  opacity: 1;
-}
-
-.home-board-cell {
-  display: inline-block;
-  color: var(--se-color-ink-soft);
-  font: 700 1.25rem/1 var(--se-font-num);
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-
-.home-board-score {
-  justify-self: end;
-  min-width: 2ch;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.home-board-num {
-  display: inline-block;
-  font: 800 2.7rem/1 var(--se-font-num);
-  font-variant-numeric: tabular-nums;
-}
-
-.home-board-suffix {
-  display: inline-block;
-  margin-left: 1px;
-  color: var(--se-color-ink-soft);
-  font: 800 1.45rem/1 var(--se-font-num);
-}
-
-.home-board-foot {
-  margin: 4px -12px 0;
-  padding: 10px 12px;
-  border-top: 1px solid var(--se-color-line-soft);
-  font: 750 0.9rem/1.3 var(--se-font-display);
-  font-variant-numeric: tabular-nums;
-}
-
-/* The narrowest phones (about 360 wide): a smaller score so a team name like "Australia" stays whole. */
-@media (max-width: 380px) {
-  .home-board-num {
-    font-size: 2.3rem;
-  }
-
-  .home-board-suffix {
-    font-size: 1.25rem;
-  }
-
-  .home-board-team {
-    font-size: 1rem;
-  }
-}
-
-/* A number that changed rises 0.2em into place while it fades in. */
-.home-roll {
-  animation: home-roll 320ms var(--se-ease-out);
-}
-
-@keyframes home-roll {
-  from {
-    opacity: 0;
-    transform: translateY(0.2em);
-  }
-}
-
-.home-slide-tag {
-  margin: auto 0 0;
-  padding: 14px 14px 16px;
-  border-top: 2px solid var(--se-color-ink);
-  font: 800 1.2rem/1.2 var(--se-font-display);
-  letter-spacing: -0.01em;
-  text-wrap: balance;
-}
-
-.home-slides.is-paused .home-tick,
-.home-slides.is-paused .home-board-live i {
-  animation-play-state: paused;
-}
-
-/* Reduced motion: the boards stay at their opening state and nothing moves on its own. The rail
-   can still be swiped. */
-@media (prefers-reduced-motion: reduce) {
-  .home-board-undo > span,
-  .home-board-serve {
-    transition: none;
-  }
-
-  .home-tick,
-  .home-roll,
-  .home-board-live i {
-    animation: none;
-  }
 }
 
 .kit-landing-signup {
@@ -516,7 +280,7 @@
     padding: 0 28px;
   }
 
-  /* The rail's top lines up with the headline's. It stays inside its column: a card is 88% wide
+  /* The rail's top lines up with the headline's. It stays inside its column: a card is 330px wide
      so the next one peeks at the column edge. */
   .home-slides {
     margin-top: 0;
@@ -530,7 +294,9 @@
   }
 
   .home-slide {
-    flex-basis: 88%;
+    flex-basis: 330px;
+    height: 352px;
+    padding: 14px 16px 16px;
   }
 
   .home-rail-nav {
@@ -554,24 +320,6 @@
 
   .kit-landing-grid .kit-tile {
     min-height: 148px;
-  }
-
-  .home-board {
-    padding: 18px 18px 0;
-  }
-
-  .home-board-foot {
-    margin: 6px -18px 0;
-    padding: 12px 18px;
-  }
-
-  .home-board-num {
-    font-size: 3.2rem;
-  }
-
-  .home-slide-tag {
-    padding: 16px 18px 18px;
-    font-size: 1.35rem;
   }
 
   .home-faq {

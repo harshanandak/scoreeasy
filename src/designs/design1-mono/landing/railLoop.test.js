@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RAIL_COPIES, homeCard, nearestCard, settleCard, wrapIndex } from './railLoop';
 
-describe('board rail loop helpers', () => {
+describe('card rail loop helpers', () => {
   it('wraps a board number in both directions', () => {
     expect([-6, -1, 0, 4, 5, 11].map((i) => wrapIndex(i, 5))).toEqual([4, 4, 0, 4, 0, 1]);
   });
