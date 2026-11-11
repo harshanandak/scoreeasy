@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { useCallback, useEffect, Suspense, lazy, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
@@ -380,7 +381,7 @@ function shouldDeferOnboardingForPath(pathname = '') {
 
 function AppEntryRoute() {
   const { isAuthenticated, isLoading } = useAuth();
-  const [appEntryState] = useState(loadAppEntryState);
+  const [appEntryState] = useState(() => Capacitor.isNativePlatform() ? loadAppEntryState() : {});
   const target = getAppEntryTarget({
     isAuthenticated,
     isLoading,

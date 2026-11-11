@@ -254,6 +254,18 @@ describe('app entry route contract', () => {
     expect(localStorage.getItem(key)).toBe(draft);
   });
 
+  it('marketing detects a legacy guest draft without migrating or rewriting storage', async () => {
+    const key = matchStorageKey('se_quickmatch_draft_volleyball');
+    const draft = JSON.stringify({ phase: 'scoring', sport: 'volleyball', team1Name: 'Kept', vScore1: 12 });
+    localStorage.setItem(key, draft);
+    const before = { ...localStorage };
+    realMarketing = true;
+    renderApp('/');
+    await screen.findByRole('link', { name: 'My matches' });
+    expect({ ...localStorage }).toEqual(before);
+    expect(localStorage.getItem(key)).toBe(draft);
+  });
+
   it('new web visitors see real marketing without My matches', async () => {
     realMarketing = true;
     renderApp('/');

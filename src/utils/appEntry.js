@@ -38,9 +38,11 @@ export function hasReturningPlayerState({
     hasItems(tournaments);
 }
 
-export function loadQuickMatchDrafts(sports = getSportsList()) {
-  migrateLegacyKabaddiBackups();
-  sports.forEach((sport) => migrateQuickMatchDraft(sport.id));
+export function loadQuickMatchDrafts(sports = getSportsList(), { migrate = true } = {}) {
+  if (migrate) {
+    migrateLegacyKabaddiBackups();
+    sports.forEach((sport) => migrateQuickMatchDraft(sport.id));
+  }
   return listDataKeys().filter(key => key.startsWith(QUICK_MATCH_DRAFT_PREFIX) && !isKabaddiMigrationBackup(key)).flatMap((key) => {
     const draft = loadData(key, null);
     const sport = draft?.sport || sports.find(sp => key === `${QUICK_MATCH_DRAFT_PREFIX}${sp.id}`)?.id;
@@ -193,7 +195,17 @@ export function loadAppEntryState() {
 }
 
 export function loadReturningPlayerState() {
-  return loadAppEntryState().returningPlayerState;
+  try {
+    const sports = getSportsList();
+    return loadData(ENTERED_APP_KEY, false) === true || hasReturningPlayerState({
+      activeSessions: loadActiveSessionSummaries(),
+      quickMatchDrafts: [...loadQuickMatchDrafts(sports, { migrate: false }), ...loadTennisQuickDrafts()],
+      quickMatches: loadQuickMatchSummaries(),
+      tournaments: loadTournamentSummaries(sports),
+    });
+  } catch {
+    return false;
+  }
 }
 
 export function getAppEntryTarget({
