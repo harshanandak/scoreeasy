@@ -213,16 +213,16 @@ describe('Home stage', () => {
       fireEvent.pointerDown(stage(), { clientX: 100, clientY: 100 });
       fireEvent.pointerUp(stage(), { clientX: 100, clientY: 100 });
     };
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(within(stage()).queryByRole('status')).toBeNull();
     tap();
     const before = scene().textContent;
     expect(stage()).toHaveAttribute('data-playing', 'false');
-    expect(screen.getByRole('status')).toHaveTextContent('Paused');
-    expect(screen.getByRole('status')).toHaveAccessibleName('Paused. Tap to play');
+    expect(within(stage()).getByRole('status')).toHaveTextContent('Paused');
+    expect(within(stage()).getByRole('status')).toHaveAccessibleName('Paused. Tap to play');
     advance(15000); expect(scene().textContent).toBe(before);
     tap();
     expect(stage()).toHaveAttribute('data-story', '0');
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(within(stage()).queryByRole('status')).toBeNull();
     advance(299); expect(scene().textContent).toBe(before);
     advance(2); expect(scene().textContent).not.toBe(before);
   });
@@ -238,7 +238,7 @@ describe('Home stage', () => {
     fireEvent.pointerUp(stage(), { clientX: 100, clientY: 100 });
     expect(stage()).toHaveAttribute('data-story', '1');
     expect(stage()).toHaveAttribute('data-playing', 'true');
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(within(stage()).queryByRole('status')).toBeNull();
     advance(STORIES[1].duration * 1000);
     expect(stage()).toHaveAttribute('data-story', '2');
     fireEvent.keyDown(stage(), { key: ' ' });
@@ -253,7 +253,7 @@ describe('Home stage', () => {
     renderLanding();
     fireEvent.pointerEnter(start(), { pointerType: 'mouse' });
     expect(stage()).toHaveAttribute('data-playing', 'false');
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(within(stage()).queryByRole('status')).toBeNull();
     advance(20000); expect(stage()).toHaveAttribute('data-story', '0');
     fireEvent.pointerLeave(start(), { pointerType: 'mouse' });
     expect(stage()).toHaveAttribute('data-playing', 'true');
@@ -271,7 +271,7 @@ describe('Home stage', () => {
     fireEvent.pointerLeave(start(), { pointerType: 'mouse' });
     advance(20000);
     expect(stage()).toHaveAttribute('data-playing', 'false');
-    expect(screen.getByRole('status')).toHaveTextContent('Paused');
+    expect(within(stage()).getByRole('status')).toHaveTextContent('Paused');
     fireEvent.keyDown(stage(), { key: ' ' });
     advance(STORIES[0].duration * 1000);
     expect(stage()).toHaveAttribute('data-story', '1');

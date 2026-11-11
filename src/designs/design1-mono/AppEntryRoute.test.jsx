@@ -87,6 +87,19 @@ function renderApp(initialEntry) {
   );
 }
 
+async function openMobileMenu(container) {
+  const prototype = HTMLDialogElement.prototype;
+  const original = Object.getOwnPropertyDescriptor(prototype, 'showModal');
+  Object.defineProperty(prototype, 'showModal', { configurable: true, value() { this.open = true; } });
+  try {
+    fireEvent.click(container.querySelector('.global-mobile-menu-button'));
+    return await screen.findByRole('navigation', { name: 'Navigation menu' });
+  } finally {
+    if (original) Object.defineProperty(prototype, 'showModal', original);
+    else delete prototype.showModal;
+  }
+}
+
 describe('app entry route contract', () => {
   beforeEach(() => {
     realAccountFlow = false;
@@ -254,14 +267,16 @@ describe('app entry route contract', () => {
     expect(localStorage.getItem(key)).toBe(draft);
   });
 
-  it('marketing detects a legacy guest draft without migrating or rewriting storage', async () => {
-    const key = matchStorageKey('se_quickmatch_draft_volleyball');
+  it.each([false, true])('marketing leaves legacy storage byte-identical, scoped=%s', async (scoped) => {
+    const key = scoped ? matchStorageKey('se_quickmatch_draft_volleyball') : 'se_quickmatch_draft_volleyball';
     const draft = JSON.stringify({ phase: 'scoring', sport: 'volleyball', team1Name: 'Kept', vScore1: 12 });
     localStorage.setItem(key, draft);
     const before = { ...localStorage };
     realMarketing = true;
     renderApp('/');
-    await screen.findByRole('link', { name: 'My matches' });
+    await screen.findByRole('link', { name: 'Sign in' });
+    if (scoped) expect(screen.getByRole('link', { name: 'My matches' })).toHaveAttribute('href', '/app');
+    else expect(screen.queryByRole('link', { name: 'My matches' })).toBeNull();
     expect({ ...localStorage }).toEqual(before);
     expect(localStorage.getItem(key)).toBe(draft);
   });
@@ -285,8 +300,9 @@ describe('app entry route contract', () => {
     const { container } = renderApp('/app');
     await screen.findByText('App dashboard');
     const selectors = { header: '.global-nav-links', dock: '.global-bottom-nav', sheet: '.global-mobile-menu-panel' };
+    const panel = surface === 'sheet' ? await openMobileMenu(container) : container.querySelector(selectors[surface]);
     const button = surface === 'brand' ? container.querySelector('.global-nav-brand')
-      : within(container.querySelector(selectors[surface])).getByRole('button', { name: 'Home', hidden: true });
+      : within(panel).getByRole('button', { name: 'Home', hidden: true });
     fireEvent.click(button);
     await screen.findByText(signedIn ? 'App dashboard' : 'Public marketing');
     expect(screen.getByLabelText('Current route').textContent).toBe(signedIn ? '/app' : '/');
@@ -488,18 +504,9 @@ describe('app entry route contract', () => {
     expect(within(dock()).getByRole('button', { name: 'Live, 1 match now', hidden: true })).toHaveAttribute('aria-current', 'page');
     expect(container.querySelector('.global-nav-links [aria-current="page"]')).toHaveTextContent('Live');
     expect(dock().querySelector('.kit-nav-live-dot')).toBeInTheDocument();
-    // JSDOM has no native dialog.showModal; model only the browser's open flag.
-    const dialogPrototype = HTMLDialogElement.prototype;
-    const showModal = Object.getOwnPropertyDescriptor(dialogPrototype, 'showModal');
-    Object.defineProperty(dialogPrototype, 'showModal', { configurable: true, value() { this.open = true; } });
-    try {
-      fireEvent.click(container.querySelector('.global-mobile-menu-button'));
-      expect(within(container.querySelector('.global-mobile-menu-panel')).getByRole('button', { name: 'Live, 1 match now', hidden: true })).toHaveAttribute('aria-current', 'page');
-      fireEvent.click(container.querySelector('.global-mobile-menu-close'));
-    } finally {
-      if (showModal) Object.defineProperty(dialogPrototype, 'showModal', showModal);
-      else delete dialogPrototype.showModal;
-    }
+    const menu = await openMobileMenu(container);
+    expect(within(menu).getByRole('button', { name: 'Live, 1 match now', hidden: true })).toHaveAttribute('aria-current', 'page');
+    fireEvent.click(container.querySelector('.global-mobile-menu-close'));
     liveFeed = [];
     rerender(<MemoryRouter initialEntries={['/app']}><LocationProbe /><Design1Mono /></MemoryRouter>);
     expect(dock().querySelector('.kit-nav-live-dot')).toBeNull();

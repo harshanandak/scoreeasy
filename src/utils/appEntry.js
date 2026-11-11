@@ -1,3 +1,4 @@
+import { readOnlyMatchStorage } from './accountStorage';
 import { Capacitor } from '@capacitor/core';
 import { getSportsList } from '../models/sportRegistry';
 import { listDataKeys, loadData, saveData } from './storage';
@@ -38,11 +39,9 @@ export function hasReturningPlayerState({
     hasItems(tournaments);
 }
 
-export function loadQuickMatchDrafts(sports = getSportsList(), { migrate = true } = {}) {
-  if (migrate) {
-    migrateLegacyKabaddiBackups();
-    sports.forEach((sport) => migrateQuickMatchDraft(sport.id));
-  }
+export function loadQuickMatchDrafts(sports = getSportsList()) {
+  migrateLegacyKabaddiBackups();
+  sports.forEach((sport) => migrateQuickMatchDraft(sport.id));
   return listDataKeys().filter(key => key.startsWith(QUICK_MATCH_DRAFT_PREFIX) && !isKabaddiMigrationBackup(key)).flatMap((key) => {
     const draft = loadData(key, null);
     const sport = draft?.sport || sports.find(sp => key === `${QUICK_MATCH_DRAFT_PREFIX}${sp.id}`)?.id;
@@ -196,12 +195,26 @@ export function loadAppEntryState() {
 
 export function loadReturningPlayerState() {
   try {
+    const storage = readOnlyMatchStorage(globalThis.localStorage);
+    const read = (key) => {
+      try { return JSON.parse(storage.getItem(key)); } catch { return null; }
+    };
+    const rows = (key) => { const value = read(key); return Array.isArray(value) ? value : []; };
+    if (read(ENTERED_APP_KEY) === true) return true;
     const sports = getSportsList();
-    return loadData(ENTERED_APP_KEY, false) === true || hasReturningPlayerState({
-      activeSessions: loadActiveSessionSummaries(),
-      quickMatchDrafts: [...loadQuickMatchDrafts(sports, { migrate: false }), ...loadTennisQuickDrafts()],
-      quickMatches: loadQuickMatchSummaries(),
-      tournaments: loadTournamentSummaries(sports),
+    const drafts = Array.from({ length: storage.length }, (_, index) => storage.key(index)).filter(Boolean).filter((key) => {
+      if (isKabaddiMigrationBackup(key)) return false;
+      if (key.startsWith(TENNIS_QUICK_DRAFT_PREFIX)) return read(key)?.status === 'in-progress';
+      if (!key.startsWith(QUICK_MATCH_DRAFT_PREFIX)) return false;
+      const draft = read(key);
+      const sport = draft?.sport || sports.find(item => key === `${QUICK_MATCH_DRAFT_PREFIX}${item.id}`)?.id;
+      return draft?.phase === 'scoring' && sports.some(item => item.id === sport);
+    });
+    return hasReturningPlayerState({
+      activeSessions: rows(SESSIONS_KEY).filter(session => session?.status === 'active' || session?.status === 'paused'),
+      quickMatchDrafts: drafts,
+      quickMatches: rows(QUICK_MATCHES_KEY),
+      tournaments: sports.flatMap(sport => rows(sport.storageKey)),
     });
   } catch {
     return false;

@@ -47,6 +47,6 @@ describe('a crashed tournament scorer can discard its own fixture', () => {
     expect(tournament.matches[0]).toEqual(expect.objectContaining({ id: 'm1', status: 'pending' }));
     expect(tournament.matches[0].draftState).toBeUndefined();
     expect(tournament.matches[1]).toEqual(expect.objectContaining({ id: 'm2', status: 'in-progress', draftState: { vScore1: 2, vScore2: 1 } }));
-    expect(assign).toHaveBeenCalledWith('/app');
+    expect(assign).toHaveBeenCalledWith('/');
   });
 });

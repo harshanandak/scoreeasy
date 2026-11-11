@@ -170,16 +170,26 @@ export function migrateMatchStorage(storage = globalThis.localStorage) {
   return changed;
 }
 
-export function scopedMatchStorage(storage) {
-  migrateMatchStorage(storage);
+/** The same namespace view as app storage, without migrations or write operations. */
+export function readOnlyMatchStorage(storage) {
   const visible = () => keys(storage).flatMap(key => key.startsWith(prefix(activeOwner)) ? [key.slice(prefix(activeOwner).length)]
     : !key.startsWith(ROOT) && !key.startsWith(BACKUP) && !scoped(logicalKey(key)) ? [key] : []);
   return {
     getItem: key => storage.getItem(matchStorageKey(key)),
-    setItem: (key, value) => storage.setItem(matchStorageKey(key), value),
-    removeItem: key => storage.removeItem(matchStorageKey(key)),
     get length() { return visible().length; },
     key: index => visible()[index] ?? null,
+  };
+}
+
+export function scopedMatchStorage(storage) {
+  migrateMatchStorage(storage);
+  const read = readOnlyMatchStorage(storage);
+  return {
+    getItem: read.getItem,
+    setItem: (key, value) => storage.setItem(matchStorageKey(key), value),
+    removeItem: key => storage.removeItem(matchStorageKey(key)),
+    get length() { return read.length; },
+    key: read.key,
   };
 }
 

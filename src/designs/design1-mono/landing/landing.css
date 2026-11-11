@@ -252,4 +252,4 @@
 .home-stage-page .top-actions { display: flex; align-items: center; gap: 8px; }
 .home-stage-page .my-matches { display: inline-flex; align-items: center; min-height: 44px; color: var(--home-white); font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 .home-stage-page .my-matches:focus-visible { outline: 3px solid var(--home-white); outline-offset: 3px; }
-.home-stage-page .paused-chip { position: absolute; z-index: 1; top: 36px; right: 0; display: inline-flex; align-items: center; min-height: 28px; padding: 0 11px; border-radius: 999px; background: rgb(0 0 0 / 72%); color: var(--home-white); font-size: 12px; font-weight: 800; pointer-events: none; }
+.home-stage-page .paused-chip { position: absolute; z-index: 1; top: 36px; right: 0; display: inline-flex; align-items: center; min-height: 28px; padding: 0 11px; border-radius: 999px; background: var(--home-pause-background); color: var(--home-white); font-size: 12px; font-weight: 800; pointer-events: none; }

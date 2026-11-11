@@ -1,4 +1,5 @@
-import { matchStorageKey } from './accountStorage';
+import { matchStorageKey, withMatchStorageScope } from './accountStorage';
+import * as accountStorage from './accountStorage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   APP_ENTRY_PATH,
@@ -14,6 +15,16 @@ import {
 } from './appEntry';
 import { getSportsList } from '../models/sportRegistry';
 import { getTennisQuickDraftKey } from './tennisQuickMatch';
+
+function expectNativeEntry(state, draftEntryPath) {
+  expect(state.returningPlayerState).toBe(true);
+  expect(state.draftEntryPath).toBe(draftEntryPath);
+  expect(getAppEntryTarget({ ...state, native: true })).toBe(draftEntryPath ?? APP_ENTRY_PATH);
+}
+const storageSnapshot = () => Object.fromEntries(Array.from({ length: localStorage.length }, (_, i) => {
+  const key = localStorage.key(i);
+  return [key, localStorage.getItem(key)];
+}));
 
 describe('app entry contract', () => {
   it('lists and migrates each resumable sport draft alongside tennis, Test matches and tournaments', () => {
@@ -41,7 +52,7 @@ describe('app entry contract', () => {
     expect(entries).toHaveLength(sports.length + 4);
     expect(new Set(entries.map((entry) => entry.entryPath)).size).toBe(entries.length);
     for (const sport of sports) expect(JSON.parse(localStorage.getItem(matchStorageKey(`se_quickmatch_draft_${sport.id}_1`))).quickMatchId).toBe(1);
-    expect(getAppEntryTarget({ ...loadAppEntryState(), native: true })).toBe('/app');
+    expectNativeEntry(loadAppEntryState(), null);
   });
 
   it('excludes setup and completed drafts but retains old scoring drafts', () => {
@@ -55,6 +66,7 @@ describe('app entry contract', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.useRealTimers();
     globalThis.localStorage.clear();
   });
@@ -97,6 +109,34 @@ describe('app entry contract', () => {
     expect(hasReturningPlayerState()).toBe(false);
   });
 
+  it.each([false, true])('returning-player scan never rewrites raw legacy storage, with scoped draft=%s', (scopedDraft) => {
+    const key = 'se_quickmatch_draft_volleyball';
+    const raw = '{ "phase": "scoring", "sport": "volleyball", "vScore1": 12, "syncOwnerId": "other-account" }';
+    localStorage.setItem(key, raw);
+    localStorage.setItem('gamescore_quickmatch_draft_volleyball', raw);
+    localStorage.setItem(matchStorageKey('se_quickmatches', 'other-account'), '[{"id":"private"}]');
+    if (scopedDraft) localStorage.setItem(matchStorageKey(key), '{ "phase": "scoring", "sport": "volleyball", "vScore1": 12 }');
+    const before = storageSnapshot();
+    const write = vi.spyOn(Storage.prototype, 'setItem');
+    const remove = vi.spyOn(Storage.prototype, 'removeItem');
+    const migratingView = vi.spyOn(accountStorage, 'scopedMatchStorage');
+    expect(loadReturningPlayerState()).toBe(scopedDraft);
+    expect(storageSnapshot()).toEqual(before);
+    expect(write).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+    expect(migratingView).not.toHaveBeenCalled();
+  });
+
+  it('returning-player scan isolates guest and account keys without migrations', () => {
+    localStorage.setItem(matchStorageKey('se_quickmatches', 'scorer'), '[{"id":"private"}]');
+    localStorage.setItem('se_local_migration:se_quickmatches', '[{"id":"backup"}]');
+    const before = storageSnapshot();
+    expect(loadReturningPlayerState()).toBe(false);
+    expect(withMatchStorageScope('scorer', loadReturningPlayerState)).toBe(true);
+    expect(withMatchStorageScope('another-scorer', loadReturningPlayerState)).toBe(false);
+    expect(storageSnapshot()).toEqual(before);
+  });
+
   it('detects in-progress quick-match drafts as returning-player state', () => {
     globalThis.localStorage.setItem(matchStorageKey('se_quickmatch_draft_volleyball'), JSON.stringify({
       phase: 'scoring',
@@ -116,9 +156,7 @@ describe('app entry contract', () => {
 
     const state = loadAppEntryState();
 
-    expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBe('/volleyball/quick?resume=1');
-    expect(getAppEntryTarget({ ...state, native: true })).toBe('/volleyball/quick?resume=1');
+    expectNativeEntry(state, '/volleyball/quick?resume=1');
   });
 
   it('resumes old generic quick-match drafts on app entry', () => {
@@ -134,9 +172,7 @@ describe('app entry contract', () => {
 
     const state = loadAppEntryState();
 
-    expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBe('/volleyball/quick?resume=1');
-    expect(getAppEntryTarget({ ...state, native: true })).toBe('/volleyball/quick?resume=1');
+    expectNativeEntry(state, '/volleyball/quick?resume=1');
   });
 
   it('routes tennis quick-live drafts to the draft scorer path', () => {
@@ -148,9 +184,7 @@ describe('app entry contract', () => {
 
     const state = loadAppEntryState();
 
-    expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBe('/tennis/quick/live/match-1');
-    expect(getAppEntryTarget({ ...state, native: true })).toBe('/tennis/quick/live/match-1');
+    expectNativeEntry(state, '/tennis/quick/live/match-1');
   });
 
   it('routes in-progress cricket Test quick matches to the draft scorer path', () => {
@@ -164,9 +198,7 @@ describe('app entry contract', () => {
     const state = loadAppEntryState();
 
     expect(loadQuickMatchSummaries()[0].entryPath).toBe('/cricket/quick/test-match/test-1');
-    expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBe('/cricket/quick/test-match/test-1');
-    expect(getAppEntryTarget({ ...state, native: true })).toBe('/cricket/quick/test-match/test-1');
+    expectNativeEntry(state, '/cricket/quick/test-match/test-1');
   });
 
   it('does not use completed cricket Test quick matches as app-entry scorer routes', () => {
@@ -180,9 +212,7 @@ describe('app entry contract', () => {
     const state = loadAppEntryState();
 
     expect(loadQuickMatchSummaries()[0].entryPath).toBeNull();
-    expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBeNull();
-    expect(getAppEntryTarget({ ...state, native: true })).toBe(APP_ENTRY_PATH);
+    expectNativeEntry(state, null);
   });
 
   it('keeps older completed quick matches without explicit completed status as returning state', () => {
@@ -200,9 +230,7 @@ describe('app entry contract', () => {
     const state = loadAppEntryState();
 
     expect(loadQuickMatchSummaries()).toHaveLength(1);
-    expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBeNull();
-    expect(getAppEntryTarget({ ...state, native: true })).toBe(APP_ENTRY_PATH);
+    expectNativeEntry(state, null);
   });
 
   it('resumes old cricket Test quick matches on app entry', () => {
@@ -219,9 +247,7 @@ describe('app entry contract', () => {
     const state = loadAppEntryState();
 
     expect(loadQuickMatchSummaries()).toHaveLength(1);
-    expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBe('/cricket/quick/test-match/test-1');
-    expect(getAppEntryTarget({ ...state, native: true })).toBe('/cricket/quick/test-match/test-1');
+    expectNativeEntry(state, '/cricket/quick/test-match/test-1');
   });
 
   it('resumes old tennis quick-live drafts on app entry', () => {
@@ -237,9 +263,7 @@ describe('app entry contract', () => {
 
     const state = loadAppEntryState();
 
-    expect(state.returningPlayerState).toBe(true);
-    expect(state.draftEntryPath).toBe('/tennis/quick/live/match-1');
-    expect(getAppEntryTarget({ ...state, native: true })).toBe('/tennis/quick/live/match-1');
+    expectNativeEntry(state, '/tennis/quick/live/match-1');
   });
 
   it('checks saved tournaments without rewriting storage during app entry', () => {
