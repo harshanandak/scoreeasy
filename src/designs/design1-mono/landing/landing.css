@@ -31,6 +31,8 @@
 
 .home-stage-page .top{display:flex;align-items:center;justify-content:space-between;height:68px;padding-top:6px}
 .home-stage-page .brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.01em;text-decoration:none}
+/* the shared Kit mark defaults to theme ink; on the colour band it is white like the name */
+.home-stage-page .brand .kit-brand-mark{color:inherit}
 /* Kit .se-ctl: white surface, 2px ink edge, 14px radius, 3px ink offset shadow, 2px press */
 .home-stage-page .signin{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border:2px solid var(--ink);border-radius:14px;
   background:var(--home-white);color:var(--ink);box-shadow:var(--ctl-shadow);font-weight:750;font-size:15px;text-decoration:none;transition:transform 60ms ease,box-shadow 60ms ease}
@@ -95,7 +97,7 @@
 
 /* live */
 .home-stage-page .l-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.home-stage-page .ph{border-radius:18px;background:var(--home-panel);padding:14px 14px 14px;display:flex;flex-direction:column;gap:6px;min-height:146px}
+.home-stage-page .ph{border-radius:18px;background:var(--home-live-panel);padding:14px 14px 14px;display:flex;flex-direction:column;gap:6px;min-height:146px}
 .home-stage-page .ph .who{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
 .home-stage-page .ph .sc{font-family:var(--num);font-weight:800;font-size:56px;line-height:.9;margin-top:2px}
 .home-stage-page .ph .tm{font-size:14px;font-weight:700;opacity:.85}
