@@ -24,8 +24,6 @@ self.addEventListener('activate', (event) => {
     await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
     await self.clients.claim();
     await self.registration.unregister();
-    const clients = await self.clients.matchAll({ type: 'window' });
-    await Promise.all(clients.map((client) => client.navigate(client.url)));
   })());
 });
 `.trim(),
@@ -43,8 +41,8 @@ export default defineConfig({
     react(),
     isVercelPreview ? previewServiceWorkerCleanup() : VitePWA({
       injectRegister: false,
-      registerType: 'autoUpdate',
-      cleanupOutdatedCaches: true,
+      // Leave updates waiting until every tab using the old worker has closed.
+      registerType: 'prompt',
       includeAssets: [
         'icons/*.{svg,png}',
       ],
@@ -118,8 +116,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        skipWaiting: true,
-        clientsClaim: true,
+        skipWaiting: false,
+        clientsClaim: false,
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
         navigateFallback: '/index.html',
         // Crawler files are real static files; never answer them with the app shell.

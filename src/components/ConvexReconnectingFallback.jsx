@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { useConvexReconnecting } from '../auth/useConvexReconnecting';
+import '../designs/design1-mono/kit/history.css';
 
 /**
  * Calm, low-emphasis status surfaced while the Convex WebSocket is briefly
@@ -12,27 +14,27 @@ import { useConvexReconnecting } from '../auth/useConvexReconnecting';
  */
 export default function ConvexReconnectingFallback() {
   const isReconnecting = useConvexReconnecting();
+  const [showStatus, setShowStatus] = useState(false);
 
-  if (!isReconnecting) return null;
+  useEffect(() => {
+    if (!isReconnecting) {
+      setShowStatus(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => setShowStatus(true), 4000);
+    return () => clearTimeout(timeout);
+  }, [isReconnecting]);
+
+  if (!isReconnecting || !showStatus) return null;
 
   return (
     <div
-      className="mono-alert mono-alert-info"
-      style={{
-        margin: '8px auto 0',
-        maxWidth: '640px',
-        padding: '12px',
-      }}
+      className="kit-connection-status"
       role="status"
       aria-live="polite"
     >
-      <p className="text-xs uppercase tracking-widest" style={{ marginBottom: '4px' }}>
-        Reconnecting
-      </p>
-      <p className="text-sm" style={{ color: 'var(--se-color-ink-soft)', margin: 0 }}>
-        Reconnecting to cloud&hellip; Your scores stay saved on this device while the
-        connection is restored.
-      </p>
+      Reconnecting
     </div>
   );
 }
