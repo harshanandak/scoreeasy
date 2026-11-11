@@ -258,7 +258,7 @@ describe('Home stage', () => {
     expect([...scene().querySelectorAll('.pt')].map((el) => el.textContent)).not.toContain('G');
   });
 
-  it('Undo removes the six and recounts 11 to 5 before the remaining legal deliveries', () => {
+  it('Undo removes the six, recounts 11 to 5 and keeps all six balls of the over', () => {
     renderLanding(); next(); advance(2550);
     expect(scene().querySelector('.c-runs')).toHaveTextContent(/^11$/);
     expect([...scene().querySelectorAll('.ball.f')].map((el) => el.textContent)).toEqual(['1', '4', '6']);
@@ -266,7 +266,7 @@ describe('Home stage', () => {
     expect(scene().querySelector('.c-runs')).toHaveTextContent(/^5$/);
     expect([...scene().querySelectorAll('.ball.f')].map((el) => el.textContent)).toEqual(['1', '4']);
     advance(500); expect(scene().querySelector('.removed-six')).toBeNull();
-    expect(scene().querySelectorAll('.ball')).toHaveLength(5);
+    expect(scene().querySelectorAll('.ball')).toHaveLength(6);
     advance(2200);
     expect([...scene().querySelectorAll('.ball.f')].map((el) => el.textContent)).toEqual(['1', '4', '2', 'W', '1']);
     expect(scene().querySelector('.c-runs')).toHaveTextContent(/^8$/);
