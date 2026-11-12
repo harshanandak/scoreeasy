@@ -230,22 +230,29 @@ describe('Home stage', () => {
     expect(stage()).toHaveAttribute('data-story', '0');
   });
 
-  it('a tap pauses, shows the only pause chip, and a second tap resumes the partial step', () => {
+  it('a tap pauses, shows only the pause glyph, and a second tap resumes the partial step', () => {
     renderLanding(); advance(1500);
     const tap = () => {
       fireEvent.pointerDown(stage(), { clientX: 100, clientY: 100 });
       fireEvent.pointerUp(stage(), { clientX: 100, clientY: 100 });
     };
-    expect(within(stage()).queryByRole('status')).toBeNull();
+    expect(within(stage()).queryByTestId('pause-mark')).toBeNull();
+    expect(within(stage()).getByRole('status')).toBeEmptyDOMElement();
     tap();
     const before = scene().textContent;
     expect(stage()).toHaveAttribute('data-playing', 'false');
+    expect(within(stage()).getByTestId('pause-mark')).toBeInTheDocument();
+    expect(within(stage()).getByTestId('pause-mark')).toHaveAttribute('aria-hidden', 'true');
     expect(within(stage()).getByRole('status')).toHaveTextContent('Paused');
-    expect(within(stage()).getByRole('status')).toHaveAccessibleName('Paused. Tap to play');
+    expect(screen.getAllByText('Paused')).toHaveLength(1);
+    expect(screen.getByText('Paused')).toHaveClass('stage-live');
+    expect(screen.queryByText(/tap to play/i)).toBeNull();
+    expect(screen.queryByText('Paused. Tap to play')).toBeNull();
     advance(15000); expect(scene().textContent).toBe(before);
     tap();
     expect(stage()).toHaveAttribute('data-story', '0');
-    expect(within(stage()).queryByRole('status')).toBeNull();
+    expect(within(stage()).queryByTestId('pause-mark')).toBeNull();
+    expect(within(stage()).getByRole('status')).toHaveTextContent('Playing');
     advance(299); expect(scene().textContent).toBe(before);
     advance(2); expect(scene().textContent).not.toBe(before);
   });
@@ -261,7 +268,8 @@ describe('Home stage', () => {
     fireEvent.pointerUp(stage(), { clientX: 100, clientY: 100 });
     expect(stage()).toHaveAttribute('data-story', '1');
     expect(stage()).toHaveAttribute('data-playing', 'true');
-    expect(within(stage()).queryByRole('status')).toBeNull();
+    expect(within(stage()).queryByTestId('pause-mark')).toBeNull();
+    expect(within(stage()).getByRole('status')).toHaveTextContent('Playing');
     advance(STORIES[1].duration * 1000);
     expect(stage()).toHaveAttribute('data-story', '2');
     fireEvent.keyDown(stage(), { key: ' ' });
@@ -272,11 +280,12 @@ describe('Home stage', () => {
     expect(stage()).toHaveAttribute('data-story', '2');
   });
 
-  it('mouse hover alone holds playback and resumes on leave without a Paused chip', () => {
+  it('mouse hover alone holds playback and resumes on leave without a pause glyph', () => {
     renderLanding();
     fireEvent.pointerEnter(start(), { pointerType: 'mouse' });
     expect(stage()).toHaveAttribute('data-playing', 'false');
-    expect(within(stage()).queryByRole('status')).toBeNull();
+    expect(within(stage()).queryByTestId('pause-mark')).toBeNull();
+    expect(within(stage()).getByRole('status')).toBeEmptyDOMElement();
     advance(20000); expect(stage()).toHaveAttribute('data-story', '0');
     fireEvent.pointerLeave(start(), { pointerType: 'mouse' });
     expect(stage()).toHaveAttribute('data-playing', 'true');
@@ -294,6 +303,7 @@ describe('Home stage', () => {
     fireEvent.pointerLeave(start(), { pointerType: 'mouse' });
     advance(20000);
     expect(stage()).toHaveAttribute('data-playing', 'false');
+    expect(within(stage()).getByTestId('pause-mark')).toBeInTheDocument();
     expect(within(stage()).getByRole('status')).toHaveTextContent('Paused');
     fireEvent.keyDown(stage(), { key: ' ' });
     advance(STORIES[0].duration * 1000);
