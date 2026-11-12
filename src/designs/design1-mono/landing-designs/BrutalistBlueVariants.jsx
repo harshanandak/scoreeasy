@@ -183,7 +183,7 @@ export default function BrutalistBlueVariant({ variant = 'surgical' }) {
   const [hoveredSport, setHoveredSport] = useState(null);
 
   const mono = "'JetBrains Mono', monospace";
-  const swiss = "'Inter', system-ui, sans-serif";
+  const swiss = "var(--se-font-sans)";
   const blue = '#0066ff';
 
   return (
