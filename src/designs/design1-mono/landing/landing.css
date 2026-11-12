@@ -232,7 +232,7 @@
 .home-stage-page .story-pause:focus-visible { clip-path: none; width: auto; height: auto; outline: 3px solid var(--home-white); outline-offset: 3px; }
 .home-stage-page .stage[data-playing='false'] *, .home-stage-page .stage[data-playing='false'] *::after { animation-play-state: paused; }
 /* Phones: one spacing scale (8, 12, 16, 24, 32) and the proximity rule. The four groups (top bar, headline,
-   story stage, Start) sit 24px apart; inside Start the note row is 40px and the account link is 12px under
+   story stage, Start) sit 24px apart; inside Start the note row is 40px and the account link is 16px under
    the button. The stage is sized by its tallest scene: every scene shares one grid cell, so there is no
    fixed height to leave a hole under the shorter ones. The hero may run past the first screen. */
 @media (max-width: 1023px) {
