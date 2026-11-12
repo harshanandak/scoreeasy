@@ -1,7 +1,7 @@
 export const fontStacks = {
   mono: "'JetBrains Mono', ui-monospace, monospace",
-  sans: "Inter, ui-sans-serif, sans-serif, system-ui",
-  serif: "Merriweather, ui-serif, serif",
+  sans: "var(--font-sans)",
+  serif: "var(--font-serif)",
 };
 
 const palette = {
