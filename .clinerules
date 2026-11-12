@@ -52,17 +52,22 @@ bun run mobile:android   # vite build && cap sync android
 
 Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMENT.md` — read those rather than guessing key names.
 
+A required check still queued with no jobs 15 minutes after a push is stuck. Cancel and re-run it once; if it queues again, report it under Decisions needed. Never end a turn waiting for a runner without a time limit.
+
 ## Standards and workflow
 
 - **Code standards** — `CODING_STANDARDS.md`, read before writing `convex/` code and at review time.
 - **Feature workflow** — the `forge-workflow` skill (7-stage, TDD-first) plus the slash commands in `.claude/commands/`.
 - **Issue tracking** — `forge issue`. `forge issue ready` to find work, `forge issue show <id>` for context, `forge issue comment <id> "…"` at each stage transition, `forge issue create` for follow-ups. Use it instead of TodoWrite or markdown TODO lists.
+- **Open items** — the lead keeps a local, untracked `.overseer/open-items.md` (owner decisions with their default and first-asked time, plus owed checks) and re-reads it after every compaction and before writing "Decisions needed". An item leaves only when the owner answers, the lead takes the default and says so, or the check passes. Do not ask what no owner rule gates: take the default and say so. When more than three decisions are open, start with "Reply yes to take every default" and give one line per item.
+- **Home decisions** — `docs/plans/2026-11-12-home-decisions.md` lists what the owner rejected on Home. Every Home brief and review names it under "Read first".
 
 ## Shipping regime (pre-user)
 
 Score Easy has no users yet, so a feature PR is reviewed as a feature, not as a diff.
 
 - The merge artifact is a **demo** — a recording or screenshots of the board on a phone viewport — plus the plan's acceptance checklist walked out loud, plus a description that leads with the problem. Line-level correctness belongs to the agent loop inside the PR.
+- **A visible change is rendered by the agent before anyone else sees it.** Render the real component, not a mock, at 390x844 and 360x780, once with web fonts loaded and once with them blocked, next to the picked mock or the previous look. The pictures and the head SHA go in the PR description under "Phone evidence (head <sha>)", redone on every push that changes the look. Harsha's look on a real phone is the acceptance, never the first test. If no render tool works, say so under Decisions needed and wait: no link, no merge. An element mounted in the app shell (banner, toast, pill, nav) is rendered on every screen family it can sit over: each sport's board, setup, the lists and the spectator page.
 - **Completeness gates the merge, size does not.** Every state and transition the plan named (including undo and the reverse path) gets walked before ship.
 - **Bot and review feedback is advisory** except four classes that must be fixed in the PR: secrets, injection, a broken build, and **documentation that asserts something the code does not do**. That last one is not scope creep — a doc promising an enforcement, a command, or a config that does not exist makes every future agent stop checking, and it has bitten us repeatedly. Everything else valid gets filed, never built here. Feedback never expands the PR.
 - **Main recovery policy:** use squash merges, revert or fix forward within the hour, never debug on a red main. GitHub deletes merged branches automatically but also permits merge and rebase merges; squash is our policy, not a repository restriction.
