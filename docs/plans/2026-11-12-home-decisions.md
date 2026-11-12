@@ -5,8 +5,8 @@ Read this before briefing, building or reviewing any change to the guest Home pa
 - Scoreboard or scorecard cards, and sport ribbons, as the feature explainer. The animations explain the features.
 - "Free", "No account" or "Works offline" chips under the headline.
 - A slide-count indicator for the stories.
-- Visible pause text or pause controls.
-- The line about keeping every match on all your phones.
+- Visible pause text or pause controls. A small pause mark with no text is allowed (default kept 2026-11-12; the owner may still remove it).
+- The tagline under Start about keeping every match on all your phones. The closing band "Keep every match." is approved and stays.
 - A sticky Start bar.
 - One sport tile left alone on the last row.
 - Plain new tiles instead of the app's `SportTile`.
