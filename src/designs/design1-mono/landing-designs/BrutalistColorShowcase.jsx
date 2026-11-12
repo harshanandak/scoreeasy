@@ -260,7 +260,7 @@ function LoadingState() {
 
 const styles = {
   root: {
-    fontFamily: "'Inter', system-ui, sans-serif",
+    fontFamily: "var(--se-font-sans)",
     background: '#fafafa',
     color: '#111',
     minHeight: '100vh',
@@ -314,7 +314,7 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 200ms ease',
     textAlign: 'left',
-    fontFamily: "'Inter', system-ui, sans-serif",
+    fontFamily: "var(--se-font-sans)",
   },
   pickerName: {
     fontSize: '0.875rem',
@@ -368,7 +368,7 @@ const styles = {
     border: 'none',
     padding: '8px 18px',
     cursor: 'pointer',
-    fontFamily: "'Inter', system-ui, sans-serif",
+    fontFamily: "var(--se-font-sans)",
     marginLeft: 12,
   },
   previewFrame: {
@@ -429,7 +429,7 @@ const styles = {
     fontSize: '0.8125rem',
     color: '#fff',
     fontWeight: 600,
-    fontFamily: "'Inter', system-ui, sans-serif",
+    fontFamily: "var(--se-font-sans)",
   },
   floatingBtns: {
     display: 'flex',
@@ -451,7 +451,7 @@ const styles = {
     border: 'none',
     padding: '6px 14px',
     cursor: 'pointer',
-    fontFamily: "'Inter', system-ui, sans-serif",
+    fontFamily: "var(--se-font-sans)",
     fontWeight: 600,
     marginLeft: 8,
   },
