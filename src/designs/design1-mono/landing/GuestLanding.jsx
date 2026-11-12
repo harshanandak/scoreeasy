@@ -114,8 +114,16 @@ export default function GuestLanding() {
             </section>
             <div className="act">
               <div className={`nudge${nudgeGone ? ' gone' : ''}`} aria-hidden="true">
-                <span className="note">Go on, try one</span>
-                <svg className="arrow" viewBox="0 0 36 28"><path className="shaft" d="M2 6C16 0 33 6 28 24" /><path className="head" d="M22.5 18.5L28 25l6-5.5" /></svg>
+                <div className="nudge-art">
+                  <svg viewBox="-10 -10 190 60" focusable="false">
+                    <g transform="translate(46 22) rotate(-4)"><text className="w" style={{ '--i': 0 }} fontSize="21">Go on, </text></g>
+                    <g transform="translate(94 20) rotate(-2)"><text className="w" style={{ '--i': 1 }} fontSize="22">try </text></g>
+                    <g transform="translate(122 21) rotate(-5)"><text className="w" style={{ '--i': 2 }} fontSize="26">one!</text></g>
+                    <path className="shaft" pathLength="1" d="M44 16C41 16.3 31.3 16.7 26 18C20.7 19.3 15.7 21.3 12 24C8.3 26.7 5.3 32.3 4 34" />
+                    <path className="echo" pathLength="1" transform="translate(.7 .6)" d="M44 16C41 16.3 31.3 16.7 26 18C20.7 19.3 15.7 21.3 12 24C8.3 26.7 5.3 32.3 4 34" />
+                    <path className="head" pathLength="1" d="M15.1 29.4Q10.8 30.7 4 34Q3 30.4 3.9 24.5" />
+                  </svg>
+                </div>
               </div>
               <button type="button" className="cta" onClick={start} aria-label={STORIES[labelIndex].label}
                 onPointerEnter={(event) => { if (event.pointerType === 'mouse') setReason('hover', true); }} onPointerLeave={() => setReason('hover', false)}

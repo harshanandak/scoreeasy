@@ -117,18 +117,20 @@
 
 /* ---------- Start, on the same surface ---------- */
 .home-stage-page .act{margin-top:6px}
-/* The nudge is hand-placed: the note leans left of the arrow and sits right of centre, and the hooked arrow
-   lands over the Go disc. Offsets are measured from the centre of the Start button. The four labels share
-   one grid cell, so the label box is always as wide as the widest label and the disc sits at a fixed point,
-   about 100px right of centre, whichever label shows. */
+/* The nudge is a small margin note at the right of the Start strip: "Go on, try one!" written in three loose words,
+   with a short pen curl that comes in from the right and stops just above the button label. The SVG origin is the
+   top centre of the strip (1 unit = 1px), so the note keeps its place from the button centre at every phone width. */
 .home-stage-page .nudge{position:relative;height:var(--nudge-h,46px);pointer-events:none;transition:opacity .7s var(--ease),transform .7s var(--ease)}
 .home-stage-page .nudge.gone{opacity:0;transform:translateY(-6px)}
-.home-stage-page .note{position:absolute;right:calc(50% - 72px);bottom:16px;font-family:var(--hand);font-weight:700;font-size:24px;line-height:1;white-space:nowrap;color:var(--home-white);opacity:0;transform:translateY(16px) rotate(-5deg);transform-origin:100% 100%;animation:home-rise .6s .7s var(--spring) forwards}
-@keyframes home-rise{to{opacity:1;transform:rotate(-5deg)}}
-.home-stage-page .arrow{position:absolute;left:calc(50% + 76px);bottom:3px;width:36px;height:28px;overflow:visible}
-.home-stage-page .arrow path{fill:none;stroke:var(--home-white);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-.home-stage-page .arrow .shaft{stroke-dasharray:48;stroke-dashoffset:48;animation:home-draw .45s 1.15s var(--ease) forwards}
-.home-stage-page .arrow .head{stroke-dasharray:18;stroke-dashoffset:18;animation:home-draw .2s 1.55s var(--ease) forwards}
+.home-stage-page .nudge-art{position:absolute;left:50%;top:0;width:0;height:0;overflow:visible}
+.home-stage-page .nudge-art svg{position:absolute;left:-10px;top:-10px;width:190px;height:60px;overflow:visible}
+.home-stage-page .nudge-art text{font-family:var(--hand);font-weight:700;fill:var(--home-white);white-space:pre}
+.home-stage-page .nudge-art .w{transform-box:fill-box;transform-origin:50% 90%;opacity:0;animation:home-write .62s var(--spring) forwards;animation-delay:calc(.5s + var(--i) * .13s)}
+@keyframes home-write{0%{opacity:0;transform:translateY(12px) scale(.55) rotate(-12deg)}62%{opacity:1;transform:translateY(-3px) scale(1.14) rotate(3deg)}100%{opacity:1;transform:none}}
+.home-stage-page .nudge-art path{fill:none;stroke:var(--home-white);stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1.05;stroke-dashoffset:1.05;animation:home-draw .55s 1s var(--ease) forwards}
+.home-stage-page .nudge-art .shaft,.home-stage-page .nudge-art .head{stroke-width:2.6}
+.home-stage-page .nudge-art .echo{stroke-width:1.3;opacity:.75;animation-delay:1.08s}
+.home-stage-page .nudge-art .head{animation-duration:.22s;animation-delay:1.47s}
 .home-stage-page .cta{position:relative;overflow:hidden}
 /* On a coloured surface the one forward action is the white Kit button: ink edge, offset shadow, 2px press,
    with the Go green carried by the arrow disc so it never disappears on the green moment. */
@@ -204,7 +206,8 @@
 @media (prefers-reduced-motion:reduce){
   .home-stage-page .scene,.home-stage-page .mom,.home-stage-page .ball,.home-stage-page .perk,.home-stage-page .hero-bg i,.home-stage-page .ul path{transition:none}
   .home-stage-page .pop,.home-stage-page .roll,.home-stage-page .tap.go{animation:none}
-  .home-stage-page .arrow .shaft,.home-stage-page .arrow .head,.home-stage-page .note{animation:none;stroke-dashoffset:0;opacity:1}
+  .home-stage-page .nudge-art .w,.home-stage-page .nudge-art path{animation:none;stroke-dashoffset:0;opacity:1}
+  .home-stage-page .nudge-art .echo{opacity:.75}
   .home-stage-page .nudge.gone{opacity:1;transform:none}
 }
 
@@ -228,7 +231,7 @@
 .home-stage-page .story-pause:focus-visible { clip-path: none; width: auto; height: auto; outline: 3px solid var(--home-white); outline-offset: 3px; }
 .home-stage-page .stage[data-playing='false'] *, .home-stage-page .stage[data-playing='false'] *::after { animation-play-state: paused; }
 /* Phones: one spacing scale (8, 12, 16, 24, 32) and the proximity rule. The four groups (top bar, headline,
-   story stage, Start) sit 24px apart; inside Start the note row is 32px and the account link is 12px under
+   story stage, Start) sit 24px apart; inside Start the note row is 40px and the account link is 12px under
    the button. The stage is sized by its tallest scene: every scene shares one grid cell, so there is no
    fixed height to leave a hole under the shorter ones. The hero may run past the first screen. */
 @media (max-width: 1023px) {
@@ -251,7 +254,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .home-stage-page *, .home-stage-page *::before, .home-stage-page *::after { animation: none !important; transition: none !important; }
-  .home-stage-page .note { transform: rotate(-5deg); }
+  .home-stage-page .nudge-art .w { opacity: 1; }
+  .home-stage-page .nudge-art path { stroke-dashoffset: 0; }
   .home-stage-page .nudge.gone { opacity: 0; }
 }
 
