@@ -161,7 +161,7 @@ export default function LandingDesignA({ theme: themeKey = 'black' }) {
   const [hoveredSport, setHoveredSport] = useState(null);
 
   return (
-    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", background: t.bg, color: t.text, minHeight: '100vh', overflowX: 'hidden' }}>
+    <div style={{ fontFamily: "var(--se-font-sans)", background: t.bg, color: t.text, minHeight: '100vh', overflowX: 'hidden' }}>
       {/* NAV */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: t.bg, borderBottom: `2px solid ${t.border}` }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
