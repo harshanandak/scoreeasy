@@ -231,9 +231,9 @@
 .home-stage-page .story-pause { position: absolute; top: 36px; right: 0; z-index: 2; min-height: 44px; padding: 8px 14px; border: 2px solid var(--home-ink); border-radius: 14px; background: var(--home-white); color: var(--home-ink); font: 750 15px var(--sans); clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; }
 .home-stage-page .story-pause:focus-visible { clip-path: none; width: auto; height: auto; outline: 3px solid var(--home-white); outline-offset: 3px; }
 .home-stage-page .stage[data-playing='false'] *, .home-stage-page .stage[data-playing='false'] *::after { animation-play-state: paused; }
-/* Phones: one spacing scale (8, 12, 16, 24, 32) and the proximity rule. The four groups (top bar, headline,
-   story stage, Start) sit 24px apart; inside Start the note row is 40px and the account link is 16px under
-   the button. The stage is sized by its tallest scene: every scene shares one grid cell, so there is no
+/* Phones: one spacing scale (8, 12, 16, 24, 32) and the proximity rule. The top bar, headline and story stage
+   sit 24px apart. The Start group begins 16px under the stage with the 40px note row, so the button sits
+   56px under the stage; the account link is 16px under the button. The stage is sized by its tallest scene: every scene shares one grid cell, so there is no
    fixed height to leave a hole under the shorter ones. The hero may run past the first screen. */
 @media (max-width: 1023px) {
   .home-stage-page .top { height: calc(64px + env(safe-area-inset-top, 0px) + 14px); padding-top: calc(6px + env(safe-area-inset-top, 0px) + 14px); }
