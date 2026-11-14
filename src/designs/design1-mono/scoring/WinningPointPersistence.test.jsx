@@ -84,6 +84,16 @@ describe('SA-04 winning point survives leaving the scorer before Finish', () => 
     expect(stored(sport).draftState.score1).toBe(2);
   });
 
+  it.each(['football', 'basketball', 'hockey', 'kabaddi'])('%s retains its target-winning score across reload', sport => {
+    seed(sport, { mode: 'points', target: 3 }, { score1: 2, score2: 1, history: [] });
+    const first = mount(sport, MonoGoalsLiveScore);
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 point to Alpha' }));
+    expect(stored(sport)).toMatchObject({ status: 'completed', score1: 3, score2: 1, winner: 'A' });
+    first.unmount(); mount(sport, MonoGoalsLiveScore);
+    expect(stored(sport)).toMatchObject({ status: 'completed', score1: 3, score2: 1, winner: 'A' });
+    expect(stored(sport).draftState).toBeUndefined();
+  });
+
   it.each([
     { name: 'winning chase run', runs: 1, balls: 0, wickets: 0, button: '1', expected: { runs: 2, balls: 1, wickets: 0 } },
     { name: 'last legal ball', runs: 0, balls: 5, wickets: 0, button: '0', expected: { runs: 0, balls: 6, wickets: 0 } },
