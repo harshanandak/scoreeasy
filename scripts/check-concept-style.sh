@@ -22,7 +22,7 @@
 #      border-top/right/bottom/left forms (with or without -color).
 #      Layout properties are fine. Custom properties such as --x-color are fine.
 #      Names are compared in lower case, a declaration may span lines, and only
-#      names right after "{" or ";" count, so selectors, quoted strings and CSS
+#      names right after "{", ";" or "}" count, so selectors, quoted strings and CSS
 #      comments are not mistaken for declarations. <style> tags match in any
 #      case, and a <style> inside an HTML comment is skipped.
 #
@@ -32,6 +32,8 @@
 #   - Only <style> blocks are read. style="..." attributes, linked stylesheets
 #     and CSS written by scripts are not checked.
 #   - A <style ...> opening tag must fit on one line.
+#   - A line number can be one low after a quoted string continued with a
+#     backslash and newline. The finding itself still fails the page.
 #   - It checks that the copied text matches the file, not that the page uses
 #     the classes well. The independent check still reads the page.
 #   - Nothing runs this script automatically. It is not wired into CI or a hook.
@@ -76,7 +78,7 @@ for page in "$@"; do
   # Unmarked CSS is gathered per run and read as a whole, so a declaration split
   # across lines is still seen. CSS comments and quoted strings are blanked
   # first (newlines kept, so line numbers hold), then only names in declaration
-  # position (right after "{" or ";") are compared, in lower case.
+  # position (right after "{", ";" or "}") are compared, in lower case.
   PAGE="$page" BLKDIR="$tmp/blk" MANIFEST="$tmp/manifest" awk '
     function blank(t,   n, i, c, out, st, q) {
       n = length(t); out = ""; st = 0
@@ -100,9 +102,9 @@ for page in "$@"; do
     function scanbuf(   t, s, off, name, pre, ln, k) {
       if (!inbuf) return
       t = tolower(blank(buf)); off = 0
-      while (match(substr(t, off + 1), /[{;][ \t\n]*[a-z-]+[ \t\n]*:/)) {
+      while (match(substr(t, off + 1), /[{;}][ \t\n]*[a-z-]+[ \t\n]*:/)) {
         s = substr(t, off + RSTART, RLENGTH)
-        name = s; sub(/^[{;][ \t\n]*/, "", name); sub(/[ \t\n]*:$/, "", name)
+        name = s; sub(/^[{;}][ \t\n]*/, "", name); sub(/[ \t\n]*:$/, "", name)
         if (name ~ /^(color|background(-color|-image)?|font-family|border-radius|box-shadow|border(-(top|right|bottom|left))?(-color)?)$/) {
           pre = substr(t, 1, off + RSTART + RLENGTH - 1)
           ln = bufstart + gsub(/\n/, "\n", pre)
