@@ -64,7 +64,9 @@ Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-fini
 - The last-point line uses a swatch, not a team name.
 - Let (badminton, table tennis) sits in the bar between Undo and More. The More button is 56px wide there (it is 64px without Let), so Undo keeps its whole hint at 360px.
 - End change, between sets and match over dock above the bar instead of opening over the board.
-- At the break in A, "Serves first" is a chip in the board column, because the pads are gone then. In B it is the key tag.
+- In A, the pads are gone at the break, end change and interval, so the serve cue is one chip in the board column: "Serves first" at the break, "Serving" (with the court side or "1 of 2") at end change and interval. In B it is the key tag.
+- In A the two columns share their row heights, so a two-line team name at 360px does not push that team's score below the other.
+- The live view header shows the green Live badge while the match runs and the shipped `.kit-live-paused` label "Match over" once it ends.
 - The live view is built from Kit parts. No shipped Kit spectator scorecard exists yet, and the old spectator page is not a style source.
 - At 360px the B key names truncate with an ellipsis ("Chennai Challeng..."), as they do on today's board.
 

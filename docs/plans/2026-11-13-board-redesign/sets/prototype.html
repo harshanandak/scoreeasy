@@ -2555,8 +2555,10 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd .tsb-word { text-align: center; padding: 0 6px; line-height: 1.2; }
 
 /* A Board over pads */
-.kd-board { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 14px; padding: 10px 8px 12px; }
-.kd-col { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; padding: 4px 2px; }
+/* the two columns share four row tracks (name, score, word, chip), so a two-line name on one side
+   gives both name areas the same height and both scores the same baseline */
+.kd-board { flex: none; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto auto; column-gap: 10px; row-gap: 0; margin: 0 14px; padding: 10px 8px 12px; }
+.kd-col { display: grid; grid-row: span 4; grid-template-rows: subgrid; justify-items: center; align-items: center; text-align: center; min-width: 0; padding: 4px 2px; }
 .kd-col.is-pick { cursor: pointer; }
 .kd-colhead { display: flex; align-items: center; justify-content: center; max-width: 100%; }
 .kd-col .tsb-who { max-width: none; white-space: normal; overflow-wrap: anywhere; line-height: 1.15; text-align: center; }
@@ -3047,7 +3049,7 @@ function tapWord(st, t) {
 function header(st, o, finish = true) {
   const R = RULES[st.sport];
   const sub = st.phase === 'first' ? 'Pick the format and the first server' : `Best of ${st.bo} · to ${targetOf(st)}${R.cap ? ` · cap ${R.cap}` : `, win by ${R.winBy}`}`;
-  return `<header class="sb-top"><div class="sb-title"><b>${esc(R.title)}</b><small>${esc(sub)}</small></div>${o.live ? '<span class="sb-live">Live</span>' : ''}${finish ? `<button type="button" class="se-ctl sb-finish" data-act="finish"${st.phase === 'over' ? ' disabled' : ''}>Finish</button>` : ''}</header>`;
+  return `<header class="sb-top"><div class="sb-title"><b>${esc(R.title)}</b><small>${esc(sub)}</small></div>${o.live ? '<span class="sb-live">Live</span>' : o.ended ? '<span class="kit-live-paused">Match over</span>' : ''}${finish ? `<button type="button" class="se-ctl sb-finish" data-act="finish"${st.phase === 'over' ? ' disabled' : ''}>Finish</button>` : ''}</header>`;
 }
 
 function bar(st, o) {
@@ -3089,7 +3091,8 @@ function boardA(st) {
     const n = st.phase === 'over' ? st.wins[t] : t === 'A' ? st.a : st.b;
     let chip = '';
     if (st.phase === 'over' && st.winner === t) chip = '<span class="kit-chip">Winner</span>';
-    else if (st.phase === 'between') {
+    else if (st.phase === 'between' || st.phase === 'change' || st.phase === 'interval') {
+      // the pads are hidden while play is paused, so the board keeps the one serve chip
       const tg = serveTag(st, t);
       if (tg) chip = `<span class="kit-chip">${markSvg(st.sport)}${esc(tg)}</span>`;
       else if (pick) chip = '<span class="kit-chip">Tap to serve first</span>';
@@ -3224,7 +3227,6 @@ function liveView(st, o) {
   const hd = `<div class="kit-live-meta kd-lhead"><span>${R.unit} ${st.phase === 'over' ? st.games.length : st.g + 1}</span><span class="kd-lnums" style="grid-template-columns:${cols}">${st.games.map((_, i) => `<span>${i + 1}</span>`).join('')}${showNow ? '<span class="kd-nowlbl">Now</span>' : ''}</span></div>`;
   let foot = '';
   if (st.phase === 'first') foot = 'Match starts soon';
-  else if (st.phase === 'over') foot = 'Match over';
   else if (st.phase === 'between') foot = `Break. ${R.unit} ${st.g + 2} starts next`;
   const f = flagText(st);
   const paused = st.phase === 'change' ? 'End change' : st.phase === 'interval' ? 'Interval' : '';
@@ -3238,7 +3240,7 @@ function liveView(st, o) {
       <p class="kd-run">${n >= 2 ? `${sw(lw)}${n} in a row` : 'Points trading'}</p>`;
   }
   return `<div class="sb tsb kd kd-live" style="${teamStyle(st, o)}" data-phase="${st.phase}" data-sport="${st.sport}">
-    ${header(st, { ...o, live: true }, false)}
+    ${header(st, { ...o, live: st.phase !== 'over', ended: st.phase === 'over' }, false)}
     <div class="kd-livebody"><div class="kit-live-list">${hd}${row('A')}${row('B')}${footer}</div>
     <section class="sb-sheet-group kd-recent"><div class="kd-rhead"><b>Last 12 points</b><span class="kit-sub">oldest to newest</span></div>${recent}</section></div></div>`;
 }
