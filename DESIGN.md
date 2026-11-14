@@ -1,18 +1,31 @@
 # Score Easy visual direction
 
-Status: cross-screen direction, 2026-10-21. Harsha chose it over Mono. Only the
-volleyball scorer implements it so far (PR #157, `TeamSetsBoard`, recorded in
-docs/plans/2026-10-20-direction-e-app-design.md, "Design revision 2"). Home,
-Play, setup and the other scorers still ship Mono; their current tokens and
-behaviour remain the source of truth until a reviewed change moves them.
+Status: The Kit is the decided app style (owner, 2026-11-13: 'we should only use kit design style ... design style that's been decided already'). It lives in src/index.css (--se-* tokens, .se-ctl, .se-go), src/designs/design1-mono/kit/*.css, scoring/boardShell.css and scoring/teamBoard.css. mono.css is the older layer: do not design from it. A redesign changes layout, not style, unless Harsha asks for a style change.
+
+Where the Kit is in the code (checked 2026-11-13): `TeamSetsBoard` is used by
+`MonoQuickMatch.jsx` and `MonoSetsLiveScore.jsx`. Home
+(`landing/DashboardLanding.jsx`, the route at `APP_ENTRY_PATH`) and Play
+(`MonoPlayHub.jsx`) import `kit/KitParts`. The cricket, goals, kabaddi and
+tennis boards import the shared `BoardShell`. `mono.css` is still imported by
+`src/designs/design1-mono/index.jsx`, so older classes can still render; new
+work does not copy from it. `MonoHome.jsx` is not routed.
+
+Source gap: `boardShell.css` and `BoardShell.jsx` cite "Kit plan 2026-10-22",
+and `src/index.css` cites "plan 2026-10-22 §4". No such plan document is in the
+repo. The `kit-*` folders under `docs/plans/` hold screenshots, and two of
+them also hold implementation evidence (`2026-10-23-kit-s5-share-live/` and
+`2026-10-23-kit-s6/` have a README.md and a JSON audit file); none is the plan. The CSS files named above are the
+source of truth for the Kit until that plan is written down.
 
 ## Reference
 
 Use Refined Soft from the left column of
 docs/plans/2026-10-20-direction-e-app-screens/scorer-options-A-B-C.png as the
 overall app language. Retain clearly defined controls from the middle column,
-especially scoring, Undo/More, and deliberate Finish. The exact control mix is
-being evaluated; do not restore a heavy frame around every surface.
+especially scoring, Undo/More, and deliberate Finish. The control mix is
+decided: `.se-ctl` is the pressed control (2px ink border, ink offset shadow)
+and `.se-go` is the one forward action per screen, both in `src/index.css`. Do
+not restore a heavy frame around every surface.
 
 ## Physical setting
 
@@ -48,7 +61,9 @@ bottom, with the score it restores. Confirm Finish and Discard distinctly.
 
 ## Rollout
 
-Review the direction across Home, Play, setup, scorer, and Finish first. Then
-update shared tokens and components and complete one flow at a time. Preserve
-the sport rules, persistence, routing, auth, and undo logic. Revise the older
-governance documents alongside any implementation that changes their promises.
+The Kit is already applied across Home, Play, setup, scoring, finish, history,
+stats, tournaments and sign-in (Kit CSS in `src/designs/design1-mono/kit/` and
+`src/designs/design1-mono/scoring/`). New screens and redesigns reuse its tokens
+and classes. Preserve the sport rules, persistence, routing, auth, and undo
+logic. Revise the older governance documents alongside any implementation that
+changes their promises.
