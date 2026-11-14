@@ -65,7 +65,7 @@ describe('SA-04 winning point survives leaving the scorer before Finish', () => 
       history: [], servingTeam: 1, scoringMode: 'rally',
     });
     const first = mount(sport, MonoSetsLiveScore);
-    fireEvent.click(screen.getByRole('button', { name: /^Alpha:/ }));
+    fireEvent.click(screen.getByRole('button', { name: sport === 'volleyball' ? 'Add point for Alpha' : /^Alpha:/ }));
     expect(stored(sport).draftState.sets[0]).toMatchObject({ score1: target, completed: true });
     first.unmount(); mount(sport, MonoSetsLiveScore);
     expect(stored(sport).draftState.sets[0]).toMatchObject({ score1: target, completed: true });
