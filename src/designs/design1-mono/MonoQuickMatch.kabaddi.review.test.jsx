@@ -56,7 +56,7 @@ describe('kabaddi scorer review regressions with durable storage', () => {
     expect(loadData(KEY).gScore1).toBe(1);
     first.unmount(); render(<MonoQuickMatch />);
     expect(loadData(KEY).kabaddi.state.phase).toBe('finishReview');
-    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    finish();
     expect(loadQuickMatch(ID)).toMatchObject({ score1: 1, score2: 0, winner: 'Royals', resultType: 'decided' });
   });
 
