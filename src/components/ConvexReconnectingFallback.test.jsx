@@ -1,4 +1,5 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // jsdom has no Convex provider, so `useConvexConnectionState` would throw.
@@ -22,6 +23,13 @@ const RECONNECTING = {
   connectionRetries: 2,
 };
 
+// The pill reads the route, so it renders inside a router like it does in the app.
+const inRouter = (path) =>
+  function Wrapper({ children }) {
+    return <MemoryRouter initialEntries={[path]}>{children}</MemoryRouter>;
+  };
+const renderAt = (path = '/app') => render(<ConvexReconnectingFallback />, { wrapper: inRouter(path) });
+
 describe('ConvexReconnectingFallback', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -36,7 +44,7 @@ describe('ConvexReconnectingFallback', () => {
   it('renders nothing while the socket is connected', () => {
     vi.mocked(useConvexConnectionState).mockReturnValue(CONNECTED);
 
-    const { container } = render(<ConvexReconnectingFallback />);
+    const { container } = renderAt();
 
     expect(container).toBeEmptyDOMElement();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
@@ -45,7 +53,7 @@ describe('ConvexReconnectingFallback', () => {
   it('shows a compact Kit status only after a four-second drop', () => {
     vi.mocked(useConvexConnectionState).mockReturnValue(RECONNECTING);
 
-    render(<ConvexReconnectingFallback />);
+    renderAt();
 
     act(() => vi.advanceTimersByTime(3999));
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
@@ -63,7 +71,7 @@ describe('ConvexReconnectingFallback', () => {
 
   it('never flashes for a short drop, and starts a fresh delay for the next drop', () => {
     vi.mocked(useConvexConnectionState).mockReturnValue(RECONNECTING);
-    const { rerender } = render(<ConvexReconnectingFallback />);
+    const { rerender } = renderAt();
     act(() => vi.advanceTimersByTime(3000));
     vi.mocked(useConvexConnectionState).mockReturnValue(CONNECTED);
     rerender(<ConvexReconnectingFallback />);
@@ -80,7 +88,7 @@ describe('ConvexReconnectingFallback', () => {
 
   it('hides immediately on reconnect and debounces a later drop again', () => {
     vi.mocked(useConvexConnectionState).mockReturnValue(RECONNECTING);
-    const { rerender } = render(<ConvexReconnectingFallback />);
+    const { rerender } = renderAt();
     act(() => vi.advanceTimersByTime(4000));
     expect(screen.getByRole('status')).toBeInTheDocument();
 
@@ -96,7 +104,7 @@ describe('ConvexReconnectingFallback', () => {
 
   it('keeps the delay running across retries and cancels it on unmount', () => {
     vi.mocked(useConvexConnectionState).mockReturnValue(RECONNECTING);
-    const { rerender, unmount } = render(<ConvexReconnectingFallback />);
+    const { rerender, unmount } = renderAt();
     act(() => vi.advanceTimersByTime(2000));
     vi.mocked(useConvexConnectionState).mockReturnValue({ ...RECONNECTING, connectionRetries: 3 });
     rerender(<ConvexReconnectingFallback />);
@@ -104,7 +112,7 @@ describe('ConvexReconnectingFallback', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
     unmount();
 
-    render(<ConvexReconnectingFallback />);
+    renderAt();
     expect(vi.getTimerCount()).toBe(1);
     cleanup();
     expect(vi.getTimerCount()).toBe(0);
@@ -117,7 +125,7 @@ describe('ConvexReconnectingFallback', () => {
       connectionRetries: 8,
     });
 
-    const { container } = render(<ConvexReconnectingFallback />);
+    const { container } = renderAt();
 
     expect(container).toBeEmptyDOMElement();
   });
@@ -129,8 +137,40 @@ describe('ConvexReconnectingFallback', () => {
       connectionRetries: 1,
     });
 
-    const { container } = render(<ConvexReconnectingFallback />);
+    const { container } = renderAt();
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('stays hidden on the spectator watch page, which has its own banner', () => {
+    vi.mocked(useConvexConnectionState).mockReturnValue(RECONNECTING);
+
+    const { container } = renderAt('/live/tok1');
+    act(() => vi.advanceTimersByTime(5000));
+
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('still shows on the live list and on other pages', () => {
+    vi.mocked(useConvexConnectionState).mockReturnValue(RECONNECTING);
+
+    renderAt('/live');
+    act(() => vi.advanceTimersByTime(4000));
+
+    expect(screen.getByRole('status')).toHaveClass('kit-connection-status');
+  });
+
+  it('shows on a normal page after a watch-page visit, and ignores a trailing slash on the watch URL', () => {
+    vi.mocked(useConvexConnectionState).mockReturnValue(RECONNECTING);
+
+    const { container } = renderAt('/live/tok1/');
+    act(() => vi.advanceTimersByTime(5000));
+    expect(container).toBeEmptyDOMElement();
+    cleanup();
+
+    renderAt('/volleyball/quick');
+    act(() => vi.advanceTimersByTime(4000));
+    expect(screen.getByRole('status')).toBeInTheDocument();
   });
 });
