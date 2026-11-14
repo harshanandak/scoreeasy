@@ -9,7 +9,7 @@ import { useMatchCompletion } from '../../../hooks/useMatchCompletion';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSportTournaments, saveSportTournament } from '../../../utils/storage';
-import { ballsToOvers, calculateRunRate, getPowerplayPhase, getMaxWickets, getTotalBalls, getCricketFormat, getLimitedOversResult } from '../../../utils/cricketCalculations';
+import { ballsToOvers, calculateRunRate, getPowerplayPhase, getMaxWickets, getTotalBalls, getCricketFormat, getLimitedOversResult, getNextSuperOverPhase } from '../../../utils/cricketCalculations';
 import { migrateCricketFormat } from '../../../utils/formatMigration';
 import { getSportById } from '../../../models/sportRegistry';
 import { updateMatchInTournament } from '../../../utils/knockoutManager';
@@ -160,6 +160,9 @@ export default function MonoCricketLiveScore() {
       setFreeHit(foundMatch.draftState.freeHit || false);
       setPendingExtra(foundMatch.draftState.pendingExtra || null);
       setTrialBallUsed(foundMatch.draftState.trialBallUsed || false);
+      setSuperOverPhase(foundMatch.draftState.superOverPhase || 'inactive');
+      if (foundMatch.draftState.superOver) setSuperOver(foundMatch.draftState.superOver);
+      setSuperOverPendingExtra(foundMatch.draftState.superOverPendingExtra || null);
     }
   }, [id, matchId, sport]);
 
@@ -202,6 +205,14 @@ export default function MonoCricketLiveScore() {
       setSuperOverPhase('prompt');
     }
   }, [isTied, superOverPhase, format?.totalInnings]);
+
+  // Derive the handoff from saved scores so reloading during the delay restarts it.
+  useEffect(() => {
+    const next = getNextSuperOverPhase(superOverPhase, superOver);
+    if (!next || completion.committed) return;
+    const timeout = setTimeout(() => setSuperOverPhase(next), 300);
+    return () => clearTimeout(timeout);
+  }, [superOverPhase, superOver, completion]);
 
   // Powerplay
   const currentOver = scores[`team${battingTeam}`]
@@ -410,15 +421,6 @@ export default function MonoCricketLiveScore() {
       team.runs += runs;
       team.balls += 1;
 
-      // Check if over done (6 balls or 2 wickets)
-      if (team.balls >= 6 || team.wickets >= 2) {
-        if (superOverPhase === 'team1_batting') {
-          setTimeout(() => setSuperOverPhase('team2_batting'), 300);
-        } else {
-          setTimeout(() => setSuperOverPhase('result'), 300);
-        }
-      }
-
       return { ...prev, [key]: team };
     });
   };
@@ -434,14 +436,6 @@ export default function MonoCricketLiveScore() {
       const team = { ...prev[key] };
       team.wickets += 1;
       team.balls += 1;
-
-      if (team.wickets >= 2 || team.balls >= 6) {
-        if (superOverPhase === 'team1_batting') {
-          setTimeout(() => setSuperOverPhase('team2_batting'), 300);
-        } else {
-          setTimeout(() => setSuperOverPhase('result'), 300);
-        }
-      }
 
       return { ...prev, [key]: team };
     });
@@ -493,6 +487,9 @@ export default function MonoCricketLiveScore() {
         freeHit,
         pendingExtra,
         trialBallUsed,
+        superOverPhase,
+        superOver: structuredClone(superOver),
+        superOverPendingExtra,
         savedAt: new Date().toISOString(),
       },
     }));
@@ -641,7 +638,7 @@ export default function MonoCricketLiveScore() {
 
   // Continuous auto-save
   useEffect(() => {
-    if (!tournament || !match || !format || isMatchComplete) return;
+    if (completion.committed || !tournament || !match || !format) return;
     if (history.length === 0 && !scoringStarted) return;
     const storageKey = sportConfig?.storageKey || 'se_cricket';
     const updatedTournament = updateMatchInTournament(tournament, matchId, m => ({
@@ -656,6 +653,9 @@ export default function MonoCricketLiveScore() {
         freeHit,
         pendingExtra,
         trialBallUsed,
+        superOverPhase,
+        superOver: structuredClone(superOver),
+        superOverPendingExtra,
         savedAt: new Date().toISOString(),
       },
     }));
@@ -663,7 +663,7 @@ export default function MonoCricketLiveScore() {
     if (!ok) {
       setSaveWarning('Save failed - storage may be full. Export your data.');
     }
-  }, [scores, battingTeam, innings, history, freeHit, pendingExtra, trialBallUsed, scoringStarted]);
+  }, [scores, battingTeam, innings, history, freeHit, pendingExtra, trialBallUsed, scoringStarted, superOverPhase, superOver, superOverPendingExtra]);
 
   // Broadcast the latest ball/undo AFTER its state commits (§87d snapshot). A ball
   // may end an innings (the innings switch is applied in a later effect pass), so
@@ -699,6 +699,13 @@ export default function MonoCricketLiveScore() {
       liveRef.current.point({ team: intent.team, value: intent.value, at: intent.at, snapshot });
     }
   }, [scores, battingTeam, innings, team1Name, team2Name, showOvers]);
+
+  useEffect(() => {
+    if (superOverPhase !== 'result' || completion.committed) return;
+    const winner = superOver.team1.runs > superOver.team2.runs ? match?.team1Id
+      : superOver.team2.runs > superOver.team1.runs ? match?.team2Id : null;
+    if (winner) saveMatch(winner);
+  }, [superOverPhase, superOver]);
 
   if (!tournament || !match || !format) {
     return <div className="min-h-screen px-6 py-10 flex items-center justify-center">
@@ -871,9 +878,16 @@ export default function MonoCricketLiveScore() {
       );
     }
 
-    // Super Over decided
-    saveMatch(soWinner);
-    return null;
+    // A failed result write keeps the terminal draft and lets the scorer retry.
+    if (!saveWarning) return null;
+    return (
+      <div className="mono-scorer-screen">
+        <div className="mono-scorer-shell text-center" style={{ paddingTop: '80px' }}>
+          <div className="mono-alert mono-alert-danger mb-4">{saveWarning}</div>
+          <button onClick={() => saveMatch(soWinner)} className="mono-btn-primary">Save &amp; Return</button>
+        </div>
+      </div>
+    );
   }
 
   // Format display for overs/balls

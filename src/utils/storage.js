@@ -181,7 +181,7 @@ function normalizedQuickMatches(matches) {
     .filter(Boolean);
 }
 
-// --- Safari Private Mode Detection & Memory Fallback ---
+// --- Storage availability ---
 
 function createMemoryFallback() {
   const store = {};
@@ -217,12 +217,13 @@ function isStorageAvailable() {
 }
 
 const storageAvailable = isStorageAvailable();
-const memoryFallback = storageAvailable ? null : createMemoryFallback();
 const isPrivateMode = !storageAvailable;
 
 // Get the active storage backend
 function getStorage() {
-  return scopedMatchStorage(storageAvailable ? globalThis.localStorage : memoryFallback);
+  // A failed write probe can mean full storage. Keep durable reads and retries;
+  // memory-only writes must never report success for a score that reload would lose.
+  return scopedMatchStorage(globalThis.localStorage);
 }
 
 // --- Quota Handling ---

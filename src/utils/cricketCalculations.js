@@ -433,3 +433,9 @@ export function getQuickCricketTransition(scores, { format, innings, battingTeam
   if (isLimitedOversMatchDecided({ team1Score: scores.team1, team2Score: scores.team2, format, innings, battingSecond: battingTeam })) return 'complete';
   return null;
 }
+
+export function getNextSuperOverPhase(phase, scores) {
+  const batting = phase === 'team1_batting' ? scores.team1 : phase === 'team2_batting' ? scores.team2 : null;
+  if (!batting || (batting.balls < 6 && batting.wickets < 2)) return null;
+  return phase === 'team1_batting' ? 'team2_batting' : 'result';
+}

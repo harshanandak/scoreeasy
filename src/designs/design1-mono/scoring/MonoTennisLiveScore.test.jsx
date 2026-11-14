@@ -195,7 +195,6 @@ describe('MonoTennisLiveScore completion navigation', () => {
   it.each(['quick', 'tournament'])('stays in the %s scorer if saving the result fails', async (mode) => {
     prepareMatch(mode);
     const save = mode === 'quick' ? saveQuickMatch : saveSportTournament;
-    save.mockReturnValueOnce(false);
     const complete = vi.fn();
     render(
       <ScoringCompletionContext.Provider value={complete}>
@@ -204,6 +203,8 @@ describe('MonoTennisLiveScore completion navigation', () => {
     );
     const finish = await screen.findByRole('button', { name: 'Finish' });
     await waitFor(() => expect(finish).toBeEnabled());
+    // Reject Finish, after the decided match's continuous draft save has run.
+    save.mockReturnValueOnce(false);
     fireEvent.click(finish);
     expect(screen.getByText('Save failed - storage may be full. Export your data.')).toBeInTheDocument();
     expect(complete).not.toHaveBeenCalled();
