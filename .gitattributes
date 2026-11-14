@@ -10,3 +10,6 @@ docs/agents/*.md text eol=lf
 .roorules text eol=lf
 .cursor/rules/*.mdc text eol=lf
 .github/copilot-instructions.md text eol=lf
+
+# Shell scripts must stay LF or sh fails on a Windows checkout with autocrlf.
+*.sh text eol=lf
