@@ -60,7 +60,7 @@ describe('SA-04 winning point survives leaving the scorer before Finish', () => 
 
   it.each(['volleyball', 'badminton', 'tabletennis'])('%s restores the match-winning set and undo history', sport => {
     const target = getSportById(sport).config.pointsPerSet;
-    seed(sport, { type: 'single', sets: 1, points: target }, {
+    seed(sport, { type: 'single', sets: 1, points: target, target }, {
       sets: [{ score1: target - 1, score2: 0, completed: false }], currentSet: 0,
       history: [], servingTeam: 1, scoringMode: 'rally',
     });
@@ -104,7 +104,7 @@ describe('SA-04 winning point survives leaving the scorer before Finish', () => 
     expect(stored('cricket').draftState.scores.team2).toMatchObject({ runs, balls, wickets });
   });
 
-  it('cricket restores Super Over progress, a pending extra, and the deciding ball during the handoff delay', () => {
+  it.each([false, true])('cricket restores Super Over progress and its deciding ball, result save fails=%s', failResult => {
     seed('cricket', { preset: 'custom', overs: 1, players: 11, totalInnings: 2, trackOvers: true }, {
       innings: 2, battingTeam: 2, history: [], scores: {
         team1: { runs: 1, balls: 6, wickets: 0 }, team2: { runs: 1, balls: 6, wickets: 0 },
@@ -133,7 +133,20 @@ describe('SA-04 winning point survives leaving the scorer before Finish', () => 
     expect(stored('cricket').draftState.superOver.team2).toMatchObject({ runs: 2, balls: 6 });
     // Reload before the delayed result transition. The terminal ball must still finish.
     view.unmount(); mount('cricket', MonoCricketLiveScore);
+    const write = Storage.prototype.setItem;
+    const resultWrite = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, value) {
+      if (failResult && key.endsWith('se_cricket') && JSON.parse(value)[0]?.matches[0]?.status === 'completed') {
+        throw new DOMException('Full', 'QuotaExceededError');
+      }
+      return write.call(this, key, value);
+    });
     act(() => { vi.advanceTimersByTime(300); });
+    if (failResult) {
+      expect(stored('cricket').draftState.superOver.team2).toMatchObject({ runs: 2, balls: 6 });
+      expect(screen.getByText('Save failed - storage may be full. Export your data.')).toBeInTheDocument();
+      resultWrite.mockRestore();
+      fireEvent.click(screen.getByRole('button', { name: 'Save & Return' }));
+    }
     expect(stored('cricket')).toMatchObject({ status: 'completed', winner: 'B', superOver: { team2: { runs: 2, balls: 6 } } });
   });
 });
