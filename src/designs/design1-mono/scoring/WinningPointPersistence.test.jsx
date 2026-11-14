@@ -103,4 +103,37 @@ describe('SA-04 winning point survives leaving the scorer before Finish', () => 
     fireEvent.click(screen.getByRole('button', { name: /undo/i }));
     expect(stored('cricket').draftState.scores.team2).toMatchObject({ runs, balls, wickets });
   });
+
+  it('cricket restores Super Over progress, a pending extra, and the deciding ball during the handoff delay', () => {
+    seed('cricket', { preset: 'custom', overs: 1, players: 11, totalInnings: 2, trackOvers: true }, {
+      innings: 2, battingTeam: 2, history: [], scores: {
+        team1: { runs: 1, balls: 6, wickets: 0 }, team2: { runs: 1, balls: 6, wickets: 0 },
+      },
+    });
+    let view = mount('cricket', MonoCricketLiveScore);
+    fireEvent.click(screen.getByRole('button', { name: 'Super Over', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Wide (+1)' }));
+    expect(stored('cricket').draftState).toMatchObject({ superOverPhase: 'team1_batting', superOverPendingExtra: 'wide',
+      superOver: { team1: { runs: 1, balls: 0 } } });
+    view.unmount(); view = mount('cricket', MonoCricketLiveScore);
+    expect(screen.getByText('Runs off the wide (off the bat or byes)')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'None' }));
+    for (let i = 0; i < 6; i++) {
+      act(() => { vi.advanceTimersByTime(160); });
+      fireEvent.click(screen.getByRole('button', { name: '0', exact: true }));
+    }
+    act(() => { vi.advanceTimersByTime(300); });
+    expect(screen.getByText('Beta batting')).toBeInTheDocument();
+    for (let i = 0; i < 5; i++) {
+      act(() => { vi.advanceTimersByTime(160); });
+      fireEvent.click(screen.getByRole('button', { name: '0', exact: true }));
+    }
+    act(() => { vi.advanceTimersByTime(160); });
+    fireEvent.click(screen.getByRole('button', { name: '2', exact: true }));
+    expect(stored('cricket').draftState.superOver.team2).toMatchObject({ runs: 2, balls: 6 });
+    // Reload before the delayed result transition. The terminal ball must still finish.
+    view.unmount(); mount('cricket', MonoCricketLiveScore);
+    act(() => { vi.advanceTimersByTime(300); });
+    expect(stored('cricket')).toMatchObject({ status: 'completed', winner: 'B', superOver: { team2: { runs: 2, balls: 6 } } });
+  });
 });

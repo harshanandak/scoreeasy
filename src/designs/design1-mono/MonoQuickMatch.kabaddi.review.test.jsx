@@ -46,6 +46,20 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe('kabaddi scorer review regressions with durable storage', () => {
+  it('retains a target-winning raid across reload before Finish', () => {
+    const rules = resolveKabaddiRules('custom', { ...resolveKabaddiRules('quick'), end: { kind: 'target', points: 1 } });
+    store(createKabaddiMatch({ format: { kabaddiRules: rules }, names }));
+    const first = render(<MonoQuickMatch />);
+    fireEvent.click(screen.getByRole('button', { name: 'Raid by Royals' }));
+    fireEvent.click(within(screen.getByRole('group', { name: 'Quick touch count' })).getByRole('button', { name: '+1' }));
+    expect(loadData(KEY).kabaddi.state.phase).toBe('finishReview');
+    expect(loadData(KEY).gScore1).toBe(1);
+    first.unmount(); render(<MonoQuickMatch />);
+    expect(loadData(KEY).kabaddi.state.phase).toBe('finishReview');
+    fireEvent.click(screen.getByRole('button', { name: 'Finish' }));
+    expect(loadQuickMatch(ID)).toMatchObject({ score1: 1, score2: 0, winner: 'Royals', resultType: 'decided' });
+  });
+
   it.each([false, true])('records Finish directly at zero as decided, refresh=%s', (refresh) => {
     store(secondHalf());
     let mounted = render(<MonoQuickMatch />);
