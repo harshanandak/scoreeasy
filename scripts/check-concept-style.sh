@@ -21,6 +21,10 @@
 #      border-radius, box-shadow, border, border-color or the four
 #      border-top/right/bottom/left forms (with or without -color).
 #      Layout properties are fine. Custom properties such as --x-color are fine.
+#      Names are compared in lower case, a declaration may span lines, and only
+#      names right after "{" or ";" count, so selectors, quoted strings and CSS
+#      comments are not mistaken for declarations. <style> tags match in any
+#      case, and a <style> inside an HTML comment is skipped.
 #
 # Failures print as  file:line: reason.
 #
@@ -69,39 +73,57 @@ for page in "$@"; do
   : > "$tmp/manifest"
 
   # Pass 1: find banned properties in unmarked CSS, and cut out marked blocks.
+  # Unmarked CSS is gathered per run and read as a whole, so a declaration split
+  # across lines is still seen. CSS comments and quoted strings are blanked
+  # first (newlines kept, so line numbers hold), then only names in declaration
+  # position (right after "{" or ";") are compared, in lower case.
   PAGE="$page" BLKDIR="$tmp/blk" MANIFEST="$tmp/manifest" awk '
-    function strip_comments(t,   out, s, e) {
-      out = ""
-      while (t != "") {
-        if (incmt) {
-          e = index(t, "*/")
-          if (!e) return out
-          t = substr(t, e + 2); incmt = 0
+    function blank(t,   n, i, c, out, st, q) {
+      n = length(t); out = ""; st = 0
+      for (i = 1; i <= n; i++) {
+        c = substr(t, i, 1)
+        if (st == 0) {
+          if (c == "/" && substr(t, i + 1, 1) == "*") { st = 1; out = out "  "; i++; continue }
+          if (c == "\"" || c == "\047") { st = 2; q = c; out = out " "; continue }
+          out = out c
+        } else if (st == 1) {
+          if (c == "*" && substr(t, i + 1, 1) == "/") { st = 0; out = out "  "; i++; continue }
+          out = out (c == "\n" ? "\n" : " ")
         } else {
-          s = index(t, "/*")
-          if (!s) { out = out t; return out }
-          out = out substr(t, 1, s - 1)
-          t = substr(t, s + 2); incmt = 1
+          if (c == "\\") { out = out "  "; i++; continue }
+          if (c == q) { st = 0; out = out " "; continue }
+          out = out (c == "\n" ? "\n" : " ")
         }
       }
       return out
     }
-    function scan(seg, ln,   t, p) {
-      t = strip_comments(seg)
-      if (match(t, /(^|[^A-Za-z0-9_.#-])(color|background(-color|-image)?|font-family|border-radius|box-shadow|border(-(top|right|bottom|left))?(-color)?)[ \t]*:/)) {
-        p = substr(t, RSTART, RLENGTH)
-        gsub(/^[^A-Za-z]+/, "", p); gsub(/[ \t]*:$/, "", p)
-        printf "%s:%d: page sets \"%s\" outside a shipped block\n", page, ln, p
-        bad = 1
+    function scanbuf(   t, s, off, name, pre, ln, k) {
+      if (!inbuf) return
+      t = tolower(blank(buf)); off = 0
+      while (match(substr(t, off + 1), /[{;][ \t\n]*[a-z-]+[ \t\n]*:/)) {
+        s = substr(t, off + RSTART, RLENGTH)
+        name = s; sub(/^[{;][ \t\n]*/, "", name); sub(/[ \t\n]*:$/, "", name)
+        if (name ~ /^(color|background(-color|-image)?|font-family|border-radius|box-shadow|border(-(top|right|bottom|left))?(-color)?)$/) {
+          pre = substr(t, 1, off + RSTART + RLENGTH - 1)
+          ln = bufstart + gsub(/\n/, "\n", pre)
+          printf "%s:%d: page sets \"%s\" outside a shipped block\n", page, ln, name
+          bad = 1
+        }
+        off += RSTART + RLENGTH - 1
       }
+      buf = ""; inbuf = 0
     }
-    BEGIN { page = ENVIRON["PAGE"]; dir = ENVIRON["BLKDIR"]; manifest = ENVIRON["MANIFEST"]; ins = 0; ship = 0; nb = 0; incmt = 0; bad = 0 }
+    function addcss(seg) {
+      if (!inbuf) { buf = seg; bufstart = NR; inbuf = 1 } else buf = buf "\n" seg
+    }
+    BEGIN { page = ENVIRON["PAGE"]; dir = ENVIRON["BLKDIR"]; manifest = ENVIRON["MANIFEST"]; ins = 0; ship = 0; nb = 0; hcmt = 0; bad = 0; buf = ""; inbuf = 0 }
     {
       line = $0; sub(/\r$/, "", line)
 
       if (line ~ /^[ \t]*\/\*[ \t]*shipped:[^ \t*]+[ \t]*\*\/[ \t]*$/) {
         if (ship) { printf "%s:%d: shipped block opened inside another shipped block\n", page, NR; bad = 1; next }
         if (!ins) { printf "%s:%d: shipped marker outside a <style> block\n", page, NR; bad = 1; next }
+        scanbuf()
         p = line
         sub(/^[ \t]*\/\*[ \t]*shipped:/, "", p); sub(/[ \t]*\*\/[ \t]*$/, "", p)
         nb++; ship = 1; cur = dir "/" nb
@@ -116,7 +138,7 @@ for page in "$@"; do
         next
       }
       if (ship) {
-        if (index(line, "</style")) {
+        if (index(tolower(line), "</style")) {
           printf "%s:%d: <style> closed inside an open shipped block\n", page, NR; bad = 1
           ship = 0; close(cur); ins = 0
           next
@@ -126,9 +148,19 @@ for page in "$@"; do
       }
 
       rem = line
+      if (ins && rem == "") addcss("")
       while (rem != "") {
-        if (!ins) {
-          i = index(rem, "<style")
+        lc = tolower(rem)
+        if (hcmt) {
+          e = index(rem, "-->")
+          if (!e) { rem = ""; break }
+          rem = substr(rem, e + 3); hcmt = 0
+        } else if (!ins) {
+          i = index(lc, "<style"); c = index(rem, "<!--")
+          while (i && substr(lc, i + 6, 1) !~ /[ \t>\/]/ && substr(lc, i + 6, 1) != "") {
+            k = index(substr(lc, i + 6), "<style"); i = k ? i + 5 + k : 0
+          }
+          if (c && (!i || c < i)) { rem = substr(rem, c + 4); hcmt = 1; continue }
           if (!i) break
           rem = substr(rem, i)
           g = index(rem, ">")
@@ -136,14 +168,14 @@ for page in "$@"; do
           rem = substr(rem, g + 1)
           ins = 1
         } else {
-          e = index(rem, "</style")
-          if (e) { seg = substr(rem, 1, e - 1); rem = substr(rem, e + 7); ins = 0 }
-          else   { seg = rem; rem = "" }
-          scan(seg, NR)
+          e = index(lc, "</style")
+          if (e) { addcss(substr(rem, 1, e - 1)); rem = substr(rem, e + 7); ins = 0; scanbuf() }
+          else   { addcss(rem); rem = "" }
         }
       }
     }
     END {
+      scanbuf()
       if (ship) { printf "%s:%d: shipped block never closed\n", page, NR; bad = 1 }
       exit bad ? 1 : 0
     }

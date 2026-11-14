@@ -12,8 +12,9 @@ work does not copy from it. `MonoHome.jsx` is not routed.
 
 Source gap: `boardShell.css` and `BoardShell.jsx` cite "Kit plan 2026-10-22",
 and `src/index.css` cites "plan 2026-10-22 §4". No such plan document is in the
-repo. `docs/plans/2026-10-22-kit-foundation/` and the other `kit-*` folders
-under `docs/plans/` hold screenshots only. The CSS files named above are the
+repo. The `kit-*` folders under `docs/plans/` hold screenshots, and two of
+them also hold implementation evidence (`2026-10-23-kit-s5-share-live/` and
+`2026-10-23-kit-s6/` have a README.md and a JSON audit file); none is the plan. The CSS files named above are the
 source of truth for the Kit until that plan is written down.
 
 ## Reference
