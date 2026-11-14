@@ -54,6 +54,8 @@ Env vars, Clerk/Convex pairing and deployment live in `README.md` and `DEPLOYMEN
 
 A required check still queued with no jobs 15 minutes after a push is stuck. Cancel and re-run it once; if it queues again, report it under Decisions needed. Never end a turn waiting for a runner without a time limit.
 
+After a gap, a compaction or a 'blocked by hook' notice, read this thread's activity since your last reply before anything else. Every 'Original prompt' inside a block notice is a message still to answer, the owner's first. Read the result of any lane whose finish notice was blocked. Commit and push lane output before a turn ends.
+
 ## Standards and workflow
 
 - **Code standards** — `CODING_STANDARDS.md`, read before writing `convex/` code and at review time.
@@ -61,6 +63,7 @@ A required check still queued with no jobs 15 minutes after a push is stuck. Can
 - **Issue tracking** — `forge issue`. `forge issue ready` to find work, `forge issue show <id>` for context, `forge issue comment <id> "…"` at each stage transition, `forge issue create` for follow-ups. Use it instead of TodoWrite or markdown TODO lists.
 - **Open items** — the lead keeps a local, untracked `.overseer/open-items.md` (owner decisions with their default and first-asked time, plus owed checks) and re-reads it after every compaction and before writing "Decisions needed". An item leaves only when the owner answers, the lead takes the default and says so, or the check passes. At most three questions are open for the owner at once, and one message asks at most three. Anything no owner rule gates is done as its default and reported. Anything not needed for the current step is parked with the event that reopens it.
 - **Design rounds** — every design brief and review names, under "Read first", the decision record of the surface it changes (boards: `docs/plans/2026-10-20-direction-e-app-design.md`; Home: `docs/plans/2026-11-12-home-decisions.md`) and repeats what the owner picked or turned down there. His words are quoted; a reading of them is marked as a reading. Before design pictures go to the owner, one independent reviewer checks every drawn state against the game's rules and every claim in the message against the pictures.
+- **Design look** — The look is fixed: the Kit (the --se-* tokens, .se-ctl and .se-go in src/index.css; src/designs/design1-mono/kit/*.css; scoring/boardShell.css and teamBoard.css). A design brief names these under 'Read first' and never mono.css, MonoWatchMatch or another pre-Kit page. A redesign changes layout only, unless Harsha asked for a style change in words the brief quotes. A concept page inlines the shipped CSS and uses its classes; its own style block holds layout only, and scripts/check-concept-style.sh must pass before the independent check.
 
 ## Shipping regime (pre-user)
 
