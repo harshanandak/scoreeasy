@@ -2521,12 +2521,12 @@ body { margin: 0; display: flex; flex-direction: column; align-items: center; ov
 .kd-ctlwrap { flex: none; min-height: 0; width: 100%; max-width: 430px; padding-bottom: 0; }
 #ctl { flex: none; width: 100%; max-width: 430px; box-sizing: border-box; padding: 8px 12px 6px; }
 .kd-cbar { display: flex; align-items: center; gap: 8px; }
-.kd-gear { flex: 1; min-width: 0; justify-content: flex-start; min-height: 40px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kd-livebtn { min-height: 40px; cursor: pointer; }
+.kd-gear { flex: 1; min-width: 0; justify-content: flex-start; min-height: 48px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kd-livebtn { min-height: 48px; cursor: pointer; }
 .kd-panel { display: grid; gap: 10px; padding: 10px 0 4px; }
 .kd-row { display: grid; gap: 4px; }
 .kd-row > .kit-sub { font-size: 0.8rem; }
-.kd-panel .se-ctl { min-height: 44px; }
+.kd-panel .se-ctl { min-height: 48px; }
 .kd-frame { flex: 1; min-height: 0; width: 100%; max-width: 430px; display: flex; overflow: auto; }
 .kd-frame #app { width: 100%; display: flex; }
 .kd-frame .sb { flex: 1; min-height: 0; max-width: none; height: 100%; min-width: 0; }
@@ -3048,7 +3048,7 @@ const NB = (s) => s.replace(/ (\S+)$/, '&nbsp;$1');                    // keep t
 const KEEP_NOTE = 'Choose Keep if you moved round the court with them.';
 
 // team swatch: the shipped sport dot, painted with the team's own core colour token
-const sw = (t) => `<i class="sb-sport-dot kd-sw" style="--sb-sport:var(--team-${t.toLowerCase()}-core)" aria-hidden="true"></i>`;
+const sw = (t) => `<i class="sb-sport-dot kd-sw tsb-key-${t.toLowerCase()}" aria-hidden="true"></i>`;
 // the sport mark as a small inline svg, from the shipped SPORT_MARKS (fill is currentColor, so it takes the text colour);
 // the mask id is made unique per mark so several marks in one document do not share a mask
 let markN = 0;
@@ -3116,8 +3116,9 @@ function cueFor(st, t) {
 // Under the score: "Last point" on the team that just scored, and what the next tap would do when it ends the set.
 function lineWords(st, t) {
   if (st.phase !== 'play') return null;
-  const e = st.ev[st.ev.length - 1], h = nextHint(st, t);
-  return { last: e && e.k === 'pt' && e.who === t ? 'Last point' : '', hint: h.startsWith('wins') ? `+1 ${h}` : '' };
+  // st.last is the team that scored last in this game. The latest event can be a flip or a swap, which scores nothing.
+  const h = nextHint(st, t);
+  return { last: st.last === t ? 'Last point' : '', hint: h.startsWith('wins') ? `+1 ${h}` : '' };
 }
 
 // the one serve cue: text for the serving tag, or null. Between sets it marks the next first server.
@@ -3320,8 +3321,7 @@ function today(st, o) {
     const k = t.toLowerCase(), tag = st.phase === 'play' ? serveTag(st, t) : null;
     return `<button type="button" class="tsb-key tsb-key-${k}" data-team="${k}" data-side="${i === 0 ? 'left' : 'right'}" aria-label="Add point for ${esc(nameOf(st, t))}">${tag ? '<span class="tsb-mark" aria-hidden="true"></span><span class="tsb-srv">Serving</span>' : ''}<span class="tsb-who">${esc(nameOf(st, t))}</span><span class="tsb-big">${t === 'A' ? st.a : st.b}</span><span class="tsb-word">Tap +1</span></button>`;
   };
-  const e = st.ev[st.ev.length - 1];
-  const last = e && e.k === 'pt' ? `Last: point ${nameOf(st, e.who)} · ${L === 'A' ? st.a : st.b}${N}${L === 'A' ? st.b : st.a}` : 'Tap a team to score a point';
+  const last = st.last ? `Last: point ${nameOf(st, st.last)} · ${L === 'A' ? st.a : st.b}${N}${L === 'A' ? st.b : st.a}` : 'Tap a team to score a point';
   return `<div class="sb tsb kd kd-today" style="${teamStyle(st, o)}" data-team-board="">
     <header class="sb-top"><div class="sb-title"><b>${esc(nameOf(st, 'A'))} v ${esc(nameOf(st, 'B'))}</b><small>${esc(sub)}</small></div><button type="button" class="se-ctl sb-finish">Finish</button></header>
     <p class="tsb-meta"><span class="tsb-meta-item">${R.unit} ${st.g + 1}</span><span class="tsb-meta-item">${R.unit}s ${st.wins[L]}${N}${st.wins[Rr]}</span>${f ? `<span class="tsb-point-cue" role="status">${esc(f)}</span>` : ''}</p>
@@ -3345,7 +3345,7 @@ function liveView(st, o) {
     const cells = st.games.map(([a, b]) => { const m = t === 'A' ? a : b, q = t === 'A' ? b : a; return `<span class="${m > q ? 'kit-live-team' : 'kit-live-sets'} kd-cell">${m}</span>`; }).join('');
     const now = showNow ? `<span class="kit-live-score kd-now">${t === 'A' ? st.a : st.b}</span>` : '';
     const chip = chipFor(t);
-    return `<div class="kit-live-row kd-lrow"><span class="kit-live-team"><i class="kit-live-team-dot" style="background:var(--team-${t.toLowerCase()}-core)"></i><span class="kit-live-name">${esc(nameOf(st, t))}</span></span>
+    return `<div class="kit-live-row kd-lrow"><span class="kit-live-team"><i class="kit-live-team-dot tsb-key-${t.toLowerCase()}"></i><span class="kit-live-name">${esc(nameOf(st, t))}</span></span>
       <span class="kd-lnums" style="grid-template-columns:${cols}">${cells}${now}</span>
       <span class="kit-live-meta"><span>${st.wins[t]} ${R.unit.toLowerCase()}${st.wins[t] === 1 ? '' : 's'}</span>${chip}</span></div>`;
   };
@@ -3361,7 +3361,7 @@ function liveView(st, o) {
   if (!last.length) recent = '<p class="kit-sub">No points yet</p>';
   else {
     let n = 0; const lw = st.all[st.all.length - 1]; for (let i = st.all.length - 1; i >= 0 && st.all[i] === lw; i--) n++;
-    recent = `<div class="kd-dots">${last.map((c) => `<span class="kit-step-num kd-dot" style="background:var(--team-${c.toLowerCase()}-core);color:var(--team-${c.toLowerCase()}-on)">${R.init[c === 'A' ? 0 : 1]}</span>`).join('')}</div>
+    recent = `<div class="kd-dots">${last.map((c) => `<span class="kit-step-num kd-dot tsb-key-${c.toLowerCase()}">${R.init[c === 'A' ? 0 : 1]}</span>`).join('')}</div>
       <p class="kd-run">${n >= 2 ? `${sw(lw)}${n} in a row` : 'Points trading'}</p>`;
   }
   return `<div class="sb tsb kd kd-live" style="${teamStyle(st, o)}" data-phase="${st.phase}" data-sport="${st.sport}">
@@ -3389,8 +3389,7 @@ function screenInner(st, o) {
     return `<header class="sb-top"><div class="sb-title"><b>${esc(R.title)}</b><small>${esc(sub)}</small></div><button type="button" class="se-ctl sb-finish">Finish</button></header>`;
   }
   function lastOld(st) {
-    const e = st.ev[st.ev.length - 1];
-    if (e && e.k === 'pt') { const [l, r] = st.left === 'A' ? [st.a, st.b] : [st.b, st.a]; return `${sw(e.who)}Last point ${l}${N}${r}`; }
+    if (st.last) { const [l, r] = st.left === 'A' ? [st.a, st.b] : [st.b, st.a]; return `${sw(st.last)}Last point ${l}${N}${r}`; }
     return 'Tap a team to score a point';
   }
   function keyOld(st, t, i) {
@@ -3416,48 +3415,51 @@ function screenInner(st, o) {
   const barFig = (chip, cap, html) => `<figure class="cmp-barfig"><figcaption><span class="kit-chip">${chip}</span><span class="kit-sub">${cap}</span></figcaption><div class="sb cmp-bar">${html}</div></figure>`;
 
   // actions the three sets sports do not use, so only the mock-ups need them
+  BAR_ACTIONS.clockc = { label: 'Clock', aria: 'Clock: start, correct or suspend', icon: ICON('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 3h6"/>') };
   BAR_ACTIONS.pause = { label: 'Pause', aria: 'Pause the clock', icon: ICON('<path d="M8 5v14"/><path d="M16 5v14"/>') };
 
   /* ---- the per-game bars: the answer to owner note 2 ---- */
+  // built: what the prototype's More sheet really holds. proposed: not built, drawn here only.
   const GAMES = [
     { g: 'Volleyball', ids: ['undo', 'flip', 'more'], hint: 'back to 24–22', live: 'vb',
       why: 'Ends change after every set and at 8 in the deciding set. A missed change is the usual mistake, so Swap ends is one tap.',
-      more: 'Timeouts, Correct a score, Discard' },
+      built: 'Correct a score (shown, disabled), Discard match', proposed: 'Timeouts' },
     { g: 'Badminton', ids: ['undo', 'flip', 'more'], hint: 'back to 20–19', live: 'bd',
       why: 'Ends change after each game and at 11 in game 3. A let is rare, so it sits in More, one tap deeper.',
-      more: 'Let, Correct a score, Discard' },
+      built: 'Let, Correct a score (shown, disabled), Discard match', proposed: '' },
     { g: 'Table tennis', ids: ['undo', 'let', 'flip', 'more'], hint: 'back to 4–7', live: 'tt',
-      why: 'A serve that touches the net is a let and scores nothing (law 2.9), so Let earns a button. Ends change after each game and at 5 in the last.',
-      more: 'Correct a score, Discard' },
+      why: 'A let is a correct service that touches the net. It is replayed and scores nothing (law 2.9), and it happens often enough to earn a button. A serve that touches the net and then misses is a lost point, so it is the other player\'s key. Ends change after each game and at 5 in the last.',
+      built: 'Correct a score (shown, disabled), Discard match', proposed: '' },
     { g: 'Tennis', ids: ['undo', 'flip', 'more'], hint: 'back to 30–15',
-      why: 'Ends change after odd games and in a tie-break. A serve fault or let records nothing, so neither gets a button.',
-      more: 'Retire, Correct a score, Discard' },
+      why: 'Ends change after odd games and in a tie-break. A first-service fault records nothing, so it has no button. A double fault loses the point, so it is the other player\'s key.',
+      built: '', proposed: 'Retire, Correct a score, Discard match' },
     { g: 'Cricket quick', ids: ['undo', 'more'], hint: 'back to 41/2',
       why: 'The keypad already holds 0 1 2 4 6, Wd, Nb and W. Over end and strike change are automatic. Nothing else is needed inside a ball.',
-      more: 'Powerplay, Correct a ball, Retire, Discard' },
+      built: '', proposed: 'Powerplay, Correct a ball, Retire, Discard match' },
     { g: 'Cricket guided', ids: ['undo', 'strike', 'more'], hint: 'back to 41/2',
-      why: 'Same keypad. Adds Swap strike for the times the batters crossed on a catch or the scorer slipped.',
-      more: 'Change bowler, Retire batter, Discard' },
+      why: 'Same keypad. Strike changes by itself from the runs and the over, so Swap strike is an explicit correction for when the app\'s strike is wrong, for example after a mis-tapped or short run. It is not needed for a catch: under Law 18.11 (2022) the incoming batter takes the striker\'s end whether or not the batters crossed.',
+      built: '', proposed: 'Change bowler, Retire batter, Discard match' },
     { g: 'Cricket Test', ids: ['undo', 'more'], hint: 'back to 212/4',
       why: 'Same keypad as quick. Declare, session break and follow-on happen a few times a day, so they sit in More behind a confirm.',
-      more: 'Declare, Stumps, Follow-on, Discard' },
-    { g: 'Football', ids: ['undo', 'pause', 'period', 'more'], hint: 'back to 1–0',
-      why: 'The clock stops and starts around stoppages. Half time is called by the referee, so it needs its own button. Goals are the two keys.',
-      more: 'Cards, Substitution, Own goal, Shoot-out, Discard' },
-    { g: 'Hockey', ids: ['undo', 'pause', 'corner', 'more'], hint: 'back to 0–0',
-      why: 'The quarter clock ends on the horn, so no period button. A penalty corner is a counted event that is not a goal.',
-      more: 'Card, Penalty stroke, Shoot-out, Discard' },
+      built: '', proposed: 'Declare, Stumps, Follow-on, Discard match' },
+    { g: 'Football', ids: ['undo', 'clockc', 'period', 'more'], hint: 'back to 1–0',
+      why: 'A count-up clock that runs on through the referee\'s added time, shown as 45+3. Clock is for kick-off and the restart of each half, an explicit correction, or a suspended match, not for every stoppage. Period is half time, full time and extra time, called by the referee.',
+      built: '', proposed: 'Cards, Substitution, Own goal, Shoot-out, Discard match' },
+    { g: 'Hockey', ids: ['undo', 'clockc', 'corner', 'more'], hint: 'back to 0–0',
+      why: 'A penalty corner awarded before the horn is played out after time has expired, so a quarter cannot simply end on the horn. The board needs an extended-corner state ("Corner after time"), and End quarter is an explicit action in More. Corner is a counted event, not a goal.',
+      built: '', proposed: 'End quarter, Card, Penalty stroke, Shoot-out, Discard match' },
     { g: 'Basketball', ids: ['undo', 'pause', 'foul', 'more'], hint: 'back to 52–48',
       why: 'The clock stops on every whistle and fouls are counted per team. Timeouts and period changes happen in a stoppage, so they sit in More.',
-      more: 'Timeout, Period, Free throws, Discard' },
+      built: '', proposed: 'Timeout, Period, Free throws, Discard match' },
     { g: 'Kabaddi', ids: ['undo', 'pause', 'more'], hint: 'reopens raid 14',
       why: 'The raid card holds Start raid, the marks and the result. The bar only pauses the match clock. Undo says whether it removes a mark or reopens a raid.',
-      more: 'Timeout, Substitution, Discard' },
+      built: '', proposed: 'Timeout, Substitution, Discard match' },
   ];
 
+  const moreLine = (x) => `${x.built ? `In More, built: ${x.built}.` : 'In More: nothing built, the prototype does not cover this game.'}${x.proposed ? ` Proposed, not built: ${x.proposed}.` : ''}`;
   const rowHtml = (x) => `<div class="sb-sheet-group cmp-row"><div class="cmp-game"><b>${x.g}</b><span class="kit-chip">${x.ids.length} buttons</span></div>
     <div class="sb cmp-bar">${barHtml(x.ids, x.hint)}</div>
-    <div class="cmp-why">${x.why}<small class="kit-sub">In More: ${x.more}.${x.live ? ` <a href="prototype.html?sport=${x.live}&amp;dir=b&amp;state=mid">Tap it in the prototype</a>.` : ''}</small></div></div>`;
+    <div class="cmp-why">${x.why}<small class="kit-sub">${moreLine(x)}</small>${x.live ? `<a class="se-ctl cmp-go" href="prototype.html?sport=${x.live}&amp;dir=b&amp;state=mid">Tap it in the prototype</a>` : ''}</div></div>`;
 
   /* ---- sections ---- */
   const stVB = SCRIPTS.vb.mid(), stBD = SCRIPTS.bd.deuce(), stTT = SCRIPTS.tt.change();
@@ -3507,7 +3509,7 @@ function screenInner(st, o) {
       <div class="sb-title cmp-subhead"><b>Two, three or four buttons</b><small>Same height, same thumb zone, same Undo. The rule: a button earns its place only if the scorer needs it inside a rally or a stoppage, or if getting it wrong breaks the board.</small></div>
       <div class="cmp-ba">${variants}</div></section>
 
-    <section class="cmp-sec" aria-label="Bar for every game"><div class="sb-title"><b>The bar for every game</b><small>The Undo wording shown is an example of what each game's Undo would say.</small></div>
+    <section class="cmp-sec" aria-label="Bar for every game"><div class="sb-title"><b>The bar for every game</b><small>The Undo wording shown is an example of what each game's Undo would say. Only the three games with a "Tap it" button are built.</small></div>
       ${GAMES.map(rowHtml).join('')}
       <a class="se-go cmp-go" href="prototype.html?sport=vb&amp;dir=b&amp;state=mid">Open the tap prototype</a></section>
 
@@ -3516,7 +3518,7 @@ function screenInner(st, o) {
         <li>Wired and tappable in prototype.html, B and A: volleyball, badminton and table tennis. The other eight bars on this page are drawings.</li>
         <li>Swap ends is a new engine event, <code>flip</code>. It turns left and right over in the middle of play. Score, serve and set state do not change. Undo reverses it and says "back to old sides".</li>
         <li>Let is the same as before: it shows a note and records nothing, because a let is a replay and not a point. In badminton it moved into More.</li>
-        <li>Clock, Period, Foul, Corner and Swap strike buttons are drawings. Their engines are not in this prototype.</li>
+        <li>Clock, Pause, Period, Foul, Corner and Swap strike buttons are drawings. Their engines are not in this prototype. Every More item marked "proposed, not built" is a proposal too.</li>
         <li>The rates and the frequency reasoning come from the research files (design estimates, not measured). Check them with real scorers.</li>
       </ol></section>`;
 

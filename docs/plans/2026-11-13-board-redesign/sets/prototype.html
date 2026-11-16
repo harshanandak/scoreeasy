@@ -2521,12 +2521,12 @@ body { margin: 0; display: flex; flex-direction: column; align-items: center; ov
 .kd-ctlwrap { flex: none; min-height: 0; width: 100%; max-width: 430px; padding-bottom: 0; }
 #ctl { flex: none; width: 100%; max-width: 430px; box-sizing: border-box; padding: 8px 12px 6px; }
 .kd-cbar { display: flex; align-items: center; gap: 8px; }
-.kd-gear { flex: 1; min-width: 0; justify-content: flex-start; min-height: 40px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kd-livebtn { min-height: 40px; cursor: pointer; }
+.kd-gear { flex: 1; min-width: 0; justify-content: flex-start; min-height: 48px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kd-livebtn { min-height: 48px; cursor: pointer; }
 .kd-panel { display: grid; gap: 10px; padding: 10px 0 4px; }
 .kd-row { display: grid; gap: 4px; }
 .kd-row > .kit-sub { font-size: 0.8rem; }
-.kd-panel .se-ctl { min-height: 44px; }
+.kd-panel .se-ctl { min-height: 48px; }
 .kd-frame { flex: 1; min-height: 0; width: 100%; max-width: 430px; display: flex; overflow: auto; }
 .kd-frame #app { width: 100%; display: flex; }
 .kd-frame .sb { flex: 1; min-height: 0; max-width: none; height: 100%; min-width: 0; }
@@ -3009,7 +3009,7 @@ const NB = (s) => s.replace(/ (\S+)$/, '&nbsp;$1');                    // keep t
 const KEEP_NOTE = 'Choose Keep if you moved round the court with them.';
 
 // team swatch: the shipped sport dot, painted with the team's own core colour token
-const sw = (t) => `<i class="sb-sport-dot kd-sw" style="--sb-sport:var(--team-${t.toLowerCase()}-core)" aria-hidden="true"></i>`;
+const sw = (t) => `<i class="sb-sport-dot kd-sw tsb-key-${t.toLowerCase()}" aria-hidden="true"></i>`;
 // the sport mark as a small inline svg, from the shipped SPORT_MARKS (fill is currentColor, so it takes the text colour);
 // the mask id is made unique per mark so several marks in one document do not share a mask
 let markN = 0;
@@ -3077,8 +3077,9 @@ function cueFor(st, t) {
 // Under the score: "Last point" on the team that just scored, and what the next tap would do when it ends the set.
 function lineWords(st, t) {
   if (st.phase !== 'play') return null;
-  const e = st.ev[st.ev.length - 1], h = nextHint(st, t);
-  return { last: e && e.k === 'pt' && e.who === t ? 'Last point' : '', hint: h.startsWith('wins') ? `+1 ${h}` : '' };
+  // st.last is the team that scored last in this game. The latest event can be a flip or a swap, which scores nothing.
+  const h = nextHint(st, t);
+  return { last: st.last === t ? 'Last point' : '', hint: h.startsWith('wins') ? `+1 ${h}` : '' };
 }
 
 // the one serve cue: text for the serving tag, or null. Between sets it marks the next first server.
@@ -3281,8 +3282,7 @@ function today(st, o) {
     const k = t.toLowerCase(), tag = st.phase === 'play' ? serveTag(st, t) : null;
     return `<button type="button" class="tsb-key tsb-key-${k}" data-team="${k}" data-side="${i === 0 ? 'left' : 'right'}" aria-label="Add point for ${esc(nameOf(st, t))}">${tag ? '<span class="tsb-mark" aria-hidden="true"></span><span class="tsb-srv">Serving</span>' : ''}<span class="tsb-who">${esc(nameOf(st, t))}</span><span class="tsb-big">${t === 'A' ? st.a : st.b}</span><span class="tsb-word">Tap +1</span></button>`;
   };
-  const e = st.ev[st.ev.length - 1];
-  const last = e && e.k === 'pt' ? `Last: point ${nameOf(st, e.who)} · ${L === 'A' ? st.a : st.b}${N}${L === 'A' ? st.b : st.a}` : 'Tap a team to score a point';
+  const last = st.last ? `Last: point ${nameOf(st, st.last)} · ${L === 'A' ? st.a : st.b}${N}${L === 'A' ? st.b : st.a}` : 'Tap a team to score a point';
   return `<div class="sb tsb kd kd-today" style="${teamStyle(st, o)}" data-team-board="">
     <header class="sb-top"><div class="sb-title"><b>${esc(nameOf(st, 'A'))} v ${esc(nameOf(st, 'B'))}</b><small>${esc(sub)}</small></div><button type="button" class="se-ctl sb-finish">Finish</button></header>
     <p class="tsb-meta"><span class="tsb-meta-item">${R.unit} ${st.g + 1}</span><span class="tsb-meta-item">${R.unit}s ${st.wins[L]}${N}${st.wins[Rr]}</span>${f ? `<span class="tsb-point-cue" role="status">${esc(f)}</span>` : ''}</p>
@@ -3306,7 +3306,7 @@ function liveView(st, o) {
     const cells = st.games.map(([a, b]) => { const m = t === 'A' ? a : b, q = t === 'A' ? b : a; return `<span class="${m > q ? 'kit-live-team' : 'kit-live-sets'} kd-cell">${m}</span>`; }).join('');
     const now = showNow ? `<span class="kit-live-score kd-now">${t === 'A' ? st.a : st.b}</span>` : '';
     const chip = chipFor(t);
-    return `<div class="kit-live-row kd-lrow"><span class="kit-live-team"><i class="kit-live-team-dot" style="background:var(--team-${t.toLowerCase()}-core)"></i><span class="kit-live-name">${esc(nameOf(st, t))}</span></span>
+    return `<div class="kit-live-row kd-lrow"><span class="kit-live-team"><i class="kit-live-team-dot tsb-key-${t.toLowerCase()}"></i><span class="kit-live-name">${esc(nameOf(st, t))}</span></span>
       <span class="kd-lnums" style="grid-template-columns:${cols}">${cells}${now}</span>
       <span class="kit-live-meta"><span>${st.wins[t]} ${R.unit.toLowerCase()}${st.wins[t] === 1 ? '' : 's'}</span>${chip}</span></div>`;
   };
@@ -3322,7 +3322,7 @@ function liveView(st, o) {
   if (!last.length) recent = '<p class="kit-sub">No points yet</p>';
   else {
     let n = 0; const lw = st.all[st.all.length - 1]; for (let i = st.all.length - 1; i >= 0 && st.all[i] === lw; i--) n++;
-    recent = `<div class="kd-dots">${last.map((c) => `<span class="kit-step-num kd-dot" style="background:var(--team-${c.toLowerCase()}-core);color:var(--team-${c.toLowerCase()}-on)">${R.init[c === 'A' ? 0 : 1]}</span>`).join('')}</div>
+    recent = `<div class="kd-dots">${last.map((c) => `<span class="kit-step-num kd-dot tsb-key-${c.toLowerCase()}">${R.init[c === 'A' ? 0 : 1]}</span>`).join('')}</div>
       <p class="kd-run">${n >= 2 ? `${sw(lw)}${n} in a row` : 'Points trading'}</p>`;
   }
   return `<div class="sb tsb kd kd-live" style="${teamStyle(st, o)}" data-phase="${st.phase}" data-sport="${st.sport}">
