@@ -3369,6 +3369,7 @@ function screenInner(st, o) {
   var noteT = null, cd = null, cdTimer = null, cdKey = '';
 
   function fresh() { return newMatch(ui.sport, BO[ui.sport]); }
+  function clearNote() { clearTimeout(noteT); ui.note = null; }
   function say(msg) { ui.note = msg; clearTimeout(noteT); noteT = setTimeout(function () { ui.note = null; render(); }, 2200); }
 
   function dispatch(ev) {
@@ -3433,7 +3434,7 @@ function screenInner(st, o) {
     else if (a === 'srv') dispatch({ k: 'srv', who: who });
     else if (a === 'start') dispatch({ k: 'start' });
     else if (a === 'undo') undo();
-    else if (a === 'new') { st = fresh(); ui.sheet = null; ui.note = null; render(); }
+    else if (a === 'new') { st = fresh(); ui.sheet = null; clearNote(); render(); }
     else if (a === 'bo') { if (st.phase === 'first') { BO[ui.sport] = Number(v); st = fresh(); render(); } }
     else if (a === 'let') { ui.sheet = null; say('Let: replay the rally. No point.'); render(); }
     else if (a === 'flip') { if (dispatch({ k: 'flip' })) { say('Sides swapped. ' + nameOf(st, st.left) + ' is now on the left.'); render(); } }
@@ -3447,10 +3448,10 @@ function screenInner(st, o) {
     var c = b.getAttribute('data-ctl'), v = b.getAttribute('data-v');
     if (c === 'open') ui.open = !ui.open;
     else if (c === 'live') ui.live = !ui.live;
-    else if (c === 'sport') { if (v !== ui.sport) { ui.sport = v; st = fresh(); } }
+    else if (c === 'sport') { if (v !== ui.sport) { ui.sport = v; st = fresh(); clearNote(); } }
     else if (c === 'dir') ui.dir = v;
     else if (c === 'kit') ui.kit = v;
-    else if (c === 'restart') st = fresh();
+    else if (c === 'restart') { st = fresh(); clearNote(); }
     render();
   });
 
