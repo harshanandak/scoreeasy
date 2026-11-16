@@ -10,11 +10,13 @@ The prototype's own style block is layout only: sizes, grids, spacing, overflow.
 
 ## What B and A are
 
-**B Court.** The two team keys are the board. Each key is a whole half of the screen, in the order the teams stand on court. Name, score and serve sit on the key. This is today's board with a tidier head and the set results shown under the status line.
+**B Court.** The two team keys are the board. Each key is a whole half of the screen, in the order the teams stand on court. Name, sets won, score, serve, set point and last point sit on the key. This is today's board with a tidier head, one status strip and a new action bar.
 
 **A Board over pads.** A scoreboard card sits on top: both team names once, big scores, sets won. Two tall pads sit under it, one per team, in team colour, with a big +1. The serve marker is on the serving pad. The board is for reading, the pads are for tapping.
 
-Both layouts: the status line reads `Set 2 · Sets 0–1` (B) or `Set 2 · To 25` (A), then the set chips (swatch plus score), then the last point. Undo stays in the bottom thumb zone and says the score it goes back to. When play pauses (end change, between sets, match over, new match) the shipped sheet look docks above the bar, so the board stays on screen.
+Both layouts (top section, redesigned 16 Nov, see `top-and-bar.html`): two rows above the board. Row one is the header: the sport, then `Set 2 · best of 5 · to 25, win by 2`, and Finish. Row two is one status strip: the finished sets as chips (swatch plus score), or one short prompt before the first set ends. Sets won (`1 set won`), serve, set point, match point, deuce and `Last point` sit on the team they belong to. The bottom bar is the action bar: Undo (first, says the score it goes back to), the game's own actions, then More. When play pauses (end change, between sets, match over, new match) the shipped sheet look docks above the bar, so the board stays on screen.
+
+**The action bar.** Two, three or four buttons depending on the game. The prototype wires volleyball (Undo, Swap ends, More), badminton (same, Let is in More) and table tennis (Undo, Let, Swap ends, More). `top-and-bar.html` draws the bar for all eleven game modes with a line of reasoning each. Swap ends and Let are disabled while play is paused, because the docked sheet handles the end change then.
 
 ## What changed this round
 
@@ -30,13 +32,15 @@ Both layouts: the status line reads `Set 2 · Sets 0–1` (B) or `Set 2 · To 25
 
 At 390 x 844, measured in the prototype with `getBoundingClientRect`:
 
-- Undo bottom edge: 18px above the bottom safe area (the shipped `.sb-bar` padding). The rule is 24px at most. Undo is 283 x 60 px (without Let). More is 64 x 60 px.
+- Action bar, measured at 360 px wide on `top-and-bar.html`: every button is 60 px tall. Three buttons: Undo 154 x 60, Swap ends 81 x 60, More 81 x 60. Four buttons: Undo 109 x 60, Let 60 x 60, Swap ends 79 x 60, More 60 x 60. Two buttons: Undo 248 x 60, More 76 x 60. The bar padding is 16px under the buttons (was 18), so the bottom gap is still under 24px.
+- Top section at 360 x 780: the B keys start 110 px from the top (168 px before) and are 582 px tall (520 px before). Those two numbers are printed on `top-and-bar.html`, read from the page.
+- The numbers below were measured in the previous round, at 390 x 844, before the redesign of the top section and bar. They are kept for the contrast and key figures, which the redesign did not change. The Undo and More sizes they gave are replaced by the bullets above.
 - Numeral contrast, white numerals on the team key, worst point of the gradient with the 7% sheen: red 4.69:1, blue 4.69:1. Yellow v white kit: 10.95:1 and 12.50:1 (ink numerals). The A board numerals are ink on white, about 19.7:1.
 - The keys are 176 x 591 px in B at mid-set. The smallest key in a docked state is 150px high.
 
 ## Where Finish went
 
-Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-finish`, 75 x 48 px. In the prototype it opens a "Finish this match?" sheet with the score. It is dashed and disabled once the match is over, because New match takes over. It is not in the thumb zone on purpose: a deliberate action should not sit next to Undo.
+Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-finish`, 69 x 48 px (narrower padding than before, and the title is larger, so it no longer leads). In the prototype it opens a "Finish this match?" sheet with the score. It is dashed and disabled once the match is over, because New match takes over. It is not in the thumb zone on purpose: a deliberate action should not sit next to Undo.
 
 ## Elements changed from the old look and the shipped class now used
 
@@ -51,7 +55,7 @@ Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-fini
 | Framed prompt cards | `.sb-sheet` with `.sb-sheet-head`, docked above the bar |
 | Hard-edged pick buttons | `.se-go` (Flip the screen, Start set, New match), `.se-ctl` (Keep), `.kit-seg` (between sets choices, format) |
 | Mono top bar with Back and Saved | `.sb-top` with `.sb-title` and `.se-ctl.sb-finish`; `.sb-live` in the live view |
-| Undo row | `.sb-bar` with `.se-ctl.sb-undo` and `.sb-more` |
+| Undo row | `.sb-bar.kd-bar` with `.se-ctl.sb-undo` first, `.se-ctl.kd-act` actions, `.se-ctl.sb-more` last |
 | Team swatches (square, ink edge) | `.sb-sport-dot`, painted with the team core token |
 | Live table | `.kit-live-list`, `.kit-live-row`, `.kit-live-team`, `.kit-live-score`, `.kit-live-sets`, `.kit-live-meta`, `.kit-chip` |
 | Last 12 points dots | `.kit-step-num` painted with the team tokens |
@@ -59,12 +63,15 @@ Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-fini
 
 ## Differences from today's board, said plainly
 
-- The header title is the sport, not "Team v Team", so names appear once.
-- Completed set chips sit under the status line. Today they live in the More sheet.
-- The last-point line uses a swatch, not a team name.
-- Let (badminton, table tennis) sits in the bar between Undo and More. The More button is 56px wide there (it is 64px without Let), so Undo keeps its whole hint at 360px.
+- The header title is the sport, not "Team v Team", so names appear once, on the keys, in full (up to two lines, no ellipsis).
+- The header's small line carries the set: `Set 2 · best of 5 · to 25, win by 2`. The old `Set 2 · Sets 0–1` meta row is gone; sets won is `1 set won` on each team.
+- Completed set chips sit in one strip under the header. Today they live in the More sheet.
+- The last-point line is gone. `Last point` sits on the team that scored it, and Undo says the score it goes back to.
+- Set point and match point sit on the team that has it. Deuce shows on both keys.
+- The serve tag is in the flow under the score, in a slot both keys reserve, not on the key's top edge.
+- The bar is Undo, the game's actions, More (see `top-and-bar.html`). Let (table tennis) is in the bar; in badminton it is a row in More.
 - End change, between sets and match over dock above the bar instead of opening over the board.
-- In A, the pads are gone at the break, end change and interval, so the serve cue is one chip in the board column: "Serves first" at the break, "Serving" (with the court side or "1 of 2") at end change and interval. In B it is the key tag.
+- In A, the serve cue is one chip in the board column in every state: "Serving" (with the court side or "1 of 2") during play, end change and interval, "Serves first" at the break. The pads only carry the sport mark on the serving side. In B it is the in-flow tag on the key.
 - In A the two columns share their row heights, so a two-line team name at 360px does not push that team's score below the other.
 - The live view header shows the green Live badge while the match runs and the shipped `.kit-live-paused` label "Match over" once it ends.
 - The live view is built from Kit parts. No shipped Kit spectator scorecard exists yet, and the old spectator page is not a style source.
@@ -72,6 +79,7 @@ Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-fini
 
 ## Files
 
+- `top-and-bar.html`: before and after of the top section and the bar, and the bar drawn for every game. `top-and-bar.png` is a picture of its first section. `top-bar-before-vb.png`, `top-bar-after-b-vb.png`, `top-bar-after-a-vb.png`, `top-bar-after-b-bd-deuce.png`, `top-bar-after-b-tt-endchange.png`: 360 x 780 pictures (rendered at 1.25x, so 450 x 975 px).
 - `prototype.html`: the tappable prototype. Open it in a browser. Tap the gear row at the top to change sport, layout (B, A, or Today) and team colours, and to open the live view. Query options: `?sport=vb|bd|tt&dir=b|a|today&state=mid|deuce|change|between|over|decider&live=1&kit=light&bare=1`.
 - `b-court-*.png`, `a-board-*.png`: each sport, each layout, 390 x 844: mid-set, deuce, end change, between sets or games, match over, and for volleyball the deciding set toss. Frames run left to right in the file name order.
 - `live-*.png`: the spectator view, three sports mid-set and one match over.
@@ -82,5 +90,8 @@ Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-fini
 ## Not done, said plainly
 
 - The pictures were rendered with web fonts loaded. The fonts-blocked render was not done in this pass.
-- In the prototype the More sheet lists Swap sides and Correct as disabled rows, and Finish only shows its check. Those work as on today's board and were left out.
+- In the prototype the More sheet lists Correct a score as a disabled row (and Let in badminton, which works), and Finish only shows its check. Correct works as on today's board and was left out. Swap sides moved to the bar as Swap ends.
+- Clock, Period, Foul, Corner and Swap strike buttons on `top-and-bar.html` are drawings; their engines are not in this prototype. Let only shows a note: a let records nothing.
+- The b-court, a-board, compare, narrow and live PNGs in this folder were taken before the top section and bar redesign. They show the old layout. The new pictures are the `top-bar-*.png` files.
+- `scripts/check-concept-style.sh` is not in this branch (it is in origin/master). Both pages were checked with that copy, run from this worktree, and print ok.
 - No tests were run, and nothing under `src/` was touched.

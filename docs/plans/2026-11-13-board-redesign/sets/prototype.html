@@ -2544,6 +2544,45 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd .tsb-last { padding-bottom: 8px; display: flex; align-items: center; justify-content: center; }
 .kd .tsb-last .kd-sw { margin-right: 6px; }
 
+/* ===== v2: top section and action bar (owner notes 1 and 2, 2026-11-13). Scoped by .kd-v2 so the before frames on top-and-bar.html keep the old layout. ===== */
+
+/* header: the title carries the live set line; Finish stays top right, same shipped control */
+.kd-v2 .sb-top { padding: 12px 14px 4px 18px; }
+.kd-v2 .sb-title b { font-size: 1.25rem; line-height: 1.15; }
+.kd-v2 .sb-finish { padding: 0 14px; font-size: 0.88rem; flex: none; }
+
+/* one status strip: finished sets (or one prompt). Replaces the meta, sets and last point rows. */
+.kd-v2 .kd-strip { min-height: 46px; padding: 6px 14px 8px; align-items: center; justify-content: center; }
+.kd-v2 .kd-strip .kd-sets { padding: 0; }
+.kd-v2 .kd-quiet { padding: 0; min-height: 0; overflow: visible; white-space: normal; text-align: center; }
+
+/* B key: name block, score, then fixed slots so both keys line up whoever serves */
+.kd-v2 .tsb-key { padding: 16px 8px 18px; }
+.kd-v2 .tsb-key .tsb-who { display: flex; align-items: center; justify-content: center; max-width: 100%; min-height: 2.4em; white-space: normal; overflow: visible; overflow-wrap: anywhere; line-height: 1.15; text-align: center; padding: 0 4px; }
+.kd-v2 .tsb-key .kd-sub { margin-top: 2px; }
+.kd-v2 .tsb-key .tsb-big { margin: 6px 0 4px; }
+.kd-v2 .kd-slot { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 46px; margin-top: 2px; }
+.kd-v2 .kd-slot.kd-slot-cue { min-height: 34px; margin-top: 0; }
+.kd-v2 .kd-line { min-height: 1.3em; text-align: center; padding: 0 6px; }
+/* the serve tag sits in the flow under the score, not on the key's top edge */
+.kd-v2 .tsb-srv { position: static; top: auto; left: auto; transform: none; }
+
+/* paused play (end change, break, match over): keys shrink, the slots that only matter in play drop out */
+.kd-v2.kd-docked .tsb-key { min-height: 150px; padding-top: 12px; padding-bottom: 12px; }
+.kd-v2.kd-docked .kd-slot { min-height: 34px; }
+.kd-v2.kd-docked .kd-slot-cue, .kd-v2.kd-docked .kd-line-hint { display: none; }
+
+/* action bar: Undo first and widest; 1 to 3 more actions; More last. Same height in every variant. */
+.sb-bar.kd-bar { grid-template-columns: minmax(0, 1.9fr) repeat(var(--kd-n, 2), minmax(0, 1fr)); gap: 8px; padding: 12px 14px 16px; }
+.sb-bar.kd-bar-2 { --kd-n: 1; grid-template-columns: minmax(0, 1fr) 76px; }
+.sb-bar.kd-bar-3 { --kd-n: 2; }
+.sb-bar.kd-bar-4 { --kd-n: 3; grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr); }
+.sb .kd-bar .sb-undo { flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; padding: 0 10px; }
+.kd-undo-top { display: flex; align-items: center; gap: 8px; }
+.sb .kd-bar .sb-undo-w { margin-left: 0; max-width: 100%; font-size: 0.8rem; }
+.sb .kd-bar .kd-act { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 60px; padding: 0 2px; font-size: 0.76rem; line-height: 1.1; text-align: center; }
+.kd-act svg { flex: none; }
+
 /* serving tag may take two lines on a narrow key (Serving, right court) */
 .kd .tsb-srv { height: auto; min-height: 26px; padding: 4px 10px; white-space: normal; text-align: center; line-height: 1.15; width: max-content; max-width: calc(100% - 12px); box-sizing: border-box; }
 
@@ -2555,18 +2594,19 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd .tsb-word { text-align: center; padding: 0 6px; line-height: 1.2; }
 
 /* A Board over pads */
-/* the two columns share four row tracks (name, score, word, chip), so a two-line name on one side
+/* the two columns share five row tracks (name, score, word, serve chip, point cue), so a two-line name on one side
    gives both name areas the same height and both scores the same baseline */
-.kd-board { flex: none; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto auto; column-gap: 10px; row-gap: 0; margin: 0 14px; padding: 10px 8px 12px; }
-.kd-col { display: grid; grid-row: span 4; grid-template-rows: subgrid; justify-items: center; align-items: center; text-align: center; min-width: 0; padding: 4px 2px; }
+.kd-board { flex: none; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto auto auto; column-gap: 10px; row-gap: 0; margin: 0 14px; padding: 10px 8px 12px; }
+.kd-col { display: grid; grid-row: span 5; grid-template-rows: subgrid; justify-items: center; align-items: center; text-align: center; min-width: 0; padding: 4px 2px; }
 .kd-col.is-pick { cursor: pointer; }
 .kd-colhead { display: flex; align-items: center; justify-content: center; max-width: 100%; }
 .kd-col .tsb-who { max-width: none; white-space: normal; overflow-wrap: anywhere; line-height: 1.15; text-align: center; }
 .kd-col .tsb-big { font-size: 5.25rem; margin: 6px 0 2px; }
 .kd-colchip { display: flex; justify-content: center; margin-top: 8px; min-height: 28px; }
+.kd-colcue { display: flex; justify-content: center; margin-top: 6px; min-height: 28px; }
 .kd-colchip .kit-chip { height: auto; min-height: 28px; padding: 4px 10px; white-space: normal; text-align: center; line-height: 1.15; }
 .kd-pads { padding-top: 12px; }
-.kd-pad { min-height: 130px; padding-top: 40px; }
+.kd-pad { min-height: 130px; padding-top: 16px; padding-bottom: 14px; }
 .kd-pad .tsb-big { font-size: 4.5rem; margin: 6px 0; }
 .kd-pad .tsb-big.kd-text { font-size: 1.7rem; }
 .kd-a.kd-docked .kd-board { flex: 1; align-content: center; }
@@ -2585,10 +2625,6 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd-cta { display: block; margin-top: 4px; }
 .kd-wide { width: 100%; }
 
-/* bar: Undo stays first and widest; Let (badminton, table tennis) sits between Undo and More */
-.kd-bar-let { grid-template-columns: 1fr auto 56px; gap: 8px; }
-.kd-bar-let .sb-undo { padding: 0 12px; gap: 8px; }
-.kd-let { min-height: 60px; padding: 0 14px; }
 
 /* live view */
 .kd-livebody { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 14px; padding: 8px 14px 18px; }
@@ -2730,6 +2766,8 @@ function reduce(s0, ev) {
     }
     case 'swap': if (ev.swap) st.left = opp(st.left); st.phase = 'play'; st.prompt = null; break;
     case 'resume': st.phase = 'play'; st.prompt = null; break;
+    // bar button "Swap ends": flip left and right in the middle of play. Score, serve and phase do not change.
+    case 'flip': st.left = opp(st.left); break;
     case 'side': st.between.swap = ev.swap; break;
     case 'srv': st.between.srv = ev.who; break;
     case 'start':
@@ -2750,6 +2788,7 @@ function valid(st, ev) {
     case 'pt': return st.phase === 'play';
     case 'swap': return st.phase === 'change';
     case 'resume': return st.phase === 'interval';
+    case 'flip': return st.phase === 'play';
     case 'side': return st.phase === 'between' && st.between.swap !== ev.swap;
     case 'srv': return st.phase === 'between' && !st.between.fixed && st.between.srv !== ev.who;
     case 'start': return st.phase === 'between' && st.between.swap !== null && !!st.between.srv;
@@ -2792,7 +2831,7 @@ function undoInfo(st) {
     if (st.phase === 'between' || st.phase === 'over') { const g0 = st.games[st.games.length - 1], gm = e.who === 'A' ? g0 : [g0[1], g0[0]]; return { sub: `ends the ${R.unit.toLowerCase()} ${gm[0]}–${gm[1]}`, team: e.who }; }
     const [l, r] = leftScore(st); return { sub: `last point ${l}–${r}`, team: e.who };
   }
-  const t = { swap: 'screen choice', resume: 'interval', side: 'screen choice', srv: 'first server', start: `start of ${R.unit.toLowerCase()} ${st.g + 1}`, first: 'first server' };
+  const t = { swap: 'screen choice', flip: 'screen sides', resume: 'interval', side: 'screen choice', srv: 'first server', start: `start of ${R.unit.toLowerCase()} ${st.g + 1}`, first: 'first server' };
   return { sub: t[e.k] || e.k, team: null };
 }
 
@@ -2997,7 +3036,7 @@ function undoHint(st) {
     if (e.who === 'A') a--; else b--;
     return `back to ${L === 'A' ? a : b}${N}${L === 'A' ? b : a}`;
   }
-  return { swap: 'back to the end change', resume: 'back to the interval', side: 'back to the break', srv: 'back to the break', start: 'back to the break', first: 'back to the toss' }[e.k] || 'back one step';
+  return { flip: 'back to old sides', swap: 'back to the end change', resume: 'back to the interval', side: 'back to the break', srv: 'back to the break', start: 'back to the break', first: 'back to the toss' }[e.k] || 'back one step';
 }
 
 function flagText(st) { const f = flagOf(st); return f ? sentence(f.text) : ''; }
@@ -3017,14 +3056,29 @@ function setsRow(st) {
   }).join('')}</div>`;
 }
 
-function lastLine(st, o) {
-  if (o.note) return esc(o.note);
-  if (st.phase === 'first') return 'Tap the team that serves first';
-  if (st.phase === 'over') return 'Match over';
-  if (st.phase !== 'play') return 'Play is paused';
-  const e = st.ev[st.ev.length - 1];
-  if (e && e.k === 'pt') { const [l, r] = st.left === 'A' ? [st.a, st.b] : [st.b, st.a]; return `${sw(e.who)}Last point ${l}${N}${r}`; }
-  return 'Tap a team to score a point';
+// The status strip. One row where the meta, sets and last point rows used to be: the finished sets,
+// or one short prompt. Set state lives in the header; sets won, serve, last point and set point live on the team.
+function strip(st, o) {
+  let inner = '';
+  if (o.note) inner = `<span class="tsb-last kd-quiet">${esc(o.note)}</span>`;
+  else if (st.phase === 'first') inner = '<span class="tsb-last kd-quiet">Tap the team that serves first</span>';
+  else if (st.games.length) inner = setsRow(st);
+  else if (st.phase === 'play') inner = '<span class="tsb-last kd-quiet">Tap a team to score a point</span>';
+  return `<div class="tsb-meta kd-strip" aria-live="polite">${inner}</div>`;
+}
+
+// Set point and match point belong to one team, so they sit on that team. Deuce and sudden point sit on both.
+function cueFor(st, t) {
+  const f = flagOf(st);
+  if (!f || (f.team && f.team !== t)) return '';
+  return sentence(f.text);
+}
+
+// Under the score: "Last point" on the team that just scored, and what the next tap would do when it ends the set.
+function lineWords(st, t) {
+  if (st.phase !== 'play') return null;
+  const e = st.ev[st.ev.length - 1], h = nextHint(st, t);
+  return { last: e && e.k === 'pt' && e.who === t ? 'Last point' : '', hint: h.startsWith('wins') ? `+1 ${h}` : '' };
 }
 
 // the one serve cue: text for the serving tag, or null. Between sets it marks the next first server.
@@ -3048,17 +3102,44 @@ function tapWord(st, t) {
 /* ---- the bar and header (shipped BoardHeader / BoardBar markup) ---- */
 function header(st, o, finish = true) {
   const R = RULES[st.sport];
-  const sub = st.phase === 'first' ? 'Pick the format and the first server' : `Best of ${st.bo} · to ${targetOf(st)}${R.cap ? ` · cap ${R.cap}` : `, win by ${R.winBy}`}`;
+  const sub = st.phase === 'first' ? 'Pick the format and the first server' : `${R.unit} ${st.g + 1} · best of ${st.bo} · to ${targetOf(st)}${R.cap ? `, cap ${R.cap}` : `, win by ${R.winBy}`}`;
   return `<header class="sb-top"><div class="sb-title"><b>${esc(R.title)}</b><small>${esc(sub)}</small></div>${o.live ? '<span class="sb-live">Live</span>' : o.ended ? '<span class="kit-live-paused">Match over</span>' : ''}${finish ? `<button type="button" class="se-ctl sb-finish" data-act="finish"${st.phase === 'over' ? ' disabled' : ''}>Finish</button>` : ''}</header>`;
 }
 
+/* The action bar. Undo is always first and says what it restores. Then 1 to 3 more actions, then More.
+   BAR_ACTIONS is the vocabulary; BARS says which actions each game gets (the table on top-and-bar.html). */
+const ICON = (d, fill) => `<svg width="22" height="22" viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="${fill ? 'none' : 'currentColor'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const BAR_ACTIONS = {
+  flip:   { label: 'Swap ends', aria: 'Swap ends: flip the screen sides', icon: ICON('<path d="M4 8h14"/><path d="m14 4 4 4-4 4"/><path d="M20 16H6"/><path d="m10 12-4 4 4 4"/>') },
+  let:    { label: 'Let', aria: 'Let: replay the rally, no point', icon: ICON('<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>') },
+  strike: { label: 'Swap strike', aria: 'Swap strike', icon: ICON('<path d="M8 4v16"/><path d="m4 8 4-4 4 4"/><path d="M16 20V4"/><path d="m12 16 4 4 4-4"/>') },
+  clock:  { label: 'Start', aria: 'Start or pause the clock', icon: ICON('<path d="M8 5v14l11-7z"/>', true) },
+  period: { label: 'Period', aria: 'Period: end or start', icon: ICON('<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>') },
+  foul:   { label: 'Foul', aria: 'Record a foul', icon: ICON('<path d="M12 3 2 20h20z"/><path d="M12 10v4"/><path d="M12 17h.01"/>') },
+  corner: { label: 'Corner', aria: 'Penalty corner', icon: ICON('<path d="M6 21V3"/><path d="m6 4 11 4-11 4"/>') },
+  more:   { label: 'More', aria: 'Match options', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>' },
+};
+const BARS = {
+  vb: ['undo', 'flip', 'more'],
+  bd: ['undo', 'flip', 'more'],
+  tt: ['undo', 'let', 'flip', 'more'],
+};
+const UNDO_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-2"/></svg>';
+
+// ids: ['undo', ...actions, 'more']; hint: the words under Undo; off: ids that are disabled right now
+function barHtml(ids, hint, off) {
+  off = off || [];
+  const btn = (id) => {
+    if (id === 'undo') return `<button type="button" class="se-ctl sb-undo" data-act="undo"${hint ? '' : ' disabled'} aria-label="${hint ? `Undo last action, ${esc(hint)}` : 'Nothing to undo'}"><span class="kd-undo-top">${UNDO_ICON}<span class="sb-undo-t">Undo</span></span><span class="sb-undo-w">${hint ? esc(hint) : 'Nothing to undo'}</span></button>`;
+    const a = BAR_ACTIONS[id];
+    return `<button type="button" class="se-ctl ${id === 'more' ? 'sb-more ' : ''}kd-act" data-act="${id}"${off.includes(id) ? ' disabled' : ''} aria-label="${esc(a.aria)}"${id === 'more' ? ' aria-haspopup="dialog"' : ''}>${a.icon}<span>${esc(a.label)}</span></button>`;
+  };
+  return `<div class="sb-bar kd-bar kd-bar-${ids.length}" data-bar="${ids.length}">${ids.map(btn).join('')}</div>`;
+}
+
 function bar(st, o) {
-  const u = undoHint(st), R = RULES[st.sport];
-  const letB = R.hasLet && st.phase === 'play' ? '<button type="button" class="se-ctl kd-let" data-act="let">Let</button>' : '';
-  return `<div class="sb-bar${letB ? ' kd-bar-let' : ''}"><button type="button" class="se-ctl sb-undo" data-act="undo"${u ? '' : ' disabled'} aria-label="Undo last action">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-2"/></svg>
-    <span class="sb-undo-t">Undo</span><span class="sb-undo-w">${u ? esc(u) : 'Nothing to undo'}</span></button>${letB}
-    <button type="button" class="se-ctl sb-more" data-act="more" aria-label="Match options" aria-haspopup="dialog"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg></button></div>`;
+  const play = st.phase === 'play';
+  return barHtml(BARS[st.sport], undoHint(st), play ? [] : ['flip', 'let']);
 }
 
 /* ---- the two keys. B: whole halves, names on the keys. A: pads only, names live on the board ---- */
@@ -3071,18 +3152,23 @@ function keyAttrs(st, t) {
 }
 
 function keyB(st, t, i) {
-  const k = t.toLowerCase(), a = keyAttrs(st, t), tag = serveTag(st, t);
-  const won = st.phase === 'over' && st.winner === t;
-  const n = st.phase === 'over' ? st.wins[t] : t === 'A' ? st.a : st.b;
+  const k = t.toLowerCase(), a = keyAttrs(st, t), tag = serveTag(st, t), R = RULES[st.sport], u = R.unit.toLowerCase();
+  const over = st.phase === 'over', won = over && st.winner === t;
+  const n = over ? st.wins[t] : t === 'A' ? st.a : st.b, w = st.wins[t];
   const label = st.phase === 'play' ? `Add point for ${nameOf(st, t)}` : a.on ? `${nameOf(st, t)} serves first` : nameOf(st, t);
+  const lw = lineWords(st, t), cue = cueFor(st, t);
+  const l1 = lw ? lw.last : a.word, l2 = lw ? lw.hint : '';
   return `<button type="button" class="tsb-key tsb-key-${k}" data-team="${k}" data-side="${i === 0 ? 'left' : 'right'}" ${a.act}${a.on ? '' : ' disabled'} aria-label="${esc(label)}">
-    ${tag ? '<span class="tsb-mark" aria-hidden="true"></span>' : ''}${tag ? `<span class="tsb-srv">${esc(tag)}</span>` : won ? '<span class="tsb-srv">Winner</span>' : ''}<span class="tsb-who">${esc(nameOf(st, t))}</span><span class="tsb-big">${n}</span><span class="tsb-word">${esc(a.word)}</span></button>`;
+    ${tag ? '<span class="tsb-mark" aria-hidden="true"></span>' : ''}<span class="tsb-who">${esc(nameOf(st, t))}</span><span class="tsb-word kd-sub">${over ? '&nbsp;' : `${w} ${u}${w === 1 ? '' : 's'} won`}</span><span class="tsb-big">${n}</span>
+    <span class="kd-slot">${tag ? `<span class="tsb-srv">${esc(tag)}</span>` : won ? '<span class="tsb-srv">Winner</span>' : ''}</span><span class="kd-slot kd-slot-cue">${cue ? `<span class="tsb-point-cue" role="status">${esc(cue)}</span>` : ''}</span>
+    <span class="tsb-word kd-line">${esc(l1)}</span><span class="tsb-word kd-line kd-line-hint">${esc(l2)}</span></button>`;
 }
 
 function padA(st, t, i) {
-  const k = t.toLowerCase(), a = keyAttrs(st, t), tag = serveTag(st, t);
+  const k = t.toLowerCase(), a = keyAttrs(st, t), tag = serveTag(st, t), first = st.phase === 'first';
+  const lw = lineWords(st, t), l1 = lw ? lw.last : first ? 'Tap to choose' : a.word, l2 = lw ? lw.hint : '';
   return `<button type="button" class="tsb-key tsb-key-${k} kd-pad" data-team="${k}" data-side="${i === 0 ? 'left' : 'right'}" ${a.act}${a.on ? '' : ' disabled'} aria-label="${esc(st.phase === 'play' ? `Add point for ${nameOf(st, t)}` : `${nameOf(st, t)} serves first`)}">
-    ${tag ? '<span class="tsb-mark" aria-hidden="true"></span>' : ''}${tag ? `<span class="tsb-srv">${esc(tag)}</span>` : ''}<span class="tsb-big${st.phase === 'first' ? ' kd-text' : ''}">${st.phase === 'first' ? 'Serve first' : '+1'}</span><span class="tsb-word">${esc(st.phase === 'first' ? 'Tap to choose' : a.word.replace(/^Tap \+1( · )?/, ''))}</span></button>`;
+    ${tag ? '<span class="tsb-mark" aria-hidden="true"></span>' : ''}<span class="tsb-big${first ? ' kd-text' : ''}">${first ? 'Serve first' : '+1'}</span><span class="tsb-word kd-line">${esc(l1)}</span><span class="tsb-word kd-line kd-line-hint">${esc(l2)}</span></button>`;
 }
 
 function boardA(st) {
@@ -3091,16 +3177,17 @@ function boardA(st) {
     const n = st.phase === 'over' ? st.wins[t] : t === 'A' ? st.a : st.b;
     let chip = '';
     if (st.phase === 'over' && st.winner === t) chip = '<span class="kit-chip">Winner</span>';
-    else if (st.phase === 'between' || st.phase === 'change' || st.phase === 'interval') {
-      // the pads are hidden while play is paused, so the board keeps the one serve chip
+    else if (['play', 'between', 'change', 'interval'].includes(st.phase)) {
+      // the board carries the one serve chip in every state; the pads only carry the sport mark on the serving side
       const tg = serveTag(st, t);
       if (tg) chip = `<span class="kit-chip">${markSvg(st.sport)}${esc(tg)}</span>`;
       else if (pick) chip = '<span class="kit-chip">Tap to serve first</span>';
     }
+    const cue = cueFor(st, t);
     const wins = st.wins[t];
     const attrs = pick ? ` role="button" tabindex="0" data-act="srv" data-who="${t}" aria-label="${esc(nameOf(st, t))} serves first"` : '';
     return `<div class="kd-col${pick ? ' is-pick' : ''}"${attrs}><span class="kd-colhead">${sw(t)}<span class="tsb-who">${esc(nameOf(st, t))}</span></span>
-      <span class="tsb-big">${n}</span><span class="tsb-word">${wins} ${R.unit.toLowerCase()}${wins === 1 ? '' : 's'} won</span>${chip ? `<span class="kd-colchip">${chip}</span>` : ''}</div>`;
+      <span class="tsb-big">${n}</span><span class="tsb-word">${wins} ${R.unit.toLowerCase()}${wins === 1 ? '' : 's'} won</span><span class="kd-colchip">${chip}</span><span class="kd-colcue">${cue ? `<span class="tsb-point-cue" role="status">${esc(cue)}</span>` : ''}</span></div>`;
   };
   return `<section class="sb-sheet-group kd-board" aria-label="Score">${col(L)}${col(Rr)}</section>`;
 }
@@ -3144,6 +3231,9 @@ function dock(st, o) {
 }
 
 /* ---- the options sheet (More) and the Finish check: the shipped sheet layer ---- */
+// extra rows in More, per game: what did not earn a bar button
+const MORE_ROWS = { bd: '<button type="button" class="sb-row" data-act="let"><span>Let: replay the rally</span><span class="sb-row-aside">no point</span></button>' };
+
 function overlay(st, o) {
   if (!o.sheet) return '';
   let body;
@@ -3155,8 +3245,8 @@ function overlay(st, o) {
       <p class="sb-sheet-note kd-note"><button type="button" class="se-ctl kd-wide" data-act="closesheet">Keep scoring</button></p>`;
   } else {
     body = `<div class="sb-sheet-head"><b>Match options</b><button type="button" class="se-ctl sb-sheet-close" data-act="closesheet">Done</button></div>
-      <div class="sb-sheet-group"><button type="button" class="sb-row" disabled>Swap sides</button><button type="button" class="sb-row" disabled><span>Correct a score</span><span class="sb-row-aside">${'−'}1</span></button></div>
-      <p class="sb-sheet-note kd-note">Swap sides and score corrections work as on today's board. This prototype leaves them out.</p>
+      <div class="sb-sheet-group">${MORE_ROWS[st.sport] && st.phase === 'play' ? MORE_ROWS[st.sport] : ''}<button type="button" class="sb-row" disabled><span>Correct a score</span><span class="sb-row-aside">${'−'}1</span></button></div>
+      <p class="sb-sheet-note kd-note">Correct a score works as on today's board. This prototype leaves it out. Swap ends${st.sport === 'tt' ? ' and Let' : ''} moved to the bar.</p>
       <div class="sb-sheet-group"><button type="button" class="sb-row sb-row-danger" data-act="new">Discard match</button></div>`;
   }
   return `<div class="sb-sheet-layer"><button type="button" class="sb-scrim" data-act="closesheet" aria-label="Close" tabindex="-1"></button><div class="sb-sheet" role="dialog" aria-modal="true" aria-label="Match options">${body}</div></div>`;
@@ -3165,8 +3255,6 @@ function overlay(st, o) {
 /* ---- scorer: B Court and A Board over pads ---- */
 function scorer(st, o) {
   const docked = phaseDocked(st), dir = o.dir === 'a' ? 'a' : 'b';
-  const f = flagText(st);
-  const meta = metaItems(st, o).map((m) => `<span class="tsb-meta-item">${esc(m)}</span>`).join('') + (f ? `<span class="tsb-point-cue" role="status">${esc(f)}</span>` : '');
   const L = st.left, Rr = opp(L);
   let surface;
   if (dir === 'b') surface = `<div class="tsb-keys">${keyB(st, L, 0)}${keyB(st, Rr, 1)}</div>`;
@@ -3174,11 +3262,9 @@ function scorer(st, o) {
     const pads = st.phase === 'play' || st.phase === 'first';
     surface = boardA(st) + (pads ? `<div class="tsb-keys kd-pads">${padA(st, L, 0)}${padA(st, Rr, 1)}</div>` : '');
   }
-  return `<div class="sb tsb kd kd-${dir}${docked ? ' kd-docked' : ''}" style="${teamStyle(st, o)}" data-team-board="" data-phase="${st.phase}" data-sport="${st.sport}">
+  return `<div class="sb tsb kd kd-v2 kd-${dir}${docked ? ' kd-docked' : ''}" style="${teamStyle(st, o)}" data-team-board="" data-phase="${st.phase}" data-sport="${st.sport}">
     ${header(st, o)}
-    <p class="tsb-meta">${meta}</p>
-    ${setsRow(st)}
-    <p class="tsb-last" aria-live="polite">${lastLine(st, o)}</p>
+    ${strip(st, o)}
     ${surface}
     ${docked ? dock(st, o) : ''}
     ${bar(st, o)}
@@ -3349,7 +3435,8 @@ function screenInner(st, o) {
     else if (a === 'undo') undo();
     else if (a === 'new') { st = fresh(); ui.sheet = null; ui.note = null; render(); }
     else if (a === 'bo') { if (st.phase === 'first') { BO[ui.sport] = Number(v); st = fresh(); render(); } }
-    else if (a === 'let') { say('Let: replay the rally. No point.'); render(); }
+    else if (a === 'let') { ui.sheet = null; say('Let: replay the rally. No point.'); render(); }
+    else if (a === 'flip') { if (dispatch({ k: 'flip' })) { say('Sides swapped. ' + nameOf(st, st.left) + ' is now on the left.'); render(); } }
   });
   app.addEventListener('keydown', function (e) {
     if ((e.key === 'Enter' || e.key === ' ') && e.target.getAttribute && e.target.getAttribute('role') === 'button') { e.preventDefault(); e.target.click(); }
