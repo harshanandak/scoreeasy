@@ -2555,6 +2555,8 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
    Horizontal: every block's outer left and right edge is the gutter (--kd-g). Header text, strip, keys, board and bar
    share those two edges. The two keys and every bar button are separated by the same --kd-gap. */
 .kd-v2 { gap: var(--kd-gap); }
+.kd-v2 .kd-sw { margin-right: 8px; }
+.kd-v2 .tsb-word { padding: 0 4px; }
 
 /* header: the title carries the live set line; Finish stays top right, same shipped control */
 .kd-v2 .sb-top { padding: 12px var(--kd-g) 0; gap: var(--kd-gap); }
@@ -2566,7 +2568,7 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
    It is centred on the seam between the two keys, and 32px tall so the chip has 0 spare above and below. */
 .kd-v2 .kd-strip { min-height: 32px; padding: 0 var(--kd-g); align-items: center; justify-content: center; }
 .kd-v2 .kd-strip .kd-sets { padding: 0; gap: var(--kd-gap); }
-.kd-v2 .kd-strip .tsb-set { padding: 4px 8px; }
+.kd-v2 .kd-strip .tsb-set { padding: 4px 8px; gap: 8px; }
 .kd-v2 .kd-quiet { padding: 0; min-height: 0; overflow: visible; white-space: normal; text-align: center; }
 
 /* B key: one stack, centred in the part of the key above the watermark band.
@@ -2587,7 +2589,7 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 /* paused play (end change, break, match over): keys shrink, the watermark and the slots that only matter in play drop out */
 .kd-v2.kd-docked .tsb-key { min-height: 150px; padding: var(--kd-gap); }
 .kd-v2.kd-docked .tsb-mark { display: none; }
-.kd-v2.kd-docked .kd-slot { min-height: 32px; }
+.kd-v2.kd-docked .kd-slot { min-height: 40px; }
 .kd-v2.kd-docked .kd-slot-cue, .kd-v2.kd-docked .kd-line-hint { display: none; }
 
 /* ACTION BAR. One grid, N+1 equal columns for an N-button bar. Undo spans 2 columns, every other button 1.
@@ -2603,6 +2605,19 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .sb .kd-bar .kd-act > span { display: block; max-width: 100%; margin: 0; font-size: 0.76rem; line-height: 14px; white-space: normal; text-wrap: balance; }
 .sb .kd-bar .kd-act > svg { flex: none; width: 22px; height: 22px; }
 .sb .kd-bar .kd-act > .sb-undo-w { margin: -4px 0 0; font-size: 0.7rem; line-height: 12px; overflow: hidden; text-overflow: ellipsis; }
+
+/* EQUAL BAR (the three sets sports: volleyball, badminton, table tennis). Every button is the same size: the bar is
+   N equal columns, one column per button, nothing spans two. The default is 4 columns of the same --kd-gap, so the
+   middle gap is the 8px seam between the two keys above (x = 176 to 184 at 360) and each key has two buttons under it.
+   Every button: icon 22, 4, label 14 on one line at 0.78rem (the Kit's smallest label size), centred, 56 tall.
+   What Undo undoes moves out of the button into one centred line above the row, so no button grows for it. */
+.sb-bar.kd-bar.kd-bar-eq { grid-template-columns: repeat(var(--kd-eq, 4), minmax(0, 1fr)); grid-auto-rows: auto; row-gap: 4px; column-gap: var(--kd-gap); padding: 0 var(--kd-g) var(--kd-g); }
+.kd-bar-eq.kd-eq-3 { --kd-eq: 3; }
+.kd-bar-eq.kd-eq-2 { --kd-eq: 2; }
+.kd-bar-eq .kd-undoline { grid-column: 1 / -1; margin: 0; min-height: 16px; text-align: center; line-height: 16px; }
+.kd-bar-eq .kd-undoline .sb-undo-w { display: block; margin: 0; overflow: visible; white-space: normal; text-align: center; }
+.sb .kd-bar-eq .kd-act, .sb .kd-bar-eq .sb-undo { grid-column: auto; height: 56px; min-height: 56px; padding: 0 4px; justify-content: center; gap: 4px; }
+.sb .kd-bar-eq .kd-act > span { font-size: 0.78rem; line-height: 14px; white-space: nowrap; text-wrap: wrap; }
 
 /* serving tag may take two lines on a narrow key (Serving, right court) */
 .kd .tsb-srv { height: auto; min-height: 24px; padding: 4px 8px; white-space: normal; text-align: center; line-height: 1.15; width: max-content; max-width: calc(100% - 12px); box-sizing: border-box; }
@@ -2630,6 +2645,7 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd-v2 .kd-col .tsb-big { margin: 0; }
 .kd-colchip { display: flex; justify-content: center; margin-top: 8px; min-height: 28px; }
 .kd-v2 .kd-colchip, .kd-v2 .kd-colcue { margin: 0; min-height: 32px; align-items: center; }
+.kd-v2 .kd-colchip .kit-chip { padding: 4px 8px; }
 .kd-colcue { display: flex; justify-content: center; margin-top: 6px; min-height: 28px; }
 .kd-colchip .kit-chip { height: auto; min-height: 28px; padding: 4px 10px; white-space: normal; text-align: center; line-height: 1.15; }
 .kd-pads { padding-top: 12px; }
@@ -2639,8 +2655,13 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd-pad .tsb-big { font-size: 4.5rem; margin: 6px 0; }
 .kd-v2 .kd-pad .tsb-big { margin: 0; }
 .kd-pad .tsb-big.kd-text { font-size: 1.7rem; }
-.kd-a.kd-docked .kd-board { flex: 1; align-content: center; }
+.kd-a.kd-docked .kd-board { flex: 1 0 auto; align-content: center; }
+.kd-a.kd-docked .kd-pads { min-height: 96px; }
+.kd-a.kd-docked .kd-pad { min-height: 96px; }
+.kd-a[data-phase='first'] .kd-board { flex: 0 0 auto; }
 .kd-a.kd-docked .kd-col .tsb-big { font-size: 7.5rem; }
+.kd-a[data-phase='first'] .kd-colchip, .kd-a[data-phase='first'] .kd-colcue { display: none; }
+.kd-a[data-phase='first'] .kd-col .tsb-big { font-size: 5.25rem; }
 
 /* docked sheet: the shipped sheet skin, in the flow above the bar */
 .kd-dock { flex: none; width: auto; max-width: none; margin-top: 10px; padding: 12px 16px 12px; max-height: none; overflow: visible; }
@@ -2648,11 +2669,15 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd-dock .sb-sheet-head { padding: 0 0 8px; gap: var(--kd-gap); }
 .kd-dock .sb-sheet-head b { display: inline-flex; align-items: center; }
 .kd-dock .kit-sub { margin: 2px 2px 6px; }
+.kd-v2 .kd-dock .kit-sub { margin: 4px 0 8px; }
 .kd-dock .sb-sheet-note { padding: 8px 2px; }
+.kd-v2 .kd-dock .sb-sheet-note { padding: 8px 0; }
 .kd-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--kd-gap); margin: 4px 0 2px; }
+.kd-v2 .kd-pair { margin: 4px 0; }
 .kd-pair .se-go, .kd-pair .se-ctl { width: 100%; min-height: 64px; line-height: 1.15; text-align: center; }
 .kd-dock .se-go { min-height: 56px; }
 .kd-dock .kit-seg { margin: 0 0 2px; }
+.kd-v2 .kd-dock .kit-seg { margin: 0 0 4px; }
 .kd-cta { display: block; margin-top: 4px; }
 .kd-wide { width: 100%; }
 
@@ -3142,6 +3167,7 @@ function header(st, o, finish = true) {
    BAR_ACTIONS is the vocabulary; BARS says which actions each game gets (the table on top-and-bar.html). */
 const ICON = (d, fill) => `<svg width="22" height="22" viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="${fill ? 'none' : 'currentColor'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const BAR_ACTIONS = {
+  replay: { label: 'Replay', aria: 'Replay: replay the rally, no point', icon: ICON('<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>') },
   flip:   { label: 'Swap ends', aria: 'Swap ends: flip the screen sides', icon: ICON('<path d="M4 8h14"/><path d="m14 4 4 4-4 4"/><path d="M20 16H6"/><path d="m10 12-4 4 4 4"/>') },
   let:    { label: 'Let', aria: 'Let: replay the rally, no point', icon: ICON('<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>') },
   strike: { label: 'Swap strike', aria: 'Swap strike', icon: ICON('<path d="M8 4v16"/><path d="m4 8 4-4 4 4"/><path d="M16 20V4"/><path d="m12 16 4 4 4-4"/>') },
@@ -3151,27 +3177,32 @@ const BAR_ACTIONS = {
   corner: { label: 'Corner', aria: 'Penalty corner', icon: ICON('<path d="M6 21V3"/><path d="m6 4 11 4-11 4"/>') },
   more:   { label: 'More', aria: 'Match options', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>' },
 };
+// The three sets sports share one bar: four equal buttons, so the middle gap sits on the seam between the keys.
+// Replay (volleyball) and Let (badminton, table tennis) are the same action: the rally is played again, no point.
 const BARS = {
-  vb: ['undo', 'flip', 'more'],
-  bd: ['undo', 'flip', 'more'],
+  vb: ['undo', 'replay', 'flip', 'more'],
+  bd: ['undo', 'let', 'flip', 'more'],
   tt: ['undo', 'let', 'flip', 'more'],
 };
 const UNDO_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-2"/></svg>';
 
 // ids: ['undo', ...actions, 'more']; hint: the words under Undo; off: ids that are disabled right now
-function barHtml(ids, hint, off) {
+// eq: the equal bar (the three sets sports): one column per button, Undo's hint is one centred line above the row
+function barHtml(ids, hint, off, eq) {
   off = off || [];
   const btn = (id) => {
+    if (eq && id === 'undo') return `<button type="button" class="se-ctl sb-undo kd-act" data-act="undo"${hint ? '' : ' disabled'} aria-label="${hint ? `Undo last action, ${esc(hint)}` : 'Nothing to undo'}">${UNDO_ICON}<span class="sb-undo-t">Undo</span></button>`;
     if (id === 'undo') return `<button type="button" class="se-ctl sb-undo kd-act" data-act="undo"${hint ? '' : ' disabled'} aria-label="${hint ? `Undo last action, ${esc(hint)}` : 'Nothing to undo'}">${UNDO_ICON}<span class="sb-undo-t">Undo</span><span class="sb-undo-w">${hint ? esc(hint) : 'Nothing to undo'}</span></button>`;
     const a = BAR_ACTIONS[id];
     return `<button type="button" class="se-ctl ${id === 'more' ? 'sb-more ' : ''}kd-act" data-act="${id}"${off.includes(id) ? ' disabled' : ''} aria-label="${esc(a.aria)}"${id === 'more' ? ' aria-haspopup="dialog"' : ''}>${a.icon}<span>${esc(a.label)}</span></button>`;
   };
+  if (eq) return `<div class="sb-bar kd-bar kd-bar-eq kd-eq-${ids.length}" data-bar="${ids.length}"><p class="kd-undoline" aria-hidden="true"><span class="sb-undo-w">${hint ? `Undo: ${esc(hint)}` : 'Nothing to undo'}</span></p>${ids.map(btn).join('')}</div>`;
   return `<div class="sb-bar kd-bar kd-bar-${ids.length}" data-bar="${ids.length}">${ids.map(btn).join('')}</div>`;
 }
 
 function bar(st, o) {
   const play = st.phase === 'play';
-  return barHtml(BARS[st.sport], undoHint(st), play ? [] : ['flip', 'let']);
+  return barHtml(BARS[st.sport], undoHint(st), play ? [] : ['flip', 'let', 'replay'], true);
 }
 
 /* ---- the two keys. B: whole halves, names on the keys. A: pads only, names live on the board ---- */
@@ -3264,7 +3295,7 @@ function dock(st, o) {
 
 /* ---- the options sheet (More) and the Finish check: the shipped sheet layer ---- */
 // extra rows in More, per game: what did not earn a bar button
-const MORE_ROWS = { bd: '<button type="button" class="sb-row" data-act="let"><span>Let: replay the rally</span><span class="sb-row-aside">no point</span></button>' };
+const MORE_ROWS = {};
 
 function overlay(st, o) {
   if (!o.sheet) return '';
@@ -3467,7 +3498,7 @@ function screenInner(st, o) {
     else if (a === 'undo') undo();
     else if (a === 'new') { st = fresh(); ui.sheet = null; clearNote(); render(); }
     else if (a === 'bo') { if (st.phase === 'first') { BO[ui.sport] = Number(v); st = fresh(); render(); } }
-    else if (a === 'let') { ui.sheet = null; say('Let: replay the rally. No point.'); render(); }
+    else if (a === 'let' || a === 'replay') { ui.sheet = null; say(a === 'let' ? 'Let: replay the rally. No point.' : 'Replay: the rally is played again. No point.'); render(); }
     else if (a === 'flip') { if (dispatch({ k: 'flip' })) { say('Sides swapped. ' + nameOf(st, st.left) + ' is now on the left.'); render(); } }
   });
   app.addEventListener('keydown', function (e) {

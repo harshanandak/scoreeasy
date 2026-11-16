@@ -16,7 +16,7 @@ The prototype's own style block is layout only: sizes, grids, spacing, overflow.
 
 Both layouts (top section, redesigned 16 Nov, see `top-and-bar.html`): two rows above the board. Row one is the header: the sport, then `Set 2 · best of 5 · to 25, win by 2`, and Finish. Row two is one status strip: the finished sets as chips (swatch plus score), or one short prompt before the first set ends. Sets won (`1 set won`), serve, set point, match point, deuce and `Last point` sit on the team they belong to. `Last point` comes from the team that scored last in the current game, so Swap ends does not remove it and Undo of a later point restores it. The bottom bar is the action bar: Undo (first, says the score it goes back to), the game's own actions, then More. When play pauses (end change, between sets, match over, new match) the shipped sheet look docks above the bar, so the board stays on screen.
 
-**The action bar.** Two, three or four buttons depending on the game. The prototype wires volleyball (Undo, Swap ends, More), badminton (same, Let is in More) and table tennis (Undo, Let, Swap ends, More). `top-and-bar.html` draws the bar for all eleven game modes with a line of reasoning each. Swap ends and Let are disabled while play is paused, because the docked sheet handles the end change then.
+**The action bar.** The three sets sports share one bar of four equal buttons: Undo, a replay button, Swap ends, More. The replay button is Replay in volleyball and Let in badminton and table tennis: the rally is played again and no point is scored. The prototype shows a note for it and records nothing. Undo says what it undoes in one centred line above the row, so no button grows for it. `top-and-bar.html` draws three symmetric grids for this bar and recommends the one wired here, and draws the bar for all eleven game modes with a line of reasoning each (the eight rows that are not sets sports are unchanged from round 3). Swap ends, Let and Replay are disabled while play is paused, because the docked sheet handles the end change then.
 
 ## What changed in the repaint round (13 Nov)
 
@@ -32,30 +32,33 @@ Both layouts (top section, redesigned 16 Nov, see `top-and-bar.html`): two rows 
 
 Measured with `getBoundingClientRect`:
 
-- Action bar, measured at 360 px wide on `top-and-bar.html` (grid rule under "Geometry"): every button is 68 px tall. Two buttons: Undo 216 x 68, More 104 x 68. Three buttons: Undo 160 x 68, Swap ends 76 x 68, More 76 x 68. Four buttons: Undo 126 x 68, the others 59 x 68. The bar has 16px under the buttons.
+- Sets bar (volleyball, badminton, table tennis; B and A are the same): four buttons, each 76 x 56 at 360 wide (x = 16, 100, 184, 268) and 83.5 x 56 at 390 wide (x = 16, 107.5, 199, 290.5). The gap between buttons two and three is x = 176 to 184 at 360 and 191 to 199 at 390, which is the seam between the two keys at both widths. Every label ("Swap ends" included) is on one line at 0.78rem, the Kit's smallest label size. The bar has 16px under the buttons.
+- The other eight games' bars, unchanged from round 3 and drawn on `top-and-bar.html`: every button 68 px tall. Two buttons: Undo 216, More 104. Three buttons: Undo 160, the others 76. Four buttons: Undo 126, the others 59.
 - Top section at 360 x 780: the B keys start 108 px from the top (168 px before) and are 580 px tall (520 px before). Those two numbers are printed on `top-and-bar.html`, read from the page.
 - Tap targets: every tappable control in both pages is at least 48 px tall, including the prototype's own gear, Live view and Restart controls and the "Tap it in the prototype" buttons.
 - The contrast figures below were measured in the repaint round, at 390 x 844, and the redesign did not change the colours they use.
 - Numeral contrast, white numerals on the team key, worst point of the gradient with the 7% sheen: red 4.69:1, blue 4.69:1. Yellow v white kit: 10.95:1 and 12.50:1 (ink numerals). The A board numerals are ink on white, about 19.7:1.
-- The smallest key in a docked state is 150px high.
+- A docked B key has a 150 px minimum height. Rendered at 360 x 780 the keys are 275 to 414 px tall across the three sports (between games 275, end change 297 to 342, first server 335, match over 379 to 414).
 
 ## Geometry (round 3, 17 Nov)
 
 The owner said the direction was right but spacing and alignment were bad. These are the rules now, in `prototype.html` under `/* layout only */`, and `geometry-overlay-b-vb.png` draws them on the B board.
 
-- Spacing scale, px: 4, 8, 12, 16, 24, 32, 40, 48. The v2 layout uses no other value. 48 is the tap minimum; 24 to 40 are only used for reserved text slots inside a key.
+- Spacing scale, px: 4, 8, 12, 16, 24, 32, 40, 48. The v2 board layout (everything under `.kd-v2`, and the sets bar) uses no other value for padding, margin, gap or row height. Heights of tap targets and minimums (48, 56, 64, 96, 150) are sizes, not spacing. 24 to 40 are only used for reserved text rows inside a key. Not on the scale, and said plainly: the live view, the Today layout, the before frames on `top-and-bar.html` and the prototype's own control strip keep their older values (14, 10, 6), and the shipped Kit classes keep their own internal values (for example the 7px gap inside a set chip is overridden to 8, but the chip's border and radius are the Kit's).
 - One page gutter, `--kd-g` = 16. The header text, the status strip, the keys (or the A board and pads), the docked sheet and the bar all start at x = 16 and end at x = 344 on a 360 wide phone. Before, the title started at 18 while the keys and bar started at 14, and the right edges were 16, 14 and 17.
 - One gap, `--kd-gap` = 8: between blocks down the screen (header, strip, keys or board and pads, sheet, bar), between the two keys, between bar buttons, between the sheet's two buttons. Before it was 10 between keys, 8 between bar buttons and 14 at the page edge. The board's own flex gap supplies the vertical 8; no block has a margin of its own.
 - Header: 12 above, 0 below, text and Finish on the gutter. The strip is 32 tall and the chips are 30, so the space above and below them is the same. The strip is centred on the seam between the keys (x = 180).
 - B key: one stack, centred in the part of the key above the watermark. Rows: name 40 (two lines reserved, text centred), sets won 16, score, serve tag 40, set point cue 32, last point 24, next tap hint 24, 4 between rows. Both keys reserve every row, so name, score and Serving are at the same y in both whoever serves or scored last.
-- Watermark: the key's bottom padding is the watermark's height (84.3% of the key width, the shipped mark is 118% wide at 140:100) plus 16, so no text row reaches it. In docked states the keys are 150 tall and the watermark is hidden; the Serving tag stays.
-- Bar: one grid of N+1 equal columns for an N-button bar. Undo spans 2 columns, every other button 1. Every button, Undo included, has one layout: 8 above, a 22px icon, 4, a 14px label centred, so the icons and the labels share a y in every bar. Undo adds its "back to" hint as a third row. A label that does not fit on one line (Swap ends in a 59px column) wraps to a second line instead of shrinking.
-- A: the board card and the pads sit on the same gutter and the same 8 gap; the two columns share five row tracks with 4 between rows; the pad stack is centred above its watermark.
+- Watermark: the key's bottom padding is the watermark's height (84.3% of the key width, the shipped mark is 118% wide at 140:100) plus 16, so no text row reaches it. In docked states (150 px minimum, 275 to 414 rendered) the watermark is hidden and the serve row is the same 40 as in play, because "Serves first · right court" needs 36.7, so both keys keep the same rows in every state.
+- Sets bar rule: one column per button, all columns equal, nothing spans two. Four columns of the 8px gap, so the middle gap is the seam between the keys and each key has two buttons under it. Each button is 56 tall: icon 22, 4, label 14, centred. Undo's "back to 16–17" is one centred line (0.84rem, the Kit's Undo hint style) above the row, 4 above the buttons.
+- Other games' bars (unchanged from round 3): one grid of N+1 equal columns for an N-button bar, Undo spanning 2, every other button 1, each 8 above the icon, 68 tall, a label that does not fit wraps to a second line.
+- A: the board card and the pads sit on the same gutter and the same 8 gap; the two columns share five row tracks with 4 between rows. The pad stack (+1, Last point, hint) is centred in the whole pad, not above a reserved watermark band: reserving the band would lift it about 40 px in ordinary play. At 360 x 780 the visible "Last point" line clears the watermark by 27 px and the reserved, usually empty, hint row touches it (0.6 px overlap). At 390 x 844 the hint row clears it by 11.6 px.
+- A first-server phase: the card is sized for its rows before the pads get the spare room, and because no serve chip or flag can exist yet, those two rows and the large numerals are not drawn. The names, scores and sets won all sit inside the card at 360 x 780 and 390 x 844.
 - Open risk: the A board reserves a row for the set point flag, so the card has spare room under the serve chip when no flag shows. Collapsing it would move the pads under the scorer's thumb when a flag appears.
 
 ## Where Finish went
 
-Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-finish`, 73 x 48 px (the title is larger, so it no longer leads). In the prototype it opens a "Finish this match?" sheet with the score. It is dashed and disabled once the match is over, because New match takes over. It is not in the thumb zone on purpose: a deliberate action should not sit next to Undo.
+Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-finish`, about 73 x 48 px (73.35 measured; font loading moves it by under 1 px; the title is larger, so it no longer leads). In the prototype it opens a "Finish this match?" sheet with the score. It is dashed and disabled once the match is over, because New match takes over. It is not in the thumb zone on purpose: a deliberate action should not sit next to Undo.
 
 ## Elements changed from the old look and the shipped class now used
 
@@ -84,7 +87,7 @@ Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-fini
 - The last-point line is gone. `Last point` sits on the team that scored it, and Undo says the score it goes back to.
 - Set point and match point sit on the team that has it. Deuce shows on both keys.
 - The serve tag is in the flow under the score, in a slot both keys reserve, not on the key's top edge.
-- The bar is Undo, the game's actions, More (see `top-and-bar.html`). Let (table tennis) is in the bar; in badminton it is a row in More.
+- The sets bar is four equal buttons: Undo, Replay or Let, Swap ends, More (see `top-and-bar.html`). Let moved from More into the bar in badminton. Volleyball gains a Replay button.
 - End change, between sets and match over dock above the bar instead of opening over the board.
 - In A, the serve cue is one chip in the board column in every state: "Serving" (with the court side or "1 of 2") during play, end change and interval, "Serves first" at the break. The pads only carry the sport mark on the serving side. In B it is the in-flow tag on the key.
 - In A the two columns share their row heights, so a two-line team name at 360px does not push that team's score below the other.
@@ -94,7 +97,7 @@ Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-fini
 
 ## Files
 
-- `top-and-bar.html`: before and after of the top section and the bar, and the bar drawn for every game. `top-and-bar.png` is a picture of its first section, reduced to 256 colours to stay under the 250 KB image limit. `top-bar-before-vb.png`, `top-bar-after-b-vb.png`, `top-bar-after-a-vb.png`, `top-bar-after-b-bd-deuce.png`, `top-bar-after-b-tt-endchange.png`: 360 x 780 pictures (rendered at 1.25x, so 450 x 975 px). `geometry-overlay-b-vb.png`: the B volleyball board with the gutter (pink), the 8px gaps (amber), the seam (blue) and the block edges (green) drawn over it. The overlay was drawn on the open page and is not in any shipped file.
+- `top-and-bar.html`: before and after of the top section and the bar, and the bar drawn for every game. `top-and-bar.png` is a picture of its "The sets bar: three symmetric grids" section at 1960 x 1000, reduced to 256 colours to stay under the 250 KB image limit. `top-bar-before-vb.png`, `top-bar-after-b-vb.png`, `top-bar-after-a-vb.png`, `top-bar-after-b-bd-deuce.png`, `top-bar-after-b-tt-endchange.png`: 360 x 780 pictures (rendered at 1.25x, so 450 x 975 px). `geometry-overlay-b-vb.png`: the B volleyball board with the gutter (pink), the 8px gaps (amber), the seam (blue) and the block edges (green) drawn over it. The overlay was drawn on the open page and is not in any shipped file.
 - `prototype.html`: the tappable prototype. Open it in a browser. Tap the gear row at the top to change sport, layout (B, A, or Today) and team colours, and to open the live view. Query options: `?sport=vb|bd|tt&dir=b|a|today&state=mid|deuce|change|between|over|decider&live=1&kit=light&bare=1`.
 - `b-court-*.png`, `a-board-*.png`: each sport, each layout, 390 x 844: mid-set, deuce, end change, between sets or games, match over, and for volleyball the deciding set toss. Frames run left to right in the file name order.
 - `live-*.png`: the spectator view, three sports mid-set and one match over.
@@ -105,7 +108,7 @@ Nowhere new. Finish stays in the header, top right, the shipped `.se-ctl.sb-fini
 ## Not done, said plainly
 
 - The pictures were rendered with web fonts loaded. The fonts-blocked render was not done in this pass.
-- In the prototype the More sheet lists Correct a score as a disabled row (and Let in badminton, which works), and Finish only shows its check. Correct works as on today's board and was left out. Swap sides moved to the bar as Swap ends.
-- Clock, Pause, Period, Foul, Corner and Swap strike buttons on `top-and-bar.html` are drawings; their engines are not in this prototype. So are the More items marked "proposed, not built" there (for example volleyball Timeouts, hockey End quarter and its extended-corner state). Let only shows a note: a let records nothing.
+- In the prototype the More sheet lists Correct a score as a disabled row, and Finish only shows its check. Correct works as on today's board and was left out. Swap sides moved to the bar as Swap ends.
+- Clock, Pause, Period, Foul, Corner and Swap strike buttons on `top-and-bar.html` are drawings; their engines are not in this prototype. So are the More items marked "proposed, not built" there (for example volleyball Timeouts, hockey End quarter and its extended-corner state). Let and Replay only show a note: a replayed rally records nothing.
 - The b-court, a-board, compare, narrow and live PNGs in this folder were taken before the top section and bar redesign. They show the old layout. The new pictures are the `top-bar-*.png` files.
 - No tests were run, and nothing under `src/` was touched.
