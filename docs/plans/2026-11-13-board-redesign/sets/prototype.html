@@ -2555,8 +2555,7 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
    Horizontal: every block's outer left and right edge is the gutter (--kd-g). Header text, strip, keys, board and bar
    share those two edges. The two keys and every bar button are separated by the same --kd-gap. */
 .kd-v2 { gap: var(--kd-gap); }
-.kd-v2 .kd-sw { margin-right: 8px; }
-.kd-v2 .tsb-word { padding: 0 4px; }
+.kd.kd-v2 .tsb-word { padding: 0 4px; }
 
 /* header: the title carries the live set line; Finish stays top right, same shipped control */
 .kd-v2 .sb-top { padding: 12px var(--kd-g) 0; gap: var(--kd-gap); }
@@ -2568,7 +2567,7 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
    It is centred on the seam between the two keys, and 32px tall so the chip has 0 spare above and below. */
 .kd-v2 .kd-strip { min-height: 32px; padding: 0 var(--kd-g); align-items: center; justify-content: center; }
 .kd-v2 .kd-strip .kd-sets { padding: 0; gap: var(--kd-gap); }
-.kd-v2 .kd-strip .tsb-set { padding: 4px 8px; gap: 8px; }
+.kd-v2 .kd-strip .tsb-set { padding: 4px 8px; }
 .kd-v2 .kd-quiet { padding: 0; min-height: 0; overflow: visible; white-space: normal; text-align: center; }
 
 /* B key: one stack, centred in the part of the key above the watermark band.
@@ -2582,7 +2581,7 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd-v2 .tsb-key .tsb-big { margin: 0; }
 .kd-v2 .kd-slot { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 40px; margin: 0; }
 .kd-v2 .kd-slot.kd-slot-cue { min-height: 32px; }
-.kd-v2 .kd-line { min-height: 24px; line-height: 24px; text-align: center; padding: 0 4px; }
+.kd.kd-v2 .kd-line { min-height: 24px; line-height: 24px; text-align: center; padding: 0 4px; }
 /* the serve tag sits in the flow under the score, not on the key's top edge */
 .kd-v2 .tsb-srv { position: static; top: auto; left: auto; transform: none; }
 
@@ -2609,14 +2608,15 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 /* EQUAL BAR (the three sets sports: volleyball, badminton, table tennis). Every button is the same size: the bar is
    N equal columns, one column per button, nothing spans two. The default is 4 columns of the same --kd-gap, so the
    middle gap is the 8px seam between the two keys above (x = 176 to 184 at 360) and each key has two buttons under it.
-   Every button: icon 22, 4, label 14 on one line at 0.78rem (the Kit's smallest label size), centred, 56 tall.
-   What Undo undoes moves out of the button into one centred line above the row, so no button grows for it. */
+   Every button: icon 22, 4, label 14 on one line at 0.78rem (the Kit's smallest label size), centred, 48 tall.
+   What Undo undoes moves out of the button into one centred line above the row, so no button grows for it.
+   Footprint: caption 16 + 4 + buttons 48 = 68, the same as the old 68px row, plus the same 16 below. So the keys, the board and the pads above the bar do not move. */
 .sb-bar.kd-bar.kd-bar-eq { grid-template-columns: repeat(var(--kd-eq, 4), minmax(0, 1fr)); grid-auto-rows: auto; row-gap: 4px; column-gap: var(--kd-gap); padding: 0 var(--kd-g) var(--kd-g); }
 .kd-bar-eq.kd-eq-3 { --kd-eq: 3; }
 .kd-bar-eq.kd-eq-2 { --kd-eq: 2; }
 .kd-bar-eq .kd-undoline { grid-column: 1 / -1; margin: 0; min-height: 16px; text-align: center; line-height: 16px; }
 .kd-bar-eq .kd-undoline .sb-undo-w { display: block; margin: 0; overflow: visible; white-space: normal; text-align: center; }
-.sb .kd-bar-eq .kd-act, .sb .kd-bar-eq .sb-undo { grid-column: auto; height: 56px; min-height: 56px; padding: 0 4px; justify-content: center; gap: 4px; }
+.sb .kd-bar-eq .kd-act, .sb .kd-bar-eq .sb-undo { grid-column: auto; height: 48px; min-height: 48px; padding: 0 4px; justify-content: center; gap: 4px; }
 .sb .kd-bar-eq .kd-act > span { font-size: 0.78rem; line-height: 14px; white-space: nowrap; text-wrap: wrap; }
 
 /* serving tag may take two lines on a narrow key (Serving, right court) */
@@ -2645,7 +2645,6 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd-v2 .kd-col .tsb-big { margin: 0; }
 .kd-colchip { display: flex; justify-content: center; margin-top: 8px; min-height: 28px; }
 .kd-v2 .kd-colchip, .kd-v2 .kd-colcue { margin: 0; min-height: 32px; align-items: center; }
-.kd-v2 .kd-colchip .kit-chip { padding: 4px 8px; }
 .kd-colcue { display: flex; justify-content: center; margin-top: 6px; min-height: 28px; }
 .kd-colchip .kit-chip { height: auto; min-height: 28px; padding: 4px 10px; white-space: normal; text-align: center; line-height: 1.15; }
 .kd-pads { padding-top: 12px; }
@@ -3179,11 +3178,14 @@ const BAR_ACTIONS = {
 };
 // The three sets sports share one bar: four equal buttons, so the middle gap sits on the seam between the keys.
 // Replay (volleyball) and Let (badminton, table tennis) are the same action: the rally is played again, no point.
+// Owner's choice, not mine: "3" puts the rare Replay and Let in More (table tennis keeps its Let, it is frequent there); "4" puts them in the bar.
 const BARS = {
-  vb: ['undo', 'replay', 'flip', 'more'],
-  bd: ['undo', 'let', 'flip', 'more'],
-  tt: ['undo', 'let', 'flip', 'more'],
+  '3': { vb: ['undo', 'flip', 'more'], bd: ['undo', 'flip', 'more'], tt: ['undo', 'let', 'flip', 'more'] },
+  '4': { vb: ['undo', 'replay', 'flip', 'more'], bd: ['undo', 'let', 'flip', 'more'], tt: ['undo', 'let', 'flip', 'more'] },
 };
+const barMode = (o) => (o && String(o.bar) === '4' ? '4' : '3');
+// the row More holds for a game that does not have the action in its bar (bar "3")
+const MORE_ACTION = { vb: { act: 'replay', label: 'Replay' }, bd: { act: 'let', label: 'Let' } };
 const UNDO_ICON = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-2"/></svg>';
 
 // ids: ['undo', ...actions, 'more']; hint: the words under Undo; off: ids that are disabled right now
@@ -3202,7 +3204,7 @@ function barHtml(ids, hint, off, eq) {
 
 function bar(st, o) {
   const play = st.phase === 'play';
-  return barHtml(BARS[st.sport], undoHint(st), play ? [] : ['flip', 'let', 'replay'], true);
+  return barHtml(BARS[barMode(o)][st.sport], undoHint(st), play ? [] : ['flip', 'let', 'replay'], true);
 }
 
 /* ---- the two keys. B: whole halves, names on the keys. A: pads only, names live on the board ---- */
@@ -3295,7 +3297,6 @@ function dock(st, o) {
 
 /* ---- the options sheet (More) and the Finish check: the shipped sheet layer ---- */
 // extra rows in More, per game: what did not earn a bar button
-const MORE_ROWS = {};
 
 function overlay(st, o) {
   if (!o.sheet) return '';
@@ -3307,9 +3308,12 @@ function overlay(st, o) {
       <button type="button" class="se-go" data-act="finishgo">Finish match</button>
       <p class="sb-sheet-note kd-note"><button type="button" class="se-ctl kd-wide" data-act="closesheet">Keep scoring</button></p>`;
   } else {
+    const ma = !BARS[barMode(o)][st.sport].includes(MORE_ACTION[st.sport] && MORE_ACTION[st.sport].act) ? MORE_ACTION[st.sport] : null;
+    const moreAction = ma ? `<button type="button" class="sb-row" data-act="${ma.act}"${st.phase === 'play' ? '' : ' disabled'}><span>${ma.label}</span><span class="sb-row-aside">no point</span></button>` : '';
+    const moved = BARS[barMode(o)][st.sport].filter((id) => id !== 'undo' && id !== 'more').map((id) => BAR_ACTIONS[id].label);
     body = `<div class="sb-sheet-head"><b>Match options</b><button type="button" class="se-ctl sb-sheet-close" data-act="closesheet">Done</button></div>
-      <div class="sb-sheet-group">${MORE_ROWS[st.sport] && st.phase === 'play' ? MORE_ROWS[st.sport] : ''}<button type="button" class="sb-row" disabled><span>Correct a score</span><span class="sb-row-aside">${'−'}1</span></button></div>
-      <p class="sb-sheet-note kd-note">Correct a score works as on today's board. This prototype leaves it out. Swap ends${st.sport === 'tt' ? ' and Let' : ''} moved to the bar.</p>
+      <div class="sb-sheet-group">${moreAction}<button type="button" class="sb-row" disabled><span>Correct a score</span><span class="sb-row-aside">${'−'}1</span></button></div>
+      <p class="sb-sheet-note kd-note">Correct a score works as on today's board. This prototype leaves it out. ${moved.join(' and ')} moved to the bar.</p>
       <div class="sb-sheet-group"><button type="button" class="sb-row sb-row-danger" data-act="new">Discard match</button></div>`;
   }
   return `<div class="sb-sheet-layer"><button type="button" class="sb-scrim" data-act="closesheet" aria-label="Close" tabindex="-1"></button><div class="sb-sheet" role="dialog" aria-modal="true" aria-label="Match options">${body}</div></div>`;
@@ -3414,6 +3418,7 @@ function screenInner(st, o) {
     kit: Q.get('kit') === 'light' ? 'light' : 'default',
     open: Q.get('controls') === '1',
     sheet: Q.get('sheet') || null,
+    bar: Q.get('bar') === '4' ? '4' : '3',
     note: null,
   };
   if (Q.get('bo') === '3' || Q.get('bo') === '5') BO[ui.sport] = Number(Q.get('bo'));
@@ -3460,7 +3465,7 @@ function screenInner(st, o) {
 
   function render() {
     syncTimer();
-    app.innerHTML = screenInner(st, { dir: ui.dir, live: ui.live, kit: ui.kit, cd: cd, sheet: ui.sheet, note: ui.note });
+    app.innerHTML = screenInner(st, { dir: ui.dir, live: ui.live, kit: ui.kit, cd: cd, sheet: ui.sheet, note: ui.note, bar: ui.bar });
     renderCtl();
   }
 
@@ -3476,6 +3481,7 @@ function screenInner(st, o) {
       (ui.open ? '<div class="kd-panel">' +
         seg([['vb', 'Volleyball'], ['bd', 'Badminton'], ['tt', 'Table tennis']], ui.sport, 'sport', 'Sport') +
         seg([['b', 'B Court'], ['a', 'A Board over pads'], ['today', 'Today']], ui.dir, 'dir', 'Layout') +
+        seg([['3', '3 buttons'], ['4', '4 buttons']], ui.bar, 'bar', 'Bar: 3 or 4') +
         seg([['default', 'Red v blue'], ['light', 'Yellow v white']], ui.kit, 'kit', 'Team colours') +
         '<button type="button" class="se-ctl" data-ctl="restart">Restart match</button></div>' : '');
   }
@@ -3513,6 +3519,7 @@ function screenInner(st, o) {
     else if (c === 'sport') { if (v !== ui.sport) { ui.sport = v; st = fresh(); clearNote(); } }
     else if (c === 'dir') ui.dir = v;
     else if (c === 'kit') ui.kit = v;
+    else if (c === 'bar') ui.bar = v === '4' ? '4' : '3';
     else if (c === 'restart') { st = fresh(); clearNote(); }
     render();
   });
