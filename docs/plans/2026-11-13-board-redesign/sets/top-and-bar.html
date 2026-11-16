@@ -2581,7 +2581,7 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd-v2 .tsb-key .tsb-big { margin: 0; }
 .kd-v2 .kd-slot { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 40px; margin: 0; }
 .kd-v2 .kd-slot.kd-slot-cue { min-height: 32px; }
-.kd.kd-v2 .kd-line { min-height: 24px; line-height: 24px; text-align: center; padding: 0 4px; }
+.kd.kd-v2 .kd-line { min-height: 24px; line-height: 1.2; text-align: center; padding: 0 4px; }
 /* the serve tag sits in the flow under the score, not on the key's top edge */
 .kd-v2 .tsb-srv { position: static; top: auto; left: auto; transform: none; }
 
@@ -2617,7 +2617,7 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd-bar-eq .kd-undoline { grid-column: 1 / -1; margin: 0; min-height: 16px; text-align: center; line-height: 16px; }
 .kd-bar-eq .kd-undoline .sb-undo-w { display: block; margin: 0; overflow: visible; white-space: normal; text-align: center; }
 .sb .kd-bar-eq .kd-act, .sb .kd-bar-eq .sb-undo { grid-column: auto; height: 48px; min-height: 48px; padding: 0 4px; justify-content: center; gap: 4px; }
-.sb .kd-bar-eq .kd-act > span { font-size: 0.78rem; line-height: 14px; white-space: nowrap; text-wrap: wrap; }
+.sb .kd-bar-eq .kd-act > span { font-size: 0.78rem; line-height: 14px; white-space: nowrap; text-wrap: nowrap; }
 
 /* serving tag may take two lines on a narrow key (Serving, right court) */
 .kd .tsb-srv { height: auto; min-height: 24px; padding: 4px 8px; white-space: normal; text-align: center; line-height: 1.15; width: max-content; max-width: calc(100% - 12px); box-sizing: border-box; }
@@ -2646,7 +2646,7 @@ body.bare .kd-frame { width: var(--fw, 390px); height: var(--fh, 844px); max-wid
 .kd-colchip { display: flex; justify-content: center; margin-top: 8px; min-height: 28px; }
 .kd-v2 .kd-colchip, .kd-v2 .kd-colcue { margin: 0; min-height: 32px; align-items: center; }
 .kd-colcue { display: flex; justify-content: center; margin-top: 6px; min-height: 28px; }
-.kd-colchip .kit-chip { height: auto; min-height: 28px; padding: 4px 10px; white-space: normal; text-align: center; line-height: 1.15; }
+.kd-colchip .kit-chip { height: auto; min-height: 28px; padding: 4px 10px; white-space: normal; text-align: center; line-height: 1.15; max-width: 100%; box-sizing: border-box; }
 .kd-pads { padding-top: 12px; }
 .kd-v2 .kd-pads { padding-top: 0; }
 .kd-pad { min-height: 130px; padding-top: 16px; padding-bottom: 14px; }
@@ -2721,7 +2721,9 @@ body { display: block; }
 .cmp-map > * { min-width: 0; }
 .cmp-map.cmp-maphead { padding-bottom: 4px; }
 .cmp-ba { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; align-items: flex-start; }
-.cmp-bar.sb { width: 100%; max-width: 360px; min-height: 0; margin: 0; padding-bottom: 0; }
+.cmp-bar.sb { width: 360px; min-width: 360px; max-width: none; flex: none; min-height: 0; margin: 0; padding-bottom: 0; }
+/* phone-width mocks keep their 360px bar; a narrower window scrolls the mock sideways instead of squeezing its buttons */
+.cmp-barfig, .cmp-bars { max-width: 100%; overflow-x: auto; }
 .cmp-barfig { margin: 0; display: grid; gap: 8px; }
 .cmp-barfig figcaption { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .cmp-row { display: grid; grid-template-columns: 128px minmax(0, 360px) minmax(0, 1fr); gap: 8px 16px; padding: 12px 16px; align-items: center; }
@@ -3618,14 +3620,14 @@ function screenInner(st, o) {
       </ol></section>`;
 
   /* measured, not claimed: the numbers printed in the captions are for a 360 px bar; this line is what this window renders */
-  (function () {
+  function measOpts() {
     const figs = [...document.querySelectorAll('.cmp-opt')];
     const label = ['A', 'B', 'C'];
     document.getElementById('optmeas').textContent = `Measured in this window (page width ${document.documentElement.clientWidth} px): ` + figs.map((f, i) => {
       const bar = f.querySelector('.sb-bar'), b = f.querySelector('.kd-act').getBoundingClientRect();
       return `${label[i]}: bar ${Math.round(bar.getBoundingClientRect().width * 10) / 10} px wide, buttons ${Math.round(b.width * 100) / 100} x ${Math.round(b.height * 100) / 100} px`;
-    }).join('; ') + '. The captions above are for a 360 px bar, the width of the real phone; a narrower window gives the mock less room.';
-  })();
+    }).join('; ') + '. The captions above are for a 360 px bar, the width of the real phone.';
+  }
 
   /* measured, not claimed */
   function top(id) {
@@ -3633,8 +3635,16 @@ function screenInner(st, o) {
     return Math.round(k.getBoundingClientRect().top - ph.getBoundingClientRect().top);
   }
   const keyH = (id) => Math.round(document.getElementById(id).querySelector('.tsb-key').getBoundingClientRect().height);
-  document.getElementById('meas').textContent =
-    `Measured on this page: the keys start ${top('f-before')}px from the top before and ${top('f-after-b')}px after. Each B key is ${keyH('f-before')}px tall before and ${keyH('f-after-b')}px after.`;
+  function measKeys() {
+    document.getElementById('meas').textContent =
+      `Measured on this page: the keys start ${top('f-before')}px from the top before and ${top('f-after-b')}px after. Each B key is ${keyH('f-before')}px tall before and ${keyH('f-after-b')}px after.`;
+  }
+  /* re-measure after fonts load and whenever the window or a mock resizes, so the printed numbers always describe the current render */
+  function measAll() { measOpts(); measKeys(); }
+  measAll();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measAll);
+  if (window.ResizeObserver) { const ro = new ResizeObserver(measAll); ro.observe(document.documentElement); document.querySelectorAll('.cmp-opt, .cmp-phone').forEach((el) => ro.observe(el)); }
+  else window.addEventListener('resize', measAll);
 })();
 </script>
 </body></html>
