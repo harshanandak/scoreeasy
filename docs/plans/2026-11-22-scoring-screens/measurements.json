@@ -1,0 +1,5162 @@
+[
+  {
+    "state": "mid",
+    "w": 360,
+    "h": 780,
+    "boards": [
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 280,
+            "y": 16
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 132,
+            "height": 40.29999923706055,
+            "scrollWidth": 132,
+            "slot": "name",
+            "width": 132,
+            "x": 28,
+            "y": 95.8499984741211
+          },
+          {
+            "clientWidth": 132,
+            "height": 64,
+            "scrollWidth": 132,
+            "slot": "main-score",
+            "width": 132,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 132,
+            "height": 15.350000381469727,
+            "scrollWidth": 132,
+            "slot": "secondary",
+            "width": 132,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 132,
+            "height": 40.29999923706055,
+            "scrollWidth": 132,
+            "slot": "name",
+            "width": 132,
+            "x": 200,
+            "y": 95.8499984741211
+          },
+          {
+            "clientWidth": 132,
+            "height": 64,
+            "scrollWidth": 132,
+            "slot": "main-score",
+            "width": 132,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 132,
+            "height": 15.350000381469727,
+            "scrollWidth": 132,
+            "slot": "secondary",
+            "width": 132,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Point",
+            "width": 156,
+            "x": 16,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Point",
+            "width": 156,
+            "x": 188,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "MoreOptions",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "vb",
+        "text": "Volleyball\nLive scoring\nFinish\nMumbai Mavericks\n16\n0 sets won · Set 2\nChennai Challengers\n18\n1 set won · Set 2\n\nChennai Challengers serves\n\nCompleted sets: 1: 25–21\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 280,
+            "y": 16
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 132,
+            "height": 20.149999618530273,
+            "scrollWidth": 132,
+            "slot": "name",
+            "width": 132,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 132,
+            "height": 64,
+            "scrollWidth": 132,
+            "slot": "main-score",
+            "width": 132,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 132,
+            "height": 30.700000762939453,
+            "scrollWidth": 132,
+            "slot": "secondary",
+            "width": 132,
+            "x": 28,
+            "y": 228.65000915527344
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 124,
+            "height": 20.149999618530273,
+            "scrollWidth": 124,
+            "slot": "name",
+            "width": 123.5374984741211,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 124,
+            "height": 64,
+            "scrollWidth": 124,
+            "slot": "main-score",
+            "width": 123.5374984741211,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 124,
+            "height": 15.350000381469727,
+            "scrollWidth": 124,
+            "slot": "secondary",
+            "width": 123.5374984741211,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Point",
+            "width": 156,
+            "x": 16,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Point",
+            "width": 156,
+            "x": 188,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "MoreOptions",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "bd",
+        "text": "Badminton\nLive scoring\nFinish\nR. Verma\n15\n0 games won · Game 2\nA. Sharma\n17\n1 game won · Game 2\n\nA. Sharma serves · left court\n\nCompleted games: 1: 21–17\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 280,
+            "y": 16
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 132,
+            "height": 20.149999618530273,
+            "scrollWidth": 132,
+            "slot": "name",
+            "width": 132,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 132,
+            "height": 64,
+            "scrollWidth": 132,
+            "slot": "main-score",
+            "width": 132,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 132,
+            "height": 30.700000762939453,
+            "scrollWidth": 132,
+            "slot": "secondary",
+            "width": 132,
+            "x": 28,
+            "y": 228.65000915527344
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 132,
+            "height": 40.29999923706055,
+            "scrollWidth": 132,
+            "slot": "name",
+            "width": 132,
+            "x": 200,
+            "y": 95.8499984741211
+          },
+          {
+            "clientWidth": 132,
+            "height": 64,
+            "scrollWidth": 132,
+            "slot": "main-score",
+            "width": 132,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 132,
+            "height": 15.350000381469727,
+            "scrollWidth": 132,
+            "slot": "secondary",
+            "width": 132,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Point",
+            "width": 156,
+            "x": 16,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Point",
+            "width": 156,
+            "x": 188,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "MoreOptions",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "tt",
+        "text": "Table tennis\nLive scoring\nFinish\nDev Patel\n5\n0 games won · Game 2\nVenkat Subramanian\n7\n1 game won · Game 2\n\nDev Patel serves · 1 of 2\n\nCompleted games: 1: 11–8\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      }
+    ]
+  },
+  {
+    "state": "over",
+    "w": 360,
+    "h": 780,
+    "boards": [
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 132,
+            "height": 40.29999923706055,
+            "scrollWidth": 132,
+            "slot": "name",
+            "width": 132,
+            "x": 28,
+            "y": 95.8499984741211
+          },
+          {
+            "clientWidth": 132,
+            "height": 64,
+            "scrollWidth": 132,
+            "slot": "main-score",
+            "width": 132,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 132,
+            "height": 15.350000381469727,
+            "scrollWidth": 132,
+            "slot": "secondary",
+            "width": 132,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 132,
+            "height": 40.29999923706055,
+            "scrollWidth": 132,
+            "slot": "name",
+            "width": 132,
+            "x": 200,
+            "y": 95.8499984741211
+          },
+          {
+            "clientWidth": 132,
+            "height": 64,
+            "scrollWidth": 132,
+            "slot": "main-score",
+            "width": 132,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 132,
+            "height": 15.350000381469727,
+            "scrollWidth": 132,
+            "slot": "secondary",
+            "width": 132,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 57.60000228881836,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 153,
+            "height": 96,
+            "scrollWidth": 153,
+            "slot": "Finish match",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "vb",
+        "text": "Volleyball\nMatch over\nMumbai Mavericks\n1\nSets won\nChennai Challengers\n3\nSets won\n\nChennai Challengers won 3–1\n\nCompleted sets: 1: 25–21 · 2: 23–25 · 3: 25–19 · 4: 25–20\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 69,
+            "height": 20.149999618530273,
+            "scrollWidth": 69,
+            "slot": "name",
+            "width": 69.05000305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 69,
+            "height": 64,
+            "scrollWidth": 69,
+            "slot": "main-score",
+            "width": 69.05000305175781,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 69,
+            "height": 15.350000381469727,
+            "scrollWidth": 69,
+            "slot": "secondary",
+            "width": 69.05000305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 78,
+            "height": 20.149999618530273,
+            "scrollWidth": 78,
+            "slot": "name",
+            "width": 77.875,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "main-score",
+            "width": 77.875,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 78,
+            "height": 15.350000381469727,
+            "scrollWidth": 78,
+            "slot": "secondary",
+            "width": 77.875,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 153,
+            "height": 96,
+            "scrollWidth": 153,
+            "slot": "Finish match",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "bd",
+        "text": "Badminton\nMatch over\nR. Verma\n0\nGames won\nA. Sharma\n2\nGames won\n\nA. Sharma won 2–0\n\nCompleted games: 1: 21–17 · 2: 21–18\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 72,
+            "height": 20.149999618530273,
+            "scrollWidth": 72,
+            "slot": "name",
+            "width": 71.82500457763672,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 72,
+            "height": 64,
+            "scrollWidth": 72,
+            "slot": "main-score",
+            "width": 71.82500457763672,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 72,
+            "height": 15.350000381469727,
+            "scrollWidth": 72,
+            "slot": "secondary",
+            "width": 71.82500457763672,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 132,
+            "height": 40.29999923706055,
+            "scrollWidth": 132,
+            "slot": "name",
+            "width": 132,
+            "x": 200,
+            "y": 95.8499984741211
+          },
+          {
+            "clientWidth": 132,
+            "height": 64,
+            "scrollWidth": 132,
+            "slot": "main-score",
+            "width": 132,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 132,
+            "height": 15.350000381469727,
+            "scrollWidth": 132,
+            "slot": "secondary",
+            "width": 132,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 153,
+            "height": 96,
+            "scrollWidth": 153,
+            "slot": "Finish match",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "tt",
+        "text": "Table tennis\nMatch over\nDev Patel\n1\nGames won\nVenkat Subramanian\n3\nGames won\n\nVenkat Subramanian won 3–1\n\nCompleted games: 1: 11–8 · 2: 7–11 · 3: 11–6 · 4: 11–9\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      }
+    ]
+  },
+  {
+    "state": "mid",
+    "w": 360,
+    "h": 780,
+    "boards": [
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 280,
+            "y": 16
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 86,
+            "height": 20.149999618530273,
+            "scrollWidth": 86,
+            "slot": "name",
+            "width": 85.7249984741211,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 86,
+            "height": 64,
+            "scrollWidth": 86,
+            "slot": "main-score",
+            "width": 85.7249984741211,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 86,
+            "height": 15.350000381469727,
+            "scrollWidth": 86,
+            "slot": "secondary",
+            "width": 85.7249984741211,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 94,
+            "height": 20.149999618530273,
+            "scrollWidth": 94,
+            "slot": "name",
+            "width": 93.5999984741211,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 94,
+            "height": 64,
+            "scrollWidth": 94,
+            "slot": "main-score",
+            "width": 93.5999984741211,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 94,
+            "height": 15.350000381469727,
+            "scrollWidth": 94,
+            "slot": "secondary",
+            "width": 93.5999984741211,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Point",
+            "width": 156,
+            "x": 16,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Point",
+            "width": 156,
+            "x": 188,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "Undo",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "MoreOptions",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "tennis",
+        "text": "Tennis\nState example\nFinish\nA. Sharma\n40\n4 games · 1 set\nR. Verma\n30\n3 games · 0 sets\n\nSharma serves · Set 2\n\nCompleted set: Sharma 6–4 Verma\n\n+1\nPoint\n+1\nPoint\nUndo\nMore\nOptions",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 280,
+            "y": 16
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 87,
+            "height": 20.149999618530273,
+            "scrollWidth": 87,
+            "slot": "name",
+            "width": 87.26250457763672,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 87,
+            "height": 64,
+            "scrollWidth": 87,
+            "slot": "main-score",
+            "width": 87.26250457763672,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 87,
+            "height": 15.350000381469727,
+            "scrollWidth": 87,
+            "slot": "secondary",
+            "width": 87.26250457763672,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 86,
+            "height": 20.149999618530273,
+            "scrollWidth": 86,
+            "slot": "name",
+            "width": 85.98750305175781,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 86,
+            "height": 64,
+            "scrollWidth": 86,
+            "slot": "main-score",
+            "width": 85.98750305175781,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 86,
+            "height": 15.350000381469727,
+            "scrollWidth": 86,
+            "slot": "secondary",
+            "width": 85.98750305175781,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Goal",
+            "width": 156,
+            "x": 16,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Goal",
+            "width": 156,
+            "x": 188,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "Undo",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "MoreOptions",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "football",
+        "text": "Football\nState example\nFinish\nChennai FC\n2\nHalf 2 of 2\nMumbai FC\n1\nHalf 2 of 2\n\n12:34 left · Clock running\n\n2 × 45 minute halves\n\n+1\nGoal\n+1\nGoal\nUndo\nMore\nOptions",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 280,
+            "y": 16
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 115,
+            "height": 20.149999618530273,
+            "scrollWidth": 115,
+            "slot": "name",
+            "width": 115.25,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 115,
+            "height": 64,
+            "scrollWidth": 115,
+            "slot": "main-score",
+            "width": 115.25,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 115,
+            "height": 15.350000381469727,
+            "scrollWidth": 115,
+            "slot": "secondary",
+            "width": 115.25,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 114,
+            "height": 20.149999618530273,
+            "scrollWidth": 114,
+            "slot": "name",
+            "width": 113.9749984741211,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 114,
+            "height": 64,
+            "scrollWidth": 114,
+            "slot": "main-score",
+            "width": 113.9749984741211,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 114,
+            "height": 15.350000381469727,
+            "scrollWidth": 114,
+            "slot": "secondary",
+            "width": 113.9749984741211,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 99,
+            "height": 64,
+            "scrollWidth": 99,
+            "slot": "Left +1",
+            "width": 98.6624984741211,
+            "x": 16,
+            "y": 540
+          },
+          {
+            "clientWidth": 99,
+            "height": 64,
+            "scrollWidth": 99,
+            "slot": "Left +2",
+            "width": 98.6624984741211,
+            "x": 130.66250610351562,
+            "y": 540
+          },
+          {
+            "clientWidth": 99,
+            "height": 64,
+            "scrollWidth": 99,
+            "slot": "Left +3",
+            "width": 98.67500305175781,
+            "x": 245.3249969482422,
+            "y": 540
+          },
+          {
+            "clientWidth": 99,
+            "height": 64,
+            "scrollWidth": 99,
+            "slot": "Right +1",
+            "width": 98.6624984741211,
+            "x": 16,
+            "y": 620
+          },
+          {
+            "clientWidth": 99,
+            "height": 64,
+            "scrollWidth": 99,
+            "slot": "Right +2",
+            "width": 98.6624984741211,
+            "x": 130.66250610351562,
+            "y": 620
+          },
+          {
+            "clientWidth": 99,
+            "height": 64,
+            "scrollWidth": 99,
+            "slot": "Right +3",
+            "width": 98.67500305175781,
+            "x": 245.3249969482422,
+            "y": 620
+          },
+          {
+            "clientWidth": 99,
+            "height": 64,
+            "scrollWidth": 99,
+            "slot": "Undo",
+            "width": 98.6624984741211,
+            "x": 16,
+            "y": 700
+          },
+          {
+            "clientWidth": 99,
+            "height": 64,
+            "scrollWidth": 99,
+            "slot": "PauseClock",
+            "width": 98.6624984741211,
+            "x": 130.66250610351562,
+            "y": 700
+          },
+          {
+            "clientWidth": 99,
+            "height": 64,
+            "scrollWidth": 99,
+            "slot": "MoreOptions",
+            "width": 98.67500305175781,
+            "x": 245.3249969482422,
+            "y": 700
+          }
+        ],
+        "sport": "basketball",
+        "text": "Basketball\nState example\nFinish\nChennai Hoops\n54\nQuarter 3 of 4\nMumbai Hoops\n49\nQuarter 3 of 4\n\n04:32 left in Q3 · Clock running\n\nFIBA example · 4 × 10 minute quarters\n\nLeft +1\nLeft +2\nLeft +3\nRight +1\nRight +2\nRight +3\nUndo\nPause\nClock\nMore\nOptions",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      }
+    ]
+  },
+  {
+    "state": "over",
+    "w": 360,
+    "h": 780,
+    "boards": [
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 78,
+            "height": 20.149999618530273,
+            "scrollWidth": 78,
+            "slot": "name",
+            "width": 77.875,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "main-score",
+            "width": 77.875,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 78,
+            "height": 15.350000381469727,
+            "scrollWidth": 78,
+            "slot": "secondary",
+            "width": 77.875,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 69,
+            "height": 20.149999618530273,
+            "scrollWidth": 69,
+            "slot": "name",
+            "width": 69.05000305175781,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 69,
+            "height": 64,
+            "scrollWidth": 69,
+            "slot": "main-score",
+            "width": 69.05000305175781,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 69,
+            "height": 15.350000381469727,
+            "scrollWidth": 69,
+            "slot": "secondary",
+            "width": 69.05000305175781,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 153,
+            "height": 96,
+            "scrollWidth": 153,
+            "slot": "Finish match",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "tennis",
+        "text": "Tennis\nMatch over\nA. Sharma\n2\nSets won\nR. Verma\n0\nSets won\n\nSharma won 2–0\n\nCompleted sets: 6–4, 6–3\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 106,
+            "height": 20.149999618530273,
+            "scrollWidth": 106,
+            "slot": "name",
+            "width": 105.86250305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 106,
+            "height": 64,
+            "scrollWidth": 106,
+            "slot": "main-score",
+            "width": 105.86250305175781,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 106,
+            "height": 15.350000381469727,
+            "scrollWidth": 106,
+            "slot": "secondary",
+            "width": 105.86250305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 106,
+            "height": 20.149999618530273,
+            "scrollWidth": 106,
+            "slot": "name",
+            "width": 105.86250305175781,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 106,
+            "height": 64,
+            "scrollWidth": 106,
+            "slot": "main-score",
+            "width": 105.86250305175781,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 106,
+            "height": 15.350000381469727,
+            "scrollWidth": 106,
+            "slot": "secondary",
+            "width": 105.86250305175781,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 153,
+            "height": 96,
+            "scrollWidth": 153,
+            "slot": "Finish match",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "football",
+        "text": "Football\nMatch over\nChennai FC\n2\n2 halves complete\nMumbai FC\n1\n2 halves complete\n\nFull time · Chennai FC won\n\n90 minutes played · no added time in this example\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 119,
+            "height": 20.149999618530273,
+            "scrollWidth": 119,
+            "slot": "name",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 119,
+            "height": 64,
+            "scrollWidth": 119,
+            "slot": "main-score",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 119,
+            "height": 15.350000381469727,
+            "scrollWidth": 119,
+            "slot": "secondary",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 119,
+            "height": 20.149999618530273,
+            "scrollWidth": 119,
+            "slot": "name",
+            "width": 118.67500305175781,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 119,
+            "height": 64,
+            "scrollWidth": 119,
+            "slot": "main-score",
+            "width": 118.67500305175781,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 119,
+            "height": 15.350000381469727,
+            "scrollWidth": 119,
+            "slot": "secondary",
+            "width": 118.67500305175781,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 153,
+            "height": 96,
+            "scrollWidth": 153,
+            "slot": "Finish match",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "basketball",
+        "text": "Basketball\nMatch over\nChennai Hoops\n78\n4 quarters complete\nMumbai Hoops\n74\n4 quarters complete\n\nFull time · Chennai Hoops won\n\n40 minutes played · no overtime required\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      }
+    ]
+  },
+  {
+    "state": "mid",
+    "w": 360,
+    "h": 780,
+    "boards": [
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 280,
+            "y": 16
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 90,
+            "height": 20.149999618530273,
+            "scrollWidth": 90,
+            "slot": "name",
+            "width": 90.4625015258789,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 90,
+            "height": 64,
+            "scrollWidth": 90,
+            "slot": "main-score",
+            "width": 90.4625015258789,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 90,
+            "height": 15.350000381469727,
+            "scrollWidth": 90,
+            "slot": "secondary",
+            "width": 90.4625015258789,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 89,
+            "height": 20.149999618530273,
+            "scrollWidth": 89,
+            "slot": "name",
+            "width": 89.17500305175781,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 89,
+            "height": 64,
+            "scrollWidth": 89,
+            "slot": "main-score",
+            "width": 89.17500305175781,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 89,
+            "height": 15.350000381469727,
+            "scrollWidth": 89,
+            "slot": "secondary",
+            "width": 89.17500305175781,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Goal",
+            "width": 156,
+            "x": 16,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "+1Goal",
+            "width": 156,
+            "x": 188,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "Undo",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "MoreOptions",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "hockey",
+        "text": "Hockey\nState example\nFinish\nChennai HC\n2\nQuarter 3 of 4\nMumbai HC\n1\nQuarter 3 of 4\n\n08:12 left in Q3 · Clock running\n\nField hockey · 4 × 15 minute quarters\n\n+1\nGoal\n+1\nGoal\nUndo\nMore\nOptions",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 280,
+            "y": 16
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 123,
+            "height": 20.149999618530273,
+            "scrollWidth": 123,
+            "slot": "name",
+            "width": 123.3125,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 123,
+            "height": 64,
+            "scrollWidth": 123,
+            "slot": "main-score",
+            "width": 123.3125,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 123,
+            "height": 15.350000381469727,
+            "scrollWidth": 123,
+            "slot": "secondary",
+            "width": 123.3125,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 130,
+            "height": 20.149999618530273,
+            "scrollWidth": 130,
+            "slot": "name",
+            "width": 130.47500610351562,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 130,
+            "height": 64,
+            "scrollWidth": 130,
+            "slot": "main-score",
+            "width": 130.47500610351562,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 130,
+            "height": 15.350000381469727,
+            "scrollWidth": 130,
+            "slot": "secondary",
+            "width": 130.47500610351562,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "Empty raid0 points",
+            "width": 156,
+            "x": 16,
+            "y": 444
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "Touch +1Review raid",
+            "width": 156,
+            "x": 188,
+            "y": 444
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "TackledReview raid",
+            "width": 156,
+            "x": 16,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "TouchesChoose players",
+            "width": 156,
+            "x": 188,
+            "y": 556
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast raid",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "MoreMatch options",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "kabaddi",
+        "text": "Kabaddi\nState example\nFinish\nChennai Raiders\n18\n7 on mat · Half 2\nMumbai Warriors\n16\n7 on mat · Half 2\n\n08:42 left · Chennai raid · 22s\n\nNew raid, no marks yet. Both teams have 7 on mat.\n\nEmpty raid\n0 points\nTouch +1\nReview raid\nTackled\nReview raid\nTouches\nChoose players\nUndo\nLast raid\nMore\nMatch options",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 280,
+            "y": 16
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 122,
+            "height": 20.149999618530273,
+            "scrollWidth": 122,
+            "slot": "name",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 122,
+            "height": 48,
+            "scrollWidth": 122,
+            "slot": "main-score",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 156
+          },
+          {
+            "clientWidth": 122,
+            "height": 15.350000381469727,
+            "scrollWidth": 122,
+            "slot": "secondary",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 121,
+            "height": 20.149999618530273,
+            "scrollWidth": 121,
+            "slot": "name",
+            "width": 121.1500015258789,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 121,
+            "height": 48,
+            "scrollWidth": 121,
+            "slot": "main-score",
+            "width": 121.1500015258789,
+            "x": 200,
+            "y": 156
+          },
+          {
+            "clientWidth": 121,
+            "height": 15.350000381469727,
+            "scrollWidth": 121,
+            "slot": "secondary",
+            "width": 121.1500015258789,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "0",
+            "width": 70,
+            "x": 16,
+            "y": 540
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "1",
+            "width": 70,
+            "x": 102,
+            "y": 540
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "2",
+            "width": 70,
+            "x": 188,
+            "y": 540
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "3",
+            "width": 70,
+            "x": 274,
+            "y": 540
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "4",
+            "width": 70,
+            "x": 16,
+            "y": 620
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "6",
+            "width": 70,
+            "x": 102,
+            "y": 620
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "Wicket",
+            "width": 70,
+            "x": 188,
+            "y": 620
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "Extras",
+            "width": 70,
+            "x": 274,
+            "y": 620
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "Undo",
+            "width": 70,
+            "x": 16,
+            "y": 700
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "StrikeSwap",
+            "width": 70,
+            "x": 102,
+            "y": 700
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "CardScorecard",
+            "width": 70,
+            "x": 188,
+            "y": 700
+          },
+          {
+            "clientWidth": 70,
+            "height": 64,
+            "scrollWidth": 70,
+            "slot": "MoreOptions",
+            "width": 70,
+            "x": 274,
+            "y": 700
+          }
+        ],
+        "sport": "cricket",
+        "text": "Cricket\nState example\nFinish\nChennai CC\n145/6\n20.0 overs · Innings 1\nMumbai CC\n120/3\n16.0 overs · Innings 2\n\nMumbai needs 26 from 24 balls\n\nT20 · Mumbai batting · Target 146\n\n0\n1\n2\n3\n4\n6\nWicket\nExtras\nUndo\nStrike\nSwap\nCard\nScorecard\nMore\nOptions",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      }
+    ]
+  },
+  {
+    "state": "over",
+    "w": 360,
+    "h": 780,
+    "boards": [
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 119,
+            "height": 20.149999618530273,
+            "scrollWidth": 119,
+            "slot": "name",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 119,
+            "height": 64,
+            "scrollWidth": 119,
+            "slot": "main-score",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 119,
+            "height": 15.350000381469727,
+            "scrollWidth": 119,
+            "slot": "secondary",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 119,
+            "height": 20.149999618530273,
+            "scrollWidth": 119,
+            "slot": "name",
+            "width": 118.67500305175781,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 119,
+            "height": 64,
+            "scrollWidth": 119,
+            "slot": "main-score",
+            "width": 118.67500305175781,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 119,
+            "height": 15.350000381469727,
+            "scrollWidth": 119,
+            "slot": "secondary",
+            "width": 118.67500305175781,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 57.60000228881836,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 153,
+            "height": 96,
+            "scrollWidth": 153,
+            "slot": "Finish match",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "hockey",
+        "text": "Hockey\nMatch over\nChennai HC\n3\n4 quarters complete\nMumbai HC\n2\n4 quarters complete\n\nFull time · Chennai HC won\n\n60 minutes played · no extended penalty corner pending\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 123,
+            "height": 20.149999618530273,
+            "scrollWidth": 123,
+            "slot": "name",
+            "width": 123.3125,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 123,
+            "height": 64,
+            "scrollWidth": 123,
+            "slot": "main-score",
+            "width": 123.3125,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 123,
+            "height": 15.350000381469727,
+            "scrollWidth": 123,
+            "slot": "secondary",
+            "width": 123.3125,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 130,
+            "height": 20.149999618530273,
+            "scrollWidth": 130,
+            "slot": "name",
+            "width": 130.47500610351562,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 130,
+            "height": 64,
+            "scrollWidth": 130,
+            "slot": "main-score",
+            "width": 130.47500610351562,
+            "x": 200,
+            "y": 148
+          },
+          {
+            "clientWidth": 130,
+            "height": 15.350000381469727,
+            "scrollWidth": 130,
+            "slot": "secondary",
+            "width": 130.47500610351562,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 153,
+            "height": 96,
+            "scrollWidth": 153,
+            "slot": "Finish match",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "kabaddi",
+        "text": "Kabaddi\nMatch over\nChennai Raiders\n32\nHalf 2 complete\nMumbai Warriors\n29\nHalf 2 complete\n\nFull time · Chennai Raiders won\n\nNo active raid and no pending points\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      },
+      {
+        "bodyHeight": 780,
+        "bodyWidth": 360,
+        "boxes": [
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-left",
+            "width": 156,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 122,
+            "height": 20.149999618530273,
+            "scrollWidth": 122,
+            "slot": "name",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 122,
+            "height": 48,
+            "scrollWidth": 122,
+            "slot": "main-score",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 156
+          },
+          {
+            "clientWidth": 122,
+            "height": 15.350000381469727,
+            "scrollWidth": 122,
+            "slot": "secondary",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 156,
+            "height": 200,
+            "scrollWidth": 156,
+            "slot": "side-right",
+            "width": 156,
+            "x": 188,
+            "y": 80
+          },
+          {
+            "clientWidth": 120,
+            "height": 20.149999618530273,
+            "scrollWidth": 120,
+            "slot": "name",
+            "width": 120.2249984741211,
+            "x": 200,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 120,
+            "height": 48,
+            "scrollWidth": 120,
+            "slot": "main-score",
+            "width": 120.2249984741211,
+            "x": 200,
+            "y": 156
+          },
+          {
+            "clientWidth": 120,
+            "height": 15.350000381469727,
+            "scrollWidth": 120,
+            "slot": "secondary",
+            "width": 120.2249984741211,
+            "x": 200,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 328,
+            "height": 64,
+            "scrollWidth": 328,
+            "slot": "status",
+            "width": 328,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 326,
+            "height": 56,
+            "scrollWidth": 326,
+            "slot": "detail",
+            "width": 328,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 156,
+            "height": 96,
+            "scrollWidth": 156,
+            "slot": "UndoLast action",
+            "width": 156,
+            "x": 16,
+            "y": 668
+          },
+          {
+            "clientWidth": 153,
+            "height": 96,
+            "scrollWidth": 153,
+            "slot": "Finish match",
+            "width": 156,
+            "x": 188,
+            "y": 668
+          }
+        ],
+        "sport": "cricket",
+        "text": "Cricket\nMatch over\nChennai CC\n145/6\n20.0 overs · Innings 1\nMumbai CC\n146/4\n19.2 overs · Innings 2\n\nMumbai CC won by 6 wickets\n\n146 reached after 116 legal balls · 4 balls unused\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 780,
+          "width": 360
+        }
+      }
+    ]
+  },
+  {
+    "state": "mid",
+    "w": 390,
+    "h": 844,
+    "boards": [
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 310.3999938964844,
+            "y": 16
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 143,
+            "height": 20.149999618530273,
+            "scrollWidth": 143,
+            "slot": "name",
+            "width": 142.65000915527344,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 143,
+            "height": 64,
+            "scrollWidth": 143,
+            "slot": "main-score",
+            "width": 142.65000915527344,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 143,
+            "height": 15.350000381469727,
+            "scrollWidth": 143,
+            "slot": "secondary",
+            "width": 142.65000915527344,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 147,
+            "height": 40.29999923706055,
+            "scrollWidth": 147,
+            "slot": "name",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 95.8499984741211
+          },
+          {
+            "clientWidth": 147,
+            "height": 64,
+            "scrollWidth": 147,
+            "slot": "main-score",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 147,
+            "height": 15.350000381469727,
+            "scrollWidth": 147,
+            "slot": "secondary",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Point",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Point",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "MoreOptions",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "vb",
+        "text": "Volleyball\nLive scoring\nFinish\nMumbai Mavericks\n16\n0 sets won · Set 2\nChennai Challengers\n18\n1 set won · Set 2\n\nChennai Challengers serves\n\nCompleted sets: 1: 25–21\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 310.3999938964844,
+            "y": 16
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 132,
+            "height": 20.149999618530273,
+            "scrollWidth": 132,
+            "slot": "name",
+            "width": 132.41250610351562,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 132,
+            "height": 64,
+            "scrollWidth": 132,
+            "slot": "main-score",
+            "width": 132.41250610351562,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 132,
+            "height": 15.350000381469727,
+            "scrollWidth": 132,
+            "slot": "secondary",
+            "width": 132.41250610351562,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 124,
+            "height": 20.149999618530273,
+            "scrollWidth": 124,
+            "slot": "name",
+            "width": 123.5374984741211,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 124,
+            "height": 64,
+            "scrollWidth": 124,
+            "slot": "main-score",
+            "width": 123.5374984741211,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 124,
+            "height": 15.350000381469727,
+            "scrollWidth": 124,
+            "slot": "secondary",
+            "width": 123.5374984741211,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Point",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Point",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "MoreOptions",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "bd",
+        "text": "Badminton\nLive scoring\nFinish\nR. Verma\n15\n0 games won · Game 2\nA. Sharma\n17\n1 game won · Game 2\n\nA. Sharma serves · left court\n\nCompleted games: 1: 21–17\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 310.3999938964844,
+            "y": 16
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 132,
+            "height": 20.149999618530273,
+            "scrollWidth": 132,
+            "slot": "name",
+            "width": 132.41250610351562,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 132,
+            "height": 64,
+            "scrollWidth": 132,
+            "slot": "main-score",
+            "width": 132.41250610351562,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 132,
+            "height": 15.350000381469727,
+            "scrollWidth": 132,
+            "slot": "secondary",
+            "width": 132.41250610351562,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 147,
+            "height": 40.29999923706055,
+            "scrollWidth": 147,
+            "slot": "name",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 95.8499984741211
+          },
+          {
+            "clientWidth": 147,
+            "height": 64,
+            "scrollWidth": 147,
+            "slot": "main-score",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 147,
+            "height": 15.350000381469727,
+            "scrollWidth": 147,
+            "slot": "secondary",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Point",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Point",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "MoreOptions",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "tt",
+        "text": "Table tennis\nLive scoring\nFinish\nDev Patel\n5\n0 games won · Game 2\nVenkat Subramanian\n7\n1 game won · Game 2\n\nDev Patel serves · 1 of 2\n\nCompleted games: 1: 11–8\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ]
+  },
+  {
+    "state": "over",
+    "w": 390,
+    "h": 844,
+    "boards": [
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 143,
+            "height": 20.149999618530273,
+            "scrollWidth": 143,
+            "slot": "name",
+            "width": 142.65000915527344,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 143,
+            "height": 64,
+            "scrollWidth": 143,
+            "slot": "main-score",
+            "width": 142.65000915527344,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 143,
+            "height": 15.350000381469727,
+            "scrollWidth": 143,
+            "slot": "secondary",
+            "width": 142.65000915527344,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 147,
+            "height": 40.29999923706055,
+            "scrollWidth": 147,
+            "slot": "name",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 95.8499984741211
+          },
+          {
+            "clientWidth": 147,
+            "height": 64,
+            "scrollWidth": 147,
+            "slot": "main-score",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 147,
+            "height": 15.350000381469727,
+            "scrollWidth": 147,
+            "slot": "secondary",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 168,
+            "height": 96,
+            "scrollWidth": 168,
+            "slot": "Finish match",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "vb",
+        "text": "Volleyball\nMatch over\nMumbai Mavericks\n1\nSets won\nChennai Challengers\n3\nSets won\n\nChennai Challengers won 3–1\n\nCompleted sets: 1: 25–21 · 2: 23–25 · 3: 25–19 · 4: 25–20\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 69,
+            "height": 20.149999618530273,
+            "scrollWidth": 69,
+            "slot": "name",
+            "width": 69.05000305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 69,
+            "height": 64,
+            "scrollWidth": 69,
+            "slot": "main-score",
+            "width": 69.05000305175781,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 69,
+            "height": 15.350000381469727,
+            "scrollWidth": 69,
+            "slot": "secondary",
+            "width": 69.05000305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 78,
+            "height": 20.149999618530273,
+            "scrollWidth": 78,
+            "slot": "name",
+            "width": 77.875,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "main-score",
+            "width": 77.875,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 78,
+            "height": 15.350000381469727,
+            "scrollWidth": 78,
+            "slot": "secondary",
+            "width": 77.875,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 168,
+            "height": 96,
+            "scrollWidth": 168,
+            "slot": "Finish match",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "bd",
+        "text": "Badminton\nMatch over\nR. Verma\n0\nGames won\nA. Sharma\n2\nGames won\n\nA. Sharma won 2–0\n\nCompleted games: 1: 21–17 · 2: 21–18\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 72,
+            "height": 20.149999618530273,
+            "scrollWidth": 72,
+            "slot": "name",
+            "width": 71.82500457763672,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 72,
+            "height": 64,
+            "scrollWidth": 72,
+            "slot": "main-score",
+            "width": 71.82500457763672,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 72,
+            "height": 15.350000381469727,
+            "scrollWidth": 72,
+            "slot": "secondary",
+            "width": 71.82500457763672,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 147,
+            "height": 40.29999923706055,
+            "scrollWidth": 147,
+            "slot": "name",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 95.8499984741211
+          },
+          {
+            "clientWidth": 147,
+            "height": 64,
+            "scrollWidth": 147,
+            "slot": "main-score",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 147,
+            "height": 15.350000381469727,
+            "scrollWidth": 147,
+            "slot": "secondary",
+            "width": 147.1999969482422,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 168,
+            "height": 96,
+            "scrollWidth": 168,
+            "slot": "Finish match",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "tt",
+        "text": "Table tennis\nMatch over\nDev Patel\n1\nGames won\nVenkat Subramanian\n3\nGames won\n\nVenkat Subramanian won 3–1\n\nCompleted games: 1: 11–8 · 2: 7–11 · 3: 11–6 · 4: 11–9\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ]
+  },
+  {
+    "state": "mid",
+    "w": 390,
+    "h": 844,
+    "boards": [
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 310.3999938964844,
+            "y": 16
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 86,
+            "height": 20.149999618530273,
+            "scrollWidth": 86,
+            "slot": "name",
+            "width": 85.7249984741211,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 86,
+            "height": 64,
+            "scrollWidth": 86,
+            "slot": "main-score",
+            "width": 85.7249984741211,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 86,
+            "height": 15.350000381469727,
+            "scrollWidth": 86,
+            "slot": "secondary",
+            "width": 85.7249984741211,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 94,
+            "height": 20.149999618530273,
+            "scrollWidth": 94,
+            "slot": "name",
+            "width": 93.5999984741211,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 94,
+            "height": 64,
+            "scrollWidth": 94,
+            "slot": "main-score",
+            "width": 93.5999984741211,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 94,
+            "height": 15.350000381469727,
+            "scrollWidth": 94,
+            "slot": "secondary",
+            "width": 93.5999984741211,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Point",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Point",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "Undo",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "MoreOptions",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "tennis",
+        "text": "Tennis\nState example\nFinish\nA. Sharma\n40\n4 games · 1 set\nR. Verma\n30\n3 games · 0 sets\n\nSharma serves · Set 2\n\nCompleted set: Sharma 6–4 Verma\n\n+1\nPoint\n+1\nPoint\nUndo\nMore\nOptions",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 310.3999938964844,
+            "y": 16
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 87,
+            "height": 20.149999618530273,
+            "scrollWidth": 87,
+            "slot": "name",
+            "width": 87.26250457763672,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 87,
+            "height": 64,
+            "scrollWidth": 87,
+            "slot": "main-score",
+            "width": 87.26250457763672,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 87,
+            "height": 15.350000381469727,
+            "scrollWidth": 87,
+            "slot": "secondary",
+            "width": 87.26250457763672,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 86,
+            "height": 20.149999618530273,
+            "scrollWidth": 86,
+            "slot": "name",
+            "width": 85.98750305175781,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 86,
+            "height": 64,
+            "scrollWidth": 86,
+            "slot": "main-score",
+            "width": 85.98750305175781,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 86,
+            "height": 15.350000381469727,
+            "scrollWidth": 86,
+            "slot": "secondary",
+            "width": 85.98750305175781,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Goal",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Goal",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "Undo",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "MoreOptions",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "football",
+        "text": "Football\nState example\nFinish\nChennai FC\n2\nHalf 2 of 2\nMumbai FC\n1\nHalf 2 of 2\n\n12:34 left · Clock running\n\n2 × 45 minute halves\n\n+1\nGoal\n+1\nGoal\nUndo\nMore\nOptions",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 310.3999938964844,
+            "y": 16
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 115,
+            "height": 20.149999618530273,
+            "scrollWidth": 115,
+            "slot": "name",
+            "width": 115.25,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 115,
+            "height": 64,
+            "scrollWidth": 115,
+            "slot": "main-score",
+            "width": 115.25,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 115,
+            "height": 15.350000381469727,
+            "scrollWidth": 115,
+            "slot": "secondary",
+            "width": 115.25,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 114,
+            "height": 20.149999618530273,
+            "scrollWidth": 114,
+            "slot": "name",
+            "width": 113.9749984741211,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 114,
+            "height": 64,
+            "scrollWidth": 114,
+            "slot": "main-score",
+            "width": 113.9749984741211,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 114,
+            "height": 15.350000381469727,
+            "scrollWidth": 114,
+            "slot": "secondary",
+            "width": 113.9749984741211,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 109,
+            "height": 64,
+            "scrollWidth": 109,
+            "slot": "Left +1",
+            "width": 108.80000305175781,
+            "x": 16,
+            "y": 604
+          },
+          {
+            "clientWidth": 109,
+            "height": 64,
+            "scrollWidth": 109,
+            "slot": "Left +2",
+            "width": 108.80000305175781,
+            "x": 140.8000030517578,
+            "y": 604
+          },
+          {
+            "clientWidth": 109,
+            "height": 64,
+            "scrollWidth": 109,
+            "slot": "Left +3",
+            "width": 108.80000305175781,
+            "x": 265.6000061035156,
+            "y": 604
+          },
+          {
+            "clientWidth": 109,
+            "height": 64,
+            "scrollWidth": 109,
+            "slot": "Right +1",
+            "width": 108.80000305175781,
+            "x": 16,
+            "y": 684
+          },
+          {
+            "clientWidth": 109,
+            "height": 64,
+            "scrollWidth": 109,
+            "slot": "Right +2",
+            "width": 108.80000305175781,
+            "x": 140.8000030517578,
+            "y": 684
+          },
+          {
+            "clientWidth": 109,
+            "height": 64,
+            "scrollWidth": 109,
+            "slot": "Right +3",
+            "width": 108.80000305175781,
+            "x": 265.6000061035156,
+            "y": 684
+          },
+          {
+            "clientWidth": 109,
+            "height": 64,
+            "scrollWidth": 109,
+            "slot": "Undo",
+            "width": 108.80000305175781,
+            "x": 16,
+            "y": 764
+          },
+          {
+            "clientWidth": 109,
+            "height": 64,
+            "scrollWidth": 109,
+            "slot": "PauseClock",
+            "width": 108.80000305175781,
+            "x": 140.8000030517578,
+            "y": 764
+          },
+          {
+            "clientWidth": 109,
+            "height": 64,
+            "scrollWidth": 109,
+            "slot": "MoreOptions",
+            "width": 108.80000305175781,
+            "x": 265.6000061035156,
+            "y": 764
+          }
+        ],
+        "sport": "basketball",
+        "text": "Basketball\nState example\nFinish\nChennai Hoops\n54\nQuarter 3 of 4\nMumbai Hoops\n49\nQuarter 3 of 4\n\n04:32 left in Q3 · Clock running\n\nFIBA example · 4 × 10 minute quarters\n\nLeft +1\nLeft +2\nLeft +3\nRight +1\nRight +2\nRight +3\nUndo\nPause\nClock\nMore\nOptions",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ]
+  },
+  {
+    "state": "over",
+    "w": 390,
+    "h": 844,
+    "boards": [
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 78,
+            "height": 20.149999618530273,
+            "scrollWidth": 78,
+            "slot": "name",
+            "width": 77.875,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "main-score",
+            "width": 77.875,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 78,
+            "height": 15.350000381469727,
+            "scrollWidth": 78,
+            "slot": "secondary",
+            "width": 77.875,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 69,
+            "height": 20.149999618530273,
+            "scrollWidth": 69,
+            "slot": "name",
+            "width": 69.05000305175781,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 69,
+            "height": 64,
+            "scrollWidth": 69,
+            "slot": "main-score",
+            "width": 69.05000305175781,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 69,
+            "height": 15.350000381469727,
+            "scrollWidth": 69,
+            "slot": "secondary",
+            "width": 69.05000305175781,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 168,
+            "height": 96,
+            "scrollWidth": 168,
+            "slot": "Finish match",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "tennis",
+        "text": "Tennis\nMatch over\nA. Sharma\n2\nSets won\nR. Verma\n0\nSets won\n\nSharma won 2–0\n\nCompleted sets: 6–4, 6–3\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 106,
+            "height": 20.149999618530273,
+            "scrollWidth": 106,
+            "slot": "name",
+            "width": 105.86250305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 106,
+            "height": 64,
+            "scrollWidth": 106,
+            "slot": "main-score",
+            "width": 105.86250305175781,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 106,
+            "height": 15.350000381469727,
+            "scrollWidth": 106,
+            "slot": "secondary",
+            "width": 105.86250305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 106,
+            "height": 20.149999618530273,
+            "scrollWidth": 106,
+            "slot": "name",
+            "width": 105.86250305175781,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 106,
+            "height": 64,
+            "scrollWidth": 106,
+            "slot": "main-score",
+            "width": 105.86250305175781,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 106,
+            "height": 15.350000381469727,
+            "scrollWidth": 106,
+            "slot": "secondary",
+            "width": 105.86250305175781,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 168,
+            "height": 96,
+            "scrollWidth": 168,
+            "slot": "Finish match",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "football",
+        "text": "Football\nMatch over\nChennai FC\n2\n2 halves complete\nMumbai FC\n1\n2 halves complete\n\nFull time · Chennai FC won\n\n90 minutes played · no added time in this example\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 119,
+            "height": 20.149999618530273,
+            "scrollWidth": 119,
+            "slot": "name",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 119,
+            "height": 64,
+            "scrollWidth": 119,
+            "slot": "main-score",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 119,
+            "height": 15.350000381469727,
+            "scrollWidth": 119,
+            "slot": "secondary",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 119,
+            "height": 20.149999618530273,
+            "scrollWidth": 119,
+            "slot": "name",
+            "width": 118.67500305175781,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 119,
+            "height": 64,
+            "scrollWidth": 119,
+            "slot": "main-score",
+            "width": 118.67500305175781,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 119,
+            "height": 15.350000381469727,
+            "scrollWidth": 119,
+            "slot": "secondary",
+            "width": 118.67500305175781,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 168,
+            "height": 96,
+            "scrollWidth": 168,
+            "slot": "Finish match",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "basketball",
+        "text": "Basketball\nMatch over\nChennai Hoops\n78\n4 quarters complete\nMumbai Hoops\n74\n4 quarters complete\n\nFull time · Chennai Hoops won\n\n40 minutes played · no overtime required\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ]
+  },
+  {
+    "state": "mid",
+    "w": 390,
+    "h": 844,
+    "boards": [
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 310.3999938964844,
+            "y": 16
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 90,
+            "height": 20.149999618530273,
+            "scrollWidth": 90,
+            "slot": "name",
+            "width": 90.4625015258789,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 90,
+            "height": 64,
+            "scrollWidth": 90,
+            "slot": "main-score",
+            "width": 90.4625015258789,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 90,
+            "height": 15.350000381469727,
+            "scrollWidth": 90,
+            "slot": "secondary",
+            "width": 90.4625015258789,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 89,
+            "height": 20.149999618530273,
+            "scrollWidth": 89,
+            "slot": "name",
+            "width": 89.17500305175781,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 89,
+            "height": 64,
+            "scrollWidth": 89,
+            "slot": "main-score",
+            "width": 89.17500305175781,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 89,
+            "height": 15.350000381469727,
+            "scrollWidth": 89,
+            "slot": "secondary",
+            "width": 89.17500305175781,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Goal",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "+1Goal",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "Undo",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "MoreOptions",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "hockey",
+        "text": "Hockey\nState example\nFinish\nChennai HC\n2\nQuarter 3 of 4\nMumbai HC\n1\nQuarter 3 of 4\n\n08:12 left in Q3 · Clock running\n\nField hockey · 4 × 15 minute quarters\n\n+1\nGoal\n+1\nGoal\nUndo\nMore\nOptions",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 310.3999938964844,
+            "y": 16
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 123,
+            "height": 20.149999618530273,
+            "scrollWidth": 123,
+            "slot": "name",
+            "width": 123.3125,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 123,
+            "height": 64,
+            "scrollWidth": 123,
+            "slot": "main-score",
+            "width": 123.3125,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 123,
+            "height": 15.350000381469727,
+            "scrollWidth": 123,
+            "slot": "secondary",
+            "width": 123.3125,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 130,
+            "height": 20.149999618530273,
+            "scrollWidth": 130,
+            "slot": "name",
+            "width": 130.47500610351562,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 130,
+            "height": 64,
+            "scrollWidth": 130,
+            "slot": "main-score",
+            "width": 130.47500610351562,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 130,
+            "height": 15.350000381469727,
+            "scrollWidth": 130,
+            "slot": "secondary",
+            "width": 130.47500610351562,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "Empty raid0 points",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 508
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "Touch +1Review raid",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 508
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "TackledReview raid",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "TouchesChoose players",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 620
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast raid",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "MoreMatch options",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "kabaddi",
+        "text": "Kabaddi\nState example\nFinish\nChennai Raiders\n18\n7 on mat · Half 2\nMumbai Warriors\n16\n7 on mat · Half 2\n\n08:42 left · Chennai raid · 22s\n\nNew raid, no marks yet. Both teams have 7 on mat.\n\nEmpty raid\n0 points\nTouch +1\nReview raid\nTackled\nReview raid\nTouches\nChoose players\nUndo\nLast raid\nMore\nMatch options",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 64,
+            "height": 48,
+            "scrollWidth": 64,
+            "slot": "Finish",
+            "width": 64,
+            "x": 310.3999938964844,
+            "y": 16
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 122,
+            "height": 20.149999618530273,
+            "scrollWidth": 122,
+            "slot": "name",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 122,
+            "height": 48,
+            "scrollWidth": 122,
+            "slot": "main-score",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 156
+          },
+          {
+            "clientWidth": 122,
+            "height": 15.350000381469727,
+            "scrollWidth": 122,
+            "slot": "secondary",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 121,
+            "height": 20.149999618530273,
+            "scrollWidth": 121,
+            "slot": "name",
+            "width": 121.1500015258789,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 121,
+            "height": 48,
+            "scrollWidth": 121,
+            "slot": "main-score",
+            "width": 121.1500015258789,
+            "x": 215.1999969482422,
+            "y": 156
+          },
+          {
+            "clientWidth": 121,
+            "height": 15.350000381469727,
+            "scrollWidth": 121,
+            "slot": "secondary",
+            "width": 121.1500015258789,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "0",
+            "width": 77.5999984741211,
+            "x": 16,
+            "y": 604
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "1",
+            "width": 77.5999984741211,
+            "x": 109.5999984741211,
+            "y": 604
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "2",
+            "width": 77.5999984741211,
+            "x": 203.1999969482422,
+            "y": 604
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "3",
+            "width": 77.5999984741211,
+            "x": 296.8000183105469,
+            "y": 604
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "4",
+            "width": 77.5999984741211,
+            "x": 16,
+            "y": 684
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "6",
+            "width": 77.5999984741211,
+            "x": 109.5999984741211,
+            "y": 684
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "Wicket",
+            "width": 77.5999984741211,
+            "x": 203.1999969482422,
+            "y": 684
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "Extras",
+            "width": 77.5999984741211,
+            "x": 296.8000183105469,
+            "y": 684
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "Undo",
+            "width": 77.5999984741211,
+            "x": 16,
+            "y": 764
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "StrikeSwap",
+            "width": 77.5999984741211,
+            "x": 109.5999984741211,
+            "y": 764
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "CardScorecard",
+            "width": 77.5999984741211,
+            "x": 203.1999969482422,
+            "y": 764
+          },
+          {
+            "clientWidth": 78,
+            "height": 64,
+            "scrollWidth": 78,
+            "slot": "MoreOptions",
+            "width": 77.5999984741211,
+            "x": 296.8000183105469,
+            "y": 764
+          }
+        ],
+        "sport": "cricket",
+        "text": "Cricket\nState example\nFinish\nChennai CC\n145/6\n20.0 overs · Innings 1\nMumbai CC\n120/3\n16.0 overs · Innings 2\n\nMumbai needs 26 from 24 balls\n\nT20 · Mumbai batting · Target 146\n\n0\n1\n2\n3\n4\n6\nWicket\nExtras\nUndo\nStrike\nSwap\nCard\nScorecard\nMore\nOptions",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ]
+  },
+  {
+    "state": "over",
+    "w": 390,
+    "h": 844,
+    "boards": [
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 119,
+            "height": 20.149999618530273,
+            "scrollWidth": 119,
+            "slot": "name",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 119,
+            "height": 64,
+            "scrollWidth": 119,
+            "slot": "main-score",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 119,
+            "height": 15.350000381469727,
+            "scrollWidth": 119,
+            "slot": "secondary",
+            "width": 118.67500305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 119,
+            "height": 20.149999618530273,
+            "scrollWidth": 119,
+            "slot": "name",
+            "width": 118.67500305175781,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 119,
+            "height": 64,
+            "scrollWidth": 119,
+            "slot": "main-score",
+            "width": 118.67500305175781,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 119,
+            "height": 15.350000381469727,
+            "scrollWidth": 119,
+            "slot": "secondary",
+            "width": 118.67500305175781,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 168,
+            "height": 96,
+            "scrollWidth": 168,
+            "slot": "Finish match",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "hockey",
+        "text": "Hockey\nMatch over\nChennai HC\n3\n4 quarters complete\nMumbai HC\n2\n4 quarters complete\n\nFull time · Chennai HC won\n\n60 minutes played · no extended penalty corner pending\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 123,
+            "height": 20.149999618530273,
+            "scrollWidth": 123,
+            "slot": "name",
+            "width": 123.3125,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 123,
+            "height": 64,
+            "scrollWidth": 123,
+            "slot": "main-score",
+            "width": 123.3125,
+            "x": 28,
+            "y": 148
+          },
+          {
+            "clientWidth": 123,
+            "height": 15.350000381469727,
+            "scrollWidth": 123,
+            "slot": "secondary",
+            "width": 123.3125,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 130,
+            "height": 20.149999618530273,
+            "scrollWidth": 130,
+            "slot": "name",
+            "width": 130.47500610351562,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 130,
+            "height": 64,
+            "scrollWidth": 130,
+            "slot": "main-score",
+            "width": 130.47500610351562,
+            "x": 215.1999969482422,
+            "y": 148
+          },
+          {
+            "clientWidth": 130,
+            "height": 15.350000381469727,
+            "scrollWidth": 130,
+            "slot": "secondary",
+            "width": 130.47500610351562,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 168,
+            "height": 96,
+            "scrollWidth": 168,
+            "slot": "Finish match",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "kabaddi",
+        "text": "Kabaddi\nMatch over\nChennai Raiders\n32\nHalf 2 complete\nMumbai Warriors\n29\nHalf 2 complete\n\nFull time · Chennai Raiders won\n\nNo active raid and no pending points\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "bodyHeight": 844,
+        "bodyWidth": 390,
+        "boxes": [
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-left",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 80
+          },
+          {
+            "clientWidth": 122,
+            "height": 20.149999618530273,
+            "scrollWidth": 122,
+            "slot": "name",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 122,
+            "height": 48,
+            "scrollWidth": 122,
+            "slot": "main-score",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 156
+          },
+          {
+            "clientWidth": 122,
+            "height": 15.350000381469727,
+            "scrollWidth": 122,
+            "slot": "secondary",
+            "width": 122.05000305175781,
+            "x": 28,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 171,
+            "height": 200,
+            "scrollWidth": 171,
+            "slot": "side-right",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 80
+          },
+          {
+            "clientWidth": 120,
+            "height": 20.149999618530273,
+            "scrollWidth": 120,
+            "slot": "name",
+            "width": 120.2249984741211,
+            "x": 215.1999969482422,
+            "y": 105.92500305175781
+          },
+          {
+            "clientWidth": 120,
+            "height": 48,
+            "scrollWidth": 120,
+            "slot": "main-score",
+            "width": 120.2249984741211,
+            "x": 215.1999969482422,
+            "y": 156
+          },
+          {
+            "clientWidth": 120,
+            "height": 15.350000381469727,
+            "scrollWidth": 120,
+            "slot": "secondary",
+            "width": 120.2249984741211,
+            "x": 215.1999969482422,
+            "y": 236.3249969482422
+          },
+          {
+            "clientWidth": 358,
+            "height": 64,
+            "scrollWidth": 358,
+            "slot": "status",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 280
+          },
+          {
+            "clientWidth": 357,
+            "height": 56,
+            "scrollWidth": 357,
+            "slot": "detail",
+            "width": 358.3999938964844,
+            "x": 16,
+            "y": 360
+          },
+          {
+            "clientWidth": 171,
+            "height": 96,
+            "scrollWidth": 171,
+            "slot": "UndoLast action",
+            "width": 171.1999969482422,
+            "x": 16,
+            "y": 732
+          },
+          {
+            "clientWidth": 168,
+            "height": 96,
+            "scrollWidth": 168,
+            "slot": "Finish match",
+            "width": 171.1999969482422,
+            "x": 203.1999969482422,
+            "y": 732
+          }
+        ],
+        "sport": "cricket",
+        "text": "Cricket\nMatch over\nChennai CC\n145/6\n20.0 overs · Innings 1\nMumbai CC\n146/4\n19.2 overs · Innings 2\n\nMumbai CC won by 6 wickets\n\n146 reached after 116 legal balls · 4 balls unused\n\nUndo\nLast action\nFinish match",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ]
+  }
+]

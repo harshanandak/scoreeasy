@@ -1,0 +1,3967 @@
+/* shipped:src/index.css */
+@import "./assets/fonts/fonts.css";
+@import "tailwindcss";
+@import "./mobile/safeArea.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #f4f5f7;
+  --foreground: #0b0b0d;
+  --card: #ffffff;
+  --card-foreground: #0b0b0d;
+  --popover: #ffffff;
+  --popover-foreground: #0b0b0d;
+  --primary: #00662a;
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.6270 0.1940 149.2140);
+  --secondary-foreground: oklch(1.0000 0 0);
+  --muted: #eceef2;
+  --muted-foreground: #5f6067;
+  --accent: oklch(0.9231 0.0773 156.7494);
+  --accent-foreground: #004720;
+  --destructive: #b42318;
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: #0b0b0d;
+  --input: #0b0b0d;
+  --ring: oklch(0.6230 0.1688 149.1777);
+  --chart-1: oklch(0.6230 0.1688 149.1777);
+  --chart-2: oklch(0.6082 0.1213 58.2537);
+  --chart-3: oklch(0.5740 0.1219 238.1136);
+  --chart-4: oklch(0.8153 0.1652 85.6698);
+  --chart-5: #4a4b52;
+  --sidebar: oklch(0.9782 0.0039 145.5458);
+  --sidebar-foreground: oklch(0 0 0);
+  --sidebar-primary: oklch(0.6230 0.1688 149.1777);
+  --sidebar-primary-foreground: oklch(1.0000 0 0);
+  --sidebar-accent: oklch(0.9231 0.0773 156.7494);
+  --sidebar-accent-foreground: oklch(0.4104 0.1066 149.9393);
+  --sidebar-border: oklch(0 0 0);
+  --sidebar-ring: oklch(0.6230 0.1688 149.1777);
+  --font-sans: Figtree, ui-sans-serif, system-ui, sans-serif;
+  --font-serif: ui-serif, Georgia, serif;
+  --font-mono: JetBrains Mono, ui-monospace, monospace;
+  --radius: 0.25rem;
+  --shadow-x: 3px;
+  --shadow-y: 3px;
+  --shadow-blur: 0px;
+  --shadow-spread: 0.5px;
+  --shadow-opacity: 0.7;
+  --shadow-color: hsl(0, 0%, 0%);
+  --shadow-2xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-xs: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.35);
+  --shadow-sm: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 1px 2px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow-md: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 2px 4px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow-lg: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 4px 6px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow-xl: 3px 3px 0px 0.5px hsl(0 0% 0% / 0.70), 3px 8px 10px -0.5px hsl(0 0% 0% / 0.70);
+  --shadow-2xl: 3px 3px 0px 0.5px hsl(0 0% 0% / 1.75);
+  --tracking-normal: 0;
+  --se-font-mono: var(--font-mono);
+  --se-font-sans: var(--font-sans);
+  /* Kit type (plan 2026-10-22 §4): display headlines, UI text, tabular numerals */
+  --se-font-display: 'Bricolage Grotesque', var(--font-sans);
+  --se-font-num: 'Barlow Condensed', var(--font-sans);
+
+  /* Kit colour roles (plan 2026-10-22 §2). Light is primary; `.dark` on <html> swaps the
+     neutrals (block below). palette.js mirrors every value; palette.test.js gates drift
+     and contrast in both themes. */
+  --se-color-action: var(--primary);
+  --se-color-action-hi: #007c34;
+  --se-color-focus-ring: var(--se-color-ink);
+  --se-color-action-soft: var(--accent);
+  --se-color-action-strong: var(--accent-foreground);
+  --se-color-canvas: var(--background);
+  --se-color-surface: var(--card);
+  --se-color-surface-warm: var(--muted);
+  --se-color-ink: var(--foreground);
+  --se-color-ink-strong: var(--foreground);
+  --se-color-ink-soft: var(--chart-5);
+  --se-color-ink-muted: var(--muted-foreground);
+  --se-color-ink-faint: var(--muted-foreground);
+  --se-color-line: var(--border);
+  --se-color-line-strong: var(--border);
+  --se-color-line-soft: color-mix(in srgb, var(--se-color-ink) 10%, transparent);
+  --se-color-inverse: var(--primary-foreground);
+  --se-color-on-ink: #ffffff;
+  --se-color-live: #00662a;
+  --se-color-live-soft: #d9f6dd;
+  --se-color-gold: #f5b700;
+  --se-color-gold-ink: #7a5410;
+  --se-color-gold-soft: #fff1c2;
+  --se-color-on-gold: #0b0b0d;
+  /* foregrounds for text and marks that sit ON an ink surface (dark banners, hero cards):
+     the Go green is a fill and fails as text on ink (2.75:1), so ink surfaces get their own */
+  --se-color-action-on-ink: #5ee08f;
+  --se-color-warning-on-ink: var(--se-color-gold);
+  --se-color-danger: #b42318;
+  --se-color-danger-soft: #fbe9e7;
+  --se-color-warning: var(--se-color-gold-ink);
+  --se-color-warning-soft: var(--se-color-gold-soft);
+  --se-color-scrim: rgba(11, 11, 13, 0.45);
+  --se-color-shadow: var(--se-color-ink);
+
+  /* Mono-strength controls (.se-ctl, .se-go) and the soft lift every other surface gets */
+  --se-ctl-border: 2px;
+  --se-ctl-radius: 14px;
+  --se-ctl-bg: var(--se-color-surface);
+  --se-ctl-shadow: 3px 3px 0 var(--se-color-ink);
+  --se-ctl-shadow-press: 1px 1px 0 var(--se-color-ink);
+  --se-go-edge: var(--se-color-ink);
+  --se-modal-lift: 0 24px 60px -28px color-mix(in oklab, var(--se-color-shadow) 60%, transparent);
+  --se-lift: 0 1px 2px color-mix(in oklab, var(--se-color-ink) 6%, transparent),
+    0 14px 30px -18px color-mix(in oklab, var(--se-color-ink) 45%, transparent);
+  --se-border-standard: 1.5px;
+  --se-radius-button: var(--radius);
+  --se-radius-card: calc(var(--radius) + 4px);
+  --se-shadow-card: var(--shadow-xs);
+  --se-shadow-hard: var(--shadow);
+  --se-motion-standard: 250ms;
+
+  /* ============================================================================
+     HiFi-BLEND TOKEN LAYER  ·  M1 foundation  ·  FROZEN API (blend-8a30cb91)
+     ----------------------------------------------------------------------------
+     Additive only. These rounded/soft/gold/live properties sit ON TOP of the
+     role tokens above (the Kit roles since 2026-10-22: near-black ink and
+     edges, hard `3px 3px 0` control shadow, Figtree/Barlow Condensed).
+     --se-blend-gold is now an alias of --se-color-gold (Kit §2).
+     Downstream screens opt into blend; scoring/live exceptions follow
+     rule 7 below.
+
+     ── BLEND-GOVERNANCE CONTRACT (full text: BLEND-GOVERNANCE.md) ──────────────
+     1. GREEN is for LEAD / LIVE only — the leading team, a live badge, an
+        active/primary CTA. Never decorative, never a resting-state fill.
+        On scoring and live surfaces the teams' own colours take over (rule 7).
+     2. GOLD is ONE milestone accent PER SCREEN — a single moment (match won,
+        record, podium). Two golds on a screen is a bug.
+     3. CAPSULES & CIRCLES are for INTERACTIVE elements only (buttons, chips,
+        toggles, avatars). Never round a container/section/card body with them.
+     4. HARD SHELL / SOFT CONTENT — the outer frame keeps the brutalist border +
+        hard shadow; softness (green wash, soft radius, soft shadow) lives on the
+        content INSIDE. Don't soften the shell.
+     5. BREATHING PULSE is a LIVE-STATE signal only (a match in progress) and is
+        ALWAYS reduced-motion gated. Never use it for idle/decorative emphasis.
+     6. PER-SCREEN SOFT-ELEMENT BUDGET — cap soft-styled elements per screen (see
+        doc); overuse dissolves the brutalist backbone the blend depends on.
+     7. TEAM COLOUR is identity on SCORING / LIVE surfaces. Use the colour
+        engine's contrast-gated values for team surfaces and point keys, never
+        raw hex. App green stays with LIVE / actions; lead and tie are not
+        colour-coded. The scorer's design decides its framing; rule 4 governs
+        the rest of the app.
+     ========================================================================== */
+
+  /* Rounded radius scale — interactive elements only (contract §3) */
+  --se-blend-radius-capsule: 999px;
+  --se-blend-radius-circle: 50%;
+  --se-blend-radius-soft-sm: 10px;
+  --se-blend-radius-soft: 12px;
+  --se-blend-radius-soft-lg: 16px;
+
+  /* Soft green wash — lead/live surfaces only (contract §1) */
+  --se-blend-green-wash: #e7f4ee;
+  --se-blend-green-wash-strong: #d6ecdf;
+
+  /* Warm-green-black soft shadow (content), colored CTA glow (primary action) */
+  --se-blend-shadow-soft: 0 6px 20px -8px rgba(20, 40, 30, 0.28);
+  --se-blend-shadow-cta: 0 8px 24px -6px rgba(35, 120, 75, 0.42);
+
+  /* Gold milestone accent — ONE per screen (contract §2) */
+  --se-blend-gold: var(--se-color-gold);
+  --se-blend-gold-bright: #e8b64c;
+
+  /* LIVE breathing pulse timing (helper class + reduced-motion gate below) */
+  --se-blend-pulse-duration: 2.4s;
+
+  /* Team colour (Direction E). Scoring screens set these at runtime from the colour engine
+     (src/lib/teamColour.js); these fallbacks are its output for the default red v blue pair. */
+  --team-a-hi: #d32928;
+  --team-a-core: #bb0012;
+  --team-a-lo: #890600;
+  --team-a-on: #ffffff;
+  --team-a-scrim: rgba(0, 0, 0, 0.3);
+  --team-a-tint: #ffe6e3;
+  --team-a-line: #c7423b;
+  --team-a-motif: rgba(0, 0, 0, 0.17);
+  --team-b-hi: #2f61e3;
+  --team-b-core: #1d4ccc;
+  --team-b-lo: #182aa4;
+  --team-b-on: #ffffff;
+  --team-b-scrim: rgba(0, 0, 0, 0.31);
+  --team-b-tint: #e4edff;
+  --team-b-line: #2d57be;
+  --team-b-motif: rgba(0, 0, 0, 0.17);
+}
+
+/* Kit dark (plan 2026-10-22 §2 and §4): swaps the neutral roles only; Go, sport and team
+   gradients keep their values because the engine gates are absolute. Opt-in with `.dark`
+   on <html> (the aliases above resolve there); nothing sets it yet. */
+.dark {
+  color-scheme: dark;
+  --background: #0e0f12;
+  --foreground: #f4f5f7;
+  --card: #191a1f;
+  --card-foreground: #f4f5f7;
+  --popover: #191a1f;
+  --popover-foreground: #f4f5f7;
+  --muted: #25272d;
+  --muted-foreground: #a2a4ab;
+  --border: #f4f5f7;
+  --input: #f4f5f7;
+  --chart-5: #b9bbc2;
+  --se-color-line-soft: color-mix(in srgb, var(--se-color-ink) 12%, transparent);
+  --se-color-on-ink: #0b0b0d;
+  --se-color-action-on-ink: #00662a;
+  --se-color-warning-on-ink: #7a5410;
+  --se-color-live: #7ee2a2;
+  --se-color-live-soft: #123321;
+  --se-color-gold-ink: #f5c84c;
+  --se-color-gold-soft: #3a2f0c;
+  --se-color-danger: #ff8f84;
+  --se-color-danger-soft: #3a1714;
+  --se-color-scrim: rgba(0, 0, 0, 0.6);
+  --se-color-shadow: #000000;
+  --se-ctl-bg: #202228;
+  --se-ctl-shadow: 3px 3px 0 #000000, 3px 3px 0 1px rgba(244, 245, 247, 0.35);
+  --se-ctl-shadow-press: 1px 1px 0 #000000;
+  --se-go-edge: #000000;
+  --se-lift: 0 1px 0 rgba(255, 255, 255, 0.04), 0 16px 30px -18px rgba(0, 0, 0, 0.9);
+}
+
+@theme inline {
+  --color-team-a: var(--team-a-core);
+  --color-team-a-on: var(--team-a-on);
+  --color-team-a-tint: var(--team-a-tint);
+  --color-team-a-line: var(--team-a-line);
+  --color-team-b: var(--team-b-core);
+  --color-team-b-on: var(--team-b-on);
+  --color-team-b-tint: var(--team-b-tint);
+  --color-team-b-line: var(--team-b-line);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-mono-bg: var(--background);
+  --color-mono-white: var(--card);
+  --color-mono-black: var(--foreground);
+  --color-mono-accent: var(--primary);
+  --color-mono-gray: var(--muted-foreground);
+  --color-mono-light: var(--muted);
+  --color-mono-border: var(--border);
+  --color-mono-muted: var(--muted-foreground);
+  --font-sans: var(--font-sans);
+  --font-swiss: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+  --tracking-tighter: 0;
+  --tracking-tight: 0;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-slide-up: slide-up 0.25s ease-out;
+  --animate-score-pop: score-pop 0.3s ease-out;
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slide-up {
+  0% { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes score-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* HiFi-blend LIVE breathing pulse — live-state signal ONLY (contract §5).
+   A slow, subtle glow-breath applied to a live indicator; never decorative. */
+@keyframes se-blend-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(35, 120, 75, 0.42);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(35, 120, 75, 0);
+  }
+}
+
+.se-blend-pulse {
+  animation: se-blend-pulse var(--se-blend-pulse-duration) ease-in-out infinite;
+}
+
+/* Contract §5: the breathing pulse is always reduced-motion gated. */
+@media (prefers-reduced-motion: reduce) {
+  .se-blend-pulse {
+    animation: none;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--se-font-sans);
+  letter-spacing: var(--tracking-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus is ink (Kit §2): a 3px outline 3px off the control, so it never sits on a team or
+   sport colour and never replaces a control's own offset shadow. */
+:where(button, [href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: 3px;
+}
+
+/* ---- Kit controls (plan 2026-10-22 §4) ----
+   .se-ctl: the Mono-strength control. Anything you press keeps a defined edge: 2px ink border,
+   3px ink offset shadow, a 2px press. Every other surface gets a hairline and the soft lift.
+   .se-go: the ONE forward action per screen, a 168deg Go gradient with a white label (5.34:1 on
+   the lightest stop, 7.16:1 on the core). Never a second one on the same screen. */
+.se-ctl,
+.se-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: var(--se-ctl-border) solid var(--se-color-ink);
+  border-radius: var(--se-ctl-radius);
+  box-shadow: var(--se-ctl-shadow);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 60ms ease, box-shadow 60ms ease;
+}
+
+.se-ctl {
+  background: var(--se-ctl-bg);
+  color: var(--se-color-ink);
+}
+
+.se-go {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 20px;
+  border-color: var(--se-go-edge);
+  background: linear-gradient(168deg, var(--se-color-action-hi), var(--se-color-action) 55%, var(--se-color-action-strong));
+  color: var(--se-color-inverse);
+  font-size: 1.06rem;
+  font-weight: 800;
+}
+
+:where(.se-ctl, .se-go):active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-ctl-shadow-press);
+}
+
+/* Disabled stays visible (Undo is always on screen): a dashed edge, no lift, quieter ink. */
+.se-ctl:disabled {
+  cursor: default;
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--se-color-ink) 45%, transparent);
+  box-shadow: none;
+  color: color-mix(in oklab, var(--se-color-ink) 62%, var(--se-color-surface));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .se-ctl,
+  .se-go {
+    transition: none;
+  }
+}
+
+:where(button, input, select, textarea):disabled,
+:where(button, input, select, textarea)[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.app-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--se-color-canvas);
+  color: var(--se-color-ink-strong);
+  font-family: var(--se-font-sans);
+}
+
+.app-loading-compact {
+  min-height: 96px;
+}
+
+.app-loading-compact .app-loading-panel {
+  width: min(100%, 220px);
+  gap: 10px;
+}
+
+/* Mirrors the static boot splash in index.html — boot and app loading are one continuous screen. */
+.app-loading-panel {
+  width: min(100%, 320px);
+  border: 1px solid var(--se-color-line-strong);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--se-color-surface);
+  box-shadow: 3px 3px 0 var(--se-color-line-strong);
+  padding: 20px;
+}
+
+.app-loading-brand {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--se-font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.app-loading-progress {
+  height: 4px;
+  margin-top: 20px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+}
+
+.app-loading-progress span {
+  display: block;
+  width: 45%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--se-color-action);
+  animation: app-loading-slide 1.1s ease-in-out infinite alternate;
+}
+
+.app-loading p {
+  margin: 12px 0 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.875rem;
+}
+
+@keyframes app-loading-slide {
+  0% {
+    transform: translateX(-15%);
+  }
+  100% {
+    transform: translateX(140%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading-progress span {
+    animation: none;
+  }
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/kit/kit.css */
+/* Kit app screens: Home and the Play hub (plan 2026-10-22 §2-§4, S1).
+   Colour only from --se-color-* tokens and engine vars (--sport-*, --team-a-*, --team-b-*), so
+   dark mode is a token swap; team and sport gradients are absolute (engine-gated). */
+
+.kit-screen {
+  position: relative;
+  box-sizing: border-box;
+  max-width: 672px;
+  margin: 0 auto;
+  padding: 0 16px 112px;
+  color: var(--se-color-ink);
+  font-family: var(--se-font-sans);
+}
+
+.kit-screen > * {
+  position: relative;
+  z-index: 1;
+}
+
+.kit-screen > .kit-wash {
+  position: absolute;
+  z-index: 0;
+}
+
+.kit-wash {
+  inset: 0 0 auto;
+  height: 300px;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 20% -10%, var(--kit-w1, transparent), transparent 60%),
+    radial-gradient(90% 80% at 95% 0%, var(--kit-w2, transparent), transparent 62%);
+}
+
+.dark .kit-wash {
+  opacity: 0.35;
+}
+
+/* ---- header ---- */
+.kit-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 14px 0 8px;
+}
+
+.kit-brand {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  font: 800 1.18rem/1 var(--se-font-display);
+  letter-spacing: -0.02em;
+}
+
+.kit-brand-mark {
+  display: inline-flex;
+  flex: none;
+  color: var(--se-color-ink);
+}
+
+.kit-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 2px var(--se-color-ink);
+  color: var(--se-color-ink);
+  font: 800 1rem var(--se-font-display);
+  cursor: pointer;
+}
+
+.kit-title {
+  margin: 6px 0 12px;
+  font: 800 2.35rem/1.02 var(--se-font-display);
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.kit-sub {
+  margin: 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.kit-sec {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 26px 2px 10px;
+}
+
+.kit-sec h2 {
+  margin: 0;
+  font: 750 1.05rem/1.15 var(--se-font-display);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.kit-sec > span {
+  flex: none;
+  color: var(--se-color-ink-soft);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* A quiet text action in a section head ("See all"); 48px tall for the thumb. */
+.kit-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 48px;
+  margin: -14px -8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--se-color-ink-soft);
+  font: 600 0.85rem var(--se-font-sans);
+  cursor: pointer;
+}
+
+/* ---- hand-drawn accents (medium dosage, one per component) ---- */
+.kit-underlined {
+  position: relative;
+  display: inline-block;
+}
+
+.kit-underline {
+  position: absolute;
+  left: -2%;
+  bottom: -0.2em;
+  width: 104%;
+  height: 0.32em;
+  overflow: visible;
+  fill: none;
+  stroke: var(--kit-underline, var(--se-color-ink));
+  stroke-width: 2.6px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kit-coach-arrow {
+  position: absolute;
+  right: 28px;
+  bottom: 70px;
+  width: 54px;
+  height: 54px;
+  overflow: visible;
+  fill: none;
+  stroke: var(--se-color-ink);
+  stroke-width: 2.3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* ---- sport tiles ---- */
+.kit-grid2,
+.kit-grid3 {
+  display: grid;
+  gap: 10px;
+}
+
+.kit-grid2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.kit-grid3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.kit-tile {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 116px;
+  padding: 14px 14px 12px;
+  border: 0;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
+    linear-gradient(168deg, var(--sport-hi, var(--se-color-surface)), var(--sport-core, var(--se-color-surface)) 52%, var(--sport-lo, var(--se-color-surface)));
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+  color: var(--sport-on, var(--se-color-ink));
+  font-family: var(--se-font-sans);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.kit-tile:active {
+  transform: scale(0.965);
+}
+
+/* The sport a link asked for (/play?sport=...): Kit's selected treatment is an ink ring, never a
+   new colour. A gap of canvas keeps it apart from the tile's own gradient edge. */
+.kit-tile.is-selected {
+  box-shadow: 0 0 0 3px var(--se-color-canvas), 0 0 0 6px var(--se-color-ink), var(--se-lift);
+}
+
+.kit-tile-mark {
+  position: absolute;
+  z-index: -1;
+  right: -16%;
+  bottom: -10%;
+  width: 82%;
+  aspect-ratio: 140 / 100;
+  background: var(--sport-motif);
+  -webkit-mask: var(--sport-mark) right bottom / contain no-repeat;
+  mask: var(--sport-mark) right bottom / contain no-repeat;
+  pointer-events: none;
+}
+
+.kit-tile-name {
+  font: 800 1.22rem/1.02 var(--se-font-display);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.kit-tile-hint {
+  max-width: 92%;
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.kit-tile-mini {
+  min-height: 92px;
+  padding: 14px 12px 12px;
+}
+
+/* Three across at 360 leaves ~79px of text width: the name scales so "Volleyball" fits whole
+   rather than breaking mid-word (it never ellipsizes). */
+.kit-tile-mini .kit-tile-name {
+  font-size: clamp(0.84rem, 3.9vw, 1.02rem);
+}
+
+/* ---- first-run hero card ---- */
+.kit-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+}
+
+/* ---- the last match: one compact card on the surface ----
+   Team colour is a slim bar in the engine's line colour (>= 3:1 on card and page); every word
+   and numeral is ink on the surface, so nothing depends on a team gradient for contrast. */
+.kit-last {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+}
+
+.kit-last-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.kit-sport-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px 0 8px;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.kit-sport-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sport-core, var(--se-color-ink-soft));
+}
+
+.kit-last-teams {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kit-last-team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+}
+
+.kit-last-bar {
+  flex: none;
+  width: 5px;
+  height: 22px;
+  border-radius: 3px;
+}
+
+.kit-last-bar-a {
+  background: var(--team-a-line);
+}
+
+.kit-last-bar-b {
+  background: var(--team-b-line);
+}
+
+.kit-last-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.02rem;
+  font-weight: 550;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.kit-last-score {
+  flex: none;
+  font: 700 1.7rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-last-team.is-winner .kit-last-name {
+  font-weight: 850;
+}
+
+.kit-last-team.is-winner .kit-last-score {
+  font-weight: 800;
+}
+
+.kit-last-detail {
+  margin: 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.84rem;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* The Go at control size inside a card: a normal 48px control, not a slab. */
+.kit-last .kit-btnrow {
+  margin-top: 4px;
+}
+
+.kit-last .kit-btnrow .se-go.kit-go-compact {
+  flex: none;
+  width: auto;
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 1rem;
+}
+
+.kit-hero-foot {
+  position: relative;
+  padding: 14px 16px 16px;
+}
+
+.kit-btnrow {
+  display: flex;
+  gap: 10px;
+}
+
+.kit-btnrow .se-go {
+  flex: 1;
+  min-width: 0;
+}
+
+.kit-btnrow .se-ctl {
+  flex: none;
+}
+
+/* First run: the hero is a prompt, not a result. */
+.kit-hero-intro {
+  padding: 20px 16px 4px;
+}
+
+.kit-hero-intro h2 {
+  margin: 0;
+  font: 800 1.5rem/1.08 var(--se-font-display);
+  letter-spacing: -0.02em;
+}
+
+.kit-hero-intro p {
+  margin: 6px 0 0;
+  padding-right: 80px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Room on the right of the sub line for the arrow, which curls down onto the Go. */
+.kit-hero-intro + .kit-hero-foot {
+  padding-top: 18px;
+}
+
+.kit-hero-intro + .kit-hero-foot .kit-coach-arrow {
+  bottom: 70px;
+}
+
+/* ---- list rows (recent, in progress, tournaments) ---- */
+.kit-list {
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+}
+
+.kit-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 68px;
+  padding: 10px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: inherit;
+  text-align: left;
+}
+
+button.kit-row {
+  cursor: pointer;
+}
+
+.kit-row + .kit-row {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-row-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.kit-row-title {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.kit-row-title strong {
+  font-weight: 850;
+}
+
+.kit-row-sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.kit-row-score {
+  flex: none;
+  font: 800 1.35rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* Long scores (cricket "164/6–158/9") step down so the names keep their room (Home and History). */
+.kit-row-score.is-long {
+  font-size: 1.05rem;
+}
+
+.kit-chev {
+  flex: none;
+  opacity: 0.55;
+}
+
+.kit-badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: linear-gradient(168deg, var(--sport-hi, var(--se-color-surface-warm)), var(--sport-core, var(--se-color-surface-warm)) 55%, var(--sport-lo, var(--se-color-surface-warm)));
+  color: var(--sport-on, var(--se-color-ink));
+}
+
+.kit-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font-size: 0.78rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-chip.is-live {
+  background: var(--se-color-live-soft);
+  color: var(--se-color-live);
+}
+
+.kit-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-step-num {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font: 800 0.95rem var(--se-font-num);
+}
+
+.kit-empty-note {
+  margin: 0;
+  padding: 18px 14px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+/* ---- segmented control (S2 setup formats, S4 History's Matches / Stats tabs) ----
+   A sunk track; the chosen one (aria-pressed, or aria-selected for tabs) is a Mono-strength control. */
+.kit-seg {
+  display: grid;
+  grid-template-columns: repeat(var(--kit-seg-cols, 3), minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 16px;
+  background: var(--se-color-surface-warm);
+}
+
+.kit-seg button {
+  min-width: 0;
+  min-height: 48px;
+  padding: 4px 6px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: 650 0.94rem/1.12 var(--se-font-sans);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-seg button[aria-pressed='true'],
+.kit-seg button[aria-selected='true'] {
+  border-color: var(--se-color-ink);
+  background: var(--se-ctl-bg);
+  box-shadow: 2px 2px 0 var(--se-color-ink);
+  font-weight: 800;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-tile {
+    transition: none;
+  }
+
+  .kit-tile:active {
+    transform: none;
+  }
+}
+
+/* Home v2: with matches in progress, "Start a match" is the one Go. It follows the In progress list
+   and stays in the thumb zone, sticky above the dock (the quick-setup Go's pattern, setup.css). */
+.kit-screen > .kit-home-cta {
+  position: sticky;
+  z-index: 5;
+  bottom: 0;
+  margin-top: 14px;
+  padding: 14px 0 16px;
+  background: linear-gradient(180deg, transparent, var(--se-color-canvas) 30%);
+}
+
+body.has-mobile-bottom-nav .kit-screen > .kit-home-cta {
+  bottom: calc(78px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/kit/setup.css */
+/* Kit S2 quick setup (plan 2026-10-22 §9 S2, prototype `setup`). Colour only from --se-color-*
+   tokens and engine vars (--team-a-*, --team-b-*, --sport-*, --kit-sw*), so dark mode is a token
+   swap and team gradients stay absolute (engine-gated).
+
+   Size: light and compact (Harsha on S1: the hero was too big and heavy). The prototype's 132px keys
+   and 3.6rem numerals become ~92px keys with 2.4rem numerals; one Go only, the Start action. */
+
+.kit-screen.kit-setup {
+  padding-bottom: calc(140px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
+}
+
+/* ---- header: navigation chrome, always clean ---- */
+.kit-setup-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 14px 0 8px;
+}
+
+.kit-setup-back {
+  flex: none;
+  width: 48px;
+  padding: 0;
+}
+
+.kit-setup-badge {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(168deg, var(--sport-hi, var(--se-color-surface-warm)), var(--sport-core, var(--se-color-surface-warm)) 55%, var(--sport-lo, var(--se-color-surface-warm)));
+}
+
+.kit-setup-badge::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  background: var(--sport-on, var(--se-color-ink));
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+  mask: var(--sport-mark) center / contain no-repeat;
+}
+
+.kit-setup-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.kit-setup-title h1 {
+  margin: 0;
+  /* Shrink with the viewport and wrap only between words: "Basketball" must never split to
+     "Basketba / ll" on a 360 px phone with a wide fallback font. */
+  font-family: var(--se-font-display);
+  font-size: clamp(1.05rem, 5vw, 1.3rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+.kit-setup-title p {
+  margin: 3px 0 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* A quiet text action ("Tournament", "Edit rules", "Add players"): 48px for the thumb. */
+.kit-setup-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: 750 0.9rem var(--se-font-sans);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+/* ---- fields ---- */
+.kit-setup-field {
+  position: relative;
+  margin-top: 16px;
+}
+
+.kit-setup-label {
+  display: block;
+  margin: 0 2px 8px;
+  color: var(--se-color-ink-soft);
+  font: 700 0.85rem/1.2 var(--se-font-sans);
+}
+
+.kit-setup-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--se-color-ink) 16%, transparent);
+  color: var(--se-color-ink);
+  font: 650 1.04rem var(--se-font-sans);
+}
+
+.kit-setup-input::placeholder {
+  color: var(--se-color-ink-muted);
+}
+
+/* Saved-team suggestions under a name field. */
+.kit-setup-suggest {
+  position: absolute;
+  z-index: 10;
+  right: 0;
+  left: 0;
+  max-height: 180px;
+  margin-top: 4px;
+  overflow-y: auto;
+  border-radius: 14px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+}
+
+.kit-setup-suggest p {
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--se-color-ink-muted);
+  font-size: 0.875rem;
+}
+
+.kit-setup-suggest button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: 600 0.9rem var(--se-font-sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.kit-setup-suggest button + button {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-setup-suggest small {
+  color: var(--se-color-ink-muted);
+  font-size: 0.78rem;
+}
+
+/* ---- stepper (the segmented control lives in kit.css, shared with History) ---- */
+.kit-stepper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kit-stepper .se-ctl {
+  width: 48px;
+  padding: 0;
+  font-size: 1.3rem;
+}
+
+.kit-stepper output {
+  min-width: 40px;
+  font: 800 1.9rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.kit-setup-rules {
+  margin: 10px 2px 0;
+  color: var(--se-color-ink-soft);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.kit-setup-rules-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kit-setup-hint {
+  margin: 6px 2px 0;
+  color: var(--se-color-ink-muted);
+  font-size: 0.82rem;
+}
+
+.kit-setup-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin-top: 8px;
+  color: var(--se-color-ink);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.kit-setup-check input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--se-color-ink);
+}
+
+.kit-setup-roster {
+  display: grid;
+  gap: 16px;
+  margin-top: 4px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+}
+
+.kit-setup-roster h3 {
+  margin: 0 0 8px;
+  color: var(--se-color-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* Fixed within the same 672px column on every sport and every step. */
+.kit-screen > .kit-setup-cta {
+  position: fixed;
+  z-index: 5;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 672px;
+  padding: 14px 16px calc(16px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
+  background: var(--se-color-canvas);
+  box-shadow: 0 -1px 0 var(--se-color-line-soft);
+}
+
+.kit-setup-cta .se-go {
+  width: 100%;
+  min-height: 52px;
+}
+
+html:has(.kit-setup) {
+  scroll-padding-bottom: calc(140px + var(--se-safe-bottom, env(safe-area-inset-bottom, 0px)));
+}
+
+/* Missing a name: still focusable and announced (aria-disabled + the hint), but it no longer
+   reads as the Go. */
+.kit-setup-cta .se-go[aria-disabled='true'] {
+  border-style: dashed;
+  background: var(--se-color-surface-warm);
+  box-shadow: none;
+  color: var(--se-color-ink-soft);
+}
+
+.kit-setup-cta .kit-setup-hint {
+  position: absolute;
+  right: 16px;
+  bottom: 100%;
+  left: 16px;
+  margin: 0;
+  padding: 8px;
+  background: var(--se-color-canvas);
+  text-align: center;
+}
+
+/* ---- the rules editor ---- */
+.kit-rules-group {
+  margin-top: 18px;
+}
+
+.kit-rules-group .kit-setup-hint {
+  margin-top: 8px;
+}
+
+.kit-rules-custom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.kit-rules-custom .kit-setup-input {
+  width: 96px;
+  text-align: center;
+}
+
+.kit-rules-done {
+  width: 100%;
+  margin-top: 24px;
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/kit/setupSteps.css */
+/* ---- compact summary rows (rules, players) ---- */
+.kit-rrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 56px;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+  color: var(--se-color-ink);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-rrow.is-static {
+  cursor: default;
+}
+
+.kit-rrow[aria-expanded='true'] {
+  box-shadow: inset 0 0 0 2px var(--se-color-ink);
+}
+
+.kit-rrow-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kit-rrow-label {
+  color: var(--se-color-ink-soft);
+  font: 700 0.78rem/1.2 var(--se-font-sans);
+}
+
+.kit-rrow-summary {
+  font: 650 0.92rem/1.3 var(--se-font-sans);
+  overflow-wrap: anywhere;
+}
+
+.kit-rrow-chev {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- step indicator ---- */
+.kit-steps {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.kit-steps li {
+  flex: 1;
+  min-width: 0;
+}
+
+.kit-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink-soft);
+  font: 700 0.85rem var(--se-font-sans);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-step b {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px currentColor;
+  font: 800 0.8rem/1 var(--se-font-num);
+}
+
+.kit-step[aria-current='step'] {
+  background: var(--se-color-ink);
+  color: var(--se-color-canvas);
+}
+
+.kit-step[aria-current='step'] b {
+  background: var(--se-color-canvas);
+  box-shadow: none;
+  color: var(--se-color-ink);
+}
+
+/* ---- remembered setup note ---- */
+.kit-remembered {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 14px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink-soft);
+  font: 600 0.85rem/1.3 var(--se-font-sans);
+}
+
+/* ---- rules step ---- */
+.kit-rules-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 48px;
+}
+
+.kit-rules-line h2 {
+  min-width: 0;
+  margin: 0;
+  font: 500 0.85rem/1.3 var(--se-font-sans);
+  color: var(--se-color-ink-soft);
+}
+
+.kit-rules-line h2 b {
+  color: var(--se-color-ink);
+  font-weight: 750;
+}
+
+/* A text-weight action: underlined, no box, a 48px hit area. */
+.kit-linkbtn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: 750 0.85rem var(--se-font-sans);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/kit/formControls.css */
+/* Kit form controls (switch row, number stepper, choice grid). Tokens only: dark mode is a token
+   swap. Every target is 48px. The fixed Start bar is cleared by setup.css scroll-padding. */
+
+/* ---- compact setting rows: label on the left, the control on the right ---- */
+.kit-togglewrap {
+  display: grid;
+}
+
+.kit-toggle,
+.kit-numrow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  padding: 4px 0;
+  color: var(--se-color-ink);
+}
+
+.kit-toggle-text,
+.kit-numrow-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kit-toggle-label {
+  font: 650 0.92rem/1.25 var(--se-font-sans);
+}
+
+.kit-toggle-hint {
+  color: var(--se-color-ink-soft);
+  font: 500 0.8rem/1.3 var(--se-font-sans);
+}
+
+/* The switch button stretches over the whole row so the row is the tap target. */
+.kit-toggle-switch {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-toggle-switch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.kit-toggle-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.kit-toggle-track {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 28px;
+  border-radius: 14px;
+  background: var(--se-color-surface-warm);
+  box-shadow: inset 0 0 0 2px var(--se-color-ink-soft);
+  transition: background 120ms ease;
+}
+
+.kit-toggle-knob {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--se-color-ink-soft);
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.kit-toggle-switch[aria-checked='true'] .kit-toggle-track {
+  background: var(--se-color-ink);
+  box-shadow: none;
+}
+
+.kit-toggle-switch[aria-checked='true'] .kit-toggle-knob {
+  background: var(--se-color-canvas);
+  transform: translateX(18px);
+}
+
+.kit-toggle-switch:focus-visible .kit-toggle-track {
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: 3px;
+}
+
+/* The small (i): 48px to tap, a 20px mark to look at. Sits above the stretched switch. */
+.kit-info-btn {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 -6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink-soft);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-info-btn span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  font: 800 0.72rem/1 var(--se-font-sans);
+}
+
+.kit-info-btn[aria-expanded='true'] {
+  color: var(--se-color-ink);
+}
+
+.kit-info {
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink-soft);
+  font: 500 0.82rem/1.4 var(--se-font-sans);
+}
+
+/* ---- number stepper: 48px controls ---- */
+.kit-numstep {
+  flex: none;
+  gap: 6px;
+}
+
+.kit-numstep .se-ctl {
+  min-height: 48px;
+  width: 48px;
+  font-size: 1.15rem;
+}
+
+.kit-numstep-input {
+  box-sizing: border-box;
+  width: 52px;
+  min-height: 48px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+  font: 800 1.1rem/1 var(--se-font-num);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.kit-numstep-unit {
+  margin-left: -2px;
+  color: var(--se-color-ink-soft);
+  font: 650 0.78rem var(--se-font-sans);
+}
+
+/* ---- choice grid ---- */
+.kit-choice {
+  display: grid;
+  grid-template-columns: repeat(var(--kit-choice-cols, 2), minmax(0, 1fr));
+  gap: 8px;
+}
+
+.kit-choice button {
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--se-color-ink) 16%, transparent);
+  color: var(--se-color-ink);
+  font: 650 0.92rem/1.15 var(--se-font-sans);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-choice button:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.kit-choice button[aria-checked='true'] {
+  background: var(--se-ctl-bg);
+  box-shadow: inset 0 0 0 2px var(--se-color-ink), 2px 2px 0 var(--se-color-ink);
+  font-weight: 800;
+}
+
+.kit-choice button[aria-checked='true']::before {
+  content: '\2713\00a0';
+}
+
+.kit-choice button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ---- kabaddi rules panel: one quiet card of compact rows ---- */
+.kit-rules-panel {
+  display: grid;
+  margin-top: 10px;
+  padding: 2px 14px;
+  border-radius: 16px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+}
+
+.kit-rules-panel > * + *,
+.kit-rules-more-body > * + * {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+.kit-rules-block {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
+}
+
+.kit-rules-block .kit-setup-label {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.kit-rules-sub {
+  display: grid;
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--se-color-line-soft);
+}
+
+.kit-rules-sub > * + * {
+  border-top: 1px solid var(--se-color-line-soft);
+}
+
+/* "More rules": one collapsed row; the less common rules sit inside it. */
+.kit-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink);
+  font: 700 0.92rem var(--se-font-sans);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-more svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kit-rules-more-body {
+  display: grid;
+}
+
+.kit-rules-more summary {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  color: var(--se-color-ink);
+  font: 650 0.88rem var(--se-font-sans);
+  cursor: pointer;
+}
+
+/* Cards: options that carry a one-line description sit one per row. Calm: unselected rows are
+   flat with a hairline, the chosen row is tinted and ticked (no heavy outline or offset shadow). */
+.kit-choice.is-cards {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.kit-choice.is-cards button {
+  position: relative;
+  display: grid;
+  gap: 1px;
+  min-height: 54px;
+  padding: 9px 46px 9px 14px;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+  font-weight: 600;
+  text-align: left;
+}
+
+.kit-choice.is-cards button[aria-checked='true'] {
+  background: var(--se-color-surface-warm);
+  box-shadow: none;
+}
+
+.kit-choice.is-cards button::before {
+  content: none;
+}
+
+.kit-choice.is-cards button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--se-color-line-soft);
+  transform: translateY(-50%);
+}
+
+.kit-choice.is-cards button[aria-checked='true']::after {
+  background: var(--se-color-ink);
+  box-shadow: none;
+}
+
+/* The tick: two borders of a rotated box, in the canvas colour so it reads on ink in both themes. */
+.kit-choice.is-cards button[aria-checked='true']::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: calc(50% - 5px);
+  right: 22.5px;
+  width: 5px;
+  height: 9px;
+  border: solid var(--se-color-canvas);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.kit-choice-label {
+  font: 700 0.95rem/1.2 var(--se-font-sans);
+}
+
+.kit-choice-hint {
+  color: var(--se-color-ink-soft);
+  font: 500 0.8rem/1.3 var(--se-font-sans);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-toggle-track,
+  .kit-toggle-knob {
+    transition: none;
+  }
+}
+
+/* A rule with a native select or number box on the right (the less common rules in More rules). */
+.kit-fieldrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: 52px;
+  padding: 4px 0;
+  color: var(--se-color-ink);
+  font: 650 0.92rem/1.25 var(--se-font-sans);
+}
+
+.kit-fieldrow > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.kit-fieldrow select,
+.kit-fieldrow input {
+  box-sizing: border-box;
+  flex: none;
+  width: auto;
+  min-width: 132px;
+  max-width: 58%;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--se-color-surface-warm);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft);
+  color: var(--se-color-ink);
+  font: 650 0.95rem var(--se-font-sans);
+}
+
+.kit-fieldrow input[type='number'] {
+  min-width: 0;
+  width: 96px;
+  text-align: center;
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/kit/teamSheet.css */
+/* Quick setup Teams step: team cards, the team sheet and the colour picker. Tokens and the
+   engine's team vars only, so dark mode is a token swap and team gradients stay engine-gated. */
+
+/* ---- team cards ---- */
+.kit-teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin: 4px 0 2px;
+}
+
+.kit-tcard {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 84px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--se-color-line-soft), var(--se-lift);
+  color: var(--se-color-ink);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-teams.is-team .kit-tcard[data-team='a'],
+.kit-tchip.is-team[data-team='a'] {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
+    linear-gradient(168deg, var(--team-a-hi), var(--team-a-core) 52%, var(--team-a-lo));
+  color: var(--team-a-on);
+}
+
+.kit-teams.is-team .kit-tcard[data-team='b'],
+.kit-tchip.is-team[data-team='b'] {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, white 7%, transparent), transparent 40%),
+    linear-gradient(168deg, var(--team-b-hi), var(--team-b-core) 52%, var(--team-b-lo));
+  color: var(--team-b-on);
+}
+
+.kit-tcard-tag {
+  font: 700 0.8rem/1.2 var(--se-font-sans);
+  opacity: 0.85;
+}
+
+.kit-tcard-name {
+  overflow: hidden;
+  font: 800 1.6rem/1.1 var(--se-font-sans);
+  letter-spacing: -0.015em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kit-tcard-pencil {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+/* ---- team sheet ---- */
+.kit-tsheet {
+  display: grid;
+  gap: 6px;
+}
+
+.kit-tchip {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 64px;
+  margin-bottom: 8px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: var(--se-color-surface-warm);
+  color: var(--se-color-ink);
+}
+
+.kit-tchip b {
+  overflow: hidden;
+  font: 800 1.3rem/1.15 var(--se-font-sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kit-tchip span {
+  flex: none;
+  font: 700 0.85rem var(--se-font-sans);
+  opacity: 0.9;
+}
+
+.kit-tsheet-field {
+  position: relative;
+}
+
+.kit-tsheet-colour-label {
+  margin-top: 12px;
+}
+
+/* ---- colour picker ---- */
+.kit-sw-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px 8px;
+}
+
+.kit-sw {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  min-width: 48px;
+  min-height: 80px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--se-color-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kit-sw-face {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--kit-sw, var(--se-color-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--se-color-ink) 22%, transparent);
+  color: var(--kit-sw-on, var(--se-color-ink));
+}
+
+.kit-sw[aria-pressed='true'] .kit-sw-face,
+.kit-sw-custom.is-selected .kit-sw-face {
+  box-shadow: 0 0 0 2px var(--se-color-surface), 0 0 0 5px var(--se-color-ink);
+}
+
+.kit-sw:disabled {
+  cursor: not-allowed;
+}
+
+.kit-sw:disabled .kit-sw-face {
+  opacity: 0.45;
+}
+
+.kit-sw-name {
+  max-width: 100%;
+  overflow: hidden;
+  font: 650 0.78rem/1.1 var(--se-font-sans);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kit-sw-check {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.kit-sw-face-custom {
+  background: var(--kit-sw, var(--se-color-surface));
+  box-shadow: inset 0 0 0 2px var(--se-color-ink);
+}
+
+.kit-sw-plus {
+  font: 700 1.6rem/1 var(--se-font-sans);
+}
+
+.kit-sw-custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.kit-sw-custom:focus-within {
+  outline: 3px solid var(--se-color-focus-ring);
+  outline-offset: 3px;
+  border-radius: 16px;
+}
+
+/* The global ring sits 3px off a control; a selected swatch's ring fills 2-5px, so the focus ring
+   moves out past it. */
+.kit-sw:focus-visible {
+  outline-offset: 7px;
+  border-radius: 16px;
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/kit/live.css */
+.kit-nav-live-dot {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--se-color-live);
+}
+.global-nav-link, .global-mobile-menu-item { position: relative; }
+.kit-live-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 16px -16px 8px;
+  padding: 2px 16px 6px;
+  scrollbar-width: none;
+}
+.kit-live-filters button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--se-color-line-soft);
+  border-radius: 999px;
+  background: var(--se-color-surface);
+  color: var(--se-color-ink);
+  font: 650 .95rem var(--se-font-sans);
+  cursor: pointer;
+}
+.kit-live-filters button[aria-pressed=true] { background: var(--se-color-ink); color: var(--se-color-on-ink); }
+.kit-live-filters i { width: 10px; height: 10px; border-radius: 50%; background: var(--sport-core); }
+.kit-live-list { overflow: hidden; border: 1px solid var(--se-color-line-soft); border-radius: 22px; background: var(--se-color-surface); }
+.kit-live-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 4px 12px;
+  align-items: center;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  min-height: 84px;
+  color: var(--se-color-ink);
+  text-decoration: none;
+}
+.kit-live-row + .kit-live-row { border-top: 1px solid var(--se-color-line-soft); }
+.kit-live-team { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .95rem; line-height: 1.55; }
+.kit-live-team-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.kit-live-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.kit-live-score { display: flex; align-items: baseline; gap: 12px; font: 800 1.35rem/1.24 var(--se-font-num); font-variant-numeric: tabular-nums; }
+.kit-live-sets { color: var(--se-color-ink-soft); font: 700 .85rem var(--se-font-sans); white-space: nowrap; }
+.kit-live-sets small { font-size: .65rem; margin-left: 3px; }
+.kit-live-meta { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; color: var(--se-color-ink-soft); font-size: .8rem; font-weight: 650; }
+.kit-live-status, .kit-live-paused { padding: 3px 8px; border-radius: 999px; }
+.kit-live-status { color: var(--se-color-live); background: var(--se-color-live-soft); }
+.kit-live-paused { color: var(--se-color-ink-soft); background: var(--se-color-surface-warm); }
+.kit-live-footnote { margin: 14px 4px 0; font-size: .85rem; color: var(--se-color-ink-soft); }
+.kit-live-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 42px 10px 0; }
+.kit-live-marks { display: flex; gap: 12px; margin-bottom: 20px; }
+.kit-live-marks .kit-badge { width: 58px; height: 58px; border-radius: 18px; transform: rotate(-8deg); }
+.kit-live-marks .kit-badge:nth-child(2) { transform: rotate(4deg); }
+.kit-live-marks .kit-badge:nth-child(3) { transform: rotate(-3deg); }
+.kit-live-empty h2 { margin: 0; font: 800 1.75rem/1.05 var(--se-font-display); letter-spacing: -.03em; }
+.kit-live-empty p { margin: 8px 0 22px; color: var(--se-color-ink-soft); font-size: .95rem; max-width: 290px; line-height: 1.4; }
+.kit-live-empty .se-go { width: 100%; max-width: 300px; text-decoration: none; }
+.kit-live-loading { display: grid; gap: 1px; margin-top: 24px; border-radius: 22px; overflow: hidden; }
+.kit-live-loading > div { height: 106px; background: var(--se-color-surface-warm); }
+.live-strip-head { display: flex; align-items: center; justify-content: space-between; }
+.kit-live-see-all { display: inline-flex; align-items: center; min-height: 48px; padding: 0 8px; color: var(--se-color-ink); font-weight: 700; }
+
+.kit-live-screen .kit-top { min-height: 60px; }
+.kit-live-screen .kit-title { margin-bottom: 2px; }
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/scoring/boardShell.css */
+/* Board shell: the scorer chrome every sport's board shares (BoardShell.jsx; Kit plan 2026-10-22,
+   F0). Factored out of the volleyball board (PR #157, "Refined Soft with Mono-strength controls"):
+   calm neutral chrome, sentence-case labels, hairlines instead of frames. The controls you press
+   (Finish, Undo, More, Done, dialog buttons) are the app's .se-ctl (index.css).
+
+   A board's root carries `sb`; the confirm dialogs it opens carry `sb-confirm` on their backdrop
+   (they render outside the root, so the variables are declared on both).
+   Chrome text is ink or --sb-ink-2 (about 8:1) on the canvas. */
+
+.sb,
+.sb-confirm {
+  --sb-num: var(--se-font-num);
+  --sb-ink: var(--se-color-ink);
+  --sb-ink-2: color-mix(in oklab, var(--se-color-ink) 62%, var(--se-color-surface));
+  --sb-hair: color-mix(in oklab, var(--se-color-ink) 11%, transparent);
+  --sb-lift: var(--se-lift);
+}
+
+.sb {
+  min-height: calc(100dvh - var(--se-safe-top));
+  display: flex;
+  flex-direction: column;
+  max-width: 560px;
+  margin: 0 auto;
+  padding-bottom: var(--se-safe-bottom);
+  background: var(--se-color-canvas);
+  color: var(--sb-ink);
+  font-family: var(--se-font-sans);
+}
+
+/* From 768px the app keeps its sticky top nav (.global-nav, min-height 56px, design1-mono/index.jsx)
+   above the board; fit under it so Undo stays on screen without scrolling. */
+@media (min-width: 768px) {
+  .sb {
+    min-height: calc(100dvh - 56px - var(--se-safe-top));
+  }
+}
+
+/* reset only the shell's own plain buttons; .se-ctl styles itself, and embedded app controls
+   (the live bar) keep their styles */
+.sb :where(.sb-row, .sb-scrim) {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- header ---- */
+.sb-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 6px 18px;
+}
+
+.sb-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.sb-title b {
+  display: block;
+  font-size: 1.06rem;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sb-title small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: var(--sb-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* the sport's identity as a 9px dot before the subtitle; the subtitle names the sport too */
+.sb-sport-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--sb-sport);
+  box-shadow: inset 0 0 0 1px var(--sb-hair);
+  vertical-align: 0.02em;
+}
+
+/* Live: the word plus a dot, never colour alone */
+.sb-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--se-color-live-soft);
+  color: var(--se-color-live);
+  font-size: 0.78rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.sb-live::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.sb .sb-finish {
+  padding: 0 16px;
+  font-size: 0.92rem;
+}
+
+/* ---- bottom thumb zone: undo + options ---- */
+.sb-bar {
+  display: grid;
+  grid-template-columns: 1fr 64px;
+  gap: 12px;
+  padding: 14px 17px 18px 14px;
+}
+
+.sb .sb-undo,
+.sb .sb-more {
+  min-height: 60px;
+}
+
+.sb .sb-undo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 16px;
+  text-align: left;
+}
+
+.sb .sb-more {
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.sb-undo-t {
+  font-size: 1rem;
+}
+
+.sb-undo-w {
+  margin-left: auto;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--sb-ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- options sheet: soft surface, hairline groups ---- */
+.sb-sheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sb-sheet-layer[hidden] {
+  display: none;
+}
+
+.sb .sb-scrim {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklab, var(--se-color-shadow) 42%, transparent);
+}
+
+.sb-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: min(85dvh, calc(100dvh - var(--se-safe-top)));
+  overflow-y: auto;
+  padding: 12px 16px calc(18px + var(--se-safe-bottom));
+  border-radius: 24px 24px 0 0;
+  background: var(--se-color-surface);
+  box-shadow: 0 -18px 40px -24px color-mix(in oklab, var(--se-color-shadow) 50%, transparent);
+}
+
+.sb-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2px 14px 4px;
+  font-size: 1.06rem;
+}
+
+.sb-sheet-head b {
+  font-weight: 750;
+}
+
+.sb .sb-sheet-close {
+  padding: 0 16px;
+}
+
+.sb-sheet-live {
+  margin-bottom: 14px;
+}
+
+.sb-sheet-group {
+  margin-bottom: 14px;
+  border: 1px solid var(--sb-hair);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--se-color-surface);
+}
+
+.sb .sb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 16px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.sb .sb-row + .sb-row {
+  border-top: 1px solid var(--sb-hair);
+}
+
+.sb .sb-sheet-note {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--se-color-ink-muted);
+}
+
+.sb :where(.sb-row, .sb-sheet-note) + :where(.sb-row, .sb-sheet-note) {
+  border-top: 1px solid var(--sb-hair);
+}
+
+.sb .sb-row:active {
+  background: var(--se-color-canvas);
+}
+
+.sb-row-aside {
+  font-family: var(--sb-num);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.sb .sb-row-danger {
+  color: var(--se-color-danger);
+}
+
+/* ---- Finish / Discard confirm: the app dialog (mono.css) plus the score it acts on ----
+   (two classes beat the dialog's own single-class rules, including its phone media query) */
+.sb-confirm .app-confirm-dialog {
+  border-color: var(--sb-hair);
+}
+
+.sb-confirm .app-confirm-eyebrow {
+  display: none;
+}
+
+.sb-confirm .app-confirm-title {
+  font-family: var(--se-font-sans);
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.sb-confirm .app-confirm-message {
+  margin-bottom: 0;
+  color: var(--sb-ink-2);
+}
+
+.sb-confirm-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0 20px;
+  padding: 14px 0;
+  border-top: 1px solid var(--sb-hair);
+  border-bottom: 1px solid var(--sb-hair);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--sb-ink-2);
+}
+
+.sb-confirm-summary strong {
+  font: 800 2rem/1 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+  color: var(--sb-ink);
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/scoring/teamBoard.css */
+/* Team-colour scorer for sets sports, "Refined Soft with Mono-strength controls" (Harsha 2026-10-21;
+   the framing BLEND-GOVERNANCE §7 leaves to the scorer's own design). The shared chrome (header,
+   Undo/More bar, options sheet, confirm skin) is the board shell (boardShell.css); this file is
+   only what is specific to a two-key sets board: the status line, the two team-colour keys, the
+   sport mark and the completed-set chips.
+
+   Contrast: the key gradient uses exactly the engine's stops (hi -> core -> lo plus the 7% white
+   sheen it models), and the sport mark is painted in the engine's --team-x-motif. The engine gates
+   the on-colour text at >= 4.6:1 (6.5:1 on bright fills) on every one of those surfaces, with and
+   without the motif under it (src/lib/teamColour.js contrastReport), so no pair can drop below
+   4.5:1. Chrome text is ink or --sb-ink-2 (about 8:1) on the canvas. */
+
+.tsb {
+  /* the engine's 7% white sheen (its contrast gate models exactly this); inverse is the app white */
+  --tsb-sheen: linear-gradient(180deg, color-mix(in srgb, var(--se-color-inverse) 7%, transparent), transparent 40%);
+}
+
+/* reset the keys (plain buttons) */
+.tsb :where(.tsb-key) {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- status line + last action: plain text, no boxes ---- */
+.tsb-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  column-gap: 8px;
+  row-gap: 2px;
+  margin: 0;
+  padding: 8px 16px 2px;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tsb-meta-item + .tsb-meta-item::before {
+  content: '\00b7';
+  margin-right: 8px;
+  color: var(--sb-ink-2);
+}
+
+.tsb-meta-item:first-child {
+  font-weight: 750;
+}
+
+.tsb-point-cue {
+  padding: 2px 8px;
+  border-radius: 6px;
+  /* The unmixed warning pair is 5.998:1 in light mode; ink lifts it above 6:1. */
+  color: color-mix(in srgb, var(--se-color-warning) 99%, var(--se-color-ink));
+  background: var(--se-color-warning-soft);
+  font-weight: 750;
+}
+
+.tsb-last {
+  min-height: 1.6em;
+  margin: 0;
+  padding: 2px 16px 10px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--sb-ink-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- the two point keys: bold team-colour gradients, no frame ---- */
+.tsb-keys {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 14px;
+  min-height: 260px;
+}
+
+.tsb .tsb-key {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 240px;
+  border-radius: 24px;
+  box-shadow: inset 0 0 0 1px var(--sb-hair), var(--sb-lift);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 44px 8px 22px;
+  text-align: center;
+  touch-action: manipulation;
+  transition: transform 80ms ease;
+}
+
+.tsb .tsb-key:active {
+  transform: scale(0.985);
+}
+
+.tsb .tsb-key-a {
+  background: var(--tsb-sheen), linear-gradient(168deg, var(--team-a-hi) 0%, var(--team-a-core) 52%, var(--team-a-lo) 100%);
+  color: var(--team-a-on);
+}
+
+.tsb .tsb-key-b {
+  background: var(--tsb-sheen), linear-gradient(168deg, var(--team-b-hi) 0%, var(--team-b-core) 52%, var(--team-b-lo) 100%);
+  color: var(--team-b-on);
+}
+
+/* "show the game": the sport's ball-and-action mark on the serving key, flying at the net and
+   cropped by the key's inner edge. Engine motif colour, so it can never cost text contrast. */
+.tsb-mark {
+  position: absolute;
+  z-index: -1;
+  bottom: 2%;
+  left: 4%;
+  width: 118%;
+  aspect-ratio: 140 / 100;
+  /* on short keys (360 x 640) the mark shrinks instead of climbing into the numeral; it stays
+     anchored to the bottom and the net-side edge */
+  max-height: 29%;
+  -webkit-mask: var(--sport-mark) right bottom / contain no-repeat;
+  mask: var(--sport-mark) right bottom / contain no-repeat;
+  pointer-events: none;
+}
+
+.tsb-key[data-side='right'] .tsb-mark {
+  left: auto;
+  right: 4%;
+  transform: scaleX(-1);
+}
+
+.tsb-key-a .tsb-mark {
+  background: var(--team-a-motif);
+}
+
+.tsb-key-b .tsb-mark {
+  background: var(--team-b-motif);
+}
+
+/* serving tag: inverted (on-colour fill, team-colour text), the same gated pair as the labels */
+.tsb-srv {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.tsb-key-a .tsb-srv {
+  background: var(--team-a-on);
+  color: var(--team-a-core);
+}
+
+.tsb-key-b .tsb-srv {
+  background: var(--team-b-on);
+  color: var(--team-b-core);
+}
+
+.tsb-who {
+  max-width: 94%;
+  font-size: 1.06rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tsb-big {
+  font: 800 clamp(6.25rem, min(36vw, 24vh), 10rem)/0.92 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin: 8px 0 6px;
+}
+
+.tsb-word {
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.tsb-sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.tsb-set {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 11px;
+  border: 1px solid var(--sb-hair);
+  border-radius: 10px;
+  background: var(--se-color-canvas);
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the winner's colour as a dot; colour is never the only cue (the score and sr text say it) */
+.tsb-set::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--sb-hair);
+}
+
+.tsb-win-a::before {
+  background: var(--team-a-core);
+}
+
+.tsb-win-b::before {
+  background: var(--team-b-core);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tsb .tsb-key,
+  .tsb .tsb-key:active {
+    transition: none;
+  }
+
+  .tsb .tsb-key:active {
+    transform: none;
+  }
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/scoring/goalsBoard.css */
+/* Flat team keys, hard controls, neutral shell. All colours come from the gated engine.
+   The sport mark belongs to the clock chip: a team mark would imply possession. */
+.tgb-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+}
+.tgb-sport, .tgb-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.tgb-sport { background: var(--sport-core); color: var(--sport-on); }
+.tgb-sport-mark {
+  width: 28px;
+  height: 22px;
+  background: currentColor;
+  mask: var(--sport-mark) center / contain no-repeat;
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+}
+.tgb-clock { background: var(--se-color-surface); color: var(--sb-ink); font-variant-numeric: tabular-nums; }
+.tgb-status { font-size: 0.85rem; font-weight: 750; }
+.tgb-last {
+  min-height: 2.6em;
+  margin: 0;
+  padding: 2px 14px 10px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--sb-ink-2);
+  overflow-wrap: anywhere;
+}
+.tgb-keys {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 0 17px 0 14px;
+}
+.tgb-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 14px 8px;
+  border: 2px solid var(--sb-ink);
+  border-radius: 24px;
+  box-shadow: 3px 3px 0 var(--se-color-shadow);
+  background: var(--tgb-core);
+  color: var(--tgb-on);
+}
+.tgb-team-a { --tgb-core: var(--team-a-core); --tgb-on: var(--team-a-on); }
+.tgb-team-b { --tgb-core: var(--team-b-core); --tgb-on: var(--team-b-on); }
+.tgb-name { font-size: 1rem; font-weight: 800; overflow-wrap: anywhere; text-align: center; max-width: 100%; }
+.tgb-score { font: 800 clamp(4.5rem, min(26vw, 17vh), 8.5rem)/1 var(--sb-num); font-variant-numeric: tabular-nums; margin: 8px 0 12px; }
+.tgb-actions { display: grid; gap: 8px; width: 100%; }
+.tgb-actions button, .tgb-whole {
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.tgb-actions button {
+  min-height: 48px;
+  width: 100%;
+  padding: 6px 4px;
+  border: 2px solid var(--tgb-on);
+  border-radius: 14px;
+  background: var(--tgb-on);
+  color: var(--tgb-core);
+  font-size: 0.85rem;
+  box-shadow: 0 3px 0 var(--se-color-shadow);
+}
+.tgb-actions button:active { transform: translateY(2px); box-shadow: none; }
+.tgb-actions button:disabled, .tgb-whole:disabled { cursor: default; border-style: dashed; box-shadow: none; }
+.tgb button:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 3px; }
+.tgb-whole { min-height: 260px; width: 100%; }
+.tgb-whole:active { transform: scale(0.985); }
+.tgb-moment { animation: tgb-bump 260ms ease-out; }
+.tgb-whole.tgb-moment { animation-name: tgb-key-bump; }
+/* Alternate names restart the moment on consecutive goals without remounting a focused key. */
+.tgb-whole.tgb-moment[data-action='0'] { animation-name: tgb-key-bump-repeat; }
+@keyframes tgb-bump { 0% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes tgb-key-bump { 0% { transform: scale(0.985); } 45% { transform: scale(1.02); } 100% { transform: scale(1); } }
+@keyframes tgb-key-bump-repeat { 0% { transform: scale(0.985); } 45% { transform: scale(1.02); } 100% { transform: scale(1); } }
+@media (max-height: 680px) {
+  .tgb .sb-top { padding-top: 10px; }
+  .tgb .sb-bar { padding-top: 12px; padding-bottom: 14px; }
+  .tgb-team { padding-top: 10px; padding-bottom: 10px; }
+  .tgb-score { margin: 4px 0 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tgb-moment, .tgb .tgb-whole.tgb-moment { animation: none; }
+  .tgb-actions button:active, .tgb-whole:active { transform: none; }
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/scoring/goalsPeriods.css */
+.gp-controls { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; padding:6px 14px; }
+.gp-controls button { min-height:48px; padding:8px 14px; border:2px solid var(--se-color-ink); border-radius:12px; background:var(--se-color-surface); color:var(--se-color-ink); font:inherit; font-weight:750; touch-action:manipulation; }
+.gp-controls button:focus-visible { outline:3px solid var(--se-color-focus-ring); outline-offset:2px; }
+.gp-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.gp-fields input { width:100%; }
+.gp-extra { display:flex; align-items:center; gap:10px; min-height:44px; margin-top:8px; }
+.gp-extra input { width:22px; height:22px; }
+.gp-setup select { width:100%; margin-bottom:8px; }
+.tgb:has(.gp-controls) .tgb-whole { min-height:180px; }
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/scoring/tennisBoard.css */
+/* Tennis adds its point ladder, moments and set strip to the shared two-key board. */
+.tennis-state {
+  padding: 8px 16px 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tennis-state p {
+  margin: 3px 0 0;
+  color: var(--sb-ink-2);
+}
+
+.tennis-moment {
+  display: block;
+  min-height: 22px;
+  font-weight: 750;
+}
+
+.tennis-tiebreak,
+.tennis-moment {
+  color: var(--se-color-warning);
+}
+
+.tennis-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px 10px;
+}
+
+.tennis-strip span {
+  padding: 5px 9px;
+  border: 1px solid var(--sb-hair);
+  border-radius: 10px;
+  background: var(--se-color-surface);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tennis-board .tsb-big {
+  font-size: clamp(5rem, min(29vw, 20vh), 9rem);
+}
+
+.tennis-board .sb-undo {
+  flex-wrap: wrap;
+  column-gap: 8px;
+  row-gap: 0;
+  align-content: center;
+}
+
+.tennis-board .sb-undo-w {
+  flex-basis: 100%;
+  margin-left: 28px;
+  text-align: left;
+  font-size: 0.76rem;
+}
+
+.tennis-board .tsb-key:disabled {
+  cursor: default;
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/scoring/cricketBoard.css */
+/* The cricket dialect uses the shared shell and the engine's gated team colours. */
+.mono-scorer-screen.cricket-board {
+  --cricket-core: var(--team-a-core);
+  --cricket-hi: var(--team-a-hi);
+  --cricket-lo: var(--team-a-lo);
+  --cricket-on: var(--team-a-on);
+  --cricket-motif: var(--team-a-motif);
+  --cricket-scrim: var(--team-a-scrim);
+  background: var(--se-color-canvas);
+  color: var(--se-color-ink);
+  padding: 0 12px;
+}
+.cricket-board[data-batting="b"] {
+  --cricket-core: var(--team-b-core);
+  --cricket-hi: var(--team-b-hi);
+  --cricket-lo: var(--team-b-lo);
+  --cricket-on: var(--team-b-on);
+  --cricket-motif: var(--team-b-motif);
+  --cricket-scrim: var(--team-b-scrim);
+}
+.cricket-board .crb { max-width: 520px; min-height: calc(100dvh - var(--se-safe-top)); gap: 8px; padding: 0 0 calc(10px + var(--se-safe-bottom)); }
+.cricket-board button { min-width: 48px; min-height: 48px; }
+.cricket-board .sb-top { padding-inline: 2px; padding-bottom: 4px; min-height: 66px; }
+.cricket-board .sb-title small { white-space: normal; }
+.cricket-board .cricket-hero {
+  position: relative; isolation: isolate; overflow: hidden;
+  border: 0; border-radius: 22px; padding: 12px 16px;
+  background: linear-gradient(168deg, var(--cricket-hi), var(--cricket-core) 52%, var(--cricket-lo));
+  color: var(--cricket-on); box-shadow: var(--se-lift); text-align: left;
+}
+.cricket-mark { position: absolute; z-index: -1; right: -3%; bottom: -20%; width: 62%; aspect-ratio: 1.4; background: var(--cricket-motif); mask: var(--sport-mark) center / contain no-repeat; }
+.cricket-who { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 5px; font-size: 0.94rem; font-weight: 750; }
+.cricket-board .ck-hero-score { font-family: var(--se-font-num); font-size: 3.7rem; letter-spacing: -0.025em; padding: 0 4px; border-radius: 8px; background: var(--cricket-scrim); }
+.cricket-board .ck-hero-score .wk { font-size: 0.6em; color: inherit; }
+.cricket-board :is(.ck-hero-ov,.ck-hero-crr,.ck-hero-chase,.ck-hero-chase b,.ck-hero-chase .need) { color: var(--cricket-on); }
+.cricket-board .ck-hero-bar { background: var(--cricket-motif); margin: 8px 0; }
+.cricket-board .ck-hero-bar > i { background: var(--cricket-on); }
+.cricket-board .ck-players { display: grid; grid-template-columns: 1fr; margin: 0; border: 1px solid var(--se-color-line-soft); border-radius: 18px; }
+.cricket-board .ck-player { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; min-height: 32px; padding: 5px 12px; }
+.cricket-board .ck-player + .ck-player { border-left: 0; border-top: 1px solid var(--se-color-line-soft); }
+.cricket-board :is(.ck-player-name,.ck-player-fig) { font-family: var(--se-font-sans); font-size: 0.81rem; margin: 0; color: var(--se-color-ink); white-space: normal; overflow: visible; }
+.cricket-board .ck-player-name { font-weight: 750; }
+.cricket-board .ck-player-name .dot { color: var(--se-color-ink); }
+.cricket-board .ck-player-fig { font-variant-numeric: tabular-nums; }
+.cricket-board .ck-pship { margin: 0; color: var(--se-color-ink-muted); font-family: var(--se-font-sans); text-transform: none; letter-spacing: 0; font-size: 0.75rem; }
+.cricket-board .ck-quota { color: var(--se-color-ink-muted); }
+.cricket-board .ck-over-row { margin: 0; }
+.cricket-board .mono-over-strip { gap: 5px; }
+.cricket-board .mono-over-label { font-family: var(--se-font-sans); color: var(--se-color-ink-muted); letter-spacing: 0; text-transform: none; }
+.cricket-board .mono-over-pip { height: 28px; min-width: 28px; }
+.cricket-board :is(.mono-over-pip-four,.mono-over-pip-six) { background: var(--cricket-core); color: var(--cricket-on); border-color: var(--cricket-core); }
+.cricket-board .mono-over-pip-wicket { background: var(--se-color-danger-soft); color: var(--se-color-danger); border-color: var(--se-color-danger); }
+.cricket-board :is(.ck-freehit,.ck-lastman,.cricket-moment,.cricket-warning) { display: inline-block; background: var(--se-color-warning-soft); color: var(--se-color-warning); padding: 3px 7px; border-radius: 8px; font: 750 0.7rem/1.3 var(--se-font-sans); letter-spacing: 0; }
+.cricket-board .big5 { order: initial; margin: auto 0 0; padding-top: 6px; }
+.cricket-board .big5-caption { display: none; }
+.cricket-board .big5-grid { grid-template-columns: repeat(5,minmax(0,1fr)); gap: 7px; }
+.cricket-board .big5-key {
+  min-height: clamp(60px, 10dvh, 78px); padding: 4px 0;
+  border: 2px solid var(--se-color-ink); border-radius: 16px;
+  background: var(--cricket-core); color: var(--cricket-on);
+  box-shadow: 3px 3px 0 var(--se-color-shadow); font: 800 1.9rem/1 var(--se-font-num);
+}
+.cricket-board .big5-key small { font: 750 0.6rem/1.4 var(--se-font-sans); color: inherit; opacity: 1; letter-spacing: 0; }
+.cricket-board .big5-key-wicket { grid-column: auto; flex-direction: column; gap: 1px; background: var(--se-color-danger-soft); color: var(--se-color-danger); }
+.cricket-board .big5-key:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--se-color-shadow); }
+.cricket-board :is(.sec-extras,.sec-otherruns) { order: initial; margin: 0; }
+.cricket-board .sec-lbl { display: none; }
+.cricket-board .sec-pills.fill { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 7px; }
+.cricket-board .pill { min-width: 48px; min-height: 48px; padding: 6px; border-radius: 12px; background: var(--se-color-surface); border: 1px solid var(--se-color-line); font-family: var(--se-font-sans); }
+.cricket-thumb { display: grid; grid-template-columns: minmax(0,1fr) 50px; gap: 8px; margin-top: 2px; }
+.cricket-board .sb-bar { padding: 0; gap: 8px; grid-template-columns: minmax(0,1fr) 50px; }
+.cricket-board .sb :is(.sb-undo,.sb-more) { min-height: 56px; }
+.cricket-board .sb .sb-undo { display: grid; grid-template-columns: 20px 1fr; gap: 0 8px; padding: 6px 10px; }
+.cricket-board .sb-undo svg { grid-row: span 2; }
+.cricket-board .sb-undo-t { font-size: 0.9rem; }
+.cricket-board .sb-undo-w { margin: 0; font-size: 0.68rem; overflow: visible; white-space: normal; }
+.cricket-swap { min-width: 48px; min-height: 56px; font-size: 1.4rem; }
+.cricket-board .cricket-aggregate-hero :is(p,span):not(.mono-over-pip) { color: inherit !important; }
+.cricket-board .cricket-aggregate-hero :is(.cricket-warning,.cricket-warning p,.mono-cricket-chip-warn) { color: var(--se-color-warning) !important; background: var(--se-color-warning-soft); }
+.cricket-board .cricket-aggregate-hero .mono-cricket-chip-accent { color: var(--cricket-on) !important; background: var(--cricket-scrim); }
+.cricket-board .cricket-aggregate-hero .mono-scorer-score-value { justify-content: flex-start !important; font-family: var(--se-font-num); font-size: 4rem !important; }
+.cricket-board .cricket-aggregate-hero .mono-scorer-score-value { width: fit-content; background: var(--cricket-scrim); border-radius: 8px; padding: 0 4px; }
+.cricket-board :is(.mono-scorer-run-grid,.mono-cricket-keys) { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin: 0 0 8px; border: 0; }
+.cricket-board :is(.mono-scorer-run-button,.mono-cricket-key) { min-height: 58px; width: auto; border: 2px solid var(--se-color-ink); border-radius: 14px; box-shadow: 3px 3px 0 var(--se-color-shadow); background: var(--cricket-core); color: var(--cricket-on); font-family: var(--se-font-num); }
+.cricket-board :is(.mono-cricket-key-sec,.mono-scorer-extra-row .mono-btn) { min-height: 48px; background: var(--se-color-surface); color: var(--se-color-ink); font: 750 0.78rem var(--se-font-sans); }
+.cricket-board :is(.mono-cricket-out-line,.mono-btn-danger) { min-height: 48px; border: 2px solid var(--se-color-ink); border-radius: 14px; color: var(--se-color-danger); background: var(--se-color-danger-soft); box-shadow: 3px 3px 0 var(--se-color-shadow); }
+.cricket-board .mono-scorer-extra-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.cricket-board .cricket-aggregate-pad { margin-top: auto; }
+.cricket-board .mono-cricket-keys:not(.mono-cricket-keys-sec) { grid-template-columns: repeat(6,minmax(0,1fr)); grid-auto-rows: auto; }
+.cricket-board .mono-cricket-keys-sec { grid-template-columns: repeat(5,minmax(0,1fr)); }
+.cricket-board .mono-cricket-out-line-row { display: block; margin-bottom: 8px; }
+.cricket-board .mono-cricket-out-line { width: 100%; }
+.cricket-board .cricket-inning-handoff { border: 1px solid var(--se-color-line-soft); background: var(--se-color-surface); border-radius: 20px; padding: 16px; }
+/* Sheet content is portalled outside the board; limit these rules to cricket's content. */
+:is(.wk-sheet,.pick-sheet,.menu-panel-body) :is(button,input) { min-width: 48px; min-height: 48px; }
+.menu-panel-body .ck-mode { margin-bottom: 12px; }
+.menu-panel-body .ck-mode-btn { min-width: 80px; }
+.menu-panel-body .menu-row { margin-bottom: 12px; }
+.menu-panel-body :is(.pill.on,.ho-pill.on), .wk-sheet .ho-pill.on { background: var(--se-color-ink); color: var(--se-color-canvas); border-color: var(--se-color-ink); }
+.menu-panel-body .cricket-scorecard { margin-top: 16px; overflow-x: auto; }
+.menu-panel-body .cricket-scorecard span { color: var(--se-color-ink) !important; }
+.mono-setup-shell :is(input,button) { min-height: 48px; }
+.mono-setup-shell .mono-setup-pill.on { background: var(--se-color-ink); color: var(--se-color-canvas); border-color: var(--se-color-ink); }
+@media (max-height: 680px) {
+  .cricket-board .crb { gap: 6px; }
+  .cricket-board .cricket-hero { padding: 10px 14px; }
+  .cricket-board .ck-hero-score { font-size: 3.2rem; }
+  .cricket-board .ck-hero-bar { margin: 5px 0; }
+  .cricket-board .cricket-aggregate-hero { margin: 0; }
+  .cricket-board .cricket-aggregate-hero .mono-scorer-score-value { font-size: 3.25rem !important; margin-bottom: 2px; }
+  .cricket-board :is(.mono-scorer-run-button,.mono-cricket-key) { min-height: 48px; }
+  .cricket-board .mono-score-mini { padding: 6px 12px !important; margin-bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .cricket-board .big5-key:active { transform: none; } }
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/scoring/kabaddiScoreStrip.css */
+/* Kabaddi score strip, round 5. Two team cards and a centre disc. The cards use the app's shipped
+   team treatment exactly (the setup keys and the sets board): the engine's hi -> core -> lo
+   gradient with its 7% white sheen, and its gated on-colour for the text. Players on the mat are a
+   count plus slim pips. Pills sit under the team they concern, outside the strip. */
+
+.k5-strip {
+  --k5-sheen: linear-gradient(180deg, color-mix(in srgb, var(--se-color-inverse) 7%, transparent), transparent 40%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+  gap: 4px;
+  padding: 6px 12px 0;
+}
+
+.k5-team {
+  position: relative;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px 12px 10px;
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 1px var(--sb-hair), var(--sb-lift);
+}
+
+.k5-team-a { grid-column: 1; background: var(--k5-sheen), linear-gradient(168deg, var(--team-a-hi), var(--team-a-core) 52%, var(--team-a-lo)); color: var(--team-a-on); --k5-bg: var(--team-a-core); }
+.k5-team-b { grid-column: 3; align-items: flex-end; background: var(--k5-sheen), linear-gradient(168deg, var(--team-b-hi), var(--team-b-core) 52%, var(--team-b-lo)); color: var(--team-b-on); --k5-bg: var(--team-b-core); }
+
+.k5-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.k5-team-b .k5-name { flex-direction: row-reverse; }
+
+.k5-name-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.k5-mark {
+  display: inline-block;
+  flex: none;
+  width: 20px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+  mask: var(--sport-mark) center / contain no-repeat;
+}
+
+.k5-score {
+  font: 800 clamp(3.5rem, 19vw, 4.6rem)/0.9 var(--sb-num);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* the preview of what the marks so far would score: a dashed tag in the card's own colour */
+.k5-pend {
+  position: absolute;
+  top: 38px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 9px;
+  border: 2px dashed currentColor;
+  border-radius: 999px;
+  font: 800 0.95rem/1 var(--sb-num);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.k5-team-b .k5-pend { right: auto; left: 10px; }
+
+/* mat: a count, then slim pips. The count is the information; the pips show how full the mat is. */
+.k5-foot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  margin-top: 3px;
+}
+
+.k5-team-b .k5-foot { align-items: flex-end; }
+
+.k5-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.94;
+}
+
+.k5-count b { font-size: 0.95rem; font-weight: 800; }
+
+.k5-pips {
+  display: flex;
+  gap: 3px;
+  width: 100%;
+}
+
+.k5-team-b .k5-pips { flex-direction: row-reverse; }
+
+.k5-pip {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 7px;
+  border-radius: 4px;
+  background: currentColor;
+}
+
+.k5-pip.out,
+.k5-pip.out-now,
+.k5-pip.coming { background: transparent; box-shadow: inset 0 0 0 1.5px currentColor; }
+.k5-pip.out { opacity: 0.4; }
+.k5-pip.out-now { opacity: 0.9; }
+/* a player the marks would send out: half solid, half empty */
+.k5-pip.going { background: linear-gradient(90deg, transparent 50%, currentColor 50%); box-shadow: inset 0 0 0 1.5px currentColor; }
+.k5-pip.coming { opacity: 0.9; }
+.k5-pip.back { box-shadow: 0 0 0 2px var(--k5-bg), 0 0 0 3.5px currentColor; }
+
+/* the named moment: for a few seconds the count and pips are replaced by what just happened */
+.k5-flash-wrap {
+  position: absolute;
+  inset: -3px -6px -3px -6px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--k5-bg);
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  animation: k5-flash 4200ms ease-out forwards;
+  pointer-events: none;
+}
+
+.k5-team-b .k5-flash-wrap { justify-content: flex-end; }
+.k5-flash { overflow: hidden; text-overflow: ellipsis; --kit-underline: currentColor; }
+
+@keyframes k5-flash {
+  0% { opacity: 0; transform: translateY(4px); }
+  8%, 82% { opacity: 1; transform: none; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+/* centre: one ink disc. At rest it carries the kabaddi mark inside a faint ring in the raiding
+   team's colour; during a raid the ring becomes the 30 s countdown and the disc shows the seconds. */
+.k5-mid {
+  grid-row: 1;
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sb-ink);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.k5-mid:disabled { cursor: default; }
+.k5-mid:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 2px; border-radius: 12px; }
+
+.k5-ring { position: relative; display: block; width: 62px; height: 62px; }
+.k5-ring-a { --k5-line: var(--team-a-line); }
+.k5-ring-b { --k5-line: var(--team-b-line); }
+.k5-ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+.k5-track { fill: none; stroke: var(--sb-hair); stroke-width: 5; }
+.k5-arc { fill: none; stroke: var(--k5-line); stroke-width: 5; stroke-linecap: round; }
+.k5-ring-low .k5-arc { stroke: var(--se-color-danger); }
+.k5-ring-idle .k5-track { stroke: var(--k5-line); opacity: 0.45; }
+.k5-disc { fill: var(--se-color-ink); }
+
+.k5-ring-in {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--se-color-on-ink);
+}
+
+.k5-ring-in b { font: 800 1.5rem/1 var(--sb-num); font-variant-numeric: tabular-nums; }
+.k5-ring-low .k5-ring-in b { color: var(--se-color-on-ink); }
+
+.k5-disc-mark {
+  display: block;
+  width: 30px;
+  height: 22px;
+  background: var(--se-color-on-ink);
+  -webkit-mask: var(--sport-mark) center / contain no-repeat;
+  mask: var(--sport-mark) center / contain no-repeat;
+}
+
+.k5-clock { font: 800 1.2rem/1 var(--sb-num); font-variant-numeric: tabular-nums; }
+
+.k5-mid small {
+  font-size: 0.72rem;
+  font-weight: 750;
+  color: var(--sb-ink-2);
+  white-space: nowrap;
+}
+
+/* rule pills: outside the strip, each as wide as the card of the team it concerns */
+.k5-cues {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+  gap: 4px;
+  padding: 8px 12px 0;
+}
+
+.k5-at-a { grid-row: 1; grid-column: 1; }
+.k5-at-b { grid-row: 1; grid-column: 3; }
+.k5-at-a-wide { grid-row: 1; grid-column: 1 / span 2; }
+.k5-at-b-wide { grid-row: 1; grid-column: 2 / span 2; }
+
+.k5-cue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.k5-cue-dod { background: var(--se-color-danger); color: var(--se-color-surface); }
+
+.k5-cue-dod::before {
+  content: '!';
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--se-color-surface);
+  color: var(--se-color-danger);
+  font-size: 0.8rem;
+}
+
+.k5-cue-super { background: var(--se-color-gold); color: var(--se-color-on-gold); }
+
+.k5-moment { animation: k5-bump 320ms ease-out; }
+@keyframes k5-bump { 0% { transform: scale(1.04); } 100% { transform: scale(1); } }
+
+@media (max-width: 380px) {
+  .k5-strip { padding-inline: 10px; grid-template-columns: minmax(0, 1fr) 66px minmax(0, 1fr); }
+  .k5-team { padding: 8px 10px 8px; }
+  .k5-cues { padding-inline: 10px; grid-template-columns: minmax(0, 1fr) 66px minmax(0, 1fr); }
+  .k5-cue { padding: 0 8px; font-size: 0.74rem; letter-spacing: 0; }
+  .k5-cue-dod::before { margin-right: 5px; }
+  .k5-ring { width: 56px; height: 56px; }
+  .k5-pend { top: 34px; right: 8px; }
+  .k5-team-b .k5-pend { left: 8px; }
+}
+
+@media (max-height: 680px) {
+  .k5-strip { padding-top: 2px; }
+  .k5-team { padding-top: 6px; padding-bottom: 6px; gap: 0; }
+  .k5-score { font-size: 3.1rem; }
+  .k5-foot { gap: 3px; margin-top: 1px; }
+  .k5-pip { height: 6px; }
+  .k5-ring { width: 50px; height: 50px; }
+  .k5-ring-in b { font-size: 1.25rem; }
+  .k5-disc-mark { width: 24px; height: 18px; }
+  .k5-pend { top: 28px; height: 22px; font-size: 0.85rem; }
+  .k5-cues { padding-top: 6px; }
+  .k5-cue { min-height: 30px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .k5-moment { animation: none; }
+  .k5-flash-wrap { animation-duration: 1ms; }
+}
+
+.k5-pip.out { border-style: dashed; }
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/scoring/kabaddiOneTap.css */
+/* Kabaddi scorer, one-tap variant (exploration k2, round 3). Chrome: board shell; score header:
+   kabaddiHeader.css; controls: the app's .se-ctl keys and .kit-seg. Here: the prominent last-raid
+   line, one fixed slot for the only follow-up (bonus, 3+ count, who was out) and six keys, the
+   three most used biggest and at the bottom, nearest the thumb. The pad fills the height below the
+   header, so there is no dead gap: the keys take what is spare, up to a cap. */
+
+.ko-pad {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+  padding: 12px 17px 0 14px;
+}
+
+/* the status card: a quiet surface; the last raid line big and in ink. It grows into whatever the
+   cue row leaves free, so the keys below never move when a cue comes or goes. */
+.ko-status {
+  flex: 1 0 112px;
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: var(--se-color-surface);
+  box-shadow: inset 0 0 0 1px var(--sb-hair);
+}
+
+.kb .ko-last {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--sb-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.kb .ko-last:disabled { cursor: default; }
+.kb .ko-last:focus-visible { outline: 3px solid var(--se-color-focus-ring); outline-offset: 2px; border-radius: 8px; }
+
+.ko-last small {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--sb-ink-2);
+}
+
+.ko-last span {
+  max-width: 100%;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.ko-status-ask .ko-last { min-height: 0; }
+.ko-status-ask .ko-last span { font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ko-ask {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+  margin: 0;
+  padding: 0 2px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--sb-ink);
+}
+
+/* a 48px square hit area; the negative margin keeps the prompt line 24px tall */
+.kb .ko-skip {
+  min-width: 48px;
+  min-height: 48px;
+  margin: -12px -6px -12px 0;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--sb-ink-2);
+  font: inherit;
+  font-weight: 750;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.kb .ko-seg { --kit-seg-cols: 5; }
+
+.kb .ko-seg button:disabled {
+  color: var(--sb-ink-2);
+  cursor: default;
+  text-decoration: line-through;
+}
+
+.kb .ko-names {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.kb .ko-names button {
+  flex: 1 0 auto;
+  min-width: 64px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.ko-order {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.ko-bonusonly { display: flex; }
+
+.kb .ko-chip {
+  min-height: 48px;
+  padding: 0 18px;
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.ko-go { padding-bottom: 10px; }
+
+/* six keys: Bonus · +2 · 3+ on top, Empty · +1 · Tackled biggest at the bottom; +1 keeps Empty
+   and Tackled apart */
+/* keys grow first (to their cap); only what is left goes to the status card */
+.ko-keys {
+  flex: 100 1 auto;
+  min-height: 150px;
+  max-height: 330px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(52px, 1fr) minmax(76px, 1.45fr);
+  gap: 10px;
+}
+
+.kb .ko-key {
+  min-height: 52px;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.kb .ko-key-big { font-size: 1.3rem; }
+.kb .ko-key-big:nth-child(5) { font: 800 1.9rem/1 var(--sb-num); }
+.kb .ko-key:nth-child(2),
+.kb .ko-key:nth-child(3) { font: 800 1.5rem/1 var(--sb-num); }
+
+/* armed: the same key, inked in (the app's pressed filter look) */
+.kb .ko-key[aria-pressed='true'] {
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-ctl-shadow-press);
+}
+
+.kb .ko-row small {
+  margin-left: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--se-color-ink-muted);
+  text-align: right;
+}
+
+.kb .ko-row:disabled { cursor: default; color: var(--se-color-ink-muted); }
+
+.ko .sb-bar { padding-top: 12px; }
+
+/* the Undo hint names the score it restores; on a 360px phone it must not clip */
+@media (max-width: 380px) {
+  .ko .sb-undo { gap: 8px; padding: 0 12px; }
+}
+
+@media (max-height: 680px) {
+  .ko-pad { padding-top: 6px; }
+  .ko-status { flex-basis: 100px; padding: 6px 10px; gap: 4px; margin-bottom: 8px; }
+  .ko-last span { font-size: 1rem; }
+  .ko-keys { min-height: 128px; gap: 8px; grid-template-rows: 52px minmax(60px, 1fr); }
+  .ko .sb-bar { padding-top: 10px; padding-bottom: 12px; }
+}
+
+/* /shipped */
+/* shipped:src/designs/design1-mono/scoring/kabaddiLive.css */
+/* Kabaddi scorer, round 5: the live raid. The strip is kabaddiScoreStrip.css; the status card, pad and
+   sheet rows are round 3's (kabaddiOneTap.css). Here: the Raid by key, the defender tokens, the
+   Bonus cell and the result keys. Team colour is the app's shipped treatment: the engine's
+   hi -> core -> lo gradient with the 7% sheen, text in the engine's gated on-colour, and the
+   sport mark as a cropped motif in the engine's motif colour (as on the sets boards). */
+
+.kl {
+  --kl-sheen: linear-gradient(180deg, color-mix(in srgb, var(--se-color-inverse) 7%, transparent), transparent 40%);
+}
+
+/* ---- Raid by: one big key in the raiding team's colour, in the keys' own place ---- */
+.kb .kl-raidby {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  flex: 100 1 auto;
+  min-height: 150px;
+  max-height: 330px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  font: inherit;
+  text-align: center;
+}
+
+.kb .kl-raidby-a { background: var(--kl-sheen), linear-gradient(168deg, var(--team-a-hi), var(--team-a-core) 52%, var(--team-a-lo)); color: var(--team-a-on); }
+.kb .kl-raidby-b { background: var(--kl-sheen), linear-gradient(168deg, var(--team-b-hi), var(--team-b-core) 52%, var(--team-b-lo)); color: var(--team-b-on); }
+
+.kl-raidby b {
+  max-width: 100%;
+  font-size: clamp(1.8rem, 9vw, 2.3rem);
+  font-weight: 800;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.kl-raidby small {
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- live raid ---- */
+.kl-live {
+  --kl-d-hi: var(--team-a-hi); --kl-d-core: var(--team-a-core); --kl-d-lo: var(--team-a-lo); --kl-d-on: var(--team-a-on);
+  --kl-r-hi: var(--team-a-hi); --kl-r-core: var(--team-a-core); --kl-r-lo: var(--team-a-lo); --kl-r-on: var(--team-a-on);
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  min-height: 0;
+}
+
+.kl-hint {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--sb-ink);
+}
+
+.kl-def-b { --kl-d-hi: var(--team-b-hi); --kl-d-core: var(--team-b-core); --kl-d-lo: var(--team-b-lo); --kl-d-on: var(--team-b-on); }
+.kl-rd-b { --kl-r-hi: var(--team-b-hi); --kl-r-core: var(--team-b-core); --kl-r-lo: var(--team-b-lo); --kl-r-on: var(--team-b-on); }
+
+/* Touched | Stepped out: what the next player tap marks */
+.kb .kl-mode { --kit-seg-cols: 2; margin-right: 3px; }
+
+/* seven defenders and the Bonus cell, four across, two rows */
+.kl-tokens {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(58px, 1fr);
+  flex: 0 1 190px;
+  min-height: 0;
+  gap: 8px;
+  padding: 0 3px 3px 0;
+}
+
+.kb .kl-token {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  min-height: 58px;
+  padding: 0 3px;
+  font: inherit;
+}
+
+.kl-token b {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 1.12rem;
+  font-weight: 800;
+}
+
+.kl-token-num b { font: 800 1.7rem/1 var(--sb-num); font-variant-numeric: tabular-nums; }
+
+.kl-token small {
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--se-color-ink-muted);
+}
+
+/* touched: the defending team's own gradient, with the order they left in */
+.kb .kl-token-touched {
+  background: var(--kl-sheen), linear-gradient(168deg, var(--kl-d-hi), var(--kl-d-core) 52%, var(--kl-d-lo));
+  color: var(--kl-d-on);
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-ctl-shadow-press);
+}
+
+.kb .kl-token-touched small { color: inherit; }
+
+/* stepped out of the court: dashed in the team colour, still a plain key */
+.kb .kl-token-out {
+  border-style: dashed;
+  border-color: var(--kl-d-core);
+  background: color-mix(in srgb, var(--kl-d-core) 14%, var(--se-color-surface));
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-ctl-shadow-press);
+}
+
+.kb .kl-token-out small { color: var(--se-color-ink); }
+
+.kl-order {
+  position: absolute;
+  top: 4px;
+  left: 5px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--se-color-surface);
+  color: var(--se-color-ink);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+/* already off the mat: shown in place, dimmed and not tappable */
+.kb .kl-token-gone { opacity: 0.45; box-shadow: none; }
+
+/* bonus line: the eighth cell, inked in when on */
+.kb .kl-bonus b { font-size: 1rem; }
+.kb .kl-bonus[aria-pressed='true'] {
+  background: var(--se-color-ink);
+  color: var(--se-color-on-ink);
+  transform: translate(2px, 2px);
+  box-shadow: var(--se-ctl-shadow-press);
+}
+.kb .kl-bonus[aria-pressed='true'] small { color: inherit; }
+.kb .kl-bonus:disabled { opacity: 0.55; box-shadow: none; }
+
+/* ---- the result keys: one tap ends the raid and lands everything ---- */
+.kl-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0 3px 3px 0;
+}
+
+
+.kb .kl-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 6px 8px;
+  font: inherit;
+  text-align: center;
+}
+
+.kb .kl-result b { font-size: 1.2rem; font-weight: 800; line-height: 1.1; }
+
+.kb .kl-result small {
+  max-width: 100%;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.kb .kl-result:disabled { opacity: 0.5; box-shadow: none; cursor: default; }
+
+/* back safe is the raiding team's result, tackled the defending team's */
+.kb .kl-result-safe {
+  grid-column: 1 / -1;
+  min-height: 84px;
+  background: var(--kl-sheen), linear-gradient(168deg, var(--kl-r-hi), var(--kl-r-core) 52%, var(--kl-r-lo));
+  color: var(--kl-r-on);
+}
+
+.kb .kl-result-safe b { font-size: 1.6rem; }
+.kb .kl-result-safe.kl-result-idle { background: var(--se-ctl-bg); color: var(--se-color-ink); }
+
+.kb .kl-result-tackled {
+  background: var(--kl-sheen), linear-gradient(168deg, var(--kl-d-hi), var(--kl-d-core) 52%, var(--kl-d-lo));
+  color: var(--kl-d-on);
+}
+
+@media (max-height: 680px) {
+  .kl-live { gap: 6px; }
+  .kl-hint { font-size: 0.78rem; }
+  .kl-tokens { grid-auto-rows: minmax(48px, 1fr); flex-basis: 108px; }
+  .kl-tokens, .kl-results { gap: 6px; }
+  .kb .kl-token { min-height: 48px; }
+  .kl-token-num b { font-size: 1.45rem; }
+  .kb .kl-result { min-height: 52px; padding: 4px 6px; }
+  .kb .kl-result b { font-size: 1.05rem; }
+  .kb .kl-result small { font-size: 0.7rem; }
+  .kb .kl-result-safe { min-height: 62px; }
+  .kb .kl-result-safe b { font-size: 1.35rem; }
+  .kb .kl-raidby { min-height: 128px; gap: 6px; }
+}
+
+/* Keep the readback and live prompt next to their controls at every phone height. */
+.kl .ko-status { flex: 0 0 auto; max-height: none; padding: 12px; }
+.kl .kl-live { justify-content: flex-start; }
+.kl .ko-pad { padding-top: 10px; }
+.kl-counts { --kit-seg-cols: 3; }
+.kl-counts button { min-height: 48px; }
+.kl .k5-count b { font-size: inherit; }
+
+.kl-raider-select { display: grid; gap: 6px; margin-bottom: 10px; }
+.kl-raider-select select { min-height: 48px; width: 100%; }
+
+.kl-tools { display: flex; align-items: stretch; gap: 8px; }
+.kl-tools .kl-mode { flex: 1 1 auto; min-width: 0; margin: 0; }
+.kl-tools .kl-counts { flex: 0 0 160px; }
+.kl-tools button { min-height: 48px; min-width: 0; font-size: 0.85rem; }
+
+.kl-tools .kl-counts-more { display: flex; overflow-x: auto; }
+.kl-counts-more button { flex: 0 0 48px; }
+
+/* /shipped */
+/* shipped:src/mobile/safeArea.css */
+/* Capacitor 8 SystemBars CSS mode reports the remaining WebView inset (zero
+   when older Android WebViews already have native padding). Safari/PWAs use env. */
+:root {
+  --se-safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --se-safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --se-safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --se-safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+}
+
+/* Own the top inset once, outside navigation and all routes. Board headers keep
+   their ordinary spacing; their height budget subtracts this shared padding. */
+.se-app-shell {
+  padding: var(--se-safe-top) var(--se-safe-right) 0 var(--se-safe-left);
+}
+
+/* Fixed surfaces escape the shell's padding, including portals mounted on body. */
+.mono-sheet-backdrop,
+.sb-sheet-layer,
+.kit-share-backdrop {
+  padding-top: var(--se-safe-top);
+  padding-right: var(--se-safe-right);
+  padding-left: var(--se-safe-left);
+}
+
+.mono-sheet-backdrop > .mono-card {
+  max-height: calc(100dvh - var(--se-safe-top) - var(--se-safe-bottom));
+  overflow-y: auto;
+  margin-bottom: var(--se-safe-bottom);
+}
+
+.se-app-shell #main-content > .min-h-screen {
+  min-height: calc(100vh - var(--se-safe-top));
+}
+
+/* /shipped */

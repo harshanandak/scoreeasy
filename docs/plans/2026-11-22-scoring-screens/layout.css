@@ -1,0 +1,70 @@
+/* Geometry only. Flat treatments use .kit-rrow, .kit-step and .sb-row unchanged.
+   Lifted actions use .se-go or .se-ctl unchanged. No new paint declarations. */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+.concept { max-width: 560px; min-height: 100dvh; padding: 16px; gap: 16px; }
+.concept .sb-top { padding: 0; min-height: 48px; gap: 16px; }
+.concept .sb-title b { font-size: 1.4rem; }
+.concept .sb-title small { margin-top: 4px; }
+.concept .sb-top .kit-linkbtn { min-width: 64px; justify-content: center; }
+.score-header { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 16px; flex: none; }
+.score-side { display: grid; grid-template-rows: minmax(48px,auto) 80px 48px; gap: 0; min-width: 0; padding: 12px; margin: 0; align-items: center; text-align: center; }
+.score-side .kit-tcard-name { font-size: 1.05rem; line-height: 1.2; white-space: normal; overflow-wrap: anywhere; overflow: visible; text-overflow: clip; margin: 0; }
+.score-side .k5-score { font-size: 4rem; line-height: 1; letter-spacing: -0.02em; white-space: nowrap; }
+.concept[data-sport='cricket'] .score-side .k5-score { font-size: 3rem; }
+.score-side .secondary { display: grid; align-content: center; gap: 4px; font-size: 0.8rem; line-height: 1.2; font-weight: 650; min-width: 0; }
+.score-status { grid-column: 1 / -1; display: flex; align-items: center; min-height: 64px; margin: 0; padding: 8px 0; line-height: 1.35; font-size: 0.86rem; }
+.history-slot { display: grid; gap: 8px; min-height: 56px; margin: 0; padding: 12px; font-size: 0.82rem; }
+.history-slot p { margin: 0; }
+.history-slot b { font-weight: 750; }
+.control-area { display: grid; gap: 16px; margin-top: auto; }
+.control-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.control-grid[data-cols='3'] { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.control-grid[data-cols='4'] { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.control-grid .kit-rrow, .control-grid .kit-step { margin: 0; padding: 8px; min-height: 96px; height: 96px; display: grid; place-content: center; text-align: center; gap: 4px; }
+.control-grid.compact .kit-rrow, .control-grid.compact .kit-step { min-height: 64px; height: 64px; }
+.control-grid .kit-rrow-summary { font-size: 1.2rem; }
+.control-grid .kit-rrow-label { font-size: 0.78rem; }
+.control-grid.compact .kit-rrow-summary { font-size: 0.94rem; overflow-wrap: normal; }
+.control-grid button:disabled { cursor: default; opacity: 0.55; }
+.control-grid .se-go, .control-grid .se-ctl { min-height: 96px; height: 96px; width: 100%; padding: 8px; text-align: center; }
+.review-controls { max-width: 560px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+.review-controls .kit-fieldrow { gap: 16px; }
+.review-controls select { max-width: 65%; }
+.review-controls .kit-step { width: 100%; }
+.bare .review-controls { display: none; }
+.sheet-content { display: grid; gap: 16px; }
+.sheet-content .control-grid button { min-height: 64px; height: 64px; }
+.sheet-content .kit-rrow { margin: 0; }
+.sheet-content .sb-sheet-note { padding: 0; }
+.docs { max-width: 1160px; margin: 0 auto; padding: 32px 24px; display: grid; gap: 32px; }
+.docs h1, .docs h2, .docs h3, .docs p { margin: 0; }
+.docs .kit-title { margin: 0; }
+.docs-section { display: grid; gap: 16px; }
+.docs-columns { display: grid; grid-template-columns: minmax(0,390px) minmax(0,1fr); gap: 32px; align-items: start; }
+.docs-demo .concept { min-height: 620px; width: 100%; }
+.docs table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.docs th, .docs td { padding: 12px; text-align: left; vertical-align: top; line-height: 1.45; }
+.docs tr { display: table-row; }
+.docs .kit-rules-panel { margin: 0; }
+.docs ul { margin: 0; padding-left: 24px; line-height: 1.6; }
+.comparison { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin: 0; }
+.comparison iframe { display: block; width: 100%; height: 100dvh; border-width: 0; }
+.today-board { height: 100dvh; overflow: hidden; }
+.today-board .tsb-keys { min-height: 0; }
+.today-board .tgb-keys { min-height: 0; }
+.today-board .tsb-meta, .today-board .tsb-last { flex: none; }
+.today-board .sb-bar { margin-top: auto; }
+.today-board .source-label { padding: 4px 16px; margin: 0; font-size: 0.68rem; }
+.today-board .k5-strip { min-height: 176px; }
+.today-board .k5-team { justify-content: center; }
+.today-board .ko-pad { padding-top: 8px; }
+.today-board .kl-tokens { flex: none; min-height: 132px; }
+.today-board .kl-results { min-height: 72px; }
+.today-cricket { padding: 12px; }
+.today-cricket .cricket-hero { min-height: 184px; }
+.today-cricket .big5 { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.today-cricket .se-ctl { min-height: 64px; }
+.today-cricket .sec-pills { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; }
+.today-cricket .sec-pills button { min-height: 48px; }
+@media(max-width:720px) { .docs-columns { grid-template-columns: minmax(0,1fr); } }
