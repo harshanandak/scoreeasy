@@ -1,0 +1,484 @@
+{
+  "historyChecks": [
+    {
+      "detail": "Completed sets: 1: 21–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 21–25",
+      "id": "vb",
+      "left": "B",
+      "names": [
+        "Mumbai Mavericks",
+        "Chennai Challengers"
+      ],
+      "state": "mid"
+    },
+    {
+      "detail": "Completed sets: 1: 21–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 21–25",
+      "id": "vb",
+      "left": "B",
+      "names": [
+        "Mumbai Mavericks",
+        "Chennai Challengers"
+      ],
+      "state": "change"
+    },
+    {
+      "detail": "Completed sets: 1: 25–21 · 2: 23–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 25–21 · 2: 23–25",
+      "id": "vb",
+      "left": "A",
+      "names": [
+        "Chennai Challengers",
+        "Mumbai Mavericks"
+      ],
+      "state": "change"
+    },
+    {
+      "detail": "Completed sets: 1: 21–25 · 2: 25–23 · 3: 19–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 21–25 · 2: 25–23 · 3: 19–25",
+      "id": "vb",
+      "left": "B",
+      "names": [
+        "Mumbai Mavericks",
+        "Chennai Challengers"
+      ],
+      "state": "change"
+    },
+    {
+      "detail": "Completed sets: 1: 25–21 · 2: 23–25 · 3: 25–19 · 4: 21–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 25–21 · 2: 23–25 · 3: 25–19 · 4: 21–25",
+      "id": "vb",
+      "left": "A",
+      "names": [
+        "Chennai Challengers",
+        "Mumbai Mavericks"
+      ],
+      "state": "change"
+    },
+    {
+      "detail": "Completed sets: 1: 21–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 21–25",
+      "id": "vb",
+      "left": "B",
+      "names": [
+        "Mumbai Mavericks",
+        "Chennai Challengers"
+      ],
+      "state": "between"
+    },
+    {
+      "detail": "Completed sets: 1: 21–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 21–25",
+      "id": "vb",
+      "left": "B",
+      "names": [
+        "Mumbai Mavericks",
+        "Chennai Challengers"
+      ],
+      "state": "over"
+    },
+    {
+      "detail": "Completed sets: 1: 25–21 · 2: 23–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 25–21 · 2: 23–25",
+      "id": "vb",
+      "left": "A",
+      "names": [
+        "Chennai Challengers",
+        "Mumbai Mavericks"
+      ],
+      "state": "over"
+    },
+    {
+      "detail": "Completed sets: 1: 21–25 · 2: 25–23 · 3: 19–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 21–25 · 2: 25–23 · 3: 19–25",
+      "id": "vb",
+      "left": "B",
+      "names": [
+        "Mumbai Mavericks",
+        "Chennai Challengers"
+      ],
+      "state": "over"
+    },
+    {
+      "detail": "Completed sets: 1: 21–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 21–25",
+      "id": "vb",
+      "left": "B",
+      "names": [
+        "Mumbai Mavericks",
+        "Chennai Challengers"
+      ],
+      "state": "deuce"
+    },
+    {
+      "detail": "Completed sets: 1: 21–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 21–25",
+      "id": "vb",
+      "left": "B",
+      "names": [
+        "Mumbai Mavericks",
+        "Chennai Challengers"
+      ],
+      "state": "decider"
+    },
+    {
+      "detail": "Completed sets: 1: 25–21 · 2: 23–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 25–21 · 2: 23–25",
+      "id": "vb",
+      "left": "A",
+      "names": [
+        "Chennai Challengers",
+        "Mumbai Mavericks"
+      ],
+      "state": "decider"
+    },
+    {
+      "detail": "Completed sets: 1: 21–25 · 2: 25–23 · 3: 19–25",
+      "event": "start",
+      "expected": "Completed sets: 1: 21–25 · 2: 25–23 · 3: 19–25",
+      "id": "vb",
+      "left": "B",
+      "names": [
+        "Mumbai Mavericks",
+        "Chennai Challengers"
+      ],
+      "state": "decider"
+    },
+    {
+      "detail": "Completed games: 1: 17–21",
+      "event": "start",
+      "expected": "Completed games: 1: 17–21",
+      "id": "bd",
+      "left": "B",
+      "names": [
+        "R. Verma",
+        "A. Sharma"
+      ],
+      "state": "mid"
+    },
+    {
+      "detail": "Completed games: 1: 17–21",
+      "event": "start",
+      "expected": "Completed games: 1: 17–21",
+      "id": "bd",
+      "left": "B",
+      "names": [
+        "R. Verma",
+        "A. Sharma"
+      ],
+      "state": "change"
+    },
+    {
+      "detail": "Completed games: 1: 21–17 · 2: 18–21",
+      "event": "start",
+      "expected": "Completed games: 1: 21–17 · 2: 18–21",
+      "id": "bd",
+      "left": "A",
+      "names": [
+        "A. Sharma",
+        "R. Verma"
+      ],
+      "state": "change"
+    },
+    {
+      "detail": "Completed games: 1: 17–21",
+      "event": "start",
+      "expected": "Completed games: 1: 17–21",
+      "id": "bd",
+      "left": "B",
+      "names": [
+        "R. Verma",
+        "A. Sharma"
+      ],
+      "state": "over"
+    },
+    {
+      "detail": "Completed games: 1: 17–21",
+      "event": "start",
+      "expected": "Completed games: 1: 17–21",
+      "id": "bd",
+      "left": "B",
+      "names": [
+        "R. Verma",
+        "A. Sharma"
+      ],
+      "state": "deuce"
+    },
+    {
+      "detail": "Completed games: 1: 8–11",
+      "event": "start",
+      "expected": "Completed games: 1: 8–11",
+      "id": "tt",
+      "left": "B",
+      "names": [
+        "Dev Patel",
+        "Venkat Subramanian"
+      ],
+      "state": "mid"
+    },
+    {
+      "detail": "Completed games: 1: 8–11",
+      "event": "start",
+      "expected": "Completed games: 1: 8–11",
+      "id": "tt",
+      "left": "B",
+      "names": [
+        "Dev Patel",
+        "Venkat Subramanian"
+      ],
+      "state": "change"
+    },
+    {
+      "detail": "Completed games: 1: 11–8 · 2: 7–11",
+      "event": "start",
+      "expected": "Completed games: 1: 11–8 · 2: 7–11",
+      "id": "tt",
+      "left": "A",
+      "names": [
+        "Venkat Subramanian",
+        "Dev Patel"
+      ],
+      "state": "change"
+    },
+    {
+      "detail": "Completed games: 1: 8–11 · 2: 11–7 · 3: 6–11",
+      "event": "start",
+      "expected": "Completed games: 1: 8–11 · 2: 11–7 · 3: 6–11",
+      "id": "tt",
+      "left": "B",
+      "names": [
+        "Dev Patel",
+        "Venkat Subramanian"
+      ],
+      "state": "change"
+    },
+    {
+      "detail": "Completed games: 1: 11–8 · 2: 7–11 · 3: 11–6 · 4: 9–11",
+      "event": "start",
+      "expected": "Completed games: 1: 11–8 · 2: 7–11 · 3: 11–6 · 4: 9–11",
+      "id": "tt",
+      "left": "A",
+      "names": [
+        "Venkat Subramanian",
+        "Dev Patel"
+      ],
+      "state": "change"
+    },
+    {
+      "detail": "Completed games: 1: 8–11",
+      "event": "start",
+      "expected": "Completed games: 1: 8–11",
+      "id": "tt",
+      "left": "B",
+      "names": [
+        "Dev Patel",
+        "Venkat Subramanian"
+      ],
+      "state": "between"
+    },
+    {
+      "detail": "Completed games: 1: 8–11",
+      "event": "start",
+      "expected": "Completed games: 1: 8–11",
+      "id": "tt",
+      "left": "B",
+      "names": [
+        "Dev Patel",
+        "Venkat Subramanian"
+      ],
+      "state": "over"
+    },
+    {
+      "detail": "Completed games: 1: 11–8 · 2: 7–11",
+      "event": "start",
+      "expected": "Completed games: 1: 11–8 · 2: 7–11",
+      "id": "tt",
+      "left": "A",
+      "names": [
+        "Venkat Subramanian",
+        "Dev Patel"
+      ],
+      "state": "over"
+    },
+    {
+      "detail": "Completed games: 1: 8–11 · 2: 11–7 · 3: 6–11",
+      "event": "start",
+      "expected": "Completed games: 1: 8–11 · 2: 11–7 · 3: 6–11",
+      "id": "tt",
+      "left": "B",
+      "names": [
+        "Dev Patel",
+        "Venkat Subramanian"
+      ],
+      "state": "over"
+    },
+    {
+      "detail": "Completed games: 1: 8–11",
+      "event": "start",
+      "expected": "Completed games: 1: 8–11",
+      "id": "tt",
+      "left": "B",
+      "names": [
+        "Dev Patel",
+        "Venkat Subramanian"
+      ],
+      "state": "deuce"
+    },
+    {
+      "detail": "Completed games: 1: 11–8 · 2: 7–11",
+      "event": "start",
+      "expected": "Completed games: 1: 11–8 · 2: 7–11",
+      "id": "tt",
+      "left": "A",
+      "names": [
+        "Venkat Subramanian",
+        "Dev Patel"
+      ],
+      "state": "deuce"
+    },
+    {
+      "detail": "Completed games: 1: 8–11 · 2: 11–7 · 3: 6–11",
+      "event": "start",
+      "expected": "Completed games: 1: 8–11 · 2: 11–7 · 3: 6–11",
+      "id": "tt",
+      "left": "B",
+      "names": [
+        "Dev Patel",
+        "Venkat Subramanian"
+      ],
+      "state": "deuce"
+    },
+    {
+      "detail": "Completed sets: 1: 25–21",
+      "event": "flip",
+      "expected": "Completed sets: 1: 25–21",
+      "id": "vb",
+      "left": "A",
+      "names": [
+        "Chennai Challengers",
+        "Mumbai Mavericks"
+      ],
+      "state": "manual flip"
+    },
+    {
+      "detail": "Completed sets: 1: 21–25",
+      "event": "flip",
+      "expected": "Completed sets: 1: 21–25",
+      "id": "vb",
+      "left": "B",
+      "names": [
+        "Mumbai Mavericks",
+        "Chennai Challengers"
+      ],
+      "state": "manual flip"
+    },
+    {
+      "detail": "Completed games: 1: 21–17",
+      "event": "flip",
+      "expected": "Completed games: 1: 21–17",
+      "id": "bd",
+      "left": "A",
+      "names": [
+        "A. Sharma",
+        "R. Verma"
+      ],
+      "state": "manual flip"
+    },
+    {
+      "detail": "Completed games: 1: 17–21",
+      "event": "flip",
+      "expected": "Completed games: 1: 17–21",
+      "id": "bd",
+      "left": "B",
+      "names": [
+        "R. Verma",
+        "A. Sharma"
+      ],
+      "state": "manual flip"
+    },
+    {
+      "detail": "Completed games: 1: 11–8",
+      "event": "flip",
+      "expected": "Completed games: 1: 11–8",
+      "id": "tt",
+      "left": "A",
+      "names": [
+        "Venkat Subramanian",
+        "Dev Patel"
+      ],
+      "state": "manual flip"
+    },
+    {
+      "detail": "Completed games: 1: 8–11",
+      "event": "flip",
+      "expected": "Completed games: 1: 8–11",
+      "id": "tt",
+      "left": "B",
+      "names": [
+        "Dev Patel",
+        "Venkat Subramanian"
+      ],
+      "state": "manual flip"
+    }
+  ],
+  "mismatches": [],
+  "selected": [
+    {
+      "box": {
+        "height": 96,
+        "width": 156
+      },
+      "clientHeight": 96,
+      "pressed": "true",
+      "scrollHeight": 96,
+      "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+      "text": "Swap ends\nSelected"
+    },
+    {
+      "box": {
+        "height": 96,
+        "width": 156
+      },
+      "clientHeight": 96,
+      "pressed": "false",
+      "scrollHeight": 96,
+      "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+      "text": "Keep screen\nTeams still change ends"
+    },
+    {
+      "box": {
+        "height": 96,
+        "width": 156
+      },
+      "clientHeight": 96,
+      "pressed": "false",
+      "scrollHeight": 96,
+      "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+      "text": "Mumbai Mavericks\nServes first"
+    },
+    {
+      "box": {
+        "height": 96,
+        "width": 156
+      },
+      "clientHeight": 96,
+      "pressed": "true",
+      "scrollHeight": 96,
+      "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+      "text": "Chennai Challengers\nSelected"
+    }
+  ],
+  "startEnabled": true
+}

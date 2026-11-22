@@ -25,6 +25,7 @@ html, body { margin: 0; }
 .control-grid.compact .kit-rrow, .control-grid.compact .kit-step { min-height: 64px; height: 64px; }
 .control-grid .kit-rrow-summary { font-size: 1.2rem; }
 .control-grid .kit-rrow-label { font-size: 0.78rem; }
+.control-grid .choice-key .kit-rrow-summary { font-size: 0.92rem; }
 .control-grid.compact .kit-rrow-summary { font-size: 0.94rem; overflow-wrap: normal; }
 .control-grid button:disabled { cursor: default; opacity: 0.55; }
 .control-grid .se-go, .control-grid .se-ctl { min-height: 96px; height: 96px; width: 100%; padding: 8px; text-align: center; }
@@ -37,6 +38,7 @@ html, body { margin: 0; }
 .sheet-content .control-grid button { min-height: 64px; height: 64px; }
 .sheet-content .kit-rrow { margin: 0; }
 .sheet-content .sb-sheet-note { padding: 0; }
+.sb-sheet-head .kit-linkbtn { min-width: 48px; justify-content: center; }
 .docs { max-width: 1160px; margin: 0 auto; padding: 32px 24px; display: grid; gap: 32px; }
 .docs h1, .docs h2, .docs h3, .docs p { margin: 0; }
 .docs .kit-title { margin: 0; }

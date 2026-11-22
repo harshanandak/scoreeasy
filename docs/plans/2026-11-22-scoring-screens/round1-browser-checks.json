@@ -1,0 +1,1522 @@
+[
+  {
+    "id": "vb",
+    "state": "mid",
+    "w": 360,
+    "h": 780,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Chennai Challengers v Mumbai Mavericks\nVolleyball\nFinish\n\nOrigin/master reference reconstruction\n\n0 sets won · Set 2 · 1 set won · Set 2\n\nChennai Challengers serves\n\nMumbai Mavericks\n16\nTap +1\nChennai Challengers\n18\nTap +1\nUndo\nLast action\n···",
+        "viewport": [
+          360,
+          780
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "More\nOptions",
+            "width": 156
+          }
+        ],
+        "detail": "Completed sets: 1: 21–25",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Chennai Challengers serves",
+        "text": "Volleyball\nLive scoring\nFinish\nMumbai Mavericks\n16\n0 sets won · Set 2\nChennai Challengers\n18\n1 set won · Set 2\n\nChennai Challengers serves\n\nCompleted sets: 1: 21–25\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": [
+          360,
+          780
+        ]
+      }
+    ]
+  },
+  {
+    "id": "vb",
+    "state": "over",
+    "w": 360,
+    "h": 780,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Chennai Challengers v Mumbai Mavericks\nVolleyball\nFinish\n\nOrigin/master reference reconstruction\n\nSets won · Sets won\n\nChennai Challengers won 3–1\n\nMumbai Mavericks\n20\nMatch over\nChennai Challengers\n25\nMatch over\nUndo\nLast action\n···",
+        "viewport": [
+          360,
+          780
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Finish match",
+            "width": 156
+          }
+        ],
+        "detail": "Completed sets: 1: 21–25 · 2: 25–23 · 3: 19–25 · 4: 20–25",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Chennai Challengers won 3–1",
+        "text": "Volleyball\nMatch over\nMumbai Mavericks\n1\nSets won\nChennai Challengers\n3\nSets won\n\nChennai Challengers won 3–1\n\nCompleted sets: 1: 21–25 · 2: 25–23 · 3: 19–25 · 4: 20–25\n\nUndo\nLast action\nFinish match",
+        "viewport": [
+          360,
+          780
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bd",
+    "state": "mid",
+    "w": 360,
+    "h": 780,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "A. Sharma v R. Verma\nBadminton\nFinish\n\nOrigin/master reference reconstruction\n\n0 games won · Game 2 · 1 game won · Game 2\n\nA. Sharma serves · left court\n\nR. Verma\n15\nTap +1\nA. Sharma\n17\nTap +1\nUndo\nLast action\n···",
+        "viewport": [
+          360,
+          780
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "More\nOptions",
+            "width": 156
+          }
+        ],
+        "detail": "Completed games: 1: 17–21",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "A. Sharma serves · left court",
+        "text": "Badminton\nLive scoring\nFinish\nR. Verma\n15\n0 games won · Game 2\nA. Sharma\n17\n1 game won · Game 2\n\nA. Sharma serves · left court\n\nCompleted games: 1: 17–21\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": [
+          360,
+          780
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bd",
+    "state": "over",
+    "w": 360,
+    "h": 780,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "A. Sharma v R. Verma\nBadminton\nFinish\n\nOrigin/master reference reconstruction\n\nGames won · Games won\n\nA. Sharma won 2–0\n\nR. Verma\n18\nMatch over\nA. Sharma\n21\nMatch over\nUndo\nLast action\n···",
+        "viewport": [
+          360,
+          780
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Finish match",
+            "width": 156
+          }
+        ],
+        "detail": "Completed games: 1: 17–21 · 2: 18–21",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "A. Sharma won 2–0",
+        "text": "Badminton\nMatch over\nR. Verma\n0\nGames won\nA. Sharma\n2\nGames won\n\nA. Sharma won 2–0\n\nCompleted games: 1: 17–21 · 2: 18–21\n\nUndo\nLast action\nFinish match",
+        "viewport": [
+          360,
+          780
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tt",
+    "state": "mid",
+    "w": 360,
+    "h": 780,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Venkat Subramanian v Dev Patel\nTable tennis\nFinish\n\nOrigin/master reference reconstruction\n\n0 games won · Game 2 · 1 game won · Game 2\n\nDev Patel serves · 1 of 2\n\nDev Patel\n5\nTap +1\nVenkat Subramanian\n7\nTap +1\nUndo\nLast action\n···",
+        "viewport": [
+          360,
+          780
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "More\nOptions",
+            "width": 156
+          }
+        ],
+        "detail": "Completed games: 1: 8–11",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Dev Patel serves · 1 of 2",
+        "text": "Table tennis\nLive scoring\nFinish\nDev Patel\n5\n0 games won · Game 2\nVenkat Subramanian\n7\n1 game won · Game 2\n\nDev Patel serves · 1 of 2\n\nCompleted games: 1: 8–11\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": [
+          360,
+          780
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tt",
+    "state": "over",
+    "w": 360,
+    "h": 780,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Venkat Subramanian v Dev Patel\nTable tennis\nFinish\n\nOrigin/master reference reconstruction\n\nGames won · Games won\n\nVenkat Subramanian won 3–1\n\nDev Patel\n9\nMatch over\nVenkat Subramanian\n11\nMatch over\nUndo\nLast action\n···",
+        "viewport": [
+          360,
+          780
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Finish match",
+            "width": 156
+          }
+        ],
+        "detail": "Completed games: 1: 8–11 · 2: 11–7 · 3: 6–11 · 4: 9–11",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Venkat Subramanian won 3–1",
+        "text": "Table tennis\nMatch over\nDev Patel\n1\nGames won\nVenkat Subramanian\n3\nGames won\n\nVenkat Subramanian won 3–1\n\nCompleted games: 1: 8–11 · 2: 11–7 · 3: 6–11 · 4: 9–11\n\nUndo\nLast action\nFinish match",
+        "viewport": [
+          360,
+          780
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cricket",
+    "state": "pause",
+    "w": 360,
+    "h": 780,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Chennai CC v Mumbai CC\nCricket\nFinish\n\nOrigin/master reference reconstruction\n\nInnings break\nYet to bat\n\nInnings 2 next\n\nInnings break · Mumbai target 146\n\n0\n1\n2\n4\n6\nWicket\nWide\nNo-ball\nBye\nLeg-bye\nUndo\nLast action\n···",
+        "viewport": [
+          360,
+          780
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 64,
+            "label": "0",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "1",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "2",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "3",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "4",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "6",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "Wicket",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "Extras",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "Undo",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "Strike\nSwap",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "Card\nScorecard",
+            "width": 70
+          },
+          {
+            "height": 64,
+            "label": "More\nOptions",
+            "width": 70
+          }
+        ],
+        "detail": "Chennai completed 120 legal balls. Chase has not begun.",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Innings break · Mumbai target 146",
+        "text": "Cricket\nState example\nFinish\nChennai CC\n145/6\n20.0 overs · Innings 1\nMumbai CC\nYet to bat\nInnings 2 next\n\nInnings break · Mumbai target 146\n\nChennai completed 120 legal balls. Chase has not begun.\n\n0\n1\n2\n3\n4\n6\nWicket\nExtras\nUndo\nStrike\nSwap\nCard\nScorecard\nMore\nOptions",
+        "viewport": [
+          360,
+          780
+        ]
+      }
+    ]
+  },
+  {
+    "id": "kabaddi",
+    "state": "pause",
+    "w": 360,
+    "h": 780,
+    "panes": [
+      {
+        "buttons": [],
+        "clock": "00:00\nHalf 1",
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Chennai Raiders v Mumbai Warriors\nKabaddi\nFinish\n\nOrigin/master reference reconstruction\n\nChennai Raiders\n14\n7 on mat · Half 1\nMumbai Warriors\n12\n7 on mat · Half 1\n00:00\nHalf 1\n\nHalf time · Both clocks stopped\n\nTouched\nStepped out\n1\n2\n3\n4\n5\n6\n7\nBonus\nSafe\nEmpty\nTackled\nUndo\nLast action\n···",
+        "viewport": [
+          360,
+          780
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "Empty raid\n0 points",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Touch +1\nReview raid",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Tackled\nReview raid",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Touches\nChoose players",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Undo\nLast raid",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "More\nMatch options",
+            "width": 156
+          }
+        ],
+        "detail": "Players return for half 2. Chennai raids first after the break in this fixture.",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Half time · Both clocks stopped",
+        "text": "Kabaddi\nState example\nFinish\nChennai Raiders\n14\n7 on mat · Half 1\nMumbai Warriors\n12\n7 on mat · Half 1\n\nHalf time · Both clocks stopped\n\nPlayers return for half 2. Chennai raids first after the break in this fixture.\n\nEmpty raid\n0 points\nTouch +1\nReview raid\nTackled\nReview raid\nTouches\nChoose players\nUndo\nLast raid\nMore\nMatch options",
+        "viewport": [
+          360,
+          780
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tennis",
+    "state": "pause",
+    "w": 360,
+    "h": 780,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "A. Sharma v R. Verma\nTennis\nFinish\n\nOrigin/master reference reconstruction\n\n4 games · 1 set · 3 games · 0 sets\n\nChange ends · Sharma serves next\n\nA. Sharma\n0\n4 games · 1 set\nR. Verma\n0\n3 games · 0 sets\nUndo\nLast action\n···",
+        "viewport": [
+          360,
+          780
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Undo",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "More\nOptions",
+            "width": 156
+          }
+        ],
+        "detail": "7 games played in set 2. Verma won the last game.",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Change ends · Sharma serves next",
+        "text": "Tennis\nState example\nFinish\nA. Sharma\n0\n4 games · 1 set\nR. Verma\n0\n3 games · 0 sets\n\nChange ends · Sharma serves next\n\n7 games played in set 2. Verma won the last game.\n\n+1\nPoint\n+1\nPoint\nUndo\nMore\nOptions",
+        "viewport": [
+          360,
+          780
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bd",
+    "state": "interval",
+    "w": 360,
+    "h": 780,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "A. Sharma v R. Verma\nBadminton\nFinish\n\nOrigin/master reference reconstruction\n\n0 games won · Game 1 · 0 games won · Game 1\n\n60 second interval\n\nA. Sharma\n11\nTap +1\nR. Verma\n8\nTap +1\nUndo\nLast action\n···",
+        "viewport": [
+          360,
+          780
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "Resume\nInterval complete",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Scorecard\nMatch detail",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 156
+          },
+          {
+            "height": 96,
+            "label": "More\nMatch options",
+            "width": 156
+          }
+        ],
+        "detail": "First to 21, win by 2, cap 30.",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "60 second interval",
+        "text": "Badminton\nLive scoring\nFinish\nA. Sharma\n11\n0 games won · Game 1\nR. Verma\n8\n0 games won · Game 1\n\n60 second interval\n\nFirst to 21, win by 2, cap 30.\n\nResume\nInterval complete\nScorecard\nMatch detail\nUndo\nLast action\nMore\nMatch options",
+        "viewport": [
+          360,
+          780
+        ]
+      }
+    ]
+  },
+  {
+    "id": "vb",
+    "state": "decider-selected",
+    "w": 360,
+    "h": 780,
+    "selection": {
+      "bodyHeight": 780,
+      "bodyWidth": 360,
+      "records": [
+        {
+          "action": "side-yes",
+          "choices": [
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Swap ends\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Keep screen\nTeams still change ends",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Mumbai Mavericks\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Chennai Challengers\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            }
+          ]
+        },
+        {
+          "action": "server-left",
+          "choices": [
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Swap ends\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Keep screen\nTeams still change ends",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Mumbai Mavericks\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Chennai Challengers\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            }
+          ]
+        },
+        {
+          "action": "side-no",
+          "choices": [
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Swap ends\nScreen follows teams",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Keep screen\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Mumbai Mavericks\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Chennai Challengers\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            }
+          ]
+        },
+        {
+          "action": "server-right",
+          "choices": [
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Swap ends\nScreen follows teams",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Keep screen\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Mumbai Mavericks\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Chennai Challengers\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            }
+          ]
+        },
+        {
+          "action": "side-yes",
+          "choices": [
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Swap ends\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Keep screen\nTeams still change ends",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Mumbai Mavericks\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Chennai Challengers\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 156
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "vb",
+    "state": "sheet-done",
+    "w": 360,
+    "h": 780,
+    "done": {
+      "height": 48,
+      "label": "Done",
+      "shadow": "none",
+      "width": 48
+    }
+  },
+  {
+    "id": "vb",
+    "state": "mid",
+    "w": 390,
+    "h": 844,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Chennai Challengers v Mumbai Mavericks\nVolleyball\nFinish\n\nOrigin/master reference reconstruction\n\n0 sets won · Set 2 · 1 set won · Set 2\n\nChennai Challengers serves\n\nMumbai Mavericks\n16\nTap +1\nChennai Challengers\n18\nTap +1\nUndo\nLast action\n···",
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "More\nOptions",
+            "width": 171.1999969482422
+          }
+        ],
+        "detail": "Completed sets: 1: 21–25",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Chennai Challengers serves",
+        "text": "Volleyball\nLive scoring\nFinish\nMumbai Mavericks\n16\n0 sets won · Set 2\nChennai Challengers\n18\n1 set won · Set 2\n\nChennai Challengers serves\n\nCompleted sets: 1: 21–25\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": [
+          390,
+          844
+        ]
+      }
+    ]
+  },
+  {
+    "id": "vb",
+    "state": "over",
+    "w": 390,
+    "h": 844,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Chennai Challengers v Mumbai Mavericks\nVolleyball\nFinish\n\nOrigin/master reference reconstruction\n\nSets won · Sets won\n\nChennai Challengers won 3–1\n\nMumbai Mavericks\n20\nMatch over\nChennai Challengers\n25\nMatch over\nUndo\nLast action\n···",
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Finish match",
+            "width": 171.1999969482422
+          }
+        ],
+        "detail": "Completed sets: 1: 21–25 · 2: 25–23 · 3: 19–25 · 4: 20–25",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Chennai Challengers won 3–1",
+        "text": "Volleyball\nMatch over\nMumbai Mavericks\n1\nSets won\nChennai Challengers\n3\nSets won\n\nChennai Challengers won 3–1\n\nCompleted sets: 1: 21–25 · 2: 25–23 · 3: 19–25 · 4: 20–25\n\nUndo\nLast action\nFinish match",
+        "viewport": [
+          390,
+          844
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bd",
+    "state": "mid",
+    "w": 390,
+    "h": 844,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "A. Sharma v R. Verma\nBadminton\nFinish\n\nOrigin/master reference reconstruction\n\n0 games won · Game 2 · 1 game won · Game 2\n\nA. Sharma serves · left court\n\nR. Verma\n15\nTap +1\nA. Sharma\n17\nTap +1\nUndo\nLast action\n···",
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "More\nOptions",
+            "width": 171.1999969482422
+          }
+        ],
+        "detail": "Completed games: 1: 17–21",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "A. Sharma serves · left court",
+        "text": "Badminton\nLive scoring\nFinish\nR. Verma\n15\n0 games won · Game 2\nA. Sharma\n17\n1 game won · Game 2\n\nA. Sharma serves · left court\n\nCompleted games: 1: 17–21\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": [
+          390,
+          844
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bd",
+    "state": "over",
+    "w": 390,
+    "h": 844,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "A. Sharma v R. Verma\nBadminton\nFinish\n\nOrigin/master reference reconstruction\n\nGames won · Games won\n\nA. Sharma won 2–0\n\nR. Verma\n18\nMatch over\nA. Sharma\n21\nMatch over\nUndo\nLast action\n···",
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Finish match",
+            "width": 171.1999969482422
+          }
+        ],
+        "detail": "Completed games: 1: 17–21 · 2: 18–21",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "A. Sharma won 2–0",
+        "text": "Badminton\nMatch over\nR. Verma\n0\nGames won\nA. Sharma\n2\nGames won\n\nA. Sharma won 2–0\n\nCompleted games: 1: 17–21 · 2: 18–21\n\nUndo\nLast action\nFinish match",
+        "viewport": [
+          390,
+          844
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tt",
+    "state": "mid",
+    "w": 390,
+    "h": 844,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Venkat Subramanian v Dev Patel\nTable tennis\nFinish\n\nOrigin/master reference reconstruction\n\n0 games won · Game 2 · 1 game won · Game 2\n\nDev Patel serves · 1 of 2\n\nDev Patel\n5\nTap +1\nVenkat Subramanian\n7\nTap +1\nUndo\nLast action\n···",
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "More\nOptions",
+            "width": 171.1999969482422
+          }
+        ],
+        "detail": "Completed games: 1: 8–11",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Dev Patel serves · 1 of 2",
+        "text": "Table tennis\nLive scoring\nFinish\nDev Patel\n5\n0 games won · Game 2\nVenkat Subramanian\n7\n1 game won · Game 2\n\nDev Patel serves · 1 of 2\n\nCompleted games: 1: 8–11\n\n+1\nPoint\n+1\nPoint\nUndo\nLast action\nMore\nOptions",
+        "viewport": [
+          390,
+          844
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tt",
+    "state": "over",
+    "w": 390,
+    "h": 844,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Venkat Subramanian v Dev Patel\nTable tennis\nFinish\n\nOrigin/master reference reconstruction\n\nGames won · Games won\n\nVenkat Subramanian won 3–1\n\nDev Patel\n9\nMatch over\nVenkat Subramanian\n11\nMatch over\nUndo\nLast action\n···",
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Finish match",
+            "width": 171.1999969482422
+          }
+        ],
+        "detail": "Completed games: 1: 8–11 · 2: 11–7 · 3: 6–11 · 4: 9–11",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Venkat Subramanian won 3–1",
+        "text": "Table tennis\nMatch over\nDev Patel\n1\nGames won\nVenkat Subramanian\n3\nGames won\n\nVenkat Subramanian won 3–1\n\nCompleted games: 1: 8–11 · 2: 11–7 · 3: 6–11 · 4: 9–11\n\nUndo\nLast action\nFinish match",
+        "viewport": [
+          390,
+          844
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cricket",
+    "state": "pause",
+    "w": 390,
+    "h": 844,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Chennai CC v Mumbai CC\nCricket\nFinish\n\nOrigin/master reference reconstruction\n\nInnings break\nYet to bat\n\nInnings 2 next\n\nInnings break · Mumbai target 146\n\n0\n1\n2\n4\n6\nWicket\nWide\nNo-ball\nBye\nLeg-bye\nUndo\nLast action\n···",
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 64,
+            "label": "0",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "1",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "2",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "3",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "4",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "6",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "Wicket",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "Extras",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "Undo",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "Strike\nSwap",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "Card\nScorecard",
+            "width": 77.5999984741211
+          },
+          {
+            "height": 64,
+            "label": "More\nOptions",
+            "width": 77.5999984741211
+          }
+        ],
+        "detail": "Chennai completed 120 legal balls. Chase has not begun.",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Innings break · Mumbai target 146",
+        "text": "Cricket\nState example\nFinish\nChennai CC\n145/6\n20.0 overs · Innings 1\nMumbai CC\nYet to bat\nInnings 2 next\n\nInnings break · Mumbai target 146\n\nChennai completed 120 legal balls. Chase has not begun.\n\n0\n1\n2\n3\n4\n6\nWicket\nExtras\nUndo\nStrike\nSwap\nCard\nScorecard\nMore\nOptions",
+        "viewport": [
+          390,
+          844
+        ]
+      }
+    ]
+  },
+  {
+    "id": "kabaddi",
+    "state": "pause",
+    "w": 390,
+    "h": 844,
+    "panes": [
+      {
+        "buttons": [],
+        "clock": "00:00\nHalf 1",
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "Chennai Raiders v Mumbai Warriors\nKabaddi\nFinish\n\nOrigin/master reference reconstruction\n\nChennai Raiders\n14\n7 on mat · Half 1\nMumbai Warriors\n12\n7 on mat · Half 1\n00:00\nHalf 1\n\nHalf time · Both clocks stopped\n\nTouched\nStepped out\n1\n2\n3\n4\n5\n6\n7\nBonus\nSafe\nEmpty\nTackled\nUndo\nLast action\n···",
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "Empty raid\n0 points",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Touch +1\nReview raid",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Tackled\nReview raid",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Touches\nChoose players",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Undo\nLast raid",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "More\nMatch options",
+            "width": 171.1999969482422
+          }
+        ],
+        "detail": "Players return for half 2. Chennai raids first after the break in this fixture.",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Half time · Both clocks stopped",
+        "text": "Kabaddi\nState example\nFinish\nChennai Raiders\n14\n7 on mat · Half 1\nMumbai Warriors\n12\n7 on mat · Half 1\n\nHalf time · Both clocks stopped\n\nPlayers return for half 2. Chennai raids first after the break in this fixture.\n\nEmpty raid\n0 points\nTouch +1\nReview raid\nTackled\nReview raid\nTouches\nChoose players\nUndo\nLast raid\nMore\nMatch options",
+        "viewport": [
+          390,
+          844
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tennis",
+    "state": "pause",
+    "w": 390,
+    "h": 844,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "A. Sharma v R. Verma\nTennis\nFinish\n\nOrigin/master reference reconstruction\n\n4 games · 1 set · 3 games · 0 sets\n\nChange ends · Sharma serves next\n\nA. Sharma\n0\n4 games · 1 set\nR. Verma\n0\n3 games · 0 sets\nUndo\nLast action\n···",
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "+1\nPoint",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Undo",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "More\nOptions",
+            "width": 171.1999969482422
+          }
+        ],
+        "detail": "7 games played in set 2. Verma won the last game.",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "Change ends · Sharma serves next",
+        "text": "Tennis\nState example\nFinish\nA. Sharma\n0\n4 games · 1 set\nR. Verma\n0\n3 games · 0 sets\n\nChange ends · Sharma serves next\n\n7 games played in set 2. Verma won the last game.\n\n+1\nPoint\n+1\nPoint\nUndo\nMore\nOptions",
+        "viewport": [
+          390,
+          844
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bd",
+    "state": "interval",
+    "w": 390,
+    "h": 844,
+    "panes": [
+      {
+        "buttons": [],
+        "overflow": false,
+        "playerFigures": 0,
+        "text": "A. Sharma v R. Verma\nBadminton\nFinish\n\nOrigin/master reference reconstruction\n\n0 games won · Game 1 · 0 games won · Game 1\n\n60 second interval\n\nA. Sharma\n11\nTap +1\nR. Verma\n8\nTap +1\nUndo\nLast action\n···",
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      {
+        "buttons": [
+          {
+            "height": 96,
+            "label": "Resume\nInterval complete",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Scorecard\nMatch detail",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "Undo\nLast action",
+            "width": 171.1999969482422
+          },
+          {
+            "height": 96,
+            "label": "More\nMatch options",
+            "width": 171.1999969482422
+          }
+        ],
+        "detail": "First to 21, win by 2, cap 30.",
+        "overflow": false,
+        "playerFigures": 0,
+        "status": "60 second interval",
+        "text": "Badminton\nLive scoring\nFinish\nA. Sharma\n11\n0 games won · Game 1\nR. Verma\n8\n0 games won · Game 1\n\n60 second interval\n\nFirst to 21, win by 2, cap 30.\n\nResume\nInterval complete\nScorecard\nMatch detail\nUndo\nLast action\nMore\nMatch options",
+        "viewport": [
+          390,
+          844
+        ]
+      }
+    ]
+  },
+  {
+    "id": "vb",
+    "state": "decider-selected",
+    "w": 390,
+    "h": 844,
+    "selection": {
+      "bodyHeight": 844,
+      "bodyWidth": 390,
+      "records": [
+        {
+          "action": "side-yes",
+          "choices": [
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Swap ends\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Keep screen\nTeams still change ends",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Mumbai Mavericks\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Chennai Challengers\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            }
+          ]
+        },
+        {
+          "action": "server-left",
+          "choices": [
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Swap ends\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Keep screen\nTeams still change ends",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Mumbai Mavericks\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Chennai Challengers\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            }
+          ]
+        },
+        {
+          "action": "side-no",
+          "choices": [
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Swap ends\nScreen follows teams",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Keep screen\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Mumbai Mavericks\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Chennai Challengers\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            }
+          ]
+        },
+        {
+          "action": "server-right",
+          "choices": [
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Swap ends\nScreen follows teams",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Keep screen\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Mumbai Mavericks\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Chennai Challengers\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            }
+          ]
+        },
+        {
+          "action": "side-yes",
+          "choices": [
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Swap ends\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Keep screen\nTeams still change ends",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Mumbai Mavericks\nServes first",
+              "pressed": "false",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            },
+            {
+              "clientHeight": 96,
+              "height": 96,
+              "label": "Chennai Challengers\nSelected",
+              "pressed": "true",
+              "scrollHeight": 96,
+              "shadow": "color(srgb 0.0431373 0.0431373 0.0509804 / 0.1) 0px 0px 0px 1px inset",
+              "width": 171.1999969482422
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "vb",
+    "state": "sheet-done",
+    "w": 390,
+    "h": 844,
+    "done": {
+      "height": 48,
+      "label": "Done",
+      "shadow": "none",
+      "width": 48
+    }
+  }
+]

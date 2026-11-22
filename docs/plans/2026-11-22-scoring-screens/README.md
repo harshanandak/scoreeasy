@@ -17,11 +17,11 @@ The setup reference was SportPicker, SetupSteps, SetsSetup, KitSetupParts, TeamC
 - `scoring-system.html`: header anatomy, style mapping, control grids, all 9 rendered sport examples and slot tables.
 - `prototype.html`: sport switch and three states per sport. For sets sports it also exposes deuce, deciding end change and a new match.
 - `compare.html`: two local phone frames, reference on the left and concept on the right.
-- `png/index.md`: all 36 comparison links and individual phone panes.
+- `png/index.md`: all 44 comparison links and individual phone panes.
 - `png/overview-new.png`: the 9 mid-match concepts in registry order.
 - `png/grid-slots-overlay-360x780.png`: measured slot and key boundaries.
-- `measurements.json`: detailed element boxes for 36 mid-match/full-time boards.
-- `final-geometry.json`: final geometry for 54 views, all 9 sports ? 3 states ? 2 phone sizes.
+- `measurements.json`: initial packet element boxes for 36 mid-match/full-time boards.
+- `final-geometry.json`: initial packet geometry for 54 views. `round1-geometry.json` repeats those 54 views after the review fixes.
 - `sets-engine.js`: the reused event-log rules engine and legal scripted states from the prior prototype.
 - `concept.js`, `layout.css`, `fonts.js`, `shipped-css.txt`, `build-pages.py`: editable sources. `python build-pages.py` rebuilds the three HTML files from this directory. It needs no package install.
 
@@ -29,7 +29,7 @@ Open `prototype.html` directly. For iframe comparisons and browser inspection, u
 
 ## Header contract
 
-The fixed anatomy is `side-left` and `side-right`, each containing `name`, `main-score` and `secondary`, followed by one shared `status` slot. `detail` is a separate quiet row for completed scores or innings context. A live score, clock or serve cue never moves into that row.
+The fixed anatomy is `side-left` and `side-right`, each containing `name`, `main-score` and `secondary`, followed by one shared `status` slot. `detail` is a separate quiet row for completed scores or innings context. A live score, clock or serve cue never moves into that row. Completed-score pairs always follow the header's current left/right order, including after end changes and manual flips.
 
 Each side is 200px high in the supplied states: 12px padding + 48px name track + 80px main-score track + 48px secondary track + 12px padding. The actual numeral glyph box is 64px, or 48px for cricket. Long names can grow the first track; both cards stretch to the same height and the remaining fixed tracks align. The shared status track is at least 64px and may wrap. Break/result text replaces the serving/clock status, rather than adding another line elsewhere.
 
@@ -43,7 +43,7 @@ An unused secondary slot removes its content and keeps its 48px track. An unused
 | --- | --- |
 | Sides | Team names and engine team colours |
 | Main score | Current rally points. At full time, sets won. |
-| Secondary | Sets won and current set number. Completed scores in detail. |
+| Secondary | Sets won and current set number. Completed scores in detail. Completed-score pairs follow current header left/right order. |
 | Status | Serving team; set or match point; end change replaces serve. |
 | Control grid | 2 point keys + 2 utilities, 2 columns |
 
@@ -53,7 +53,7 @@ An unused secondary slot removes its content and keeps its 48px track. An unused
 | --- | --- |
 | Sides | Singles players and engine team colours |
 | Main score | Current rally points. At full time, games won. |
-| Secondary | Games won and current game number. |
+| Secondary | Games won and current game number. Completed-score pairs follow current header left/right order. |
 | Status | Server and right/left court; 60 second interval or end change takes priority. |
 | Control grid | 2 point keys + 2 utilities, 2 columns |
 
@@ -63,7 +63,7 @@ An unused secondary slot removes its content and keeps its 48px track. An unused
 | --- | --- |
 | Sides | Singles players and engine team colours |
 | Main score | Current rally points. At full time, games won. |
-| Secondary | Games won and current game number. |
+| Secondary | Games won and current game number. Completed-score pairs follow current header left/right order. |
 | Status | Server and 1 of 2 / 2 of 2. Each point at deuce. End change takes priority. |
 | Control grid | 2 point keys + 2 utilities, 2 columns |
 
@@ -133,9 +133,9 @@ An unused secondary slot removes its content and keeps its 48px track. An unused
 | --- | --- | --- |
 | Point/goal keys, cricket ball keys, kabaddi raid actions | `.kit-rrow`, `.kit-rrow-summary`, `.kit-rrow-label` in setupSteps.css | Flat surface and `--se-color-line-soft` inset hairline. No offset shadow. |
 | Undo, More, clock, strike, scorecard, extras | Same `.kit-rrow` family | Same key size as scoring keys within each sport. |
-| Side/server choices and resume | `.kit-rrow`; `.kit-step` is an available shipped alternative | No selected `.kit-seg` shadow. |
+| Side/server choices and resume | `.kit-rrow`; selected choices add the shipped flat `.kit-chip` with the word Selected and `aria-pressed`. | Team names identify server choices. Resume is an immediate action. No offset shadow. |
 | Options-sheet rows | `.sb-row` in boardShell.css | Flat rows separated by the shipped hairline. |
-| Done, top Finish entry | `.kit-linkbtn` in setupSteps.css | Text action, at least 48px high. Finish entry opens a confirmation. |
+| Done, top Finish entry | `.kit-linkbtn` in setupSteps.css | Flat text actions. Sheet Done has a measured 48x48px target. Top Finish has a 64x48px target and opens confirmation. |
 | Team score cards | `.kit-tchip.is-team[data-team]` from teamSheet.css; `.k5-score` from kabaddiScoreStrip.css | Shipped team gradient, no new paint or lift. |
 | Noninteractive status | `.kit-sub` | No button shell or decorative chip. |
 | Finish match confirmation | `.se-ctl` | Retained lift, unchanged. |
@@ -167,7 +167,7 @@ Those are the complete retained-lift list. New match, ordinary Done, Replay, Let
 | Cricket batter/bowler/partnership/over-detail cards | Scorecard drill-down. This needs the owner's second design pick. |
 | Cricket separate small swap-strike control | Equal Strike utility beside Undo, Card and More. |
 | Kabaddi centre timer disc and separate raid cues | Status slot. Mat counts go in secondary. |
-| Kabaddi seven defender tokens + Bonus always on screen | Raid result sheet with a 4 ? 2 grid. The engine still owns pending score, revivals and all-out. |
+| Kabaddi seven defender tokens + Bonus always on screen | Raid result sheet with a 4 x 2 grid. The engine still owns pending score, revivals and all-out. |
 | Kabaddi Touched / Stepped out and extra count bars | Player-marking flow inside the raid sheet. |
 | Kabaddi independent result and last-raid cards | Four raid actions; details stay in the sheet and Undo. |
 | Lift on every pressable control | Flat shipped rows; lift only on the listed transitions. |
@@ -176,39 +176,39 @@ Those are the complete retained-lift list. New match, ordinary Done, Replay, Let
 
 | Sport | Rendered states and reasoning |
 | --- | --- |
-| Volleyball | Reused event log. Mid-set is 18?16 in set 2 after 25?21. Full time is 3?1 in sets after 25?20 in the fourth. Deciding end change fires at 8. The browser walk scored the left team, undid it, changed ends, started the next set and undid match over. |
-| Badminton | Reused event log. Mid-game is 17?15 in game 2 after 21?17. A's 17 is odd, so the serve is from the left court. Full time is 2?0 after 21?18. Deciding change is at 11. The browser walk covered point/undo, end change, next game and undo from full time. |
-| Table tennis | Reused event log. Game 2 starts with B serving. At 7?5 there are 12 total points, so B serves the first of its next pair. Full time is 3?1 after 11?9. Deciding change is at 5; deuce uses one serve each. The same browser transitions were walked. |
-| Tennis | Hand fixture: 6?4 in set 1; set 2 is 4?3, current points 40?30, Sharma serving. Break is after the seventh game, an odd count, with the next game at 0?0. Verma won that seventh game and Sharma serves next. Full time is 6?4, 6?3, so 2?0 in sets. This is arithmetic and sequence reasoning, not an executed tennis engine. |
-| Football | Hand fixture: 2?1 in half 2, 12:34 remaining in a 45-minute half. Break is 1?0 at half time. Full time is 2?1 after two halves. No added time in this example. |
-| Basketball | Hand fixture: FIBA 4 ? 10 minutes. 54?49 at 04:32 in Q3; pause keeps score and clock; full time 78?74 after Q4. No tied final, so no overtime is needed. |
-| Hockey | Hand fixture: field hockey 4 ? 15 minutes. 2?1 at 08:12 in Q3; quarter break preserves score; full time 3?2. The example explicitly has no extended penalty corner pending. |
-| Kabaddi | Hand fixture: standard 7-player timed match. Mid-match is 18?16 in half 2, with 08:42 left and 22 of 30 raid seconds left. Both sides have 7 on mat and no pending marks, which is a legal new-raid state after revivals/resets. Break is 14?12 at half time. Full time is 32?29, no active raid. These snapshots do not claim to be one simulated raid sequence. |
-| Cricket | Hand fixture: T20 first innings 145/6 after 120 balls, target 146. Chase 120/3 after 96 balls needs 26 from 24. Break shows Yet to bat, not 0 overs falsely marked complete. Finish at 146/4 after 116 balls means 6 wickets and 4 balls left. Overs 19.2 means 19 ? 6 + 2, not a decimal. |
+| Volleyball | Reused event log. Mid-set is 18-16 in set 2 after 25-21. Full time is 3-1 in sets after 25-20 in the fourth. Deciding end change fires at 8. The browser walk scored the left team, undid it, changed ends, started the next set and undid match over. |
+| Badminton | Reused event log. Mid-game is 17-15 in game 2 after 21-17. A's 17 is odd, so the serve is from the left court. Full time is 2-0 after 21-18. Deciding change is at 11. The browser walk covered point/undo, end change, next game and undo from full time. |
+| Table tennis | Reused event log. Game 2 starts with B serving. At 7-5 there are 12 total points, so B serves the first of its next pair. Full time is 3-1 after 11-9. Deciding change is at 5; deuce uses one serve each. The same browser transitions were walked. |
+| Tennis | Hand fixture: 6-4 in set 1; set 2 is 4-3, current points 40-30, Sharma serving. Break is after the seventh game, an odd count, with the next game at 0-0. Verma won that seventh game and Sharma serves next. Full time is 6-4, 6-3, so 2-0 in sets. This is arithmetic and sequence reasoning, not an executed tennis engine. |
+| Football | Hand fixture: 2-1 in half 2, 12:34 remaining in a 45-minute half. Break is 1-0 at half time. Full time is 2-1 after two halves. No added time in this example. |
+| Basketball | Hand fixture: FIBA 4 x 10 minutes. 54-49 at 04:32 in Q3; pause keeps score and clock; full time 78-74 after Q4. No tied final, so no overtime is needed. |
+| Hockey | Hand fixture: field hockey 4 x 15 minutes. 2-1 at 08:12 in Q3; quarter break preserves score; full time 3-2. The example explicitly has no extended penalty corner pending. |
+| Kabaddi | Hand fixture: standard 7-player timed match. Mid-match is 18-16 in half 2, with 08:42 left and 22 of 30 raid seconds left. Both sides have 7 on mat and no pending marks, which is a legal new-raid state after revivals/resets. Break is 14-12 at half time. Full time is 32-29, no active raid. These snapshots do not claim to be one simulated raid sequence. |
+| Cricket | Hand fixture: T20 first innings 145/6 after 120 balls, target 146. Chase 120/3 after 96 balls needs 26 from 24. Break shows Yet to bat, not 0 overs falsely marked complete. Finish at 146/4 after 116 balls means 6 wickets and 4 balls left. Overs 19.2 means 19 x 6 + 2, not a decimal. |
 
 The source checks used `src/models/setsRules.js`, `src/utils/tennisScoring.js`, `src/utils/goalsPeriods.js`, `src/utils/kabaddiRules.js` and `src/utils/cricketCalculations.js` on the named remote ref. The fixture arithmetic above is rung 3 evidence. The sets interactions and rendered concepts are rung 5 evidence for this local concept, not for production persistence.
 
 ## Measurements
 
-All 54 final views were measured with getBoundingClientRect in the T3 integrated preview. They are 9 sports ? mid-match, break, match over ? 360?780 and 390?844. Each had body width equal to the viewport and board height within the viewport. Detailed element boxes for the 36 comparison states are in measurements.json; the final three-state pass is in final-geometry.json.
+All 54 final views were measured with getBoundingClientRect in the T3 integrated preview. They are 9 sports x mid-match, break, match over x 360x780 and 390x844. Each had body width equal to the viewport and board height within the viewport. Initial element boxes for the 36 comparison states are in measurements.json; the initial three-state pass is in final-geometry.json; the refreshed round 1 pass is in round1-geometry.json.
 
-| Box | 360?780 | 390?844 |
+| Box | 360x780 | 390x844 |
 | --- | --- | --- |
 | Board gutter | 16px each side | 16px each side |
 | Content width | 328px | 358px |
 | Gap between keys/cards | 16px | 16px |
-| Top Finish target | 64?48px | 64?48px |
-| Each team card | 156?200px | 171?200px |
-| Header including status | 328?264px | 358?264px |
-| Status track | 328?64px | 358?64px |
-| Two-column scoring and utility key | 156?96px | 171?96px |
-| Basketball three-column key | 98.7?64px | 108.7?64px |
-| Cricket four-column key | 70?64px | 77.5?64px |
-| Match-over pair | 156?96px | 171?96px |
+| Top Finish target | 64x48px | 64x48px |
+| Each team card | 156x200px | 171x200px |
+| Header including status | 328x264px | 358x264px |
+| Status track | 328x64px | 358x64px |
+| Two-column scoring and utility key | 156x96px | 171x96px |
+| Basketball three-column key | 98.7x64px | 108.7x64px |
+| Cricket four-column key | 70x64px | 77.5x64px |
+| Match-over pair | 156x96px | 171x96px |
 
 A 50-character team name was also placed in the rendered header at 390px. Both side cards grew to 232.6px and both score baselines stayed at y=180.6px.
 
-The PNGs are exact phone-size crops. Each comparison contains two phone panes plus a 16px seam, so the comparison file itself is 736?780 or 796?844. The individual new/reference files are exactly 360?780 or 390?844. The preview captures at 1.25 device scale; export resamples uniformly to CSS pixels. Tall preview captures were clipped, so only their first complete row was used. Remaining rows were captured separately. No stretched crop remains in the final PNG set.
+The PNGs are exact phone-size crops. Each comparison contains two phone panes plus a 16px seam, so the comparison file itself is 736x780 or 796x844. The individual new/reference files are exactly 360x780 or 390x844. The preview captures at 1.25 device scale; export resamples uniformly to CSS pixels. Tall preview captures were clipped, so only their first complete row was used. Remaining rows were captured separately. No stretched crop remains in the final PNG set.
 
 ## Verification and limits
 
@@ -221,6 +221,26 @@ The PNGs are exact phone-size crops. Each comparison contains two phone panes pl
 - Test cricket, doubles and custom-format states are mapped by the contract but not rendered as separate format examples in this packet. The sport-level T20 and singles examples do not prove those formats.
 - No test suite, app build, backend command or deployment ran on this laptop. The normal commit hook ran config sync, lint and type checking. All passed; lint reported 27 warnings and 0 errors.
 - The lead must arrange the independent rules/design review required by AGENTS.md before showing these as an approved design. This sub-agent did not run another agent.
+
+## Review round 1 corrections
+
+All 7 findings are addressed in this packet. The reference panes remain source reconstructions, as stated above.
+
+| Finding | Change | Browser evidence |
+| --- | --- | --- |
+| Cricket reference break | Current striker, non-striker and bowler figures are omitted at innings break. The hero says Innings break and Yet to bat. | At both phone sizes, the break reference contains 0 `.ck-players` blocks. |
+| Kabaddi reference break | Centre clock and half come from `clock` and `half` on the same fixture as the team totals and status. | Half-time reference shows 00:00 and Half 1, agreeing with both team cards and the stopped-clock status. |
+| Sets completed scores | Every historical pair is formatted in the current header left/right order. | 36 rendered checkpoints across fixture end changes, next-game starts and manual flips had 0 mismatches. The event log itself is unchanged. |
+| Break choices | Flat `.kit-rrow` choices show the shipped `.kit-chip` Selected marker and `aria-pressed`. Server choices use team names. | Both side choices and both server choices were selected and deselected at both sizes. Selected and unselected buttons keep only the inset hairline. Boxes are 156x96px at 360px and about 171x96px at 390px, with no content overflow. |
+| Sheet Done | Added layout-only min-width 48px to the existing `.kit-linkbtn`. | Done measures 48x48px with box-shadow none at both sizes. |
+| Badminton interval | Deliberate 2x2 grid: Resume, Scorecard, Undo, More. Scorecard opens match detail; More appears once. | Both sizes show exactly those 4 keys, each with the sport's regular 96px key height. Direct example: `prototype.html?bare=1&sport=bd&state=interval`. |
+| Tennis serve cue | Sharma serves next is in status with Change ends. Detail now contains only the game count and last game winner. | Both sizes show the serve cue in status and no serve cue in detail. |
+
+`round1-history-and-choices.json` contains the 36 history checkpoints. `round1-browser-checks.json` records both reference panes, all interval keys, choice toggles and Done measurements. `round1-geometry.json` is the refreshed 54-view pass, with 0 measured overflow views. These are browser observations, rung 5 for the local concepts. The fixture arithmetic remains the hand reasoning described above.
+
+The round re-rendered the 12 affected sets mid-match/full-time comparisons, refreshed their individual panes, the 9-sport overview and the grid overlay. It also added 8 comparisons for cricket/kabaddi/tennis breaks and the badminton interval, plus 4 standalone selected-choice and Done images. The PNG set now has 44 comparisons, 88 individual panes, 4 review images, 1 overview and 1 overlay, for 138 PNGs. Every new comparison uses exact 360x780 or 390x844 iframe viewports; the pair includes a 16px seam.
+
+The normal style check is repeated for all 3 pages. No test suite ran. The normal commit hooks still run config sync, lint and type checking without bypasses.
 
 ## Owner choices
 

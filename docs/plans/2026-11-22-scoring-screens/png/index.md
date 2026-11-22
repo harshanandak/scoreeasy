@@ -15,3 +15,19 @@ Reference reconstruction is on the left, concept on the right. Comparisons inclu
 | Cricket | [Pair](compare-cricket-mid-360x780.png) ? [New](new-cricket-mid-360x780.png) ? [Reference](reference-cricket-mid-360x780.png) | [Pair](compare-cricket-over-360x780.png) ? [New](new-cricket-over-360x780.png) ? [Reference](reference-cricket-over-360x780.png) | [Pair](compare-cricket-mid-390x844.png) ? [New](new-cricket-mid-390x844.png) ? [Reference](reference-cricket-mid-390x844.png) | [Pair](compare-cricket-over-390x844.png) ? [New](new-cricket-over-390x844.png) ? [Reference](reference-cricket-over-390x844.png) |
 
 [All 9 concepts](overview-new.png) ? [Grid and slots](grid-slots-overlay-360x780.png)
+
+## Review round 1 evidence
+
+The pairs retain the reference reconstruction on the left and the concept on the right.
+
+| State | 360x780 pair | 390x844 pair |
+| --- | --- | --- |
+| Cricket innings break | [Pair](compare-cricket-pause-360x780.png) | [Pair](compare-cricket-pause-390x844.png) |
+| Kabaddi half time | [Pair](compare-kabaddi-pause-360x780.png) | [Pair](compare-kabaddi-pause-390x844.png) |
+| Tennis end change | [Pair](compare-tennis-pause-360x780.png) | [Pair](compare-tennis-pause-390x844.png) |
+| Badminton interval | [Pair](compare-badminton-interval-360x780.png) | [Pair](compare-badminton-interval-390x844.png) |
+
+| Control state | 360x780 | 390x844 |
+| --- | --- | --- |
+| Deciding-set selections | [Image](review-vb-decider-selected-360x780.png) | [Image](review-vb-decider-selected-390x844.png) |
+| Sheet Done target | [Image](review-vb-sheet-done-360x780.png) | [Image](review-vb-sheet-done-390x844.png) |
