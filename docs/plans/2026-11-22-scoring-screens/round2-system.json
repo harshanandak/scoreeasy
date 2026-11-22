@@ -1,0 +1,42 @@
+{
+  "sizes": [
+    {
+      "bodyScrollWidth": 345,
+      "documentScrollWidth": 345,
+      "maxCellRight": 306.8000183105469,
+      "tableLayout": "fixed",
+      "tableLeft": 38,
+      "tableRight": 306.8000183105469,
+      "tableWidth": 268.8000183105469,
+      "viewport": [
+        360,
+        780
+      ]
+    },
+    {
+      "bodyScrollWidth": 375,
+      "documentScrollWidth": 375,
+      "maxCellRight": 337.20001220703125,
+      "tableLayout": "fixed",
+      "tableLeft": 38,
+      "tableRight": 337.20001220703125,
+      "tableWidth": 299.20001220703125,
+      "viewport": [
+        390,
+        844
+      ]
+    }
+  ],
+  "captures": [
+    {
+      "w": 360,
+      "h": 780,
+      "path": "C:\\Users\\harsha_befach\\.t3\\userdata\\browser-artifacts\\browser-screenshot-127-0-0-1-mwrjlkt6-e734c1b3.png"
+    },
+    {
+      "w": 390,
+      "h": 844,
+      "path": "C:\\Users\\harsha_befach\\.t3\\userdata\\browser-artifacts\\browser-screenshot-127-0-0-1-mwrjkv4b-9a42413d.png"
+    }
+  ]
+}

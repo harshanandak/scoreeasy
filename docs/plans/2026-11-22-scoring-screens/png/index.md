@@ -31,3 +31,12 @@ The pairs retain the reference reconstruction on the left and the concept on the
 | --- | --- | --- |
 | Deciding-set selections | [Image](review-vb-decider-selected-360x780.png) | [Image](review-vb-decider-selected-390x844.png) |
 | Sheet Done target | [Image](review-vb-sheet-done-360x780.png) | [Image](review-vb-sheet-done-390x844.png) |
+
+## Review round 2 geometry evidence
+
+All board images above were refreshed after centring the header slots. These standalone views show the long-name case and the constrained system table.
+
+| View | 360x780 | 390x844 |
+| --- | --- | --- |
+| 50-character name | [Image](review-football-long-name-360x780.png) | [Image](review-football-long-name-390x844.png) |
+| System flat-controls table | [Image](system-flat-controls-360x780.png) | [Image](system-flat-controls-390x844.png) |

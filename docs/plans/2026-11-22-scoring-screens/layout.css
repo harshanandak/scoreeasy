@@ -8,7 +8,7 @@ html, body { margin: 0; }
 .concept .sb-title small { margin-top: 4px; }
 .concept .sb-top .kit-linkbtn { min-width: 64px; justify-content: center; }
 .score-header { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 16px; flex: none; }
-.score-side { display: grid; grid-template-rows: minmax(48px,auto) 80px 48px; gap: 0; min-width: 0; padding: 12px; margin: 0; align-items: center; text-align: center; }
+.score-side { display: grid; grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(48px,auto) 80px 48px; justify-items: stretch; gap: 0; min-width: 0; padding: 12px; margin: 0; align-items: center; text-align: center; }
 .score-side .kit-tcard-name { font-size: 1.05rem; line-height: 1.2; white-space: normal; overflow-wrap: anywhere; overflow: visible; text-overflow: clip; margin: 0; }
 .score-side .k5-score { font-size: 4rem; line-height: 1; letter-spacing: -0.02em; white-space: nowrap; }
 .concept[data-sport='cricket'] .score-side .k5-score { font-size: 3rem; }
@@ -45,8 +45,8 @@ html, body { margin: 0; }
 .docs-section { display: grid; gap: 16px; }
 .docs-columns { display: grid; grid-template-columns: minmax(0,390px) minmax(0,1fr); gap: 32px; align-items: start; }
 .docs-demo .concept { min-height: 620px; width: 100%; }
-.docs table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-.docs th, .docs td { padding: 12px; text-align: left; vertical-align: top; line-height: 1.45; }
+.docs table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.88rem; }
+.docs th, .docs td { padding: 12px; text-align: left; vertical-align: top; line-height: 1.45; overflow-wrap: anywhere; }
 .docs tr { display: table-row; }
 .docs .kit-rules-panel { margin: 0; }
 .docs ul { margin: 0; padding-left: 24px; line-height: 1.6; }

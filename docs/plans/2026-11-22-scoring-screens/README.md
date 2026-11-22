@@ -190,7 +190,7 @@ The source checks used `src/models/setsRules.js`, `src/utils/tennisScoring.js`, 
 
 ## Measurements
 
-All 54 final views were measured with getBoundingClientRect in the T3 integrated preview. They are 9 sports x mid-match, break, match over x 360x780 and 390x844. Each had body width equal to the viewport and board height within the viewport. Initial element boxes for the 36 comparison states are in measurements.json; the initial three-state pass is in final-geometry.json; the refreshed round 1 pass is in round1-geometry.json.
+All 54 final views were measured with getBoundingClientRect in the T3 integrated preview. They are 9 sports x mid-match, break, match over x 360x780 and 390x844. Each had body width equal to the viewport and board height within the viewport. Initial element boxes for the 36 comparison states are in measurements.json; the initial three-state pass is in final-geometry.json; the round 1 pass is in round1-geometry.json. The current horizontal-centre pass, including those 54 fixture views and name stress cases, is in round2-centres.json.
 
 | Box | 360x780 | 390x844 |
 | --- | --- | --- |
@@ -206,7 +206,7 @@ All 54 final views were measured with getBoundingClientRect in the T3 integrated
 | Cricket four-column key | 70x64px | 77.5x64px |
 | Match-over pair | 156x96px | 171x96px |
 
-A 50-character team name was also placed in the rendered header at 390px. Both side cards grew to 232.6px and both score baselines stayed at y=180.6px.
+The 50-character name was measured again at both 360px and 390px in round 2, on either or both sides. In the supplied football long-name image, both cards are 232.6px high and the score boxes share y=180.6px. The width values in the table above are rounded; the exact horizontal centres are recorded in round2-centres.json.
 
 The PNGs are exact phone-size crops. Each comparison contains two phone panes plus a 16px seam, so the comparison file itself is 736x780 or 796x844. The individual new/reference files are exactly 360x780 or 390x844. The preview captures at 1.25 device scale; export resamples uniformly to CSS pixels. Tall preview captures were clipped, so only their first complete row was used. Remaining rows were captured separately. No stretched crop remains in the final PNG set.
 
@@ -238,9 +238,31 @@ All 7 findings are addressed in this packet. The reference panes remain source r
 
 `round1-history-and-choices.json` contains the 36 history checkpoints. `round1-browser-checks.json` records both reference panes, all interval keys, choice toggles and Done measurements. `round1-geometry.json` is the refreshed 54-view pass, with 0 measured overflow views. These are browser observations, rung 5 for the local concepts. The fixture arithmetic remains the hand reasoning described above.
 
-The round re-rendered the 12 affected sets mid-match/full-time comparisons, refreshed their individual panes, the 9-sport overview and the grid overlay. It also added 8 comparisons for cricket/kabaddi/tennis breaks and the badminton interval, plus 4 standalone selected-choice and Done images. The PNG set now has 44 comparisons, 88 individual panes, 4 review images, 1 overview and 1 overlay, for 138 PNGs. Every new comparison uses exact 360x780 or 390x844 iframe viewports; the pair includes a 16px seam.
+The round re-rendered the 12 affected sets mid-match/full-time comparisons, refreshed their individual panes, the 9-sport overview and the grid overlay. It also added 8 comparisons for cricket/kabaddi/tennis breaks and the badminton interval, plus 4 standalone selected-choice and Done images. At the round 1 head (bfb0302), the PNG set had 44 comparisons, 88 individual panes, 4 review images, 1 overview and 1 overlay, for 138 PNGs. Every new comparison uses exact 360x780 or 390x844 iframe viewports; the pair includes a 16px seam.
 
 The normal style check is repeated for all 3 pages. No test suite ran. The normal commit hooks still run config sync, lint and type checking without bypasses.
+
+## Review round 2 final geometry
+
+The header cards now have one explicit `minmax(0,1fr)` column and stretched grid items. Name, main score and secondary score each fill that column and share the card's horizontal centre. This removes the content-sized column left by the shipped team chip's inherited space-between alignment. No paint or sport rules changed.
+
+The system tables now use `table-layout: fixed`. Their cells use `overflow-wrap: anywhere`, so long class names and transition labels wrap inside the available column instead of extending the page.
+
+| Measured value | 360x780 | 390x844 |
+| --- | --- | --- |
+| Football card centres, left / right | 94.0 / 266.0px | 101.6 / 288.8px |
+| Name, score and secondary centres, left / right | 94.0 / 266.0px | 101.6 / 288.8px |
+| Largest slot-to-card centre error, all cases | 0.000003815px | 0px |
+| System document scrollWidth | 345px | 375px |
+| Flat-controls table left / right edge | 38.0 / 306.8px | 38.0 / 337.2px |
+
+The centre pass covers all 9 sports, mid-match/break/match-over states, both viewport sizes and 5 name cases: the fixture names, short A/B names, the 50-character name on the left, on the right and on both sides. That is 270 board scenarios and 1,620 individual name/score/secondary centre checks. Every error is below 0.000004px, within the requested 1px tolerance. `round2-centres.json` contains every measured centre and card height. The 54 fixture views fit their viewport heights. Long-name stress cases can grow vertically, as allowed by the header contract; horizontal centring is checked in those cases too.
+
+At 360px, document scrollWidth is 345px, which is less than or equal to 360. The vertical scrollbar reserves the remaining width. At 390px the same measurement is 375px. `round2-system.json` records the document widths and table/cell bounds. No overflow-hiding rule was added.
+
+All 44 comparison PNGs and their individual panes were re-rendered after the header change. The 4 round 1 review images, overview and overlay were refreshed too. Two system-table images and two 50-character-name images were added. The current PNG set has 142 files: 44 comparisons, 88 individual panes, 6 review images, 2 system images, 1 overview and 1 overlay. The image index links the new evidence. `capture-round2.json` lists the fresh board captures; `round2-capture-checks.json` records their viewport and header checks.
+
+These are measured browser observations, rung 5 for the local concept pages. The previous reference-reconstruction and sport-engine limits still apply. The required style check is repeated on all 3 HTML pages. No test suite ran; the normal commit hooks run without bypasses.
 
 ## Owner choices
 
